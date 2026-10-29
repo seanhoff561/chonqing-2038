@@ -2,6 +2,7 @@ import './style.css';
 import { Game } from './game';
 import { scenarios } from './data/scenarios';
 import { DevPanel } from './dev/panel';
+import { addItem } from './sim/inventory';
 
 const q = new URLSearchParams(location.search);
 const dev = q.get('dev') === '1';
@@ -16,4 +17,5 @@ game.start();
   scenarios: scenarios.map(s => s.name),
   runFrames: (n: number) => game.runFrames(n),
   player: () => game.state.player,
+  give: (id: string, n = 1) => addItem(game.state, game.state.inv.pack, id, n),
 };

@@ -23,6 +23,8 @@ export interface InputFrame {
   pressed: number;
   /** hotbar selection this tick (0-5) or -1 for none */
   slot: number;
+  /** UI commands for this tick */
+  cmds?: import('./commands').Cmd[];
 }
 
 export const emptyInput = (): InputFrame => ({ mx: 0, my: 0, yaw: 0, pitch: 0, buttons: 0, pressed: 0, slot: -1 });
@@ -49,6 +51,8 @@ export interface SimState {
   /** container grids by id, created when first opened */
   containers: Record<string, import('./inventory').Grid>;
   nextUid: number;
+  /** container currently open beside the backpack, or null */
+  openContainer: string | null;
   /** cause of death, or null while alive */
   dead: string | null;
   /** events emitted during the latest tick */

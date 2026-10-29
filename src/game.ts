@@ -9,6 +9,7 @@ import { View } from './render/view';
 import { Hud } from './ui/hud';
 import { Sky } from './render/sky';
 import { BodyFx } from './render/body-fx';
+import { InventoryUI } from './ui/inventory-ui';
 
 export interface GameOpts { scenario: string; seed: number; dev: boolean }
 
@@ -20,6 +21,7 @@ export class Game {
   readonly hud = new Hud();
   readonly sky: Sky;
   readonly bodyFx: BodyFx;
+  readonly inv: InventoryUI;
   drawDistance = 160;
   scenario!: Scenario;
   private prev: Vec3 = { x: 0, y: 0, z: 0 };
@@ -33,6 +35,7 @@ export class Game {
     this.input = new Input(this.view.renderer.domElement);
     this.sky = new Sky(this.view);
     this.bodyFx = new BodyFx(this.view.renderer.domElement);
+    this.inv = new InventoryUI(this);
     this.load(opts.scenario, opts.seed);
   }
 
@@ -49,7 +52,18 @@ export class Game {
     this.view.setWorld(this.world);
   }
 
+  /** Display name of a container grid id. */
+  containerName(id: string): string { return id === 'stash' ? '藏匿箱 STASH' : id; }
+
+  private uiKeys() {
+    for (const k of this.input.uiKeys.splice(0)) {
+      if (k === 'Tab') this.inv.toggle();
+      if (k === 'Escape' && this.inv.open) this.inv.toggle(false);
+    }
+  }
+
   tick() {
+    this.uiKeys();
     this.prev = { ...this.state.player.pos };
     const f = this.input.frame();
     step(this.state, this.world, f);
@@ -63,6 +77,7 @@ export class Game {
     this.view.fp.update(p, pos, this.input.yaw, this.input.pitch, dt);
     this.view.arms.update(p, dt, this.input.pitch);
     this.bodyFx.update(this.state, this.view.fp, dt);
+    this.inv.update();
     this.sky.update(this.state.time, this.view.fp.cam.position, this.drawDistance);
     this.view.render();
     this.frames++;

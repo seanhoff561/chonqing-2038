@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M2. Next: M2-11 Backpack UI.
-Features done: 34 / 204 | Last done: M2-10
+**Status:** building M2. Next: M2-12 Hotbar and held item.
+Features done: 35 / 204 | Last done: M2-11
 <!-- /status -->
 
 ## Log
@@ -41,3 +41,4 @@ Features done: 34 / 204 | Last done: M2-10
 - M2-08 Body feedback without meters: body feedback without meters
 - M2-09 Item database: item database
 - M2-10 Grid inventory: grid inventory
+- M2-11 Backpack UI: backpack UI with drag, rotate and hotbar binding

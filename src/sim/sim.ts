@@ -8,6 +8,7 @@ import { GAME_PER_TICK } from './clock';
 import { createBody, stepBody } from './body';
 import { checkCollapse } from './sleep';
 import { grid } from './inventory';
+import { applyCmds } from './commands';
 import { survival } from '../data/survival';
 
 export const STATE_VERSION = 1;
@@ -25,6 +26,7 @@ export function createState(seed: number, world: World): SimState {
     inv: { pack: grid(8, 6), hotbar: [null, null, null, null, null], held: 0 },
     containers: {},
     nextUid: 0,
+    openContainer: null,
     dead: null,
     events: [],
     flags: { god: false, noclip: false, rain: 0 },
@@ -33,6 +35,7 @@ export function createState(seed: number, world: World): SimState {
 
 export function step(state: SimState, world: World, input: InputFrame): void {
   state.events.length = 0;
+  applyCmds(state, input.cmds);
   stepPlayer(state, world, input);
   stepBody(state);
   checkCollapse(state);

@@ -1,5 +1,6 @@
 // Keyboard and mouse to per-tick input frames. Presses between ticks are kept until the next frame.
 import { B, emptyInput, type InputFrame } from '../sim/types';
+import type { Cmd } from '../sim/commands';
 
 const KEYS: Record<string, number> = {
   Space: B.JUMP, ShiftLeft: B.SPRINT, ShiftRight: B.SPRINT, KeyC: B.CROUCH, ControlLeft: B.CROUCH,
@@ -20,6 +21,8 @@ export class Input {
   private slot = -1;
   /** single-shot UI keys (Tab, L, Esc...) read by the game each frame */
   readonly uiKeys: string[] = [];
+  /** commands from UI, delivered with the next frame */
+  readonly cmds: Cmd[] = [];
 
   constructor(readonly el: HTMLElement) {
     addEventListener('keydown', e => this.key(e, true));
@@ -64,6 +67,7 @@ export class Input {
     f.buttons = this.buttons | this.mouse;
     f.pressed = this.pressed;
     f.slot = this.slot;
+    if (this.cmds.length) f.cmds = this.cmds.splice(0);
     this.pressed = 0;
     this.slot = -1;
     return f;
