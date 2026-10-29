@@ -25,18 +25,18 @@ Then open the printed URL. Other commands:
 |---|---|
 | Move / look | WASD / mouse |
 | Sprint | Shift |
-| Jump, mantle, vault, wall-run, climb | Space |
-| Crouch / slide / roll | C |
+| Jump (tap short, hold high), vault, hop | Space |
+| In the air by a wall: kick off / wall-run / up-kick (aim with the camera) | Space again |
+| From a hang: push off (feet on a wall) or pump a swing (bars) | Space |
+| Grip with left / right hand (hold) | Left / right mouse |
+| Pull up / let arms out while hanging | W / S, or drag the mouse |
+| Crouch (hold), slide, roll | Ctrl (or C) |
 | Crawl | Z |
 | Interact (hold for timed actions) | E |
-| Let go of a ledge, pipe, ladder or rope | Q |
-| Use held item / aim or throw | Left / right mouse |
+| Let go | Q |
 | Reload, rotate item while dragging | R |
 | Hotbar | 1-5, 0 for empty hands |
-| Backpack | Tab |
-| Laptop (Anna) | L |
-| Headlamp | H |
-| Pause, controls, settings | Esc |
+| Backpack / laptop / headlamp / pause | Tab / L / H / Esc |
 
 ## Dev flags
 | Flag | Effect |

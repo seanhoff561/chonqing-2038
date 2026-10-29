@@ -16,46 +16,54 @@ The director's brief (BRIEF.md) is the vision. This is the build design. Numbers
 |---|---|
 | Move / look | WASD / mouse |
 | Sprint | Shift (hold) |
-| Jump, mantle, vault, wall-run, climb up | Space |
-| Crouch (tap) / slide (while sprinting) / roll (hold before landing) | C |
+| Jump (tap for a short hop, hold for full height); vault or hop onto waist-high things | Space |
+| Wall move in the air (kick off, wall-run, up-kick), push off from a hang, pump a swing | Space again |
+| Left hand / right hand: hold to grip what's under the reticle | Left / right mouse |
+| Crouch (hold) / slide (while sprinting) / roll (just before landing) | Ctrl (or C) |
 | Crawl (toggle) | Z |
-| Interact / pick up / enter box / attach pipe or ladder | E (hold E for timed actions) |
-| Drop from ledge, pipe, ladder or rope | Q |
-| Use held item (attack, place, fire) / aim or throw arc | Left mouse / right mouse |
-| Reload | R (also rotates an item while dragging in the backpack) |
+| Interact / pick up / enter box (hold E for timed actions) | E |
+| Let go of everything | Q |
+| Use held item (when nothing grabbable is in reach) | Left mouse |
+| Reload / rotate an item while dragging | R |
 | Hotbar slots | 1-5 (0 = empty hands) |
-| Backpack | Tab |
-| Laptop (Anna) | L |
-| Headlamp (off, white, red) | H |
-| Pause menu (lists controls, settings) | Esc |
+| Backpack / laptop (Anna) / headlamp / pause | Tab / L / H / Esc |
+
+Every control will be rebindable in settings (U-001). The game asks for fullscreen with a keyboard lock when it captures the mouse so Ctrl+W can't close the tab (D-014).
 
 ## 3. Movement
 
-Player collision is an axis-aligned box 0.5 m wide. All values live in `src/data/movement.ts`.
+Parkour with the legs, climbing with the hands (U-002 to U-005). Player collision is an axis-aligned box 0.5 m wide. All values live in `src/data/movement.ts`.
 
 | Parameter | Value |
 |---|---|
 | Heights (stand / crouch / crawl and slide / curled in a box) | 1.75 / 1.10 / 0.50 / 0.75 m (eye 1.62 / 0.98 / 0.38 / 0.55) |
-| Speeds (jog / sprint / crouch / crawl / ladder / pipe up) | 3.2 / 7.0 / 1.6 / 0.8 / 1.5 / 1.0 m/s |
-| Ground accel / air accel | 30 / 4 m/s^2 |
-| Gravity / jump take-off speed | 9.81 m/s^2 / 3.1 m/s (apex 0.49 m); a jump still counts 0.1 s after stepping off an edge |
+| Speeds (jog / sprint / crouch / crawl) | 3.2 / 7.0 / 1.6 / 0.8 m/s; no running stamina (U-003) |
+| Ground accel / air accel | 30 / 4 m/s^2; in the air he steers and slows but never speeds up past his take-off speed |
+| Jump | take-off 3.55 m/s (apex about 0.63 m, 9.81 m/s^2 gravity); at a sprint 88% of the speed carries; releasing Space while rising cuts the jump (a tap is about 40% of the height); 0.03 s of coyote time |
 | Running jump | clears a 4.5 m gap at sprint, fails 5.2 m |
 | Auto step-up | 0.45 m (stairs are invisible ramps under the visible steps) |
-| Mantle | ledge top 0.5 to 2.4 m above feet, wall within 0.7 m, moving forward + Space; 0.35 s (below 1.0 m) or 0.8 s |
+| Space hop | onto a ledge 0.5 to 1.2 m above the feet, 0.35 s; higher ledges need the hands |
 | Vault | obstacle 0.5 to 1.2 m high and at most 1.2 m deep, clear landing, moving at 2.5 m/s or more; 0.45 s, keeps 85% speed |
-| Slide | from 6 m/s+ with C: 1.0 s, 7.5 to 3 m/s, height 0.5 (passes under 0.6 m clearance), ends crouched |
-| Crawl | passes 0.6 m gaps |
-| Ledge hang | in the air, grab a ledge whose top is 1.0 to 1.9 m above his feet (his hands' reach) with its wall in front within 0.6 m; hangs with feet 1.8 m below the top; shimmy 0.8 m/s; climb up 0.9 s; drop with Q. A standing jump plus reach tops out at 2.4 m, the mantle limit |
-| Wall-run | sprinting (5.5 m/s+), Space with a wall within 0.8 m at the side and travel within 35 degrees of the wall: up to 3 steps (0.9 s) at 6.5 m/s, starts +3.0 m/s up at 60% gravity; Space again leaps off at 5 m/s |
-| Wall climb (run-up) | sprinting at a wall (within 30 degrees of its normal), Space within 1.2 m: 2 steps, +5.75 m/s up (about 1.63 m); with the 1.9 m reach he catches a ledge up to 3.5 m above the feet, then hangs and climbs |
-| Pipes | vertical drain pipes: attach with E or by jumping into them; up 1.0, down 1.4 m/s |
-| Safe drops | 4 m; 7 m with a roll (C held within 0.3 s before landing) |
+| Slide | Ctrl at 6 m/s+: 1.0 s, 7.5 to 3 m/s, 0.5 m tall (passes under 0.6 m); releasing Ctrl stands him up keeping 80% speed |
+| Crawl | Z; passes 0.6 m gaps |
+| Wall cling | moving into a wall in the air holds him for 0.35 s, sliding 0.4 m/s, once per airtime; palm-on-wall hands and a pat sound |
+| Wall moves (Space in the air within 0.8 m of a wall, 2 per airtime) | looking up at the wall: up-kick +4.6 m/s; looking along it at 5.5 m/s or more: wall-run up to 3 steps (0.9 s) at 6.5 m/s, 60% gravity; otherwise: kick off at 5.5 m/s toward the camera (never into the wall), +3.4 m/s up plus a little for looking up |
+| Grab | hold a mouse button looking at a lip, sill, pipe or rung within 1.6 m of the eye and 0.2 to 2.2 m above the feet (2.8 m with a jump, about 3.8 m with an up-kick); two hands on one lip sit a shoulder apart |
+| Hanging | gravity off; the hands are a force-limited spring (one hand 35 m/s^2, two 80) toward a spot 0.4 m off the wall and 1.15 to 2.1 m below the higher hand; momentum carries, so one hand at speed slips after redirecting him and two hands can stop a sprint |
+| Pull up / over | W pulls up 1.1 m/s, S lets the arms out; mouse drags move the body (drag down hauls up, sideways shifts up to 0.45 m); pulled within 1.3 m of a lip top with room above, W climbs over (0.7 s) |
+| Push-off from a hang | Space with wall under the feet: looking up dynos +4.6 m/s, otherwise kicks off by the camera |
+| Bars and laches | no wall under the feet: he swings as a pendulum (head under the bar); Space pumps 1.6 m/s toward the camera, max 6.5 m/s; letting go keeps the swing velocity |
+| Grip endurance | 100; drains 6/s one hand, 2/s two, half on ladders, double with a splinted arm; at 0 the hands slip until it refills (30/s with free hands) |
+| Pipes and ladders | grabbable anywhere along their length: hand over hand |
+| Safe drops | 4 m; 7 m with a roll (Ctrl within 0.3 s before landing) |
 | Hide in box | E at a box, crate, dumpster or cabinet with an interior of 0.8 m or more: 0.6 s in, 0.5 s out |
-| Swimming | surface 1.4 m/s (sprint 2.2), dive with C, breath 40 s, then 8 HP/s; leaves him wet for 120 game minutes |
-| Stamina (0-100) | sprint 6/s, jump 8, mantle 6, wall-run 15, hang 2/s; regen 15/s after 1 s still; at 0 no sprint until 30 |
-| Encumbrance | over 15 kg: sprint and jump -15%; over 25 kg: no sprint, no wall-run, no ledge grabs, mantle max 1.6 m |
+| Swimming | surface 1.4 m/s (sprint 2.2), dive with Ctrl, breath 40 s, then 8 HP/s; climbs out onto banks up to 0.6 m; wet for 120 game minutes |
+| Encumbrance | over 15 kg: sprint and jump -15%; over 25 kg: no sprint, no wall moves, no pulling up (lips up to 1.6 m only) |
+| Sound | every movement action has one fixed sound cue (U-004): steps by gait, jump, land, roll, vault, hop, slide, wall kick, wall-run step, cling, grab, two-hand catch, slip, release, pull-over, dyno, pump |
 
-**Fall outcomes** (h = fall height): no roll: h <= 4 nothing; 4-7 m: (h-4) x 8 damage, 40% sprain; 7-12 m: (h-4) x 10 damage and a broken leg; over 12 m: death. With a roll: h <= 7 nothing; 7-10 m: (h-7) x 8 damage, 40% sprain; above 10 m as without a roll. Chances use the run's seeded RNG.
+**Fall outcomes** (h = fall height): no roll: h <= 4 nothing; 4-7 m: (h-4) x 8 damage, 40% sprain; 7-12 m: (h-4) x 10 damage and a broken bone; over 12 m: death. With a roll: h <= 7 nothing; 7-10 m: (h-7) x 8 damage, 40% sprain; above 10 m as without a roll. Chances use the run's seeded RNG.
+
+**Building for the movement set.** The city gives every move a place (U-005): facades with sills 1.4-2.0 m apart that need push-offs, pipes for hand-over-hand climbs, bars, scaffolds and sign frames for swings and laches, cling walls beside gaps, run-up walls with lips at 3-3.8 m, glass and smooth render where nothing holds.
 
 ## 4. Survival, health and time
 
