@@ -6,6 +6,10 @@ import { MAT } from '../mats';
 import { stair } from './terrain';
 import { TUNNELS, GATE } from '../../data/tunnels';
 import type { Inter, Prop, Zone, Site } from '../world';
+import { hideoutParts } from '../sets/hideout';
+
+/** The air-raid chamber (M3-09, U-013): off the side tunnel under the plaza, its vent shaft up to a grate. */
+export const AIRRAID = { x: 439.6, y: 32, z: 354 };
 
 const lampAt = (alongX: boolean, p: number, c: number, y: number): [number, number, number, number, number, number, number] =>
   alongX ? [p - 0.3, y - 0.12, c - 0.12, p + 0.3, y, c + 0.12, MAT.lamp] : [c - 0.12, y - 0.12, p - 0.3, c + 0.12, y, p + 0.3, MAT.lamp];
@@ -40,6 +44,16 @@ export function carveTunnels(terrain: Solid[]) {
       zones.push({ kind: 'under', box: z });
     }
   }
+  // The old air-raid chamber: empty but for junk and a rotten mattress; its collapsed side passage reaches the
+  // Grand Tunnel behind a rubble plug, and its vent shaft ends in a grate on the plaza (raid-prep exits).
+  const h = hideoutParts(AIRRAID.x, AIRRAID.y, AIRRAID.z, { shaftTop: 44 - AIRRAID.y, furnished: false, prefix: 'airraid-', side: 9 });
+  cuts.push(...h.cuts);
+  solids.push(...h.solids);
+  props.push(...h.props);
+  zones.push(...h.zones);
+  inter.push(...h.inter);
+  sites.push({ id: 'airraid', kind: 'cellar', x: AIRRAID.x + 10, y: AIRRAID.y, z: AIRRAID.z, bed: 'airraid-mattress', table: null, containers: [], exits: 1, windows: 0, streetSides: 0 });
+
   let ground = terrain;
   for (const c of cuts) ground = carve(ground, c);
 
