@@ -1,16 +1,19 @@
-import * as THREE from 'three';
+import './style.css';
+import { Game } from './game';
+import { scenarios } from './data/scenarios';
+import { DevPanel } from './dev/panel';
 
-// Boot: a renderer and an empty scene. The game loop arrives with M1-20.
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(innerWidth, innerHeight);
-document.body.appendChild(renderer.domElement);
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x07080a);
-const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.05, 500);
-renderer.render(scene, camera);
+const q = new URLSearchParams(location.search);
+const dev = q.get('dev') === '1';
+const seed = Number(q.get('seed')) || Math.floor(Math.random() * 1e9);
+const game = new Game({ scenario: q.get('scenario') ?? 'gym', seed, dev });
+if (dev) new DevPanel(game);
+game.start();
 
 (window as unknown as { __cq: unknown }).__cq = {
   ready: true,
-  scenarios: [] as string[],
-  runFrames: (n: number) => { for (let i = 0; i < n; i++) renderer.render(scene, camera); },
+  game,
+  scenarios: scenarios.map(s => s.name),
+  runFrames: (n: number) => game.runFrames(n),
+  player: () => game.state.player,
 };

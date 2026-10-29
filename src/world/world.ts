@@ -9,8 +9,11 @@ export interface HideSpot { id: number; inner: Box; kind: string }
 
 export interface Label { text: string; x: number; y: number; z: number; face: 'n' | 's' | 'e' | 'w' | 'up' }
 
+export interface Teleport { name: string; x: number; y: number; z: number; yaw: number }
+
 export interface World {
   name: string;
+  teleports: Teleport[];
   solids: Solid[];
   index: SolidIndex;
   water: Box[];
@@ -27,6 +30,7 @@ export interface WorldParts {
   climbables?: Climbable[];
   hides?: HideSpot[];
   labels?: Label[];
+  teleports?: Teleport[];
   spawn: World['spawn'];
 }
 
@@ -39,6 +43,7 @@ export function makeWorld(p: WorldParts): World {
     climbables: p.climbables ?? [],
     hides: p.hides ?? [],
     labels: p.labels ?? [],
+    teleports: p.teleports ?? [],
     spawn: p.spawn,
   };
 }
