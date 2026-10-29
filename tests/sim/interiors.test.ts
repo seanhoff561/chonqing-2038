@@ -42,4 +42,15 @@ describe('enterable buildings (M3-04)', () => {
     expect(s.player.pos.y).toBeCloseTo(lot.wall, 1);
     expect(s.dead).toBeFalsy();
   });
+  it("walks into Shibati's open shop houses under the rolled-up shutter (M3-55)", () => {
+    const shops = open.filter(l => l.kind === 'trad');
+    expect(shops.length).toBeGreaterThan(5);
+    for (const lot of shops.slice(0, 4)) {
+      const s = createState(1, w), route = lot.route!;
+      teleport(s.player, route[0].x, route[0].y + 0.05, route[0].z);
+      run(s, w, 20);
+      expect(follow(s, w, route.slice(1)), `shop house at ${route[0].x.toFixed(0)},${route[0].z.toFixed(0)}`).toBe(true);
+      expect(Math.abs(s.player.pos.y - lot.base)).toBeLessThan(0.3);
+    }
+  });
 });

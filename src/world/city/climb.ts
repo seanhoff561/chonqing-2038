@@ -44,6 +44,10 @@ export function facades(l: Lot, r: Rng, out: Fabric) {
       const p = faceXZ(s, low ? s.a + 0.3 : s.b - 0.3, 0.06);
       out.climbables.push({ kind: 'pipe', x: p.x, z: p.z, y0: l.base, y1: top, nx: s.nx, nz: s.nz });
       out.features.push({ kind: 'pipe', x: p.x, y: l.base, z: p.z, group: out.features.length });
+      // A downpipe on its brackets, a hopper head under the roof edge.
+      const pc = low ? s.a + 0.3 : s.b - 0.3;
+      for (let y = l.base + 1.2; y < top - 0.8; y += 3) out.decor.push(onFace(s, pc - 0.1, pc + 0.1, 0, 0.16, y, y + 0.05, MAT.metal));
+      out.decor.push(onFace(s, pc - 0.16, pc + 0.16, 0, 0.3, top - 0.7, top - 0.35, MAT.metal));
     } else if (x < 0.42 && l.kind === 'res' && !ladder) {
       // Fire escape: the drop section is pulled up, so it takes a jump to reach.
       ladder = true;
@@ -59,8 +63,18 @@ export function facades(l: Lot, r: Rng, out: Fabric) {
           ? onFace(s, c - 0.375, c + 0.375, 0, 0.4, y - 0.5, y, MAT.metal)
           : onFace(s, c - 0.5, c + 0.5, 0, 0.14, y - 0.1, y, l.kind === 'trad' ? MAT.wood : MAT.concrete));
         out.features.push({ kind: ac ? 'ac' : 'sill', ...faceXZ(s, c, 0), y, group });
+        // What the hold is (U-022): an AC unit with its grille, or a stairwell window on its sill.
+        if (ac) out.decor.push(onFace(s, c - 0.28, c + 0.12, 0.4, 0.42, y - 0.44, y - 0.06, MAT.tealMetal));
+        else {
+          // Bars on the windows within reach of the street.
+          const h = Math.min(1.1, top - y - 0.1);
+          out.decor.push(onFace(s, c - 0.4, c + 0.4, 0, 0.02, y, y + h, MAT.glass));
+          if (y < l.base + 8) for (const b of [c - 0.14, c + 0.14]) out.decor.push(onFace(s, b - 0.015, b + 0.015, 0.08, 0.11, y, y + h, MAT.metal));
+        }
         y += rand(r) < 0.15 ? 2.3 + rand(r) * 0.3 : 1.4 + rand(r) * 0.5;
       }
+      // The units drain down a pipe beside the stack.
+      out.decor.push(onFace(s, c + 0.55, c + 0.6, 0.02, 0.07, l.base, top - 0.3, MAT.metal));
     } else if (x < 0.9 && l.kind === 'res' && !l.route && s.street) {
       // Balconies on a street front: the slab edge and the rail top are holds 1 and 2 m apart.
       const m = (s.a + s.b) / 2, n = Math.round((l.wall - l.base) / FLOOR);

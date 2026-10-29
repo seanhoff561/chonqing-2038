@@ -7,6 +7,7 @@ import type { Prop, Inter, Climbable, HideSpot, Site, Feature } from '../world';
 import { canEnter, hollow } from './interiors';
 import { facades } from './climb';
 import { details } from './details';
+import { fronts, shopHouse } from './fronts';
 import { tower } from './towers';
 import { tintFor, PAINTED } from './palette';
 
@@ -49,12 +50,15 @@ function paint(l: Lot, r: Rng): number {
 
 function mass(l: Lot, r: Rng, out: Fabric) {
   const { x0, z0, x1, z1, base, wall } = l;
-  // Half the blocks that fit a stair core can be entered (U-022: more of the city opens up).
-  const open = canEnter(l) && rand(r) < 0.5;
+  // Two in three blocks that fit a stair core can be entered (U-022, M3-55: more of the city opens up).
+  const open = canEnter(l) && rand(r) < 0.65;
   const look = open ? (l.mat === MAT.tile ? MAT.facadeTile : MAT.facade) : paint(l, r);
   // Some tall solid blocks step their top two floors back from the edge.
   const step = !open && l.kind === 'res' && wall - base >= 24 && rand(r) < 0.25 ? 1.6 : 0;
+  // Half of Shibati's shop houses on flat ground stand open (M3-55).
+  const shop = l.kind === 'trad' && !l.noEnter && wall - base >= 5 && Math.min(x1 - x0, z1 - z0) >= 3.5 && rand(r) < 0.5 ? l.street.findIndex(Boolean) : -1;
   if (open) hollow(l, r, out);
+  else if (shop >= 0) shopHouse(l, shop, look, out);
   else if (step) out.solids.push(solid(x0, base, z0, x1, wall - 2 * FLOOR, z1, look), solid(x0 + step, wall - 2 * FLOOR, z0 + step, x1 - step, wall, z1 - step, look));
   else out.solids.push(solid(x0, base, z0, x1, wall, z1, look));
   // The far view's stand-in: the whole block in its painted facade, parapet included.
@@ -82,6 +86,7 @@ function mass(l: Lot, r: Rng, out: Fabric) {
     out.solids.push(solid(x0, wall - 2 * FLOOR, z0, x1, wall - 2 * FLOOR + 0.3, z0 + w, MAT.concrete), solid(x0, wall - 2 * FLOOR, z1 - w, x1, wall - 2 * FLOOR + 0.3, z1, MAT.concrete));
   }
   if (!open) details(l, r, out, wall - (step ? 2 * FLOOR : 0));
+  fronts(l, look, open, step > 0, out);
   const px0 = x0 + step, pz0 = z0 + step, px1 = x1 - step, pz1 = z1 - step;
   out.solids.push(
     solid(px0, wall, pz0, px1, wall + p, pz0 + w, MAT.concrete), solid(px0, wall, pz1 - w, px1, wall + p, pz1, MAT.concrete),

@@ -27,11 +27,13 @@ export function shopfronts(l: Lot, r: Rng, out: Fabric) {
     for (let i = 0; i <= bays; i++) { const u = fc.u0 + i * bay; out.decor.push(B(Math.max(fc.u0, u - 0.09), Math.min(fc.u1, u + 0.09), base, base + SHOP, -0.02, 0.14, MAT.wood)); }
     out.decor.push(B(fc.u0, fc.u1, base + SHOP - 0.25, base + SHOP, -0.02, 0.16, MAT.wood));
     for (let i = 0; i < bays; i++) {
-      const ua = fc.u0 + i * bay + 0.1, ub = ua + bay - 0.2, q = rand(r);
+      // An open shop house's door is its middle bay (city/fronts.ts), the shutter rolled up and no stall in the way.
+      const door = !!l.route && fc === faces[l.street.findIndex(Boolean)] && i === bays >> 1;
+      const ua = fc.u0 + i * bay + 0.1, ub = ua + bay - 0.2, q = door ? 1 : rand(r);
       // Shutters down, or half up over an open, looted shop.
-      out.decor.push(B(ua, ub, q < 0.7 ? base + 0.1 : base + 2.1, base + SHOP - 0.35, -0.02, 0.05, MAT.wood));
+      out.decor.push(B(ua, ub, q < 0.7 ? base + 0.1 : door ? base + 2.4 : base + 2.1, base + SHOP - 0.35, -0.02, 0.05, MAT.wood));
       if (l.wall - base > SHOP + 1.5 && i % 2 === 0) out.decor.push(B(ua + bay * 0.2, ub - bay * 0.2, base + SHOP + 0.8, base + SHOP + 2, -0.02, 0.06, MAT.wood));
-      if (rand(r) < 0.25) out.props.push(rand(r) < 0.5
+      if (rand(r) < 0.25 && !door) out.props.push(rand(r) < 0.5
         ? { kind: 'neonblade', x: fc.alongX ? (ua + ub) / 2 : fc.f + fc.n * 0.05, y: base + SHOP + 0.4, z: fc.alongX ? fc.f + fc.n * 0.05 : (ua + ub) / 2, yaw: fc.alongX ? (fc.n > 0 ? 0 : Math.PI) : (fc.n > 0 ? Math.PI / 2 : -Math.PI / 2), h: 1.6 }
         : { kind: 'stall', x: fc.alongX ? (ua + ub) / 2 : fc.f + fc.n * 0.8, y: base, z: fc.alongX ? fc.f + fc.n * 0.8 : (ua + ub) / 2, yaw: fc.alongX ? 0 : Math.PI / 2 });
     }

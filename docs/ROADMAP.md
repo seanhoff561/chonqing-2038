@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 38 of 61 done
+## M3: 39 of 62 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -420,15 +420,22 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Streets are meshes along their real lines, not painted ground cells: carriageway with lane markings, kerbs, pavements either side, gutters, drains and manholes, crossings at junctions; smooth edges and curves, no cell-stepped borders; stairs and ramps as continuous flights
   - The ground meets them without seams or steps; junctions blend
   - Screenshots of a main road, a lane, a junction and a stair street beside reference photos
-- [ ] **M3-55** Buildings that look like buildings, in 2038 (U-022, U-024)
+- [x] **M3-55** Buildings that look like buildings, in 2038 (U-022, U-024)
   - Every building shows an entrance (door, lobby, shopfront with glass or shutters) on its street side and real elements by type: framed windows with sills and bars, balconies with rails and clutter, AC units, awnings, signs, downpipes, roof kit; walk-ups, slabs, offices, malls, hotels and Shibati houses each read differently; 2038 architecture, not today's city: megastructure blocks, stacked and cantilevered floors, new skins on old concrete bones, screens and holographic signage, cyberpunk in the centres and dystopian elsewhere
   - Climbing holds are those real elements (downpipes on brackets, AC units, window bars, balcony rails, signs), not abstract strips; the hold spacing tests still pass
   - Enterable buildings read as enterable (open or broken doors, lit gaps); a share of every district can be entered
   - Screenshots of five building types beside reference photos
-- [ ] **M3-56** Nothing empty (U-022)
+- [ ] **M3-56a** Clear, smooth streets; ruins and green marked (U-029)
+  - Streets are smooth: each carriageway and pavement follows an eased profile along its line and lies level across it, and nothing (ground, foundations, steps, buildings, decor) pokes through a street surface or hides it; a unit test samples every ground street every metre
+  - Carriageways are clear (U-029, U-030): no prop or solid dressing stands on one; bins, stalls, bikes and wrecks stand on the pavement or against the buildings beside it, turned to the street; a unit test checks every prop
+  - The rough ground (steep or broken terrain off the streets: the war's debris, U-030) and the green (OSM parks, woods, grass and scrub, and unbuilt verges) are found and kept in the world as marks for M3-56; a unit test counts them, and docs/maps/marks.png shows them on the peninsula
+- [ ] **M3-56** Nothing empty: a filled, ordered city (U-022, U-028)
   - The open paved spaces between buildings fill from the reference photos: back buildings and lean-tos, courtyards with walls and gates, sheds, stalls, gardens and trees, parked and wrecked vehicles, retaining walls with greenery, stairs between levels; soft landings (bins, bags, awnings) under long drops (U-024)
-  - A unit test finds no open paved patch wider than 12 m off the streets and squares on the peninsula, and props on every 20 m of street
+  - A unit test finds no open paved patch wider than 12 m off the streets and squares on the peninsula, and props beside every 20 m of street (on the pavement, not the carriageway)
   - Screenshots of three spots that were empty in PT-008
+  - Rough ground becomes ruins (U-028): where the terrain is steep or broken it reads as collapsed buildings and debris (rubble heaps, broken slabs, rebar, half walls, retaining walls), with new props for it; smooth ground fills with things that belong there
+  - Green from the real map (U-028): OSM parks, woods, grass and scrub (refetched with natural=wood and the other green tags) render as grass and stands of trees; unbuilt verges and banks get grass and weeds, so the peninsula has green as the real one does
+  - Order (U-028): carriageways stay clear for the patrol lines, nothing on them but the odd wreck; every prop stands on what is under it (none floating), turned to its street or wall; a unit test checks both over the whole peninsula
 - [ ] **M3-47** Hiding, seen from inside; more places to hide (U-021)
   - Hidden, he sees the inside of what he's in (crate slats with light between, a dumpster under a lifted lid, a wardrobe's door crack, a car boot), not through it
   - Many more places to hide across the city: dumpsters and big bins on streets and in alleys, wardrobes and cupboards in flats, stall cabinets, water tanks on roofs, car boots, barrels; each with a prompt
@@ -445,6 +452,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Exteriors climbable all the way up by the envelope's hardest chains: beams, poles, ledges, cornices, scaffold and cables; open and broken floors to duck through mid-climb; vantage ledges high over the street to look down from
   - Hard by design (U-023): huge gaps at the envelope's maximum, no easy line to the top of a tower; a bot climbs three towers over 80 m from the street using only generated features
   - Screenshots looking down from three vantage points
+  - The factory (U-030, D-020): Raffles City at Chaotianmen is where the machines are made, lit all night and guarded, its output marching onto the roads
 - [ ] **M3-58** The underground city (U-023, U-024)
   - Several levels under the peninsula: air-raid tunnels, basements, storm culverts and the metro joined into a network, and in places a whole underground layer of streets, shops and buildings with shafts, stairs and drops between its levels, futuristic like the city above
   - Many ways in (building basements, stairs, grates, culvert mouths, metro entrances), some only by a climb or a squeeze; patrols walk it (M4-01)
@@ -517,6 +525,8 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
   - Routes have dwell times and units have active hours
   - A unit test: the same pose for the same time however that time was reached
   - Patrol routes run underground too: the tunnels and the underground layer (U-024)
+  - Main patrol lines run the clear streets; robots and drones break off them into side alleys and buildings (U-028)
+  - Convoys (U-030): the main roads carry the machines' columns (humanoids, quadrupeds, carriers, drones overhead) out of the city at all hours from the factory, so streets and open ground are where he gets seen
 - [ ] **M4-02** Navigation graph and pathing
   - A nav graph built from streets, stairs and tunnels with levels; A* between any two reachable nodes
   - Unit types filter edges (delivery robots avoid stairs)
@@ -884,7 +894,7 @@ M8 Story and sound: the intro cutscene, endings, the voice system with subtitles
   - Subtitles show the speaker and text in English, Chinese or both, at the chosen size
   - The smoke test switches the language setting
 - [ ] **M8-05** Intro cutscene
-  - The scripted intro from DESIGN section 13 and docs/cinematics/INTRO.md (news of the AI, Li Wei at the construction site, his father's call, the attack, the flight through Shibati and the subway, Anna wakes) ending on day 1 at 06:00 in the grate hideout under Shibati (U-018)
+  - The scripted intro from DESIGN section 13 and docs/cinematics/INTRO.md (news of the AI, the city fighting back and the rubble it left, the factory and the convoys out (U-030), Li Wei at the construction site, his father's call, the attack, the flight through Shibati, the subway and the underground city, Anna wakes) ending on day 1 at 06:00 in the grate hideout under Shibati (U-018)
   - The smoke test plays it to the end
   - Plays the generated clips in public/cinematics when present (subtitled, zh and en), else the in-engine version
 - [ ] **M8-06** Intro skip after the first run

@@ -72,11 +72,10 @@ function tree(p: Prop, big: boolean): THREE.Object3D {
     const a = r() * Math.PI * 2, l = (1 + r()) * s;
     k.cyl(0.07 * s, 0.04 * s, l, 0x4a3e32, Math.cos(a) * 0.3, h * 0.75, Math.sin(a) * 0.3, 5, 'x', a);
   }
-  const greens = [0x4a5a32, 0x5a6a3a, 0x3e4e2c, 0x66703c];
-  for (let i = 0; i < 6; i++) {
+  // The crown is leaves only (U-028): clusters of leaf cards, no solid core showing through.
+  for (let i = 0; i < 7; i++) {
     const a = r() * Math.PI * 2, d = r() * 1.4 * s, y = h + (r() - 0.3) * 1.4 * s;
-    k.blob((0.9 + r() * 0.7) * s, greens[Math.floor(r() * greens.length)], Math.cos(a) * d, y, Math.sin(a) * d, 0.8);
-    for (let j = 0; j < 6; j++) cards.push({ x: Math.cos(a) * d + (r() - 0.5) * 2 * s, y: y + (r() - 0.5) * 1.4 * s, z: Math.sin(a) * d + (r() - 0.5) * 2 * s, s: (0.9 + r() * 0.6) * s, ry: r() * Math.PI });
+    for (let j = 0; j < 9; j++) cards.push({ x: Math.cos(a) * d + (r() - 0.5) * 2 * s, y: y + (r() - 0.5) * 1.4 * s, z: Math.sin(a) * d + (r() - 0.5) * 2 * s, s: (0.9 + r() * 0.6) * s, ry: r() * Math.PI });
   }
   // Fig trees drop aerial roots.
   if (big) for (let i = 0; i < 10; i++) { const a = r() * Math.PI * 2, d = 0.5 + r() * 1.8; k.cyl(0.03, 0.02, h * (0.5 + r() * 0.4), 0x6a5e4e, Math.cos(a) * d, h * 0.2, Math.sin(a) * d, 4); }
@@ -285,12 +284,19 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
     for (let i = 0; i < 6 + Math.floor(r() * 8); i++) { const bw = w * (0.1 + r() * 0.4), bh = h * (0.08 + r() * 0.3); glow.box(bw, bh, 0.02, pal[Math.floor(r() * pal.length)], (r() - 0.5) * (w - bw), (h - bh) * r(), 0.04); }
     return group([{ geo: k.geometry(), mat: PROP_MAT }, { geo: glow.geometry(), mat: GLOW_MAT }]);
   },
-  // A blade sign sticking out from a shop front (its +z out of the wall), glowing characters down both faces.
+  // A blade sign over a shop front (its +z out of the wall) as Chongqing's are (U-028): mostly a tall light box,
+  // big characters down both faces in red or white, a neon tube round the edge; else a dark board with the
+  // characters themselves in neon tube.
   neonblade: p => {
-    const k = new Kit(seedOf(p)).use('metal'), r = k.r, h = p.h ?? 3, c = [0xff4fa0, 0xffb040, 0x60e0ff, 0xff3030, 0x80ff90, 0xffffff][Math.floor(r() * 6)];
-    k.box(0.08, 0.08, 1.0, 0x3a3a3a, 0, h - 0.2, 0.5).box(0.08, 0.08, 1.0, 0x3a3a3a, 0, 0.2, 0.5).box(0.24, h, 0.8, 0x15161a, 0, 0, 0.6);
-    const glow = new Kit(seedOf(p) + 4);
-    for (const x of [-0.13, 0.13]) for (let y = 0.25; y < h - 0.5; y += 0.55 + r() * 0.15) glow.box(0.02, 0.4, 0.5, c, x, y, 0.6);
+    const k = new Kit(seedOf(p)).use('metal'), r = k.r, h = p.h ?? 3, glow = new Kit(seedOf(p) + 4), lit = r() < 0.65;
+    const tube = [0xff3040, 0xff4fa0, 0x60e0ff, 0xffb040, 0x80ff90][Math.floor(r() * 5)];
+    const face = lit ? [0xfff4e0, 0xffd040, 0xd81c1c, 0xf4f8ff][Math.floor(r() * 4)] : 0x15161a, ink = face === 0xd81c1c ? 0xfff0d0 : 0xb01414;
+    k.box(0.08, 0.08, 1.0, 0x3a3a3a, 0, h - 0.2, 0.5).box(0.08, 0.08, 1.0, 0x3a3a3a, 0, 0.2, 0.5);
+    (lit ? glow : k).box(0.24, h, 0.8, face, 0, 0, 0.6);
+    const s = 0.52, t = lit ? 0.07 : 0.035, pen = lit ? k : glow;
+    for (let y = h - 0.22 - s; y > 0.15; y -= s + 0.1) for (const [z0, y0, z1, y1] of glyph(r)) for (const x of [-0.13, 0.13])
+      pen.box(0.02, Math.max(t, (y1 - y0) * s), Math.max(t, (z1 - z0) * s), lit ? ink : tube, x, y + y0 * s - (y1 === y0 ? t / 2 : 0), 0.6 + ((z0 + z1) / 2 - 0.5) * s);
+    for (const x of [-0.13, 0.13]) glow.box(0.02, 0.03, 0.8, tube, x, h - 0.05, 0.6).box(0.02, 0.03, 0.8, tube, x, 0.02, 0.6).box(0.02, h - 0.04, 0.03, tube, x, 0.02, 0.215).box(0.02, h - 0.04, 0.03, tube, x, 0.02, 0.985);
     return group([{ geo: k.geometry(), mat: PROP_MAT }, { geo: glow.geometry(), mat: GLOW_MAT }]);
   },
   dronewreck: p => {
@@ -300,6 +306,17 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
     return group([{ geo: k.geometry(), mat: PROP_MAT }]);
   },
 };
+
+/** A made-up character in a unit cell, as a sign reads from the street: three to five strokes across and down
+ *  ([z0, y0, z1, y1], one pair equal). */
+function glyph(r: () => number): [number, number, number, number][] {
+  const out: [number, number, number, number][] = [], n = 3 + Math.floor(r() * 3);
+  for (let i = 0; i < n; i++) {
+    if (i === 0 || (i > 1 && r() < 0.5)) { const y = [0.1, 0.5, 0.9][Math.floor(r() * 3)], a = 0.05 + r() * 0.3; out.push([a, y, a + 0.5 + r() * 0.15, y]); }
+    else { const z = [0.2, 0.5, 0.8][Math.floor(r() * 3)], a = 0.05 + r() * 0.3; out.push([z, a, z, a + 0.5 + r() * 0.15]); }
+  }
+  return out;
+}
 
 export const libKinds = () => Object.keys(LIB);
 export const libProp = (p: Prop): THREE.Object3D | null => LIB[p.kind]?.(p) ?? null;

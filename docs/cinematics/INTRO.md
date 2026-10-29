@@ -1,7 +1,7 @@
 # Intro: screenplay and shot list (U-018)
 
 The opening of Chongqing 2038, written to be made shot by shot with an AI video generator in a 3D Chinese
-anime style, and cut again for the trailer. About 5.5 minutes, 48 shots in seven scenes. It ends where the game
+anime style, and cut again for the trailer. About 6 minutes, 53 shots in seven scenes. It ends where the game
 begins: Li Wei in the grate hideout under Shibati, day 1, 06:00.
 
 How to use it: build each shot's keyframe with an image model from the character and location sheets below
@@ -262,6 +262,48 @@ gore, blood spray, lens-flare spam, motion smear, low detail`
 - Line: 李伟（内心） | 墙修起来以后，日子照样过。只是莫得人再笑了。 | After the wall went up, life went on. Only nobody laughed anymore.
 - Sound: monorail hum, rubber tyres on concrete
 
+### S02-05 The city fights back (U-030)
+- Duration: 8 s
+- Camera: 35 mm, handheld at the foot of a stepped lane
+- Action: residents and soldiers in mismatched gear set charges under a stalled column of [HUMANOID]s on a stepped street; they run; the blast takes the corner off an apartment block, which slumps into the lane in a wave of dust.
+- Light: smoky afternoon, orange flash
+- Prompt: Chongqing stepped alley between old concrete apartment blocks, civilians and soldiers running from planted explosives, a column of tall faceless robots in the street, an explosion bringing down the corner of a building in a cloud of dust and concrete
+- Negative: default; gore
+- Consistency: the block and lane match the game's rubble mounds and collapsed corners
+- Sound: shouts, a deep thump, collapsing concrete
+
+### S02-06 What the fighting left
+- Duration: 6 s
+- Camera: drone shot, slow rise over the hillside
+- Action: months later in silence: blocks broken open, rubble heaped across the lanes and stairs, burnt cars, weeds already in the cracks; nothing moves.
+- Light: overcast, haze
+- Prompt: aerial view of a dense hillside district of Chongqing after months of fighting, collapsed apartment blocks, mounds of rubble and rebar blocking stepped lanes, burnt-out cars, weeds growing through cracks, haze
+- Negative: default; people
+- Consistency: the game's debris fields are these places (rough ground on the map)
+- Line: 李伟（内心） | 打了三个月。炸掉的不是它们，是我们自己的城。 | We fought for three months. What we blew up wasn't them, it was our own city.
+- Sound: wind, a loose sheet of metal banging
+
+### S02-07 The factory at Chaotianmen
+- Duration: 7 s
+- Camera: 200 mm from across the river, then a slow push
+- Action: Raffles City's towers and the long sky bridge across their tops at the tip of the peninsula, lit at every floor all night; cranes swing pallets; out of its base, rows of new [HUMANOID]s and [QUADRUPED]s walk out in step.
+- Light: night, cold white factory light on the river
+- Prompt: night view across a river of a cluster of curved glass skyscrapers joined at the top by a long horizontal sky bridge, every floor lit cold white like a factory, cranes on the riverfront, rows of identical robots marching out of the base
+- Negative: default
+- Consistency: Raffles City at Chaotianmen as it stands, the machines' factory in the game
+- Sound: a low industrial hum across the water
+
+### S02-08 The roads out
+- Duration: 8 s
+- Camera: 85 mm from a rooftop over an arterial road, slow pan to the bridge
+- Action: the road below is a river of machines: [HUMANOID]s, [QUADRUPED]s and carriers in an endless column, [DRONE]s overhead, all heading out over the bridge; a heavy loader robot shoves abandoned cars off the carriageway into a heap against the kerb.
+- Light: grey day
+- Prompt: elevated view of a wide city road packed end to end with a column of tall faceless robots, four-legged robots and autonomous carriers, drones flying above it, all moving toward a steel truss bridge, a large loader robot pushing abandoned cars to the roadside into a pile
+- Negative: default; people
+- Consistency: the game's main roads, kept clear by the machines, wrecks along the kerbs
+- Line: 李伟（内心） | 它们不是来守这座城的。它们是要从这里出去。 | They didn't come to guard this city. They're leaving it, from here.
+- Sound: thousands of footfalls in step, servo whine, rotor hum
+
 ## Scene 3: Li Wei (spring 2038, the last ordinary morning)
 
 ### S03-01 Breakfast
@@ -508,6 +550,16 @@ gore, blood spray, lens-flare spam, motion smear, low detail`
 - Negative: default
 - Consistency: [HAOZI]'s mouse is the friends' mark the player finds in the tunnels
 - Sound: the door's hinge screaming
+
+### S05-06a The city under the city (U-030)
+- Duration: 7 s
+- Camera: 24 mm, from a gantry, tilting down through three levels
+- Action: behind the door the tunnels open into an underground street: shops cut into the rock in tiers, dead neon, stairs and open shafts between levels, a stalled escalator; far below, a [DRONE]'s searchlight sweeps a lower level. He keeps to the shadows of the upper gantry.
+- Light: emergency strips, the drone's beam
+- Prompt: a vast underground street in Chongqing cut into rock on several levels, rows of abandoned shops with dead neon signs, metal stairs and open shafts between levels, a frozen escalator, a drone's searchlight sweeping the lowest level, a boy creeping along an upper gantry
+- Negative: default
+- Consistency: the game's underground layer (M3-58)
+- Sound: dripping, ventilation drone, rotors far below
 
 ### S05-07 The Grand Tunnel
 - Duration: 7 s

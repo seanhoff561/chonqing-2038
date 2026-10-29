@@ -97,3 +97,21 @@ describe('too fast to hold (U-020)', () => {
     expect(p.mode).toBe('air');
   });
 });
+
+describe('jumps off slopes (U-028)', () => {
+  /** Run along -z on ground rising by `grade` and jump: his take-off climb rate. */
+  const takeoff = (grade: number) => {
+    const len = 40, rise = Math.abs(grade) * len;
+    const solids = [solid(-5, -60, 0, 5, 0, 40), grade > 0 ? rampSolid(-5, -60, -len, 5, 0, 0, rise, 4) : rampSolid(-5, -60, -len, 5, 0, -rise, 0, 3), solid(-20, -80, -120, 20, -70, 60)];
+    const { world, state } = setup(solids, { x: 0, y: 0.05, z: 20, yaw: 0 });
+    for (let i = 0; i < secs(6) && state.player.pos.z > -10; i++) run(state, world, 1, { my: 1, buttons: B.SPRINT });
+    run(state, world, 1, { my: 1, buttons: B.SPRINT | B.JUMP, pressed: B.JUMP });
+    return state.player.vel.y;
+  };
+  it('leaves along the slope: faster up running uphill, slower running downhill', () => {
+    const flat = takeoff(0), up = takeoff(0.4), down = takeoff(-0.4);
+    expect(up).toBeGreaterThan(flat + 1);
+    expect(down).toBeLessThan(flat - 1);
+    expect(flat).toBeCloseTo(M.jumpSpeed - M.gravity / 60, 1);
+  });
+});

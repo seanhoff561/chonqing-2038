@@ -1,6 +1,7 @@
 // The three.js scene: renderer, lights, fog, the static world meshes and the first-person rig.
 import * as THREE from 'three';
 import type { World } from '../world/world';
+import type { Solid } from '../world/geom';
 import { buildSolidMeshes, ChunkMerger, CASTER_LAYER } from './world-mesh';
 import { buildGroundMeshes, buildFarGround } from './ground-mesh';
 import { buildStreetMeshes } from './streets';
@@ -80,7 +81,13 @@ export class View {
     this.world.clear();
     // Big worlds draw detail near the camera and one cheap stand-in per block beyond (U-012).
     this.hasFar = w.far.length > 0;
-    const meshes = buildSolidMeshes(w.solids.concat(w.decor), this.hasFar ? 'near' : 'all', undefined, w.index);
+    // Small trims (window cages, AC units, bars, signs) are drawn only within DETAIL of the camera and cast no
+    // shadow: from further off they are a pixel or two (M3-55).
+    const small = (s: Solid) => { const e = s.rot ?? s; return this.hasFar && !s.ramp && Math.max(e.x1 - e.x0, s.y1 - s.y0, e.z1 - e.z0) < 2.6; };
+    const meshes = buildSolidMeshes(w.solids.concat(w.decor.filter(s => !small(s))), this.hasFar ? 'near' : 'all', undefined, w.index);
+    const detail = buildSolidMeshes(w.decor.filter(small), 'near').children.filter(m => !m.castShadow);
+    for (const m of detail) m.userData.detail = true;
+    if (detail.length) meshes.add(...detail);
     if (w.ground) meshes.add(...buildGroundMeshes(w.ground, this.hasFar ? 'near' : 'all'), ...buildStreetMeshes(w.ground, w.streets, this.hasFar ? 'near' : 'all'));
     const props = buildProps(w.props);
     this.world.add(meshes, buildLabels(w.labels), props);
@@ -158,7 +165,7 @@ export class View {
     const c = this.fp.cam.position, far = this.hasFar ? lodRadius.value : (this.scene.fog as THREE.Fog).far;
     if (far !== this.visFar || Math.hypot(c.x - this.visAt.x, c.z - this.visAt.z) > 4) {
       this.visFar = far; this.visAt.copy(c);
-      const within = (o: THREE.Object3D) => { const [x0, z0, x1, z1] = o.userData.rect; return Math.hypot(Math.max(x0 - c.x, 0, c.x - x1), Math.max(z0 - c.z, 0, c.z - z1)) < far; };
+      const within = (o: THREE.Object3D) => { const [x0, z0, x1, z1] = o.userData.rect; return Math.hypot(Math.max(x0 - c.x, 0, c.x - x1), Math.max(z0 - c.z, 0, c.z - z1)) < (o.userData.detail ? Math.min(far, DETAIL) : far); };
       for (const cell of this.cells) if ((cell.visible = within(cell))) for (const m of cell.children) m.visible = within(m);
     }
     tickProps(t, open);
@@ -200,6 +207,8 @@ function liveWalk(o: THREE.Object3D, force: boolean) {
 }
 
 export type Resolution = 'high' | 'balanced' | 'fast';
+/** How far small trims are drawn. */
+const DETAIL = 110;
 const RES_KEY = 'cq2038.resolution';
 function loadResolution(): Resolution {
   try { const r = localStorage.getItem(RES_KEY); if (r === 'high' || r === 'fast') return r; } catch { /* default */ }

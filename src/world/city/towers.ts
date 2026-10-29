@@ -6,6 +6,7 @@ import { MAT } from '../mats';
 import { rand, randInt, type Rng } from '../../sim/rng';
 import { pick, GLASS } from './palette';
 import { PARAPET, type Lot, type Fabric } from './buildings';
+import { lobby } from './fronts';
 
 export function tower(l: Lot, r: Rng, out: Fabric) {
   const { base, wall } = l;
@@ -46,6 +47,7 @@ export function tower(l: Lot, r: Rng, out: Fabric) {
     default: // a lit band round the top
       out.decor.push(solid(x0 - 0.05, wall - 2.5, z0 - 0.05, x1 + 0.05, wall - 1.5, z1 + 0.05, MAT.lamp));
   }
+  lobby(l, () => rand(r), out);
   // The roof edge.
   out.solids.push(solid(x0, wall, z0, x1, wall + PARAPET, z0 + 0.2, MAT.concrete), solid(x0, wall, z1 - 0.2, x1, wall + PARAPET, z1, MAT.concrete),
     solid(x0, wall, z0 + 0.2, x0 + 0.2, wall + PARAPET, z1 - 0.2, MAT.concrete), solid(x1 - 0.2, wall, z0 + 0.2, x1, wall + PARAPET, z1 - 0.2, MAT.concrete));

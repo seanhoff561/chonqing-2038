@@ -170,7 +170,11 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
   let jumped = false;
   if (p.onGround && (input.pressed & B.JUMP) && groundParkour(state, world, input, Math.min(M.mantle.hop, L.maxMantle))) return;
   if ((p.onGround || p.coyote > 0) && (input.pressed & B.JUMP) && p.posture === 'stand' && L.jumpScale > 0) {
-    p.vel.y = M.jumpSpeed * Math.sqrt(L.jumpScale);
+    // Off a slope he leaves along it (U-028): the rise of the ground under his feet along his stride adds to the
+    // jump, uphill or down (a ledge's edge ahead is not a slope).
+    const n = p.onGround ? surface(idx, boxAt(p.pos.x, p.pos.y, p.pos.z, h), p.pos.y) : { ny: 1, dx: 0, dz: 0 };
+    const v = Math.hypot(p.vel.x, p.vel.z), rise = (-(p.vel.x * n.dx + p.vel.z * n.dz) * Math.sqrt(1 - n.ny * n.ny)) / n.ny;
+    p.vel.y = M.jumpSpeed * Math.sqrt(L.jumpScale) + Math.max(-0.7 * v, Math.min(0.7 * v, rise));
     if (Math.hypot(p.vel.x, p.vel.z) > M.speed.jog) { p.vel.x *= M.jumpCarry; p.vel.z *= M.jumpCarry; }
     p.onGround = false;
     p.jumpHeld = true;

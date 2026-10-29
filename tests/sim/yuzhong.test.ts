@@ -7,6 +7,7 @@ import { createState } from '../../src/sim/sim';
 import { teleport } from '../../src/sim/player';
 import { streets, onGround } from '../../src/world/yuzhong/ground';
 import { segNearObb, minRect } from '../../src/world/yuzhong/shapes';
+import { districtAt } from '../../src/world/yuzhong/lots';
 import { run } from './helpers';
 import { B } from '../../src/sim/types';
 
@@ -34,6 +35,16 @@ describe('Yuzhong at 1:1 (M3-41b)', () => {
     }
     expect(gaps, 'gaps under walls').toBe(0);
     expect(poking, 'ground in enterable buildings').toBe(0);
+  });
+  it('lets a share of every district be entered, its doors standing open (M3-55)', () => {
+    const by = new Map<string, [number, number]>();
+    for (const p of near) {
+      const x = p.corners.reduce((a, c) => a + c[0], 0) / 4, z = p.corners.reduce((a, c) => a + c[1], 0) / 4, d = districtAt(x, z).district;
+      const n = by.get(d) ?? [0, 0];
+      by.set(d, [n[0] + 1, n[1] + (p.route ? 1 : 0)]);
+    }
+    for (const [d, [all, open]] of by) expect(open / all, d).toBeGreaterThan(0.05);
+    expect(by.size).toBe(7);
   });
   it("puts every enterable building's door at the ground outside it", () => {
     const doors = near.filter(p => p.route).map(p => p.route![0]);
