@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M1. Next: M1-07 Vault.
-Features done: 6 / 204 | Last done: M1-06
+**Status:** building M1. Next: M1-08 Crouch and crawl.
+Features done: 7 / 204 | Last done: M1-07
 <!-- /status -->
 
 ## Log
@@ -13,3 +13,4 @@ Features done: 6 / 204 | Last done: M1-06
 - M1-04 Player kinematics: jog, sprint, crouch, gravity, stairs: player kinematics with step-up, ground snap and posture
 - M1-05 Jump: jump with coyote time
 - M1-06 Ledge mantle: ledge mantle with ledge finder and scripted actions
+- M1-07 Vault: vault
