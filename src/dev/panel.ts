@@ -1,6 +1,7 @@
 // ?dev=1 panel: noclip, god mode, teleports, scenario switch, fps and draw-call readout.
 import type { Game } from '../game';
 import { scenarios } from '../data/scenarios';
+import { clockText } from '../sim/clock';
 
 export class DevPanel {
   readonly el: HTMLDivElement;
@@ -17,6 +18,7 @@ export class DevPanel {
       <div class="row"><label><input type="checkbox" class="noclip"> noclip</label> <label><input type="checkbox" class="god"> god</label></div>
       <div class="row">teleport <select class="tp"></select></div>
       <div class="row">scenario <select class="sc">${scenarios.map(s => `<option>${s.name}</option>`).join('')}</select></div>
+      <div class="row">time <input type="range" class="time" min="0" max="24" step="0.25" style="width:110px"> <span class="clock"></span></div>
       <div class="row extra"></div>`;
     document.body.appendChild(el);
     this.stats = el.querySelector('.stats')!;
@@ -27,6 +29,11 @@ export class DevPanel {
     const sc = el.querySelector<HTMLSelectElement>('.sc')!;
     sc.value = game.scenario.name;
     sc.onchange = () => { location.search = `?dev=1&scenario=${sc.value}&seed=${game.state.seed}`; };
+    const time = el.querySelector<HTMLInputElement>('.time')!;
+    time.oninput = () => {
+      const t = game.state.time;
+      game.state.time = Math.floor(t / 86400) * 86400 + Number(time.value) * 3600;
+    };
     this.fillTeleports();
     setInterval(() => this.update(), 500);
     el.addEventListener('keydown', e => e.stopPropagation());
@@ -57,6 +64,7 @@ export class DevPanel {
     const info = this.game.view.renderer.info.render;
     const p = this.game.state.player;
     this.el.querySelector('.seed')!.textContent = `seed ${this.game.state.seed}`;
+    this.el.querySelector('.clock')!.textContent = clockText(this.game.state.time);
     this.stats.innerHTML = `${fps.toFixed(0)} fps | ${info.calls} calls | ${(info.triangles / 1000).toFixed(0)}k tris<br>` +
       `pos ${p.pos.x.toFixed(1)} ${p.pos.y.toFixed(1)} ${p.pos.z.toFixed(1)} | ${p.mode}/${p.posture} | st ${p.stamina.toFixed(0)}`;
   }

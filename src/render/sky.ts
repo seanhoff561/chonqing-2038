@@ -1,0 +1,39 @@
+// Sky, sun, moon, ambient and fog colour from the game clock.
+import * as THREE from 'three';
+import { daylight, hourOf } from '../sim/clock';
+import type { View } from './view';
+
+const DAY_SKY = new THREE.Color(0x9fabb2), DUSK_SKY = new THREE.Color(0x6b5a58), NIGHT_SKY = new THREE.Color(0x0b0e14);
+const NIGHT_GROUND = new THREE.Color(0x3a2a18), DAY_GROUND = new THREE.Color(0x4a4438);
+const c = new THREE.Color();
+
+export class Sky {
+  readonly moon = new THREE.Mesh(new THREE.SphereGeometry(6, 12, 8), new THREE.MeshBasicMaterial({ color: 0xd8dce6, fog: false }));
+  /** fog density multiplier set by weather (1 = clear haze) */
+  fogMul = 1;
+
+  constructor(private view: View) { view.scene.add(this.moon); }
+
+  update(time: number, camPos: THREE.Vector3, farBase: number) {
+    const v = this.view, d = daylight(time), h = hourOf(time);
+    const duskness = Math.max(0, 1 - Math.abs(d - 0.5) * 2) * (d < 1 && d > 0 ? 1 : 0);
+    c.copy(NIGHT_SKY).lerp(DAY_SKY, d).lerp(DUSK_SKY, duskness * 0.6);
+    (v.scene.background as THREE.Color).copy(c);
+    const fog = v.scene.fog as THREE.Fog;
+    fog.color.copy(c);
+    fog.far = farBase / this.fogMul;
+    fog.near = Math.min(fog.far * 0.15, 25);
+    // Sun arcs east to west through the day; below the horizon at night.
+    const a = ((h - 6) / 12) * Math.PI;
+    v.sun.position.set(camPos.x + Math.cos(a) * 80, camPos.y + Math.sin(a) * 90, camPos.z + 30);
+    v.sun.target.position.copy(camPos);
+    v.sun.intensity = 1.7 * d;
+    v.sun.color.setHSL(0.09, 0.5 - 0.3 * d, 0.85 + 0.1 * d);
+    v.hemi.intensity = 0.5 + 0.75 * d;
+    v.hemi.color.copy(NIGHT_SKY).lerp(new THREE.Color(0xc8d4e0), d).lerp(new THREE.Color(0x46557a), (1 - d) * 0.8);
+    v.hemi.groundColor.copy(NIGHT_GROUND).lerp(DAY_GROUND, d);
+    const ma = ((h - 18) / 12) * Math.PI;
+    this.moon.visible = d < 0.6;
+    this.moon.position.set(camPos.x - Math.cos(ma) * 300, camPos.y + Math.max(40, Math.sin(ma) * 260), camPos.z - 200);
+  }
+}
