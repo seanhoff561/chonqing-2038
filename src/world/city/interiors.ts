@@ -32,7 +32,7 @@ type Piece = keyof typeof FURNITURE;
 export function canEnter(l: Lot): boolean {
   const a = l.x1 - l.x0, b = l.z1 - l.z0, floors = (l.wall - l.base) / FLOOR;
   return !l.noEnter && l.kind === 'res' && Math.max(a, b) >= CORE_L + 2 * WALL + 1.5 && Math.min(a, b) >= CORE_W + 2 * WALL + 2.5 &&
-    Number.isInteger(Math.round(floors * 1000) / 1000) && floors >= 2 && floors <= 8;
+    Number.isInteger(Math.round(floors * 1000) / 1000) && floors >= 2 && floors <= 12;
 }
 
 export function hollow(l: Lot, r: Rng, out: Fabric) {

@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 39 of 62 done
+## M3: 40 of 62 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -425,7 +425,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Climbing holds are those real elements (downpipes on brackets, AC units, window bars, balcony rails, signs), not abstract strips; the hold spacing tests still pass
   - Enterable buildings read as enterable (open or broken doors, lit gaps); a share of every district can be entered
   - Screenshots of five building types beside reference photos
-- [ ] **M3-56a** Clear, smooth streets; ruins and green marked (U-029)
+- [x] **M3-56a** Clear, smooth streets; ruins and green marked (U-029)
   - Streets are smooth: each carriageway and pavement follows an eased profile along its line and lies level across it, and nothing (ground, foundations, steps, buildings, decor) pokes through a street surface or hides it; a unit test samples every ground street every metre
   - Carriageways are clear (U-029, U-030): no prop or solid dressing stands on one; bins, stalls, bikes and wrecks stand on the pavement or against the buildings beside it, turned to the street; a unit test checks every prop
   - The rough ground (steep or broken terrain off the streets: the war's debris, U-030) and the green (OSM parks, woods, grass and scrub, and unbuilt verges) are found and kept in the world as marks for M3-56; a unit test counts them, and docs/maps/marks.png shows them on the peninsula

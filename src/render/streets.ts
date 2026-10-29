@@ -13,19 +13,29 @@ import { MAT } from '../world/mats';
 import { CHUNK } from './world-mesh';
 import { Buf } from './ground-mesh';
 import type { StreetLine } from '../world/world';
+import { ROAD, KERB_W, PAVE } from '../world/yuzhong/ground';
 
 
-const ROAD = new Set(['motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'service']);
 /** Kerb height and width, pavement width, line paint brightness (vertex colour over the dark asphalt). */
-const KERB = 0.12, KERB_W = 0.25, PAVE = 2, PAINT = 7;
+const KERB = 0.12, PAINT = 7;
 const STEP = 2, UP: [number, number, number] = [0, 1, 0];
 
 interface Seg { ax: number; az: number; bx: number; bz: number; half: number; s: StreetLine }
 
 export function buildStreetMeshes(g: Heightfield, streets: StreetLine[], lod: Lod): THREE.Mesh[] {
-  const out: THREE.Mesh[] = [];
+  const out: THREE.Mesh[] = [], mats = new Map<number, THREE.Material>();
+  // Drawn a hair nearer than the ground they lie on, so far off the two never flicker through each other.
+  const own = (mat: number) => {
+    let m = mats.get(mat);
+    if (!m) {
+      const base = material(mat, true, lod);
+      m = Object.assign(base.clone(), { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2, onBeforeCompile: base.onBeforeCompile, customProgramCacheKey: base.customProgramCacheKey });
+      mats.set(mat, m);
+    }
+    return m;
+  };
   for (const { k, mat, buf } of streetBuffers(g, streets)) {
-    const m = buf.mesh(material(mat, true, lod));
+    const m = buf.mesh(own(mat));
     if (!m) continue;
     m.userData.chunk = { x: (Math.floor(k / 65536) + 0.5) * CHUNK, z: ((k % 65536) + 0.5) * CHUNK };
     out.push(m);
@@ -62,6 +72,9 @@ export function streetBuffers(g: Heightfield, streets: StreetLine[]): { k: numbe
     const pts = sample(s.pts), road = ROAD.has(s.kind);
     /** A strip from offset o0 to o1 across the street, lift above the ground, into buffer b; paint brightens. */
     const strip = (o0: number, o1: number, lift: number, b: 0 | 1, colour = 1, keep?: (along: number) => boolean, mine = true) => {
+      // Wide strips in pieces no wider than the ground's cells, so the surface follows the ground under it.
+      const n = Math.ceil(Math.abs(o1 - o0) / 2);
+      if (n > 1) { for (let i = 0; i < n; i++) strip(o0 + ((o1 - o0) * i) / n, o0 + ((o1 - o0) * (i + 1)) / n, lift, b, colour, keep, mine); return; }
       for (let k = 0; k + 1 < pts.length; k++) {
         const p = pts[k], q = pts[k + 1];
         if (keep && !keep((p.d + q.d) / 2)) continue;
@@ -72,6 +85,14 @@ export function streetBuffers(g: Heightfield, streets: StreetLine[]): { k: numbe
           return y === null ? null : [x, y + lift, z];
         });
         if (v.some(c => c === null)) continue;
+        // Nothing pokes through (U-029): where the ground rises inside a piece (a kink in it, or the edge of
+        // another street laid at another level) the piece is raised clear of it, or left out if that's more
+        // than a kerb's height.
+        const ys = v.map(c => c![1]);
+        if (Math.max(...ys) - Math.min(...ys) > 1) continue;
+        const poke = Math.max(rise(g, v[0]!, v[1]!, v[2]!), rise(g, v[0]!, v[2]!, v[3]!)) + lift - 0.01;
+        if (poke > 0.3) continue;
+        if (poke > 0) for (const c of v) c![1] += poke;
         const buf = bufAt(mx, mz)[b], sc = b === 0 ? asph : pave;
         // Wound to face up whichever side the offsets run.
         const [a, bb, c, d] = (o1 > o0 ? [v[0], v[1], v[2], v[3]] : [v[0], v[3], v[2], v[1]]) as number[][];
@@ -144,4 +165,28 @@ function sample(line: [number, number][]): Pt[] {
     d += len;
   }
   return out;
+}
+
+/** How far the ground rises above a triangle anywhere over it: the most is at a ground sample inside it or where
+ *  its edges cross the ground's cells. */
+function rise(g: Heightfield, a: number[], b: number[], c: number[]): number {
+  const d = (b[2] - c[2]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[2] - c[2]);
+  if (Math.abs(d) < 1e-9) return -Infinity;
+  const over = (x: number, z: number) => {
+    const h = heightAt(g, x, z);
+    if (h === null) return -Infinity;
+    const u = ((b[2] - c[2]) * (x - c[0]) + (c[0] - b[0]) * (z - c[2])) / d, v = ((c[2] - a[2]) * (x - c[0]) + (a[0] - c[0]) * (z - c[2])) / d;
+    return h - (a[1] * u + b[1] * v + c[1] * (1 - u - v));
+  };
+  let most = -Infinity;
+  for (let j = Math.ceil(Math.min(a[2], b[2], c[2]) / g.cell); j * g.cell <= Math.max(a[2], b[2], c[2]); j++)
+    for (let i = Math.ceil(Math.min(a[0], b[0], c[0]) / g.cell); i * g.cell <= Math.max(a[0], b[0], c[0]); i++) {
+      const x = i * g.cell, z = j * g.cell, u = ((b[2] - c[2]) * (x - c[0]) + (c[0] - b[0]) * (z - c[2])) / d, v = ((c[2] - a[2]) * (x - c[0]) + (a[0] - c[0]) * (z - c[2])) / d;
+      if (u >= 0 && v >= 0 && u + v <= 1) most = Math.max(most, over(x, z));
+    }
+  for (const [p, q] of [[a, b], [b, c], [c, a]]) {
+    const n = Math.ceil(Math.hypot(q[0] - p[0], q[2] - p[2]) / 0.5);
+    for (let k = 1; k < n; k++) most = Math.max(most, over(p[0] + ((q[0] - p[0]) * k) / n, p[2] + ((q[2] - p[2]) * k) / n));
+  }
+  return most;
 }

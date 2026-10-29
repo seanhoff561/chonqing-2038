@@ -1,4 +1,5 @@
 // The static world: collision index plus the entity lists the sim needs. Identical every run.
+import type { Marks } from './yuzhong/marks';
 import type { Heightfield } from './heightfield';
 import { buildIndex, type Box, type Solid, type SolidIndex } from './geom';
 
@@ -55,6 +56,8 @@ export interface World {
   plots: Plot[];
   /** the streets on the ground, drawn as meshes along their lines (M3-54) */
   streets: StreetLine[];
+  /** what the open ground should become, for filling it (M3-56a); real-map worlds only */
+  marks?: Marks;
   /** holds, hide spots and alley pieces as built (Yuzhong), for tests and tools */
   features: Feature[];
   index: SolidIndex;
@@ -83,6 +86,7 @@ export interface WorldParts {
   ground?: Heightfield;
   plots?: Plot[];
   streets?: StreetLine[];
+  marks?: Marks;
   features?: Feature[];
   spawn: World['spawn'];
 }
@@ -95,6 +99,7 @@ export function makeWorld(p: WorldParts): World {
     ground: p.ground,
     plots: p.plots ?? [],
     streets: p.streets ?? [],
+    marks: p.marks,
     features: p.features ?? [],
     index: buildIndex(p.solids, p.ground),
     water: p.water ?? [],

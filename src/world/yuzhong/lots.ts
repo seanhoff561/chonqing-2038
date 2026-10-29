@@ -266,8 +266,9 @@ export function markEnterable(g: Heightfield, plans: Plan[]) {
     // under the ground-floor slab and the foundation.
     if (hi <= p.base + 0.25 && lo >= p.base - LANDING) { settle(); continue; }
     if (stairs || hi > p.base + LANDING || lo < p.base - LANDING) { p.noEnter = true; continue; }
-    rasterPoly(corners({ ...p.obb, hw: p.obb.hw + LEVEL, hd: p.obb.hd + LEVEL }), 0, 0, g.cell, g.w, g.h, (i0, i1, j) => { for (let k = j * g.w + i0; k <= j * g.w + i1; k++) if (!foot[k]) g.y[k] = p.base; });
-    // A neighbour's footprint inside the ring keeps its own ground: if that leaves a step at our walls, stay solid.
+    rasterPoly(corners({ ...p.obb, hw: p.obb.hw + LEVEL, hd: p.obb.hd + LEVEL }), 0, 0, g.cell, g.w, g.h, (i0, i1, j) => { for (let k = j * g.w + i0; k <= j * g.w + i1; k++) if (!foot[k] && streetCells[k] !== 1) g.y[k] = p.base; });
+    // A neighbour's footprint or a road's carriageway inside the ring keeps its own ground (a landing may cross
+    // a pavement or a lane): if that leaves a step at our walls, stay solid.
     let off = false;
     rasterPoly(corners({ ...p.obb, hw: p.obb.hw + g.cell * 1.5, hd: p.obb.hd + g.cell * 1.5 }), 0, 0, g.cell, g.w, g.h, (i0, i1, j) => { for (let k = j * g.w + i0; k <= j * g.w + i1; k++) off ||= g.y[k] - p.base > 0.25; });
     if (off) p.noEnter = true; else settle();
@@ -287,7 +288,7 @@ export function levelLots(g: Heightfield, plans: Plan[]) {
   const order = [...plans].sort((a, b) => b.base - a.base);
   for (const pad of [LEVEL, 0.3]) for (const p of order) {
     const o = { ...p.obb, hw: p.obb.hw + pad, hd: p.obb.hd + pad };
-    // Aprons stop at the street's surface; footprints take everything under them.
-    rasterPoly(corners(o), 0, 0, g.cell, g.w, g.h, (i0, i1, j) => { for (let k = j * g.w + i0; k <= j * g.w + i1; k++) if (pad < LEVEL || !streetCells[k]) g.y[k] = p.base; });
+    // Aprons stop at the carriageway (a pavement steps up or down to a door); footprints take everything under them.
+    rasterPoly(corners(o), 0, 0, g.cell, g.w, g.h, (i0, i1, j) => { for (let k = j * g.w + i0; k <= j * g.w + i1; k++) if (pad < LEVEL || streetCells[k] === 0 || streetCells[k] === 3) g.y[k] = p.base; });
   }
 }

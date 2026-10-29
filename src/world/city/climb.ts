@@ -116,8 +116,9 @@ export function alleys(lots: Lot[], r: Rng, out: Fabric) {
     const B = (p0: number, q0: number, p1: number, q1: number, y0: number, y1: number, mat: number) =>
       alongZ ? solid(p0, y0, q0, p1, y1, q1, mat) : solid(q0, y0, p0, q1, y1, p1, mat);
     const at = (p: number, q: number) => (alongZ ? { x: p, z: q } : { x: q, z: p });
+    // Most alleys hold something to hide in, swing from or get over (U-023).
     const x = rand(r);
-    if (x < 0.45) {
+    if (x < 0.4) {
       // Hide spots against one wall: a crate (0.8 m inside) or a dumpster.
       const k = 1 + randInt(r, 2);
       for (let h = 0; h < k; h++) {
@@ -139,7 +140,7 @@ export function alleys(lots: Lot[], r: Rng, out: Fabric) {
         out.solids.push(B(w0, q - 0.03, w1, q + 0.03, hy - 0.05, hy, MAT.metal));
         out.features.push({ kind: 'bar', ...at((w0 + w1) / 2, q), y: hy, group: out.features.length });
       }
-    } else if (x < 0.85) {
+    } else if (x < 0.92) {
       // A fence across the alley: climb its 2.4 m top or crawl through the gap under it.
       const q = (l0 + l1) / 2, wm = (w0 + w1) / 2;
       out.solids.push(...carve([B(w0, q - 0.05, w1, q + 0.05, y, y + 2.4, MAT.metal)], B(wm - 0.4, q - 1, wm + 0.4, q + 1, y - 1, y + 0.65, 0)));
