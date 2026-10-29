@@ -27,6 +27,9 @@ export interface Site {
 /** Areas with special rules: 'under' = underground (no sky light). */
 export interface Zone { kind: string; box: Box }
 
+/** A built lot as laid out on the map (Yuzhong): its corners, base and walking route, for tests and tools. */
+export interface Plot { corners: [number, number][]; base: number; wall: number; /** foundation bottom */ found: number; route?: { x: number; y: number; z: number }[]; far: boolean; osm: boolean }
+
 export interface Teleport { name: string; x: number; y: number; z: number; yaw: number }
 
 export interface World {
@@ -43,6 +46,7 @@ export interface World {
   solids: Solid[];
   /** heightfield ground (M3-41a), also in the index */
   ground?: Heightfield;
+  plots: Plot[];
   index: SolidIndex;
   water: Box[];
   climbables: Climbable[];
@@ -67,6 +71,7 @@ export interface WorldParts {
   far?: Solid[];
   /** heightfield ground (M3-41a) */
   ground?: Heightfield;
+  plots?: Plot[];
   spawn: World['spawn'];
 }
 
@@ -76,6 +81,7 @@ export function makeWorld(p: WorldParts): World {
     decor: p.decor ?? [],
     solids: p.solids,
     ground: p.ground,
+    plots: p.plots ?? [],
     index: buildIndex(p.solids, p.ground),
     water: p.water ?? [],
     climbables: p.climbables ?? [],

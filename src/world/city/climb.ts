@@ -5,23 +5,20 @@
 import { solid, carve } from '../geom';
 import { MAT } from '../mats';
 import { rand, randInt, makeRng, hashString, type Rng } from '../../sim/rng';
-import { tileAt, TILE } from '../map';
 import type { Lot, Fabric } from './buildings';
 
-const STREETS = '.=sb';
 const FLOOR = 3;
 
-interface Side { a: number; b: number; f: number; nx: number; nz: number; street: boolean }
+interface Side { a: number; b: number; f: number; nx: number; nz: number; street: boolean; across: number }
 
-/** The four facades: along a..b, face at f, outward normal, and whether a street tile lies beyond. */
+/** The four facades: along a..b, face at f, outward normal, whether a street lies beyond and how far across it
+ *  the next building stands (0 for none). */
 export function sides(l: Lot): Side[] {
-  const t = l.tile, tx = t.c * TILE, tz = t.r * TILE;
-  const st = (dc: number, dr: number, edge: boolean) => edge && STREETS.includes(tileAt(t.c + dc, t.r + dr)?.type ?? '~');
   return [
-    { a: l.x0, b: l.x1, f: l.z0, nx: 0, nz: -1, street: st(0, -1, l.z0 - tz < 1.3) },
-    { a: l.x0, b: l.x1, f: l.z1, nx: 0, nz: 1, street: st(0, 1, tz + TILE - l.z1 < 1.3) },
-    { a: l.z0, b: l.z1, f: l.x0, nx: -1, nz: 0, street: st(-1, 0, l.x0 - tx < 1.3) },
-    { a: l.z0, b: l.z1, f: l.x1, nx: 1, nz: 0, street: st(1, 0, tx + TILE - l.x1 < 1.3) },
+    { a: l.x0, b: l.x1, f: l.z0, nx: 0, nz: -1, street: l.street[0], across: l.across[0] },
+    { a: l.x0, b: l.x1, f: l.z1, nx: 0, nz: 1, street: l.street[1], across: l.across[1] },
+    { a: l.z0, b: l.z1, f: l.x0, nx: -1, nz: 0, street: l.street[2], across: l.across[2] },
+    { a: l.z0, b: l.z1, f: l.x1, nx: 1, nz: 0, street: l.street[3], across: l.across[3] },
   ];
 }
 

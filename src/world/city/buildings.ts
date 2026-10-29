@@ -11,7 +11,15 @@ import { details } from './details';
 
 export type LotKind = 'res' | 'tower' | 'trad';
 export interface Lot {
-  id: number; x0: number; z0: number; x1: number; z1: number; base: number; top: number; wall: number; kind: LotKind; tile: Tile; mat: number;
+  id: number; x0: number; z0: number; x1: number; z1: number; base: number; top: number; wall: number; kind: LotKind; mat: number;
+  /** the tile it stands on (the old tile city only) */
+  tile?: Tile;
+  /** facing a street on its north, south, west and east sides */
+  street: [boolean, boolean, boolean, boolean];
+  /** per side, how far across the street the next building stands (0: none), for cables strung over it */
+  across: [number, number, number, number];
+  /** never hollowed: the ground round it rises above its floor (Yuzhong lots against a higher street) */
+  noEnter?: boolean;
   /** enterable buildings: a walking route from outside the door up the stairs and out onto the roof */
   route?: { x: number; y: number; z: number }[];
 }
@@ -46,6 +54,15 @@ function splitTile(t: Tile, r: Rng): [number, number, number, number][] {
   return [[L, N, xm - gap / 2, zm - gap / 2], [xm + gap / 2, N, R, zm - gap / 2], [L, zm + gap / 2, xm - gap / 2, S], [xm + gap / 2, zm + gap / 2, R, S]];
 }
 
+/** Which sides of a lot on tile t face a street tile, and whether a built tile stands across it. */
+function tileSides(t: Tile, x0: number, z0: number, x1: number, z1: number): Pick<Lot, 'street' | 'across'> {
+  const tx = t.c * TILE, tz = t.r * TILE;
+  const dirs = [[0, -1, z0 - tz < 1.3], [0, 1, tz + TILE - z1 < 1.3], [-1, 0, x0 - tx < 1.3], [1, 0, tx + TILE - x1 < 1.3]] as const;
+  const street = dirs.map(([dc, dr, edge]) => edge && STREETS.includes(tileAt(t.c + dc, t.r + dr)?.type ?? '~')) as Lot['street'];
+  const across = dirs.map(([dc, dr], i) => (street[i] && BUILT.includes(tileAt(t.c + dc * 2, t.r + dr * 2)?.type ?? '~') ? TILE + 2 : 0)) as Lot['across'];
+  return { street, across };
+}
+
 /** Highest neighbouring street level, for roofs that sit flush with the street above. */
 function upperStreet(t: Tile): number {
   let h = -Infinity;
@@ -76,7 +93,7 @@ export function buildFabric(): Fabric {
       // Hillside block whose roof is the street above (the Kuixinglou effect).
       if (kind === 'res' && up - t.h >= 6 && rand(r) < 0.5) wall = up;
       const mat = kind === 'tower' ? MAT.glass : kind === 'trad' ? MAT.brick : [MAT.tile, MAT.plaster, MAT.tile, MAT.concrete][randInt(r, 4)];
-      const lot: Lot = { id: out.lots.length, x0, z0, x1, z1, base: t.h, wall, top: wall, kind, tile: t, mat };
+      const lot: Lot = { id: out.lots.length, x0, z0, x1, z1, base: t.h, wall, top: wall, kind, tile: t, mat, ...tileSides(t, x0, z0, x1, z1) };
       out.lots.push(lot);
       mine.push(lot);
       mass(lot, r, out);
@@ -86,6 +103,9 @@ export function buildFabric(): Fabric {
   }
   return out;
 }
+
+/** Build one lot (its mass, roof and facade climbing) into out: the tile city's lots and Yuzhong's alike. */
+export function buildLot(l: Lot, r: Rng, out: Fabric) { mass(l, r, out); facades(l, r, out); }
 
 /** Solid blocks wear painted facades with window grids; hollow ones show their real openings. */
 function paint(l: Lot, r: Rng): number {

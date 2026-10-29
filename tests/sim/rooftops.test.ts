@@ -11,7 +11,7 @@ const fabric = buildFabric();
 describe('building generator (M3-03)', () => {
   it('splits tiles into 1-4 buildings with 1.5-4 m alleys, with roof clutter', () => {
     const byTile = new Map<string, typeof fabric.lots>();
-    for (const l of fabric.lots) { const k = `${l.tile.c},${l.tile.r}`; byTile.set(k, [...(byTile.get(k) ?? []), l]); }
+    for (const l of fabric.lots) { const k = `${l.tile!.c},${l.tile!.r}`; byTile.set(k, [...(byTile.get(k) ?? []), l]); }
     for (const lots of byTile.values()) {
       expect(lots.length).toBeGreaterThanOrEqual(1);
       expect(lots.length).toBeLessThanOrEqual(4);
@@ -37,7 +37,7 @@ describe('building generator (M3-03)', () => {
   it('runs a rooftop route along a Shibati row across at least 4 houses', () => {
     const w = getWorld('city');
     const s = createState(1, w);
-    const row = fabric.lots.filter(l => l.kind === 'trad' && l.tile.r === 22 && l.tile.c >= 24 && l.z0 < l.tile.r * 20 + 10).sort((a, b) => a.x0 - b.x0);
+    const row = fabric.lots.filter(l => l.kind === 'trad' && l.tile!.r === 22 && l.tile!.c >= 24 && l.z0 < l.tile!.r * 20 + 10).sort((a, b) => a.x0 - b.x0);
     expect(row.length).toBeGreaterThanOrEqual(6);
     const ridge = (row[0].z0 + row[0].z1) / 2;
     teleport(s.player, row[0].x0 + 0.6, row[0].top + 0.1, ridge);

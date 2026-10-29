@@ -80,7 +80,7 @@ export function referenceParts() {
     // Enterable blocks need whole floors; the rest keep the photo's roof line exactly.
     let wall = Y(s.row, s.d) - lip;
     if (s.enter) wall = base + Math.max(2, Math.round((wall - base) / FLOOR)) * FLOOR;
-    const lot: Lot = { id: 1000 + blocks.length, x0, z0, x1, z1, base, wall, top: wall + lip, kind: 'res', tile: tile(base), mat: s.mat };
+    const lot: Lot = { id: 1000 + blocks.length, x0, z0, x1, z1, base, wall, top: wall + lip, kind: 'res', tile: tile(base), mat: s.mat, street: [true, true, false, false], across: [0, 0, 0, 0] };
     if (s.enter) hollow(lot, r, out);
     else out.solids.push(solid(x0, base, z0, x1, wall, z1, s.mat));
     roof(s, lot, out);
@@ -140,7 +140,7 @@ function vantageBlock(r: ReturnType<typeof makeRng>, out: Fabric): RefBlock {
   // 11 floors: standing on the roof puts the eye where the photo was taken.
   const x0 = -6, x1 = 6, z0 = -5.6, z1 = 4.4, base = 0, wall = 33;
   const tmp: Fabric = { solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [], sites: [], far: [] };
-  const lot: Lot = { id: 999, x0, z0, x1, z1, base, wall, top: wall + PARAPET, kind: 'res', tile: { c: -999, r: -999, type: '#', h: 0 } as Tile, mat: MAT.concrete };
+  const lot: Lot = { id: 999, x0, z0, x1, z1, base, wall, top: wall + PARAPET, kind: 'res', tile: { c: -999, r: -999, type: '#', h: 0 } as Tile, mat: MAT.concrete, street: [true, false, false, false], across: [0, 0, 0, 0] };
   hollow(lot, r, tmp);
   // Mirror north-south so the stair core and its roof hut sit at the back.
   const m = z0 + z1, flip = (s: Solid): Solid => ({ ...s, z0: m - s.z1, z1: m - s.z0, ramp: s.ramp === 3 ? 4 : s.ramp === 4 ? 3 : s.ramp });

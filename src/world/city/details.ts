@@ -4,12 +4,10 @@
 import { solid } from '../geom';
 import { MAT } from '../mats';
 import { rand, randInt, makeRng, hashString, type Rng } from '../../sim/rng';
-import { tileAt, TILE } from '../map';
 import { sides } from './climb';
 import type { Lot, Fabric } from './buildings';
 
 const FLOOR = 3;
-const BUILT = '#Th';
 
 type Side = ReturnType<typeof sides>[number];
 const onFace = (s: Side, c0: number, c1: number, d0: number, d1: number, y0: number, y1: number, mat: number) =>
@@ -62,9 +60,8 @@ export function details(l: Lot, r: Rng, out: Fabric, roof: number) {
   // Cables sag across the street to the block opposite.
   for (const s of all) {
     if (!s.street || rand(r) > 0.3) continue;
-    const t = l.tile, dc = s.nx, dr = s.nz;
-    if (!BUILT.includes(tileAt(t.c + dc * 2, t.r + dr * 2)?.type ?? '~')) continue;
-    const c = s.a + 1 + rand(r) * (s.b - s.a - 2), y = l.base + 5 + rand(r) * 4, span = TILE + 2, sag = 0.8 + rand(r) * 0.8;
+    if (!s.across) continue;
+    const c = s.a + 1 + rand(r) * (s.b - s.a - 2), y = l.base + 5 + rand(r) * 4, span = s.across, sag = 0.8 + rand(r) * 0.8;
     for (let i = 0; i < 4; i++) {
       const d0 = (i / 4) * span, d1 = ((i + 1) / 4) * span;
       const h = (d: number) => y - sag * Math.sin((d / span) * Math.PI);
