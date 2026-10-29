@@ -30,7 +30,7 @@ function jumpIntoWall() {
 }
 
 describe('wall cling window (M1-35)', () => {
-  it('jumping into a wall clings about 0.35 s, barely sliding, then slides down', () => {
+  it('jumping into a wall clings about 0.35 s, sliding down at about 1.4 m/s, then falls', () => {
     const { world, state } = jumpIntoWall();
     let t = 0, y0 = NaN, y1 = NaN, cue = false;
     run(state, world, secs(1.5), { my: 1, buttons: B.JUMP }, s => {
@@ -39,7 +39,8 @@ describe('wall cling window (M1-35)', () => {
     });
     expect(cue).toBe(true);
     expect(t / 60).toBeCloseTo(0.35, 1);
-    expect(y0 - y1).toBeLessThan(0.2);
+    expect((y0 - y1) / 0.33).toBeGreaterThan(1.1);
+    expect((y0 - y1) / 0.33).toBeLessThan(1.6);
     expect(state.player.pos.y).toBeLessThan(0.01);
   });
   it('a kick from the cling goes where the camera looks', () => {
@@ -138,5 +139,17 @@ describe('bar swing and lache (M1-34)', () => {
     }
     expect(released).toBe(true);
     expect(caught).toBe(true);
+  });
+});
+
+describe('cling keeps speed along the wall (U-006)', () => {
+  it('a diagonal jump into a wall carries on sideways during the cling', () => {
+    const r = setup([floor(), solid(-30, 0, -30, 30, 8, -3)], { x: 0, y: 0, z: -1.2, yaw: 0 });
+    run(r.state, r.world, 3);
+    const p = r.state.player;
+    p.mode = 'air'; p.onGround = false; p.pos.y = 2; p.pos.z = -2.5; p.fallFrom = 2; p.vel.x = 4; p.vel.z = -3; p.vel.y = 0;
+    let vx = -1;
+    run(r.state, r.world, 20, { buttons: B.JUMP }, s => { if (s.player.mode === 'cling' && vx < 0) vx = s.player.vel.x; });
+    expect(vx).toBeCloseTo(4, 1);
   });
 });

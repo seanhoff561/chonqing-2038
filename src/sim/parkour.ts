@@ -236,7 +236,9 @@ export function startCling(state: SimState, nx: number, nz: number): boolean {
   p.mode = 'cling';
   p.clung = true;
   p.wall = { nx, nz, t: 0, y: p.pos.y, id: -1 };
-  p.vel.x = p.vel.z = 0;
+  // Keep all the speed along the wall (U-006); only the push into it stops.
+  const into = p.vel.x * nx + p.vel.z * nz;
+  if (into < 0) { p.vel.x -= into * nx; p.vel.z -= into * nz; }
   p.vel.y = Math.min(0, p.vel.y) * 0.2;
   p.jumpHeld = false;
   sfx(state, 'cling');
@@ -253,5 +255,10 @@ export function stepCling(state: SimState, world: World, input: InputFrame) {
     return;
   }
   p.vel.y = -M.cling.slide;
-  if (moveVertical(world.index, p.pos, M.height.stand, p.vel.y * DT) === 1) { p.mode = 'ground'; p.onGround = true; p.vel.y = 0; p.clung = false; }
+  const blocked = moveHorizontal(world.index, p.pos, M.height.stand, p.vel.x * DT, p.vel.z * DT, 0.05);
+  if (blocked & 1) p.vel.x = 0;
+  if (blocked & 2) p.vel.z = 0;
+  if (moveVertical(world.index, p.pos, M.height.stand, p.vel.y * DT) === 1) { p.mode = 'ground'; p.onGround = true; p.vel.y = 0; p.clung = false; return; }
+  // Slid past the end of the wall.
+  if (!raycast(world.index, p.pos.x, p.pos.y + 0.9, p.pos.z, -w.nx, 0, -w.nz, HW + 0.3)) p.mode = 'air';
 }

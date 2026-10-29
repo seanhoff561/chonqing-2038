@@ -13,7 +13,7 @@ export const movement = {
   /** releasing Space while rising multiplies the upward speed (a tap reaches about 40%) */
   jumpCut: 0.63,
   /** jumping into a wall holds him there briefly (U-005) */
-  cling: { time: 0.35, slide: 0.4, minInto: 1.0, after: 1.2 },
+  cling: { time: 0.35, slide: 1.4, minInto: 1.0, after: 1.8 },
   coyote: 0.03,
   stepHeight: 0.45,
   snapDown: 0.5,

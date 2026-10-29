@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-03 Building generator.
-Features done: 61 / 216 | Last done: M3-02
+**Status:** building M1. Next: M1-37 3D hands.
+Features done: 60 / 218 | Last done: M1-35
 <!-- /status -->
 
 ## Log
@@ -76,3 +76,4 @@ Features done: 61 / 216 | Last done: M3-02
 - M2-24 Permadeath and new run: permadeath and new run
 - M3-01 Map data and parser: map data and parser
 - M3-02 Terrain and terraces: terrain, terraces and stair streets
+- M1-35 Wall cling window: wall cling keeps speed along the wall and slides faster (U-006)
