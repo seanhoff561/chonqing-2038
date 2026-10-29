@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import type { World } from '../world/world';
 import { buildSolidMeshes, ChunkMerger } from './world-mesh';
 import { buildLabels } from './labels';
-import { material } from './materials';
+import { material, lodRadius } from './materials';
 import { MAT } from '../world/mats';
 import { FPCamera } from './fpcamera';
 import { buildProps, tickProps } from './props';
@@ -16,6 +16,7 @@ export class View {
   readonly hemi = new THREE.HemisphereLight(0xc8d4e0, 0x4a4438, 1.2);
   readonly world = new THREE.Group();
   private chunks: THREE.Mesh[] = [];
+  private hasFar = false;
 
   constructor(container: HTMLElement) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -41,9 +42,12 @@ export class View {
   setWorld(w: World) {
     this.world.traverse(o => (o as THREE.Mesh).geometry?.dispose());
     this.world.clear();
-    const meshes = buildSolidMeshes(w.solids.concat(w.decor));
+    // Big worlds draw detail near the camera and one cheap stand-in per block beyond (U-012).
+    this.hasFar = w.far.length > 0;
+    const meshes = buildSolidMeshes(w.solids.concat(w.decor), this.hasFar ? 'near' : 'all');
     const props = buildProps(w.props);
     this.world.add(meshes, buildLabels(w.labels), props);
+    if (this.hasFar) this.world.add(buildSolidMeshes(w.far, 'far', 1e6));
     for (const b of w.water) {
       const m = new THREE.Mesh(new THREE.PlaneGeometry(b.x1 - b.x0, b.z1 - b.z0), material(MAT.water));
       m.rotation.x = -Math.PI / 2;
@@ -66,8 +70,8 @@ export class View {
   }
 
   render(t = 0, open: Record<string, boolean> = {}) {
-    // Chunks past the fog are not drawn (a chunk's half-diagonal is about 46 m).
-    const c = this.fp.cam.position, far = (this.scene.fog as THREE.Fog).far + 46;
+    // Detailed chunks past the detail radius (or the fog) are not drawn (a chunk's half-diagonal is about 46 m).
+    const c = this.fp.cam.position, far = (this.hasFar ? lodRadius.value : (this.scene.fog as THREE.Fog).far) + 46;
     for (const m of this.chunks) { const k = m.userData.chunk; m.visible = Math.hypot(k.x - c.x, k.z - c.z) < far; }
     tickProps(t, open);
     this.renderer.render(this.scene, this.fp.cam);

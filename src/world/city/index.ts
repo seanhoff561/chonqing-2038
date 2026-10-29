@@ -11,6 +11,8 @@ export function buildCity(): World {
   const sb = buildShibati();
   return makeWorld({
     name: 'city', solids: t.solids.concat(f.solids, sb.solids), decor: t.decor.concat(f.decor, sb.decor), water: t.water, props: f.props, inter: f.inter, climbables: f.climbables, hides: f.hides, sites: f.sites,
+    // The far view: ground, every block's stand-in, and the Shibati shop houses as they are.
+    far: t.solids.concat(t.decor, f.far, sb.solids),
     spawn: { x: 23 * TILE + 10, y: 44, z: 17 * TILE + 10, yaw: Math.PI },
     teleports: [
       { name: 'Jiaochangkou plaza', x: 24 * TILE, y: 44, z: 17 * TILE, yaw: Math.PI },

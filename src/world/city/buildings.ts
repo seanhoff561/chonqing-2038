@@ -16,7 +16,7 @@ export interface Lot {
 }
 /** Holds, hide spots and alley pieces, for tests and tools: one group per hand-route column. */
 export interface Feature { kind: string; x: number; y: number; z: number; group: number }
-export interface Fabric { solids: Solid[]; decor: Solid[]; props: Prop[]; lots: Lot[]; inter: Inter[]; climbables: Climbable[]; hides: HideSpot[]; features: Feature[]; sites: Site[] }
+export interface Fabric { solids: Solid[]; decor: Solid[]; props: Prop[]; lots: Lot[]; inter: Inter[]; climbables: Climbable[]; hides: HideSpot[]; features: Feature[]; sites: Site[]; far: Solid[] }
 
 const FLOOR = 3;
 const STREETS = '.=sb';
@@ -54,7 +54,7 @@ function upperStreet(t: Tile): number {
 }
 
 export function buildFabric(): Fabric {
-  const out: Fabric = { solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [], sites: [] };
+  const out: Fabric = { solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [], sites: [], far: [] };
   for (const t of tiles()) {
     if (!BUILT.includes(t.type)) continue;
     const r = tileRng(t);
@@ -93,8 +93,11 @@ function mass(l: Lot, r: Rng, out: Fabric) {
   const { x0, z0, x1, z1, base, wall } = l;
   // About a quarter of the blocks that fit a stair core can be entered.
   const open = canEnter(l) && rand(r) < 0.28;
+  const look = open ? (l.mat === MAT.tile ? MAT.facadeTile : MAT.facade) : paint(l, r);
   if (open) hollow(l, r, out);
-  else out.solids.push(solid(x0, base, z0, x1, wall, z1, paint(l, r)));
+  else out.solids.push(solid(x0, base, z0, x1, wall, z1, look));
+  // The far view's stand-in: the whole block in its painted facade, parapet included.
+  if (l.kind !== 'trad') out.far.push(solid(x0, base, z0, x1, wall + 0.9, z1, look));
   if (l.kind === 'trad') {
     // Pitched tiled roof: ridges run along the row (the hill's contour), so a row of houses lines up into a
     // rooftop route; eaves overhang as decor.
@@ -106,6 +109,7 @@ function mass(l: Lot, r: Rng, out: Fabric) {
       const xm = (x0 + x1) / 2;
       out.solids.push(rampSolid(x0, wall, z0, xm, z1, wall, wall + rise, 1, MAT.roofTile), rampSolid(xm, wall, z0, x1, z1, wall, wall + rise, 2, MAT.roofTile));
     }
+    out.far.push(solid(x0, base, z0, x1, wall, z1, l.mat), ...out.solids.slice(-2));
     // The eave plate is solid all round: its edge is the lip he pulls over onto the tiles.
     out.solids.push(solid(x0 - 0.4, wall - 0.12, z0 - 0.4, x1 + 0.4, wall, z1 + 0.4, MAT.wood));
     l.top = wall + rise;

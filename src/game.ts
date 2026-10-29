@@ -23,10 +23,14 @@ import { itemModel, supportPoint } from './render/items3d';
 import { SleepUI } from './ui/sleep-ui';
 import { DeathScreen } from './ui/death';
 import { Furniture } from './render/furniture';
+import { lodRadius } from './render/materials';
 import { PauseMenu } from './ui/pause';
 import { findGrab } from './sim/grip';
 import { allInters } from './sim/interact';
 import { raycast } from './world/geom';
+
+/** Metres to full haze when the whole city is drawn (U-012). */
+const FAR_HAZE = 2800;
 
 export interface GameOpts { scenario: string; seed: number; dev: boolean }
 
@@ -80,7 +84,9 @@ export class Game {
     this.input.pitch = 0;
     this.prev = { ...this.state.player.pos };
     this.drawDistance = sc.draw ?? 160;
-    this.view.fp.cam.far = Math.max(400, this.drawDistance + 100);
+    // With far stand-ins the whole city shows through aerial haze; the draw distance is the detail radius.
+    lodRadius.value = this.world.far.length ? this.drawDistance : 1e9;
+    this.view.fp.cam.far = this.hazeDistance() + 100;
     this.view.fp.cam.updateProjectionMatrix();
     this.sky.overcast = sc.overcast ? 1 : 0;
     this.view.setWorld(this.world);
@@ -97,6 +103,9 @@ export class Game {
     if (sc.run) q.delete('scenario'); else q.set('scenario', sc.name);
     history.replaceState(null, '', `${location.pathname}${q.size ? `?${q}` : ''}`);
   }
+
+  /** Where the fog closes in: the draw distance, or far haze over a city drawn whole. */
+  hazeDistance() { return this.world.far.length ? FAR_HAZE : this.drawDistance; }
 
   /** Display name of a container grid id. */
   containerName(id: string): string {
@@ -147,7 +156,7 @@ export class Game {
     this.updatePrompt();
     this.updateHeld();
     this.furniture.sync(this.state, this.world);
-    this.sky.update(this.state.time, this.view.fp.cam.position, this.drawDistance, this.underAmount(dt));
+    this.sky.update(this.state.time, this.view.fp.cam.position, this.hazeDistance(), this.underAmount(dt));
     this.view.render(this.state.tick / 60, this.state.wstate.open);
     this.frames++;
   }

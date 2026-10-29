@@ -37,6 +37,8 @@ export interface World {
   zones: Zone[];
   inter: Inter[];
   sites: Site[];
+  /** render-only stand-ins for the far view (U-012): one box per block; empty for small worlds */
+  far: Solid[];
   solids: Solid[];
   index: SolidIndex;
   water: Box[];
@@ -59,6 +61,7 @@ export interface WorldParts {
   zones?: Zone[];
   inter?: Inter[];
   sites?: Site[];
+  far?: Solid[];
   spawn: World['spawn'];
 }
 
@@ -77,6 +80,7 @@ export function makeWorld(p: WorldParts): World {
     zones: p.zones ?? [],
     inter: p.inter ?? [],
     sites: p.sites ?? [],
+    far: p.far ?? [],
     spawn: p.spawn,
   };
 }

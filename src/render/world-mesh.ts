@@ -3,7 +3,7 @@
 // Vertex colours tint each building a little differently and darken walls toward the ground.
 import * as THREE from 'three';
 import { topAt, type Solid } from '../world/geom';
-import { material, texScale, isFacade, FACADE_BAY } from './materials';
+import { material, texScale, isFacade, FACADE_BAY, type Lod } from './materials';
 import { MAT } from '../world/mats';
 
 export const CHUNK = 64;
@@ -75,16 +75,16 @@ export function pushSolid(s: Solid, b: Buf, roof: Buf = b) {
 }
 
 /** Chunk meshes, each tagged with its chunk centre for distance culling. */
-export function buildSolidMeshes(solids: Solid[]): THREE.Group {
+export function buildSolidMeshes(solids: Solid[], lod: Lod = 'all', chunk = CHUNK): THREE.Group {
   type G = Buf & { mat: number; cx: number; cz: number; count: number };
   const groups = new Map<string, G>();
-  const keyOf = (s: Solid, mat: number) => `${Math.floor((s.x0 + s.x1) / 2 / CHUNK)},${Math.floor((s.z0 + s.z1) / 2 / CHUNK)},${mat}`;
+  const keyOf = (s: Solid, mat: number) => `${Math.floor((s.x0 + s.x1) / 2 / chunk)},${Math.floor((s.z0 + s.z1) / 2 / chunk)},${mat}`;
   const group = (s: Solid, mat: number) => {
     const key = keyOf(s, mat);
     let g = groups.get(key);
     if (!g) {
       const e = new Float32Array(0);
-      groups.set(key, (g = { pos: e, nor: e, uv: e, col: e, n: 0, count: 0, mat, cx: Math.floor((s.x0 + s.x1) / 2 / CHUNK), cz: Math.floor((s.z0 + s.z1) / 2 / CHUNK) }));
+      groups.set(key, (g = { pos: e, nor: e, uv: e, col: e, n: 0, count: 0, mat, cx: Math.floor((s.x0 + s.x1) / 2 / chunk), cz: Math.floor((s.z0 + s.z1) / 2 / chunk) }));
     }
     return g;
   };
@@ -107,9 +107,9 @@ export function buildSolidMeshes(solids: Solid[]): THREE.Group {
     geo.setAttribute('uv', new THREE.BufferAttribute(g.uv, 2));
     geo.setAttribute('color', new THREE.BufferAttribute(g.col, 3));
     geo.computeBoundingSphere();
-    const mesh = new THREE.Mesh(geo, material(g.mat, true));
+    const mesh = new THREE.Mesh(geo, material(g.mat, true, lod));
     mesh.receiveShadow = mesh.castShadow = true;
-    mesh.userData.chunk = { x: (g.cx + 0.5) * CHUNK, z: (g.cz + 0.5) * CHUNK };
+    mesh.userData.chunk = { x: (g.cx + 0.5) * chunk, z: (g.cz + 0.5) * chunk };
     root.add(mesh);
   }
   return root;

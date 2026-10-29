@@ -80,8 +80,8 @@ const draws: Record<number, [Draw, number]> = {
   }, 4],
   [MAT.asphalt]: [(g, w, h) => { noise(g, w, h, '#2f3032', 0.18, 9); blotches(g, w, h, 91, 20, '0,0,0', 0.2, 20, 80); cracks(g, w, h, 92, 6); }, 4],
   [MAT.glass]: [(g, w, h) => {
-    g.fillStyle = '#2a353d'; g.fillRect(0, 0, w, h);
-    const grd = g.createLinearGradient(0, 0, w, h); grd.addColorStop(0, 'rgba(190,205,215,0.18)'); grd.addColorStop(0.5, 'rgba(190,205,215,0)'); grd.addColorStop(1, 'rgba(190,205,215,0.1)');
+    g.fillStyle = '#4c5d68'; g.fillRect(0, 0, w, h);
+    const grd = g.createLinearGradient(0, 0, w, h); grd.addColorStop(0, 'rgba(200,212,220,0.35)'); grd.addColorStop(0.5, 'rgba(190,205,215,0.05)'); grd.addColorStop(1, 'rgba(200,212,220,0.25)');
     g.fillStyle = grd; g.fillRect(0, 0, w, h); grid(g, w, h, 64, 96, '#11161a', 4); streaks(g, 0, w, 0, 93, 20, [h * 0.2, h], '20,25,28', 0.3);
   }, 3],
   [MAT.moss]: [(g, w, h) => { noise(g, w, h, '#45503a', 0.3, 11); blotches(g, w, h, 111, 40, '25,32,20', 0.4, 8, 40); blotches(g, w, h, 112, 20, '110,125,70', 0.25, 6, 25); }, 2],
@@ -106,9 +106,26 @@ const draws: Record<number, [Draw, number]> = {
 const mats = new Map<string, THREE.MeshLambertMaterial>();
 const glowing: THREE.MeshLambertMaterial[] = [];
 
-/** A world material; vc for meshes that carry vertex colours (the merged world). */
-export function material(id: number, vc = false): THREE.MeshLambertMaterial {
-  const key = `${id}:${vc}`;
+/** Detail radius (U-012): detailed chunks draw inside it, the far stand-ins outside it. */
+export const lodRadius = { value: 1e9 };
+export type Lod = 'all' | 'near' | 'far';
+
+/** Cut fragments by horizontal distance from the camera: near keeps inside the radius, far keeps outside. */
+function lodCut(m: THREE.Material, lod: Lod) {
+  if (lod === 'all') return;
+  m.onBeforeCompile = sh => {
+    sh.uniforms.uLodR = lodRadius;
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vLodXZ;')
+      .replace('#include <project_vertex>', '#include <project_vertex>\nvLodXZ = (modelMatrix * vec4(transformed, 1.0)).xz;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec2 vLodXZ;\nuniform float uLodR;')
+      .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>\nif (length(vLodXZ - cameraPosition.xz) ${lod === 'near' ? '>' : '<'} uLodR) discard;`);
+  };
+  m.customProgramCacheKey = () => lod;
+}
+
+/** A world material; vc for meshes that carry vertex colours (the merged world); lod splits near and far. */
+export function material(id: number, vc = false, lod: Lod = 'all'): THREE.MeshLambertMaterial {
+  const key = `${id}:${vc}:${lod}`;
   let m = mats.get(key);
   if (m) return m;
   if (isFacade(id)) {
@@ -116,10 +133,12 @@ export function material(id: number, vc = false): THREE.MeshLambertMaterial {
     const lights = canvasTexture(`facadeLit${id}`, 512, 512, (g, w) => drawFacadeLights(id, g, w));
     m = new THREE.MeshLambertMaterial({ map, vertexColors: vc, emissive: 0xffffff, emissiveMap: lights, emissiveIntensity: 0 });
     glowing.push(m);
+    lodCut(m, lod);
   } else {
     const [draw] = draws[id] ?? draws[MAT.concrete];
     const tex = canvasTexture(`mat${id}`, 512, 512, draw);
     m = new THREE.MeshLambertMaterial({ map: tex, vertexColors: vc, transparent: id === MAT.water, opacity: id === MAT.water ? 0.82 : 1 });
+    lodCut(m, lod);
   }
   mats.set(key, m);
   return m;

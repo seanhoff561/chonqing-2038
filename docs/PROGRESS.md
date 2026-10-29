@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-25 Whole-city far view (U-012).
-Features done: 74 / 228 | Last done: M3-29
+**Status:** building M3. Next: M3-26 Lighting and shadows (U-012).
+Features done: 75 / 228 | Last done: M3-25
 <!-- /status -->
 
 ## Log
@@ -92,3 +92,4 @@ Features done: 74 / 228 | Last done: M3-29
 - M3-27 Run start without a shelter (U-013): runs start in Shibati with no shelter; sleep rough anywhere
 - M3-28 Setting up a shelter (U-013): claim or lay down a bed, toolbox workbench, stash near the bed
 - M3-29 Shelter sites in Shibati and Jiaochangkou (U-013): shelter sites with exposure data in every enterable block
+- M3-25 Whole-city far view (U-012): whole city visible: far stand-ins beyond the detail radius, aerial haze
