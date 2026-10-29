@@ -1,5 +1,6 @@
 // Player-box collision against the world: horizontal moves with step-up, vertical sweeps, ground probes.
-import { query, overlaps, topOver, xzHit, groundBox, type Box, type Solid, type SolidIndex } from '../world/geom';
+import { query, overlaps, topOver, xzHit, groundBox, frameDirOut, type Box, type Solid, type SolidIndex } from '../world/geom';
+import { normalAt } from '../world/heightfield';
 import type { Vec3 } from './types';
 import { movement as M } from '../data/movement';
 
@@ -58,11 +59,33 @@ function tryMove(idx: SolidIndex, pos: Vec3, h: number, dx: number, dz: number, 
   const top = overlapTop(idx, b);
   if (top === -Infinity) { pos.x += dx; pos.z += dz; return true; }
   const lift = top - pos.y;
+  // Ground steeper than a person can walk up is a wall (U-020): only a lip of a few centimetres steps on.
+  if (lift > 0.05 && surface(idx, b, top).ny < M.steep) return false;
   if (lift > 0 && lift <= step + EPS && free(idx, pos.x + dx, top + EPS, pos.z + dz, h)) {
     pos.x += dx; pos.z += dz; pos.y = top + EPS;
     return true;
   }
   return false;
+}
+
+/** The surface at height `top` under a footprint: its normal's up component (the steepest of what's there)
+ *  and its downhill direction. Flat boxes are level; ramps and the ground slope. */
+export function surface(idx: SolidIndex, b: Box, top: number): { ny: number; dx: number; dz: number } {
+  let best = { ny: 1, dx: 0, dz: 0 };
+  for (const s of nearby(idx, b)) {
+    if (b.x1 <= s.x0 + 1e-6 || b.x0 >= s.x1 - 1e-6 || b.z1 <= s.z0 + 1e-6 || b.z0 >= s.z1 - 1e-6) continue;
+    if (s.rot && !xzHit(s, b.x0, b.z0, b.x1, b.z1)) continue;
+    if (Math.abs(topOver(s, b.x0, b.z0, b.x1, b.z1) - top) > 0.03) continue;
+    let n: [number, number, number] = [0, 1, 0];
+    if (Number.isNaN(s.low)) n = normalAt(idx.ground!, (b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2);
+    else if (s.ramp) {
+      const e = s.rot ?? s, len = s.ramp <= 2 ? e.x1 - e.x0 : e.z1 - e.z0, k = (s.y1 - s.low) / len, l = Math.hypot(k, 1);
+      const [px, pz] = [[1, 0], [-1, 0], [0, 1], [0, -1]][s.ramp - 1], [wx, wz] = frameDirOut(s, -k * px, -k * pz);
+      n = [wx / l, 1 / l, wz / l];
+    }
+    if (n[1] < best.ny) { const hl = Math.hypot(n[0], n[2]) || 1; best = { ny: n[1], dx: n[0] / hl, dz: n[2] / hl }; }
+  }
+  return best;
 }
 
 /** Binary-search the largest free fraction of a blocked move so the box ends flush with the wall. */

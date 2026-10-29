@@ -178,7 +178,8 @@ export function overlaps(idx: SolidIndex, b: Box): boolean {
  *  surface less the shell; null without ground there. Physics treats it like any other solid. */
 export function groundBox(idx: SolidIndex, x0: number, z0: number, x1: number, z1: number): Solid | null {
   const g = idx.ground, sp = g && spanOver(g, x0, z0, x1, z1);
-  return sp ? { x0, z0, x1, z1, y0: sp.lo - g!.thick, y1: sp.hi, mat: 0, ramp: 0, low: 0 } : null;
+  // low NaN marks it as the ground (physics asks the heightfield for its slope).
+  return sp ? { x0, z0, x1, z1, y0: sp.lo - g!.thick, y1: sp.hi, mat: 0, ramp: 0, low: NaN } : null;
 }
 
 /** Highest solid top at (x, z) that is at or below y + 1e-3; -Infinity if none. */

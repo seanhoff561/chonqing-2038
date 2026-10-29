@@ -2,6 +2,8 @@
 // While gripping he hangs and reels toward the grip; W pulls up (and over a lip), S lets the arms out,
 // Space launches a leg-driven dyno, Q or releasing both buttons drops. Grip endurance drains while hanging.
 // Grabbing keeps momentum; the hands can only pull so hard (see stepGrip).
+import { tooFast } from './parkour';
+import { damage } from './body';
 import { B, DT, type InputFrame, type SimState } from './types';
 import type { World } from '../world/world';
 import type { Player, Grip } from './player';
@@ -43,7 +45,7 @@ export function findGrab(world: World, p: Player): Grip | null {
     const s = h.id >= 0 ? world.index.solids[h.id] : null;
     const hx = ex + d.x * h.t, hy = ey + d.y * h.t, hz = ez + d.z * h.t;
     best = null;
-    if (Math.abs(h.ny) < 0.5) {
+    if (Math.abs(h.ny) < M.steep) {
       // A wall face just below its top edge is a lip, if nothing sits on the edge.
       const top = s ? topAt(s, hx, hz) : heightAt(world.index.ground!, hx - h.nx * 0.05, hz - h.nz * 0.05) ?? hy;
       if (top - hy <= G.lipDepth && free(world.index, hx - h.nx * 0.07, top + 0.02, hz - h.nz * 0.07, 0.3, 0.05))
@@ -99,8 +101,17 @@ export function stepHands(s: SimState, world: World, input: InputFrame) {
       const side = i === 0 ? -0.18 : 0.18;
       g.x = o.x + g.nz * side * 2 - (o.x - g.x); g.z = o.z - g.nx * side * 2 - (o.z - g.z);
     }
-    h.grip = g;
     input.pressed &= ~BITS[i];
+    // Falling too fast (U-020): the hold tears out of his hands, wrenching his arms, and slows him a little.
+    if (tooFast(p)) {
+      p.vel.x *= M.tear.keep; p.vel.y *= M.tear.keep; p.vel.z *= M.tear.keep;
+      p.regrab = M.tear.regrab;
+      damage(s, M.tear.damage, 'grab');
+      s.events.push({ t: 'msg', text: 'torn loose' });
+      sfx(s, 'slip');
+      continue;
+    }
+    h.grip = g;
     if (p.mode !== 'grip') {
       p.mode = 'grip';
       p.onGround = false;

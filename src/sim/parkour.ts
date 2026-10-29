@@ -16,7 +16,7 @@ export function wallAhead(world: World, p: Player, dx: number, dz: number, reach
   let best: { d: number; nx: number; nz: number } | null = null;
   for (const hh of heights) {
     const r = raycast(world.index, p.pos.x, p.pos.y + hh, p.pos.z, dx, 0, dz, HW + reach);
-    if (!r || Math.abs(r.ny) > 0.3 || -(r.nx * dx + r.nz * dz) < 0.6) continue;
+    if (!r || Math.abs(r.ny) > M.steep || -(r.nx * dx + r.nz * dz) < 0.6) continue;
     if (!best || r.t < best.d) best = { d: r.t, nx: r.nx, nz: r.nz };
   }
   return best;
@@ -111,7 +111,7 @@ export function wallNear(world: World, p: Player, reach: number): { nx: number; 
     const a = (k * Math.PI) / 4, dx = Math.cos(a), dz = Math.sin(a);
     for (const hh of [0.5, 1.2]) {
       const r = raycast(world.index, p.pos.x, p.pos.y + hh, p.pos.z, dx, 0, dz, HW + reach);
-      if (r && Math.abs(r.ny) < 0.3 && (!best || r.t < best.d)) best = { nx: r.nx, nz: r.nz, d: r.t };
+      if (r && Math.abs(r.ny) < M.steep && (!best || r.t < best.d)) best = { nx: r.nx, nz: r.nz, d: r.t };
     }
   }
   return best;
@@ -141,20 +141,23 @@ export function kickOff(state: SimState, nx: number, nz: number) {
   noise(state, M.noise.vault, 'wallkick');
 }
 
+/** Too fast for any wall move or grab to hold (U-020): about a 12 m fall. */
+export const tooFast = (p: Player) => Math.hypot(p.vel.x, p.vel.y, p.vel.z) > M.tear.speed;
+
 /**
- * The second Space in the air (U-004): looking up at a wall kicks up it, looking along it at speed
- * starts a wall-run, anything else kicks off in the look direction. Two wall moves per airtime.
+ * The second Space in the air (U-004, U-020): facing the wall kicks up it, looking along it at speed starts a
+ * wall-run, facing away kicks off the way he looks. Two wall moves per airtime; none when falling too fast.
  */
 export function airWall(state: SimState, world: World): boolean {
   const p = state.player, K = M.wallKick;
-  if (p.kicks >= K.max || !lim().wallRun || p.posture !== 'stand') return false;
+  if (p.kicks >= K.max || !lim().wallRun || p.posture !== 'stand' || tooFast(p)) return false;
   const w = wallNear(world, p, K.reach);
   if (!w) return false;
   const { hx, hz } = lookFlat(p, w.nx, w.nz);
   const into = -(hx * w.nx + hz * w.nz);
   const speed = Math.hypot(p.vel.x, p.vel.z);
   p.kicks++;
-  if (into > 0.5 && p.pitch > K.upPitch) {
+  if (into > 0.5) {
     p.mode = 'wallclimb';
     p.wall = { nx: w.nx, nz: w.nz, t: 0, y: p.pos.y, id: -1 };
     p.vel.x = -w.nx * 0.6; p.vel.z = -w.nz * 0.6; p.vel.y = K.upSpeed;
@@ -248,6 +251,7 @@ export function stepAction(state: SimState, world: World) {
 /** A short hold against a wall after jumping into it: time to choose a kick, a wall-run or a grab (U-005). */
 export function startCling(state: SimState, nx: number, nz: number): boolean {
   const p = state.player;
+  if (tooFast(p)) return false;
   p.mode = 'cling';
   p.clung = true;
   p.wall = { nx, nz, t: 0, y: p.pos.y, id: -1 };

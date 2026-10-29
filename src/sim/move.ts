@@ -1,10 +1,11 @@
 // Player movement. Each tick: look, posture, then the current mode's update.
-import { B, DT, type InputFrame, type SimState, type FallOutcome } from './types';
+import { B, DT, type InputFrame, type SimState, type FallOutcome, type Vec3 } from './types';
 import { rand } from './rng';
 import type { World } from '../world/world';
 import type { Player, Posture } from './player';
 import { movement as M } from '../data/movement';
-import { free, moveHorizontal, moveVertical, groundGap } from './physics';
+import { free, moveHorizontal, moveVertical, groundGap, surface, boxAt } from './physics';
+import { groundAt, type SolidIndex } from '../world/geom';
 import { groundParkour, airParkour, airWall, stepAction, stepWallRun, stepWallClimb, stepCling } from './parkour';
 import { stepHands, stepGrip } from './grip';
 import { startCling } from './parkour';
@@ -108,8 +109,13 @@ function updatePosture(state: SimState, world: World, input: InputFrame) {
     if (!held) { endSlide(p, world); p.vel.x *= 0.8; p.vel.z *= 0.8; }
     return;
   }
-  if ((input.pressed & B.CROUCH) && p.mode === 'ground' && p.posture === 'stand' && Math.hypot(p.vel.x, p.vel.z) >= M.slide.minSpeed) {
+  const v = Math.hypot(p.vel.x, p.vel.z);
+  const downhill = v > 0.1 && grade(world.index, p.pos, p.vel.x / v, p.vel.z / v) >= M.slide.downhill;
+  if ((input.pressed & B.CROUCH) && p.mode === 'ground' && p.posture === 'stand' && v >= (downhill ? M.slide.downhillMin : M.slide.minSpeed)) {
     p.slide = 0; p.posture = 'crawl';
+    // Dropping into a slide from a sprint kicks the speed up a little.
+    const k = Math.max(v, Math.min(M.slide.start, v + 2)) / v;
+    p.vel.x *= k; p.vel.z *= k;
     sfx(state, 'slide');
     return;
   }
@@ -142,12 +148,14 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
   if (wl > 1) { wx /= wl; wz /= wl; }
   let sp = targetSpeed(p, input);
   if (p.slide >= 0) {
-    // A slide keeps its heading and bleeds speed; it ends crouched (or crawling under something low).
+    // A slide keeps its heading: friction bleeds it on the flat, the grade feeds it downhill and eats it
+    // uphill (U-020); it ends crouched (or crawling under something low) once it's down to a walk.
     const v = Math.hypot(p.vel.x, p.vel.z) || 1;
-    sp = M.slide.start + (M.slide.end - M.slide.start) * Math.min(1, p.slide / M.slide.time);
     wx = p.vel.x / v; wz = p.vel.z / v;
+    const g = grade(idx, p.pos, wx, wz), c = Math.sqrt(1 - g * g);
+    sp = Math.min(M.slide.max, v + (M.gravity * g - M.slide.friction * c) * DT);
     p.slide += DT;
-    if (p.slide >= M.slide.time || v < 0.5) endSlide(p, world, (input.buttons & B.CROUCH) !== 0);
+    if (sp < M.slide.end) endSlide(p, world, (input.buttons & B.CROUCH) !== 0);
   }
   // In the air he can steer and slow but not speed up past his take-off speed (or a jog).
   if (!p.onGround) sp = Math.min(sp, Math.max(M.speed.jog, Math.hypot(p.vel.x, p.vel.z)));
@@ -187,19 +195,21 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
     const nx = blocked & 1 ? -Math.sign(into.x) : 0, nz = blocked & 1 ? 0 : -Math.sign(into.z);
     if (Math.abs(nx ? into.x : into.z) > M.cling.minInto && startCling(state, nx, nz)) return;
   }
-  const vy = p.onGround ? -0.05 : p.vel.y * DT;
+  const vy = p.onGround ? -0.05 : p.vel.y * DT, yBefore = p.pos.y;
   const hit = moveVertical(idx, p.pos, h, vy);
   if (hit === 1) {
-    if (!wasGround) land(state);
-    p.onGround = true;
-    p.vel.y = 0;
+    if (!slideOffSteep(p, idx, h, yBefore)) {
+      if (!wasGround) land(state);
+      p.onGround = true;
+      p.vel.y = 0;
+    }
   } else {
     if (hit === -1 && p.vel.y > 0) p.vel.y = 0;
     p.onGround = false;
     // Stick to stairs and ramps going down.
     if (wasGround && !jumped) {
       const gap = groundGap(idx, p.pos, M.snapDown);
-      if (gap !== Infinity) { p.pos.y -= gap; p.onGround = true; p.vel.y = 0; }
+      if (gap !== Infinity) { p.pos.y -= gap; if (!slideOffSteep(p, idx, h, yBefore)) { p.onGround = true; p.vel.y = 0; } }
     }
   }
   if (p.onGround) {
@@ -217,6 +227,27 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
     if (p.wall.t < 0) p.wall.t = Math.min(0, p.wall.t + DT);
     else if (!airParkour(state, world, input) && (input.pressed & B.JUMP) && !jumped) airWall(state, world);
   }
+}
+
+/** Sine of the ground's grade under him along (dx, dz): positive going downhill. */
+function grade(idx: SolidIndex, pos: Vec3, dx: number, dz: number): number {
+  const a = groundAt(idx, pos.x - dx * 0.4, pos.z - dz * 0.4, pos.y + 0.5), b = groundAt(idx, pos.x + dx * 0.4, pos.z + dz * 0.4, pos.y + 0.5);
+  if (!isFinite(a) || !isFinite(b)) return 0;
+  return (a - b) / Math.hypot(0.8, a - b);
+}
+
+/** Feet on ground steeper than he can stand on (U-020): he's not standing, he slides off it, gathering speed
+ *  downhill; half of the drop counts toward the fall he lands from. Returns whether he's sliding. */
+function slideOffSteep(p: Player, idx: SolidIndex, h: number, yBefore: number): boolean {
+  const s = surface(idx, boxAt(p.pos.x, p.pos.y, p.pos.z, h), p.pos.y);
+  if (s.ny >= M.steep) return false;
+  // Keep only the motion along the slope, then let gravity pull him down it.
+  const hz = Math.sqrt(1 - s.ny * s.ny), nx = s.dx * hz, nz = s.dz * hz, into = p.vel.x * nx + p.vel.y * s.ny + p.vel.z * nz;
+  if (into < 0) { p.vel.x -= into * nx; p.vel.y -= into * s.ny; p.vel.z -= into * nz; }
+  p.vel.x += M.gravity * s.ny * nx * DT; p.vel.y += M.gravity * (s.ny * s.ny - 1) * DT; p.vel.z += M.gravity * s.ny * nz * DT;
+  p.onGround = false;
+  if (p.pos.y < yBefore) p.fallFrom -= (yBefore - p.pos.y) * 0.5;
+  return true;
 }
 
 function land(state: SimState) {

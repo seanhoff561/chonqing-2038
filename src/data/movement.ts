@@ -21,7 +21,13 @@ export const movement = {
   mantle: { min: 0.5, max: 2.4, hop: 1.2, reach: 0.7, lowTime: 0.35, highTime: 0.8, lowLimit: 1.0 },
   /** overH/lift: a vault over a low wall with a drop beyond carries on into the air (U-014) */
   vault: { minH: 0.5, maxH: 1.2, maxDepth: 1.2, minSpeed: 2.5, time: 0.45, keep: 0.85, overH: 1.0, lift: 1.8 },
-  slide: { minSpeed: 6.0, time: 1.0, start: 7.5, end: 3.0 },
+  /** a slide starts at 7.5 m/s, bleeds `friction` on the flat and gathers g x the grade downhill, up to max; on a
+   *  downhill grade of 0.2 or more it starts from a jog (U-020) */
+  slide: { minSpeed: 6.0, start: 7.5, end: 3.0, friction: 3.5, max: 14, downhill: 0.2, downhillMin: 3.0 },
+  /** ground steeper than this (normal's y; about 45 degrees) is a wall: no walking up it, he slides off it (U-020) */
+  steep: 0.7,
+  /** moving faster than this (a fall of about 12 m), grabs tear loose and wall moves are refused (U-020) */
+  tear: { speed: 15, keep: 0.8, damage: 6, regrab: 0.6 },
   wallRun: { maxTime: 0.9, speed: 6.5, upSpeed: 3.0, minSpeed: 5.5, stepEvery: 0.3, gravityScale: 0.6, wallDist: 0.8, maxAngle: 35, leapSpeed: 5.0, leapUp: 3.0 },
   wallClimb: { time: 0.6 },
   /** second Space in the air near a wall, read from the camera (U-004) */

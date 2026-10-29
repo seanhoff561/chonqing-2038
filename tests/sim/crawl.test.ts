@@ -42,9 +42,10 @@ describe('slide', () => {
     expect(state.player.slide).toBeGreaterThanOrEqual(0);
     const v0 = hspeed(state);
     let t = 0;
-    run(state, world, secs(1.1), { my: 1, buttons: B.CROUCH }, s => { if (s.player.slide >= 0) t++; });
+    run(state, world, secs(1.6), { my: 1, buttons: B.CROUCH }, s => { if (s.player.slide >= 0) t++; });
     expect(v0).toBeGreaterThan(7);
-    expect(t / 60).toBeCloseTo(1.0, 1);
+    // U-020: slides carry further, about 1.3 s on the flat.
+    expect(t / 60).toBeCloseTo(1.3, 1);
     expect(state.player.pos.z).toBeLessThan(-9.2);
     expect(state.player.posture).toBe('crouch');
     run(state, world, 2);

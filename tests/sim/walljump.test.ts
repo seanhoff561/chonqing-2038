@@ -25,9 +25,11 @@ describe('wall jump by camera direction (M1-30)', () => {
     expect(s.player.vel.x).toBeCloseTo(5.5 * Math.SQRT1_2, 1);
     expect(s.player.vel.z).toBeCloseTo(-5.5 * Math.SQRT1_2, 1);
   });
-  it('never kicks into the wall', () => {
+  it('facing the wall kicks up it, never into it (U-020)', () => {
     const s = kick(Math.PI / 2 + 0.3);
-    expect(s.player.vel.x).toBeGreaterThan(1);
+    expect(s.player.mode).toBe('wallclimb');
+    expect(s.player.vel.y).toBeGreaterThan(4);
+    expect(s.player.vel.x).toBeGreaterThan(-1);
   });
   it('looking up at the wall kicks up it', () => {
     const s = kick(Math.PI / 2, 0.8);

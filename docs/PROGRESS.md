@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-41c Everything moves to Yuzhong (D-016).
-Features done: 96 / 247 | Last done: M3-41b
+**Status:** building M3. Next: M3-46 Building variety (U-020).
+Features done: 97 / 249 | Last done: M1-41
 <!-- /status -->
 
 ## Log
@@ -114,3 +114,4 @@ Features done: 96 / 247 | Last done: M3-41b
 - M3-45 The headlamp works (U-019): the headlamp works: white and red beams, battery, recharge
 - M3-41a Heightfield ground (D-016): heightfield ground: collision shell, rays, holes, chunked meshes and far mesh
 - M3-41b The Yuzhong base world (D-016): Yuzhong at 1:1 from the real ground and map: OSM and infill buildings, streets, stairs, bridges
+- M1-41 Movement realism (U-020): slides gather speed downhill, steep ground is a wall, grabs tear loose at speed, facing-wall kicks go up

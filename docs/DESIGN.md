@@ -45,12 +45,14 @@ Parkour with the legs, climbing with the hands (U-002 to U-005). Player collisio
 | Jump | take-off 3.55 m/s (apex about 0.63 m, 9.81 m/s^2 gravity); at a sprint 88% of the speed carries; releasing Space while rising cuts the jump (a tap is about 40% of the height); 0.03 s of coyote time |
 | Running jump | clears a 4.5 m gap at sprint, fails 5.2 m |
 | Auto step-up | 0.45 m (stairs are invisible ramps under the visible steps) |
+| Steep ground (U-020) | slopes steeper than about 45 degrees (normal's y under 0.7) are walls: he can't walk up them, slides off them (half the drop counts toward the fall) and uses the wall moves on them |
+| Too fast (U-020) | above 15 m/s (a fall of about 12 m) a grab tears loose (6 damage, speed x0.8, no regrab for 0.6 s) and wall kicks, wall-runs and clings are refused |
 | Space hop | onto a ledge 0.5 to 1.2 m above the feet, 0.35 s; higher ledges need the hands |
 | Vault | obstacle 0.5 to 1.2 m high and at most 1.2 m deep, clear landing, moving at 2.5 m/s or more; 0.45 s, keeps 85% speed. Over a low thin wall (up to 1 m high, 0.6 m deep) with a drop beyond, like a roof parapet, he vaults into the air and flies on with a 1.8 m/s lift (U-014). Window openings (1.4 x 1.9 m, sill at 0.8 m) take a hop or a vault |
-| Slide | Ctrl at 6 m/s+: 1.0 s, 7.5 to 3 m/s, 0.5 m tall (passes under 0.6 m); releasing Ctrl stands him up keeping 80% speed |
+| Slide | Ctrl at 6 m/s+ (3 m/s+ down a grade of 0.2 or more): starts at 7.5 m/s, friction 3.5 m/s^2, gravity times the grade adds downhill and takes uphill (U-020): about 1.3 s on the flat, gathering speed (to 14 m/s) down stairs and steep streets; ends below 3 m/s; 0.5 m tall (passes under 0.6 m); releasing Ctrl stands him up keeping 80% speed |
 | Crawl | Z; passes 0.6 m gaps |
 | Wall cling | moving into a wall in the air holds him for 0.35 s, sliding 1.4 m/s, once per wall per airtime, keeping all his speed along it (U-006); palm-on-wall hands and a pat sound |
-| Wall moves (Space in the air within 0.8 m of a wall, 2 per airtime) | looking up at the wall: up-kick +4.6 m/s; looking along it at 5.5 m/s or more: wall-run up to 3 steps (0.9 s) at 6.5 m/s, 60% gravity; otherwise: kick off at 5.5 m/s toward the camera (never into the wall), +3.4 m/s up plus a little for looking up |
+| Wall moves (Space in the air within 0.8 m of a wall, 2 per airtime) | facing the wall (U-020): up-kick +4.6 m/s; looking along it at 5.5 m/s or more: wall-run up to 3 steps (0.9 s) at 6.5 m/s, 60% gravity; facing away: kick off at 5.5 m/s toward the camera, +3.4 m/s up plus a little for looking up |
 | Grab | hold a mouse button looking at a lip, sill, pipe or rung within 1.6 m of the eye and 0.2 to 2.2 m above the feet (2.8 m with a jump, about 3.8 m with an up-kick); two hands on one lip sit a shoulder apart |
 | Hanging | gravity off; the hands are a force-limited spring (one hand 35 m/s^2, two 80) toward a spot 0.4 m off the wall and 1.15 to 2.1 m below the higher hand; momentum carries, so one hand at speed slips after redirecting him and two hands can stop a sprint |
 | Pull up / over | W pulls up 1.1 m/s, S lets the arms out; mouse drags move the body (drag down hauls up, sideways shifts up to 0.45 m); pulled within 1.3 m of a lip top with room above, W climbs over (0.7 s) |
