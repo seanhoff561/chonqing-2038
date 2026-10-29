@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M1. Next: M1-39 Walking and running hands.
-Features done: 62 / 220 | Last done: M1-38
+**Status:** building M1. Next: M1-40 Pause menu with the movement gym.
+Features done: 63 / 220 | Last done: M1-39
 <!-- /status -->
 
 ## Log
@@ -80,3 +80,4 @@ Features done: 62 / 220 | Last done: M1-38
 - M1-37 3D hands: 3D hands (U-006)
 - M1-26 Hand grab core (White Knuckle style): no grabbing while an item is out (U-007)
 - M1-38 Held items in the hands: held items in both hands unless small (U-007)
+- M1-39 Walking and running hands: walking and running hand poses (U-007)
