@@ -27,5 +27,5 @@ You weren't sure about stamina. Default: no running stamina at all; only grip en
 ## Q-005 Mouse pull direction while gripping (open)
 Default: dragging the mouse down hauls him up toward the hands and sideways swings him that way, like White Knuckle. If you meant the body should follow the mouse (drag down to lower yourself), say so and it becomes the default; either way an invert option goes into settings.
 
-## Q-006 Reference image file (open)
-I can't save an image from chat into the repo. Please commit it as `docs/reference/look-01.jpg` (or drop it anywhere in the repo and say where). Default until then: the written description in DESIGN section 15 is the target.
+## Q-006 Reference image file (resolved)
+The director uploaded it; it now lives at `docs/reference/look-01.jpg`, described in DESIGN section 15.
