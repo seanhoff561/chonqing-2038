@@ -19,11 +19,12 @@ interface Style {
 }
 
 const STYLES: Record<number, Style> = {
-  [MAT.facade]: { seed: 21, wall: '#bdb6a8', band: '#cbc5b8', win: [1.4, 1.6], sill: 0.9, blank: 0.12 },
-  [MAT.facadeTile]: { seed: 22, wall: '#e0b4a2', band: '#e8e2d6', win: [1.0, 1.1], sill: 1.1, tile: true, blank: 0.45, bandEvery: 2 },
-  [MAT.facadeBrick]: { seed: 23, wall: '#b09b7f', band: '#a08d72', win: [0.9, 1.15], sill: 1.0, brick: true, lattice: true, blank: 0.4 },
-  [MAT.facadeOpen]: { seed: 24, wall: '#87796a', band: '#958775', win: [2.2, 1.9], sill: 0.75, open: true },
-  [MAT.facadeBand]: { seed: 25, wall: '#d6d4cd', band: '#ebe9e2', win: [2.4, 1.6], sill: 1.05, bands: true },
+  // Near-white bases: each building's colour (M3-46) tints them.
+  [MAT.facade]: { seed: 21, wall: '#e6e3dc', band: '#f0eee8', win: [1.4, 1.6], sill: 0.9, blank: 0.12 },
+  [MAT.facadeTile]: { seed: 22, wall: '#f2f0ea', band: '#f6f4ef', win: [1.0, 1.1], sill: 1.1, tile: true, blank: 0.45, bandEvery: 2 },
+  [MAT.facadeBrick]: { seed: 23, wall: '#dcd4c6', band: '#cfc6b6', win: [0.9, 1.15], sill: 1.0, brick: true, lattice: true, blank: 0.4 },
+  [MAT.facadeOpen]: { seed: 24, wall: '#a89a8a', band: '#b4a896', win: [2.2, 1.9], sill: 0.75, open: true },
+  [MAT.facadeBand]: { seed: 25, wall: '#eeece6', band: '#f6f5f1', win: [2.4, 1.6], sill: 1.05, bands: true },
 };
 
 export const isFacade = (id: number) => id in STYLES;
@@ -46,8 +47,9 @@ function layout(st: Style, px: number): Window[] {
 export function drawFacade(id: number, g: CanvasRenderingContext2D, S: number) {
   const st = STYLES[id], px = S / FACADE_M, r = mulberry(st.seed + 100);
   // Wall: base, large damp and bleached patches, fine speckle.
-  noise(g, S, S, st.wall, 0.14, st.seed);
-  blotches(g, S, S, st.seed + 1, 40, '60,55,45', 0.16, px * 0.5, px * 2.5);
+  // Months after the takeover, not decades (U-020): weathered, not ruined.
+  noise(g, S, S, st.wall, 0.1, st.seed);
+  blotches(g, S, S, st.seed + 1, 30, '60,55,45', 0.1, px * 0.5, px * 2.5);
   blotches(g, S, S, st.seed + 2, 25, '235,230,215', 0.1, px * 0.5, px * 2);
   if (st.brick) {
     for (let y = 0, row = 0; y < S; y += px * 0.075, row++) for (let x = (row % 2) * px * 0.13; x < S; x += px * 0.26) {
@@ -56,7 +58,7 @@ export function drawFacade(id: number, g: CanvasRenderingContext2D, S: number) {
     }
   }
   if (st.tile) {
-    g.fillStyle = 'rgba(90,60,50,0.18)';
+    g.fillStyle = 'rgba(70,70,70,0.14)';
     for (let y = 0; y < S; y += px * 0.12) g.fillRect(0, y, S, 1);
     for (let x = 0; x < S; x += px * 0.24) g.fillRect(x, 0, 1, S);
   }
@@ -70,9 +72,9 @@ export function drawFacade(id: number, g: CanvasRenderingContext2D, S: number) {
     const y = S - f * FACADE_BAY * px;
     g.fillStyle = st.band; g.fillRect(0, y - px * 0.28, S, px * 0.28);
     g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(0, y, S, px * 0.06);
-    g.fillStyle = 'rgba(52,62,40,0.5)';
-    for (let i = 0; i < 60; i++) g.fillRect(r() * S, y - px * 0.28 - r() * 3, 2 + r() * 10, 2 + r() * 3);
-    streaks(g, 0, S, y + px * 0.04, st.seed + 10 + f, 70, [px * 0.2, px * 1.6], '45,42,38', 0.22);
+    g.fillStyle = 'rgba(52,62,40,0.35)';
+    for (let i = 0; i < 30; i++) g.fillRect(r() * S, y - px * 0.28 - r() * 3, 2 + r() * 10, 2 + r() * 3);
+    streaks(g, 0, S, y + px * 0.04, st.seed + 10 + f, 50, [px * 0.2, px * 1.4], '45,42,38', 0.14);
   }
   if (st.bands) {
     // Balcony floors: a dark recessed strip of windows behind a white parapet, the slab edge above.

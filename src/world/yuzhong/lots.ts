@@ -20,6 +20,19 @@ export interface Plan {
   far: boolean;
   /** the ground round it rises above its base (a higher street beside it): solid only, never hollowed */
   noEnter?: boolean;
+  /** the district it stands in, and whether that was a crowded centre now gone cyberpunk (U-011, U-020) */
+  district: string; cyber: boolean;
+}
+
+/** Districts round the landmarks, nearest first within their reach; the old crowded centres are cyberpunk. */
+const DISTRICTS: [string, number, boolean][] = [['jiefangbei', 380, true], ['jiaochangkou', 200, true], ['hongyadong', 170, true], ['xiaoshizi', 220, true], ['chaotianmen', 320, false], ['shibati', 160, false]];
+export function districtAt(x: number, z: number): { district: string; cyber: boolean } {
+  let best = { district: 'yuzhong', cyber: false }, bd = Infinity;
+  for (const [k, reach, cyber] of DISTRICTS) {
+    const L = GEO.landmarks[k], d = Math.hypot(L.x - x, L.z - z);
+    if (d < reach && d < bd) { bd = d; best = { district: k, cyber }; }
+  }
+  return best;
 }
 
 /** APRON: the gap kept round each lot (half an alley); LEVEL: how far round it the ground is levelled, more than a
@@ -95,11 +108,15 @@ export function planLots(g: Heightfield, sts: Street[], land: Uint8Array): Plan[
     const r = makeRng(hashString(`osm${n}`)), far = land[k] === 2;
     const floors = levels || (hdm ? Math.max(1, Math.round(hdm / 10 / 3.2)) : area > 1500 ? 12 + randInt(r, 25) : area > 400 ? 6 + randInt(r, 18) : 3 + randInt(r, 6));
     const trad = !far && inShibati(o.cx, o.cz) && floors <= 3;
-    const tower = floors > 20 || kind === 'commercial' || kind === 'hotel' || kind === 'office';
+    // By type: towers over 20 floors; offices, hotels, shops and malls in gridded stone or glass; homes in tile
+    // and render; old houses in brick.
+    const business = ['commercial', 'retail', 'office', 'hotel', 'theatre', 'transportation'].includes(kind);
+    const tower = floors > 20 || (business && floors > 10);
     const street = sideStreets(o);
     const front = street.findIndex(Boolean);
     const base = front >= 0 ? edgeHeight(o, front, hAt) : Math.min(...[...corners(o), [o.cx, o.cz] as P2].map(([x, z]) => hAt(x, z)));
-    add({ obb: o, base, wall: base + floors * (tower ? 3.3 : FLOOR), kind: trad ? 'trad' : tower ? 'tower' : 'res', mat: tower ? MAT.glass : trad ? MAT.brick : [MAT.tile, MAT.plaster, MAT.concrete][randInt(r, 3)], seed: `osm${n}`, street, across: [0, 0, 0, 0], osm: true, name, far });
+    const mat = tower ? MAT.glass : trad ? MAT.brick : business ? MAT.facadeBand : kind === 'historic' || kind === 'temple' ? MAT.brick : [MAT.tile, MAT.plaster, MAT.concrete, MAT.tile][randInt(r, 4)];
+    add({ obb: o, base, wall: base + floors * (tower ? 3.3 : business ? 4 : FLOOR), kind: trad ? 'trad' : tower ? 'tower' : 'res', mat, seed: `osm${n}`, street, across: [0, 0, 0, 0], osm: true, name, far, noEnter: business, ...districtAt(o.cx, o.cz) });
   });
 
   // Infill: rows along every street, main streets first, fronting the street, alleys between.
@@ -124,9 +141,11 @@ export function planLots(g: Heightfield, sts: Street[], land: Uint8Array): Plan[
           }
           if (ok) {
             const n = plans.length, rr = makeRng(hashString(`lot${n}`)), far = land[cellAt(ok.cx, ok.cz)] === 2;
-            const base = edgeHeight(ok, 1, hAt), floors = MAIN.has(s.kind) ? 4 + randInt(rr, 8) + (rand(rr) < 0.15 ? 12 + randInt(rr, 14) : 0) : 2 + randInt(rr, 6);
-            const trad = !far && inShibati(ok.cx, ok.cz);
-            add({ obb: ok, base, wall: base + (trad ? 2 + randInt(rr, 2) : floors) * FLOOR, kind: trad ? 'trad' : 'res', mat: trad ? MAT.brick : [MAT.tile, MAT.plaster, MAT.tile, MAT.concrete][randInt(rr, 4)], seed: `lot${n}`, street: [false, true, false, false], across: [0, s.w + 3, 0, 0], osm: false, name: '', far });
+            const base = edgeHeight(ok, 1, hAt), dist = districtAt(ok.cx, ok.cz);
+            // The crowded centres build up: shops below, offices and flats above; elsewhere walk-ups and the odd slab.
+            const floors = MAIN.has(s.kind) ? 4 + randInt(rr, 8) + (rand(rr) < (dist.cyber ? 0.35 : 0.15) ? 12 + randInt(rr, 14) : 0) : 2 + randInt(rr, 6);
+            const trad = !far && inShibati(ok.cx, ok.cz), shop = dist.cyber && MAIN.has(s.kind) && rand(rr) < 0.4;
+            add({ obb: ok, base, wall: base + (trad ? 2 + randInt(rr, 2) : floors) * FLOOR, kind: trad ? 'trad' : 'res', mat: trad ? MAT.brick : shop ? MAT.facadeBand : [MAT.tile, MAT.plaster, MAT.tile, MAT.concrete][randInt(rr, 4)], seed: `lot${n}`, street: [false, true, false, false], across: [0, s.w + 3, 0, 0], osm: false, name: '', far, noEnter: shop || undefined, ...dist });
           }
           t += f + 1.6 + rand(r) * 1.6;
         }

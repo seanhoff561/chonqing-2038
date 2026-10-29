@@ -11,6 +11,8 @@ export interface Heightfield {
   y: Float32Array;
   /** per cell ((w - 1) x (h - 1)): 1 where there is no ground */
   hole: Uint8Array;
+  /** per sample, its surface for the render: 0 ground, 1 asphalt, 2 paving (streets laid on it) */
+  surf?: Uint8Array;
   thick: number;
 }
 

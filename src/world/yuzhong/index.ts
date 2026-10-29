@@ -4,7 +4,7 @@
 import { solid, rampSolid, turn, type Solid } from '../geom';
 import { makeWorld, type World, type Teleport, type Prop, type Inter, type Climbable, type HideSpot, type Site, type Plot } from '../world';
 import { MAT } from '../mats';
-import { makeRng, hashString } from '../../sim/rng';
+import { makeRng, hashString, rand, randInt, type Rng } from '../../sim/rng';
 import { buildLot, PARAPET, type Fabric, type Lot } from '../city/buildings';
 import { stepsFor } from '../city/terrain';
 import { GEO } from '../geo';
@@ -23,7 +23,8 @@ export function buildYuzhong(): World {
   const out = empty(), plots: Plot[] = [];
   plans.forEach((p, n) => plots.push(buildPlan(p, n, out, g)));
   const decor: Solid[] = [];
-  for (const s of sts) if (onGround(s)) surface(s, g, decor); else if (s.bridge && s.layer > 0) bridge(s, g, out.solids);
+  // Streets are painted on the ground itself (its surf); stairs get their steps; bridges their decks.
+  for (const s of sts) if (onGround(s) && s.steps) surface(s, g, decor); else if (s.bridge && s.layer > 0) bridge(s, g, out.solids);
   const [W, H] = GEO.size;
   const L = GEO.landmarks, at = (k: string, yaw = 0): Teleport => ({ name: k, x: L[k].x, y: hAt(g, L[k].x, L[k].z) + 1.5, z: L[k].z, yaw });
   const teleports = ['jiefangbei', 'shibati', 'jiaochangkou', 'hongyadong', 'xiaoshizi', 'chaotianmen', 'cablewayNorth', 'grandTunnel'].map(k => at(k));
@@ -59,7 +60,10 @@ function buildPlan(p: Plan, n: number, out: Fabric, g: Heightfield): Plot {
     const look = p.kind === 'tower' ? MAT.glass : MAT.facade;
     f.solids.push(solid(l.x0, l.base, l.z0, l.x1, l.wall, l.z1, look));
     f.far.push(solid(l.x0, l.base, l.z0, l.x1, l.wall + PARAPET, l.z1, look));
-  } else buildLot(l, r, f);
+  } else {
+    buildLot(l, r, f);
+    if (p.cyber) cyber(l, p, r, f);
+  }
   // A foundation down to the lowest ground round it: where a neighbour's lower base dips the ground at a shared
   // wall, or the slope falls away, no gap shows under the walls.
   let low = l.base;
@@ -81,6 +85,29 @@ function buildPlan(p: Plan, n: number, out: Fabric, g: Heightfield): Plot {
   if (l.route) l.route = l.route.map(q => { const [x, z] = pt(q.x, q.z); return { ...q, x, z }; });
   out.lots.push(l);
   return { corners: corners(o), base: p.base, wall: p.wall, found: low - 1, route: l.route, far: p.far, osm: p.osm };
+}
+
+/** The crowded centres gone cyberpunk (U-011, U-020): LED screens on the street faces of towers, malls and
+ *  offices; blade signs on the shop fronts below everything else. Props in the lot's own frame. */
+function cyber(l: Lot, p: Plan, r: Rng, f: Fabric) {
+  const faces = [
+    { on: p.street[0], c: (l.x0 + l.x1) / 2, f: l.z0, len: l.x1 - l.x0, yaw: Math.PI, at: (u: number, d: number) => [u, l.z0 - d] },
+    { on: p.street[1], c: (l.x0 + l.x1) / 2, f: l.z1, len: l.x1 - l.x0, yaw: 0, at: (u: number, d: number) => [u, l.z1 + d] },
+    { on: p.street[2], c: (l.z0 + l.z1) / 2, f: l.x0, len: l.z1 - l.z0, yaw: -Math.PI / 2, at: (u: number, d: number) => [l.x0 - d, u] },
+    { on: p.street[3], c: (l.z0 + l.z1) / 2, f: l.x1, len: l.z1 - l.z0, yaw: Math.PI / 2, at: (u: number, d: number) => [l.x1 + d, u] },
+  ].filter(x => x.on && x.len > 6);
+  const big = l.kind === 'tower' || l.mat === MAT.facadeBand;
+  for (const fc of faces) {
+    if (big && rand(r) < 0.8) {
+      const w = Math.min(fc.len * 0.6, 8 + rand(r) * 12), h = 4 + rand(r) * 8, y = l.base + Math.min((l.podium ?? l.wall) - l.base - h - 1, 6 + rand(r) * 10);
+      const [x, z] = fc.at(fc.c + (rand(r) - 0.5) * (fc.len - w) * 0.5, 0.2);
+      if (y > l.base + 3) f.props.push({ kind: 'ledscreen', x, y, z, yaw: fc.yaw, w, h });
+    }
+    for (let i = 0, n = big ? 1 : 1 + randInt(r, 3); i < n; i++) {
+      const [x, z] = fc.at(fc.c + (rand(r) - 0.5) * (fc.len - 2), 0.05);
+      f.props.push({ kind: 'neonblade', x, y: l.base + 3.2 + rand(r) * 3, z, yaw: fc.yaw, h: 2 + rand(r) * 2.5 });
+    }
+  }
 }
 
 /** A street's surface over the levelled ground: a thin ramp per segment in asphalt or paving; stair streets

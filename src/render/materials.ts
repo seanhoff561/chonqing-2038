@@ -65,7 +65,7 @@ const draws: Record<number, [Draw, number]> = {
     grid(g, w, h, w, 42, 'rgba(0,0,0,0.5)', 3); blotches(g, w, h, 52, 10, '20,18,15', 0.25, 10, 40);
   }, 1.5],
   [MAT.tile]: [(g, w, h) => {
-    noise(g, w, h, '#bdb7aa', 0.08, 6); courses(g, w, h, 32, 16, 'rgba(70,64,56,0.5)', 61, 0.12, false);
+    noise(g, w, h, '#dcd8d0', 0.08, 6); courses(g, w, h, 32, 16, 'rgba(70,66,60,0.4)', 61, 0.12, false);
     blotches(g, w, h, 62, 25, '60,55,45', 0.2, 15, 70); streaks(g, 0, w, 0, 63, 40, [h * 0.1, h * 0.7], '50,46,40', 0.22);
   }, 1.5],
   [MAT.stone]: [(g, w, h) => {
@@ -73,14 +73,15 @@ const draws: Record<number, [Draw, number]> = {
     blotches(g, w, h, 72, 25, '35,40,30', 0.2, 10, 50); cracks(g, w, h, 73, 6);
   }, 2],
   [MAT.plaster]: [(g, w, h) => {
-    noise(g, w, h, '#a8a194', 0.14, 8);
+    noise(g, w, h, '#ccc7bd', 0.14, 8);
     blotches(g, w, h, 81, 30, '70,65,55', 0.16, 20, 100); blotches(g, w, h, 82, 15, '230,225,210', 0.15, 20, 80);
     streaks(g, 0, w, 0, 83, 50, [h * 0.1, h * 0.8], '55,52,45', 0.22); cracks(g, w, h, 84, 5);
     const grd = g.createLinearGradient(0, 0, 0, h); grd.addColorStop(0, 'rgba(0,0,0,0)'); grd.addColorStop(1, 'rgba(40,50,30,0.25)'); g.fillStyle = grd; g.fillRect(0, 0, w, h);
   }, 4],
-  [MAT.asphalt]: [(g, w, h) => { noise(g, w, h, '#2f3032', 0.18, 9); blotches(g, w, h, 91, 20, '0,0,0', 0.2, 20, 80); cracks(g, w, h, 92, 6); }, 4],
+  [MAT.asphalt]: [(g, w, h) => { noise(g, w, h, '#4c4d4e', 0.18, 9); blotches(g, w, h, 91, 20, '0,0,0', 0.2, 20, 80); cracks(g, w, h, 92, 6); }, 4],
   [MAT.glass]: [(g, w, h) => {
-    g.fillStyle = '#4c5d68'; g.fillRect(0, 0, w, h);
+    // Neutral grey glass: each tower's colour (M3-46) tints it.
+    g.fillStyle = '#7c8488'; g.fillRect(0, 0, w, h);
     const grd = g.createLinearGradient(0, 0, w, h); grd.addColorStop(0, 'rgba(200,212,220,0.35)'); grd.addColorStop(0.5, 'rgba(190,205,215,0.05)'); grd.addColorStop(1, 'rgba(200,212,220,0.25)');
     g.fillStyle = grd; g.fillRect(0, 0, w, h); grid(g, w, h, 64, 96, '#11161a', 4); streaks(g, 0, w, 0, 93, 20, [h * 0.2, h], '20,25,28', 0.3);
   }, 3],

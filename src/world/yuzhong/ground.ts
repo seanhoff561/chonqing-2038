@@ -9,6 +9,7 @@ export const Y0 = 150;
 /** The rivers' surface (the Three Gorges reservoir's winter level, about 162 m). */
 export const WATER_Y = 12;
 export const CELL = 2;
+const PAVED = new Set(['footway', 'pedestrian', 'path', 'steps', 'corridor', 'living_street']);
 
 export interface Street { kind: string; w: number; steps: boolean; bridge: boolean; tunnel: boolean; layer: number; name: string; pts: P2[] }
 
@@ -34,6 +35,7 @@ export function buildGround(): Heightfield {
 function level(g: Heightfield) {
   const set = new Float32Array(g.y.length).fill(NaN), wt = new Float32Array(g.y.length);
   streetCells = new Uint8Array(g.y.length);
+  g.surf = new Uint8Array(g.y.length);
   for (const s of streets()) {
     if (!onGround(s) || s.pts.length < 2) continue;
     const raw = s.pts.map(([x, z]) => sample(g, x, z));
@@ -50,7 +52,7 @@ function level(g: Heightfield) {
         const y = hs[k] + (hs[k + 1] - hs[k]) * t, k2 = j * g.w + i, f = d <= half ? 1 : 1 - (d - half) / 3;
         // The strongest claim wins where streets meet or run side by side.
         if (f > wt[k2]) { wt[k2] = f; set[k2] = y; }
-        if (d <= s.w / 2) streetCells[k2] = 1;
+        if (d <= s.w / 2) { streetCells[k2] = 1; g.surf![k2] = s.steps || PAVED.has(s.kind) ? 2 : 1; }
       }
     }
   }

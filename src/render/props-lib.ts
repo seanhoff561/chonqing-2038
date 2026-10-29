@@ -273,6 +273,26 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
     glow.box(w - 0.1, 0.03, 0.26, c, 0, y - 0.02);
     return group([{ geo: k.geometry(), mat: PROP_MAT }, { geo: glow.geometry(), mat: GLOW_MAT }]);
   },
+  // A building's LED screen (M3-46): a black frame of w x h on the wall (+z out), lit in blocks of colour that
+  // read as ads and slogans from the street; the crowded centres are full of them.
+  ledscreen: p => {
+    const k = new Kit(seedOf(p)).use('metal'), r = k.r, w = p.w ?? 10, h = p.h ?? 6;
+    k.box(w + 0.4, h + 0.4, 0.3, 0x18191b, 0, -0.2, -0.15);
+    const glow = new Kit(seedOf(p) + 3), pal = [0xff3a6a, 0x3ae0ff, 0xffd03a, 0xffffff, 0xff7a20, 0x9a5aff, 0x40ff9a];
+    // A dark field with bright content, as screens read at a distance.
+    const bg = [0x0c1424, 0x1c0810, 0x08180e, 0x14101c, 0x201408][Math.floor(r() * 5)];
+    glow.box(w, h, 0.02, bg, 0, 0, 0.02);
+    for (let i = 0; i < 6 + Math.floor(r() * 8); i++) { const bw = w * (0.1 + r() * 0.4), bh = h * (0.08 + r() * 0.3); glow.box(bw, bh, 0.02, pal[Math.floor(r() * pal.length)], (r() - 0.5) * (w - bw), (h - bh) * r(), 0.04); }
+    return group([{ geo: k.geometry(), mat: PROP_MAT }, { geo: glow.geometry(), mat: GLOW_MAT }]);
+  },
+  // A blade sign sticking out from a shop front (its +z out of the wall), glowing characters down both faces.
+  neonblade: p => {
+    const k = new Kit(seedOf(p)).use('metal'), r = k.r, h = p.h ?? 3, c = [0xff4fa0, 0xffb040, 0x60e0ff, 0xff3030, 0x80ff90, 0xffffff][Math.floor(r() * 6)];
+    k.box(0.08, 0.08, 1.0, 0x3a3a3a, 0, h - 0.2, 0.5).box(0.08, 0.08, 1.0, 0x3a3a3a, 0, 0.2, 0.5).box(0.24, h, 0.8, 0x15161a, 0, 0, 0.6);
+    const glow = new Kit(seedOf(p) + 4);
+    for (const x of [-0.13, 0.13]) for (let y = 0.25; y < h - 0.5; y += 0.55 + r() * 0.15) glow.box(0.02, 0.4, 0.5, c, x, y, 0.6);
+    return group([{ geo: k.geometry(), mat: PROP_MAT }, { geo: glow.geometry(), mat: GLOW_MAT }]);
+  },
   dronewreck: p => {
     const k = new Kit(seedOf(p)).use('metal'), r = k.r;
     k.box(0.5, 0.18, 0.7, 0x2a2e32, 0, 0, 0, 0, (r() - 0.5) * 0.4, (r() - 0.5) * 0.4);

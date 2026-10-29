@@ -8,6 +8,8 @@ import type { Prop, Inter, Climbable, HideSpot, Site } from '../world';
 import { canEnter, hollow } from './interiors';
 import { facades, alleys } from './climb';
 import { details } from './details';
+import { tower } from './towers';
+import { tintFor, PAINTED } from './palette';
 
 export type LotKind = 'res' | 'tower' | 'trad';
 export interface Lot {
@@ -20,6 +22,10 @@ export interface Lot {
   across: [number, number, number, number];
   /** never hollowed: the ground round it rises above its floor (Yuzhong lots against a higher street) */
   noEnter?: boolean;
+  /** its colour (M3-46): set by the caller or chosen from the palette by its material */
+  tint?: number;
+  /** a tower's podium top, if it has one */
+  podium?: number;
   /** enterable buildings: a walking route from outside the door up the stairs and out onto the roof */
   route?: { x: number; y: number; z: number }[];
 }
@@ -96,20 +102,25 @@ export function buildFabric(): Fabric {
       const lot: Lot = { id: out.lots.length, x0, z0, x1, z1, base: t.h, wall, top: wall, kind, tile: t, mat, ...tileSides(t, x0, z0, x1, z1) };
       out.lots.push(lot);
       mine.push(lot);
-      mass(lot, r, out);
-      facades(lot, r, out);
+      buildLot(lot, r, out);
     }
     alleys(mine, r, out);
   }
   return out;
 }
 
-/** Build one lot (its mass, roof and facade climbing) into out: the tile city's lots and Yuzhong's alike. */
-export function buildLot(l: Lot, r: Rng, out: Fabric) { mass(l, r, out); facades(l, r, out); }
+/** Build one lot (its mass, roof and facade climbing) into out: the tile city's lots and Yuzhong's alike. Its
+ *  walls, slabs and glass take its colour (M3-46), from a stream of its own so the layout never shifts. */
+export function buildLot(l: Lot, r: Rng, out: Fabric) {
+  const s0 = out.solids.length, f0 = out.far.length;
+  l.tint ??= tintFor(l.mat, makeRng(hashString(`tint:${l.x0}:${l.z0}`)));
+  if (l.kind === 'tower') tower(l, r, out); else { mass(l, r, out); facades(l, r, out); }
+  for (const list of [out.solids.slice(s0), out.far.slice(f0)]) for (const s of list) if (s.tint === undefined && PAINTED.has(s.mat)) s.tint = l.tint;
+}
 
 /** Solid blocks wear painted facades with window grids; hollow ones show their real openings. */
 function paint(l: Lot, r: Rng): number {
-  if (l.kind !== 'res') return l.mat;
+  if (l.kind !== 'res' || l.mat === MAT.facadeBand) return l.mat;
   if (l.wall - l.base <= 12 && rand(r) < 0.5) return MAT.facadeBrick;
   return l.mat === MAT.tile ? MAT.facadeTile : MAT.facade;
 }

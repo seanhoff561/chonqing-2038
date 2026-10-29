@@ -11,6 +11,15 @@ export const CHUNK = 64;
 export const CASTER_LAYER = 1;
 const CASTER = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, colorWrite: false, depthWrite: false });
 const OPEN = [1, 1, 1, 1];
+/** A building colour as linear RGB, cached; none is white. */
+const tints = new Map<number, [number, number, number]>(), WHITE: [number, number, number] = [1, 1, 1];
+function tintOf(hex?: number): [number, number, number] {
+  if (hex === undefined) return WHITE;
+  let t = tints.get(hex);
+  if (!t) { const c = new THREE.Color(hex); tints.set(hex, (t = [c.r, c.g, c.b])); }
+  return t;
+}
+
 /** Baked occlusion: a wall facing another within AO_R metres darkens, down to AO_MIN when touching. */
 const AO_R = 6, AO_MIN = 0.62;
 
@@ -44,15 +53,15 @@ export function pushSolid(s: Solid, b: Buf, roof: Buf = b, ao: number[] = OPEN) 
   const h = hash(s.x0, s.z0, s.mat), h2 = hash(s.z1, s.x1, s.mat + 31);
   const bay = FACADE_BAY;
   const ou = facade ? Math.floor(h * 4) * bay : 0, ov = facade ? Math.floor(h2 * 4) * bay : 0;
-  // Per-building tint: brightness and a slight warm or cool cast.
-  const tone = 0.86 + h * 0.2, warm = (h2 - 0.5) * 0.08;
+  // Per-building tint: brightness and a slight warm or cool cast, times the building's colour (M3-46).
+  const tone = 0.86 + h * 0.2, warm = (h2 - 0.5) * 0.08, tc = tintOf(s.tint);
   const tall = s.y1 - s.y0 > 2.5;
   const yt = (x: number, z: number) => (s.ramp ? topAt(s, x, z) : s.y1);
   const colour = (o: Buf, y: number, side: boolean, shade: number) => {
     // Grime: walls darken over their bottom 4 m, and rain runs dirt down from the roof edge.
     const g = side && tall ? (0.72 + 0.28 * Math.min(1, (y - s.y0) / 4)) * (1 - 0.18 * Math.max(0, 1 - (s.y1 - y) / 1.5)) : 1;
     const k = tone * g * shade;
-    o.col[o.n * 3] = k * (1 + warm); o.col[o.n * 3 + 1] = k; o.col[o.n * 3 + 2] = k * (1 - warm);
+    o.col[o.n * 3] = k * (1 + warm) * tc[0]; o.col[o.n * 3 + 1] = k * tc[1]; o.col[o.n * 3 + 2] = k * (1 - warm) * tc[2];
   };
   const quad = (pts: number[][], n: number[], uvs: number[][], side: boolean, shade = 1) => {
     const o = side ? b : roof, k = side ? sc : rsc;

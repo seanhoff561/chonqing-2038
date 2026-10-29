@@ -31,7 +31,8 @@ function surface(g: Heightfield, i0: number, j0: number, i1: number, j1: number,
     const l = Math.hypot(sx, 1, sz);
     return [-sx / l, 1 / l, -sz / l];
   };
-  const bufs = [new Buf(), new Buf()];
+  // Ground, retaining wall, asphalt and paving (streets laid on the ground, M3-46).
+  const bufs = [new Buf(), new Buf(), new Buf(), new Buf()], mats = [MAT.concrete, MAT.stone, MAT.asphalt, MAT.stone];
   const flat = 1 / texScale(MAT.concrete), wall = 1 / texScale(MAT.stone);
   for (let j = j0; j < j1; j += k) for (let i = i0; i < i1; i += k) {
     const ie = Math.min(i + k, W - 1), je = Math.min(j + k, g.h - 1);
@@ -41,7 +42,8 @@ function surface(g: Heightfield, i0: number, j0: number, i1: number, j1: number,
       const [a, b, c] = tri;
       const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2];
       const ny = (uz * vx - ux * vz) / (Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) || 1);
-      const steep = ny < STEEP, o = bufs[steep ? 1 : 0];
+      const steep = ny < STEEP, sf = g.surf && k === 1 ? g.surf[j * W + i] || g.surf[je * W + ie] : 0;
+      const o = bufs[steep ? 1 : sf ? sf + 1 : 0];
       const fx = Math.abs(uy * vz - uz * vy) > Math.abs(ux * vy - uy * vx);
       for (const v of tri) {
         const [nx, nyy, nz] = nrm(Math.round((v[0] - g.x0) / g.cell), Math.round((v[2] - g.z0) / g.cell));
@@ -49,7 +51,7 @@ function surface(g: Heightfield, i0: number, j0: number, i1: number, j1: number,
       }
     }
   }
-  return bufs.map((b, s) => b.mesh(material(s ? MAT.stone : MAT.concrete, true, lod))).filter((m): m is THREE.Mesh => !!m);
+  return bufs.map((b, s) => b.mesh(material(mats[s], true, lod))).filter((m): m is THREE.Mesh => !!m);
 }
 
 /** A little variation in the ground's tone, stable per place. */

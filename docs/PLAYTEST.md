@@ -36,3 +36,8 @@ Report: does the city feel endless from up high, and does the haze look right? A
 Start: `?scenario=shibati&dev=1`; look from the stair street and from rooftops toward the upper city; compare with docs/reference/look-01.jpg.
 Try: the residential slabs over the walk-ups, balcony bands, roof gardens, laundry and cables; the overcast light.
 Report: what still looks least like the photo (colours, window grids, regularity of the blocks, roofs)? Where should the city be denser or more broken?
+
+## PT-008 Yuzhong at 1:1, first look (U-017, U-020)
+Start: `?scenario=yuzhong&dev=1` (the old map is still the default until M3-41c); teleports in the dev panel go to Jiefangbei, Shibati, Jiaochangkou, Hongyadong, Xiaoshizi, Chaotianmen, the cableway and the Grand Tunnel.
+Try: noclip up over the peninsula and look along both rivers; walk Jiefangbei's streets (towers, LED screens, neon); walk a residential slope and the stairs; slide down a steep street (Ctrl at a sprint); try a steep bank (it should be a wall); fall from a tower roof past a ledge and grab (it should tear loose above about 12 m).
+Report: does it read as Chongqing (sizes, slopes, how buildings sit on the hill)? Which buildings or colours look wrong, and where is it too empty? After `npm run verify`, compare logs/variety-jiefangbei.png, variety-slope.png and variety-shibati.png with docs/reference/places/jiefangbei-3.jpg, old-housing-1.jpg and shibati-2.jpg. How is the frame rate and the load time on your machine?
