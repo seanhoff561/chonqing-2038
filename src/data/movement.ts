@@ -1,0 +1,29 @@
+// Movement tuning (DESIGN section 3). The sim reads every movement number from here.
+export const movement = {
+  width: 0.5,
+  height: { stand: 1.75, crouch: 1.1, crawl: 0.5, hidden: 0.75 },
+  eye: { stand: 1.62, crouch: 0.98, crawl: 0.38, hidden: 0.55 },
+  speed: { jog: 3.2, sprint: 7.0, crouch: 1.6, crawl: 0.8, limp: 1.5 },
+  groundAccel: 30,
+  airAccel: 4,
+  gravity: 9.81,
+  jumpSpeed: 3.0,
+  stepHeight: 0.45,
+  snapDown: 0.5,
+  maxFall: 50,
+  mantle: { min: 0.5, max: 2.4, reach: 0.7, lowTime: 0.35, highTime: 0.8, lowLimit: 1.0 },
+  vault: { minH: 0.5, maxH: 1.2, maxDepth: 1.2, minSpeed: 2.5, time: 0.45, keep: 0.85 },
+  slide: { minSpeed: 6.0, time: 1.0, start: 7.5, end: 3.0 },
+  hang: { grabWindow: 0.35, handHeight: 2.1, shimmy: 0.8, climbTime: 0.9, wallGap: 0.6 },
+  wallRun: { maxTime: 0.9, speed: 6.5, upSpeed: 2.5, gravityScale: 0.6, wallDist: 0.8, maxAngle: 35, leapSpeed: 5.0, leapUp: 3.0 },
+  wallClimb: { maxAngle: 30, dist: 1.2, upSpeed: 4.2, time: 0.45, reach: 3.5 },
+  climb: { pipeUp: 1.0, pipeDown: 1.4, ladder: 1.5, attachDist: 0.7 },
+  falls: { safe: 4, rollSafe: 7, rollWindow: 0.3, lethal: 12, fractureFrom: 7, rollMax: 10, dmgPerM: 8, dmgPerMHigh: 10, sprainChance: 0.4, armChance: 0.2 },
+  hide: { enterTime: 0.6, exitTime: 0.5, minInner: 0.8, reach: 1.6 },
+  swim: { speed: 1.4, sprint: 2.2, dive: 1.2, breath: 40, drownDps: 8, wetMinutes: 120, climbOut: 0.6, floatDepth: 1.2 },
+  stamina: { max: 100, sprint: 6, jump: 8, mantle: 6, wallRun: 15, hang: 2, regen: 15, regenDelay: 1, recover: 30 },
+  noise: { crawl: 1, crouch: 2, jog: 8, sprint: 16, land: 15, landMinH: 2, vault: 6, stepEvery: 0.55, rainScale: 0.5 },
+  encumbrance: { heavy: 15, overloaded: 25, penalty: 0.15, overloadedMantle: 1.6 },
+} as const;
+
+export type Movement = typeof movement;

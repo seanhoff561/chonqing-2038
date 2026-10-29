@@ -1,9 +1,10 @@
 # Progress
 
 <!-- status -->
-**Status:** Phase 0 done. Next: M1 Movement (M1-01).
-Milestone: M1 | Features done: 0 / 204 | Last verify: Phase 0
+**Status:** building M1. Next: M1-02 Box and ramp collision world.
+Features done: 1 / 204 | Last done: M1-01
 <!-- /status -->
 
 ## Log
 - Phase 0: scaffold, DESIGN.md, features.json (204), tools, docs.
+- M1-01 Fixed-step deterministic sim core: fixed-step deterministic sim core
