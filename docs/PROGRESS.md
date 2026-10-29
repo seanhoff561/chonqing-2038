@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-41 The city at 1:1 (U-017).
-Features done: 94 / 244 | Last done: M3-45
+**Status:** building M3. Next: M3-41b The Yuzhong base world (D-016).
+Features done: 95 / 247 | Last done: M3-41a
 <!-- /status -->
 
 ## Log
@@ -112,3 +112,4 @@ Features done: 94 / 244 | Last done: M3-45
 - M3-42 Start hideout and many hideouts (U-018): start in the friends' vent hideout; any number of hideouts, each with its own storage
 - M3-40 Rotated solids (U-017): turned solids: collision, rays, parkour and rendering at any angle
 - M3-45 The headlamp works (U-019): the headlamp works: white and red beams, battery, recharge
+- M3-41a Heightfield ground (D-016): heightfield ground: collision shell, rays, holes, chunked meshes and far mesh

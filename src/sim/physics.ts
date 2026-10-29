@@ -1,11 +1,20 @@
 // Player-box collision against the world: horizontal moves with step-up, vertical sweeps, ground probes.
-import { query, overlaps, topOver, xzHit, type Box, type SolidIndex } from '../world/geom';
+import { query, overlaps, topOver, xzHit, groundBox, type Box, type Solid, type SolidIndex } from '../world/geom';
 import type { Vec3 } from './types';
 import { movement as M } from '../data/movement';
 
 const HW = M.width / 2;
 const EPS = 1e-4;
-const ids: number[] = [];
+const ids: number[] = [], near: Solid[] = [];
+
+/** Solids whose footprint may touch the box, plus the ground's shell under it. Reuses one array. */
+function nearby(idx: SolidIndex, b: Box): Solid[] {
+  near.length = 0;
+  for (const i of query(idx, b.x0, b.z0, b.x1, b.z1, ids)) near.push(idx.solids[i]);
+  const g = groundBox(idx, b.x0, b.z0, b.x1, b.z1);
+  if (g) near.push(g);
+  return near;
+}
 
 export function boxAt(x: number, y: number, z: number, h: number, hw = HW): Box {
   return { x0: x - hw, y0: y, z0: z - hw, x1: x + hw, y1: y + h, z1: z + hw };
@@ -16,8 +25,7 @@ export const free = (idx: SolidIndex, x: number, y: number, z: number, h: number
 /** Highest top among solids overlapping the box, or -Infinity. */
 function overlapTop(idx: SolidIndex, b: Box): number {
   let top = -Infinity;
-  for (const i of query(idx, b.x0, b.z0, b.x1, b.z1, ids)) {
-    const s = idx.solids[i];
+  for (const s of nearby(idx, b)) {
     if (b.x1 <= s.x0 + 1e-6 || b.x0 >= s.x1 - 1e-6 || b.z1 <= s.z0 + 1e-6 || b.z0 >= s.z1 - 1e-6) continue;
     if (s.rot && !xzHit(s, b.x0, b.z0, b.x1, b.z1)) continue;
     const t = topOver(s, b.x0, b.z0, b.x1, b.z1);
@@ -71,9 +79,11 @@ function approach(idx: SolidIndex, pos: Vec3, h: number, dx: number, dz: number)
 export function moveVertical(idx: SolidIndex, pos: Vec3, h: number, dy: number): number {
   const b = boxAt(pos.x, pos.y, pos.z, h);
   let d = dy, hit = 0;
+  // Feet a little inside the ground (a teleport, a spawn) come back up onto it rather than sinking through.
+  const g = dy <= 0 ? groundBox(idx, b.x0, b.z0, b.x1, b.z1) : null;
+  if (g && b.y0 < g.y1 && b.y0 > g.y1 - 1.5) { pos.y = g.y1 + 1e-4; return 1; }
   const y0 = Math.min(b.y0, b.y0 + dy), y1 = Math.max(b.y1, b.y1 + dy);
-  for (const i of query(idx, b.x0, b.z0, b.x1, b.z1, ids)) {
-    const s = idx.solids[i];
+  for (const s of nearby(idx, b)) {
     if (b.x1 <= s.x0 + 1e-6 || b.x0 >= s.x1 - 1e-6 || b.z1 <= s.z0 + 1e-6 || b.z0 >= s.z1 - 1e-6) continue;
     if (s.rot && !xzHit(s, b.x0, b.z0, b.x1, b.z1)) continue;
     const top = topOver(s, b.x0, b.z0, b.x1, b.z1);
@@ -89,8 +99,7 @@ export function moveVertical(idx: SolidIndex, pos: Vec3, h: number, dy: number):
 export function groundGap(idx: SolidIndex, pos: Vec3, maxDrop: number): number {
   const b = boxAt(pos.x, pos.y - maxDrop, pos.z, maxDrop);
   let best = Infinity;
-  for (const i of query(idx, b.x0, b.z0, b.x1, b.z1, ids)) {
-    const s = idx.solids[i];
+  for (const s of nearby(idx, b)) {
     if (b.x1 <= s.x0 + 1e-6 || b.x0 >= s.x1 - 1e-6 || b.z1 <= s.z0 + 1e-6 || b.z0 >= s.z1 - 1e-6) continue;
     if (s.rot && !xzHit(s, b.x0, b.z0, b.x1, b.z1)) continue;
     const top = topOver(s, b.x0, b.z0, b.x1, b.z1);

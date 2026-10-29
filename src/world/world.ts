@@ -1,4 +1,5 @@
 // The static world: collision index plus the entity lists the sim needs. Identical every run.
+import type { Heightfield } from './heightfield';
 import { buildIndex, type Box, type Solid, type SolidIndex } from './geom';
 
 /** Vertical climbable. (nx, nz) points from the wall out toward where the climber hangs. */
@@ -40,6 +41,8 @@ export interface World {
   /** render-only stand-ins for the far view (U-012): one box per block; empty for small worlds */
   far: Solid[];
   solids: Solid[];
+  /** heightfield ground (M3-41a), also in the index */
+  ground?: Heightfield;
   index: SolidIndex;
   water: Box[];
   climbables: Climbable[];
@@ -62,6 +65,8 @@ export interface WorldParts {
   inter?: Inter[];
   sites?: Site[];
   far?: Solid[];
+  /** heightfield ground (M3-41a) */
+  ground?: Heightfield;
   spawn: World['spawn'];
 }
 
@@ -70,7 +75,8 @@ export function makeWorld(p: WorldParts): World {
     name: p.name,
     decor: p.decor ?? [],
     solids: p.solids,
-    index: buildIndex(p.solids),
+    ground: p.ground,
+    index: buildIndex(p.solids, p.ground),
     water: p.water ?? [],
     climbables: p.climbables ?? [],
     hides: p.hides ?? [],

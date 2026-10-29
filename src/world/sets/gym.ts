@@ -1,6 +1,7 @@
 // The movement gym: a floodlit yard of labelled obstacles at standard sizes (DESIGN section 3).
 import { solid, carve, turn, type Solid } from '../geom';
 import { makeWorld, type World, type Label, type Climbable, type HideSpot } from '../world';
+import { heightfield } from '../heightfield';
 import { MAT } from '../mats';
 
 export function buildGym(): World {
@@ -104,8 +105,18 @@ export function buildGym(): World {
     }
   }
 
+  // Heightfield ground (M3-41a) east of the yard: level with the floor at x 70, a 30% slope from x 80, a 6 m cut
+  // retaining face at x 110 and a plateau; a pit with a tunnel under the shell.
+  const ground = heightfield(70, -40, 2, 41, 41, 4);
+  for (let j = 0; j < 41; j++) for (let i = 0; i < 41; i++) {
+    const x = 70 + i * 2, z = -40 + j * 2;
+    ground.y[j * 41 + i] = Math.min(9, Math.max(0, (x - 80) * 0.3)) + (x >= 112 ? 6 : 0) + 0.8 * Math.sin(z * 0.15);
+  }
+  solids.push(solid(118, 4, -6, 140, 5, 6, MAT.concrete)); // a tunnel floor under the plateau
+  label('坡 SLOPE 30%', 90, 4, 0, 'up');
+
   return makeWorld({
-    name: 'gym', solids, labels, climbables, hides,
+    name: 'gym', solids, labels, climbables, hides, ground,
     water: [{ x0: -30, y0: -3.3, z0: 24, x1: -16, y1: -0.3, z1: 36 }],
     spawn: { x: 0, y: 0, z: 0, yaw: 0 },
     teleports: [
@@ -120,6 +131,7 @@ export function buildGym(): World {
       { name: 'bars over the pit', x: -41, y: 0, z: -9.6, yaw: 0 },
       { name: 'ledge traverse', x: -58, y: 0, z: 27, yaw: Math.PI },
       { name: 'turned walls', x: 14, y: 0, z: 58, yaw: Math.PI / 6 },
+      { name: 'hillside (ground)', x: 74, y: 1.5, z: 10, yaw: -Math.PI / 2 - 0.3 },
     ],
   });
 }

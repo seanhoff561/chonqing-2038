@@ -1,3 +1,5 @@
+import { heightAt, spanOver, rayGround, GROUND_ID, type Heightfield } from './heightfield';
+
 // Collision geometry: boxes and ramps in a uniform 4 m grid. A ramp is a box whose top slopes along one axis: it
 // rises from `low` to y1 toward `ramp` direction. A turned solid (M3-40, U-017) is a box turned by a yaw about a
 // pivot: its x0..z1 are its world bounds (for the grid and quick rejects) and `rot` holds the box as it was
@@ -115,6 +117,8 @@ export function topOver(s: Solid, x0: number, z0: number, x1: number, z1: number
 
 export interface SolidIndex {
   solids: Solid[];
+  /** the heightfield ground (M3-41a), if the world has one */
+  ground?: Heightfield;
   cells: Map<number, number[]>;
   /** per-solid flag: 1 disables the solid (open doors, cut fences) */
   off: Uint8Array;
@@ -124,7 +128,7 @@ export interface SolidIndex {
 
 const key = (ix: number, iz: number) => (ix + 32768) * 65536 + (iz + 32768);
 
-export function buildIndex(solids: Solid[]): SolidIndex {
+export function buildIndex(solids: Solid[], ground?: Heightfield): SolidIndex {
   const cells = new Map<number, number[]>();
   solids.forEach((s, i) => {
     for (let ix = Math.floor(s.x0 / CELL); ix <= Math.floor((s.x1 - 1e-6) / CELL); ix++)
@@ -135,7 +139,7 @@ export function buildIndex(solids: Solid[]): SolidIndex {
         c.push(i);
       }
   });
-  return { solids, cells, off: new Uint8Array(solids.length), stamp: new Uint32Array(solids.length), stampN: 0 };
+  return { solids, ground, cells, off: new Uint8Array(solids.length), stamp: new Uint32Array(solids.length), stampN: 0 };
 }
 
 /** Ids of enabled solids whose footprint touches the xz rectangle. Reuses `out`. */
@@ -166,7 +170,15 @@ export function overlaps(idx: SolidIndex, b: Box): boolean {
     if (b.y1 <= s.y0 + EPS || b.y0 >= topOver(s, b.x0, b.z0, b.x1, b.z1) - EPS) continue;
     return true;
   }
-  return false;
+  const g = groundBox(idx, b.x0, b.z0, b.x1, b.z1);
+  return !!g && b.y1 > g.y0 + EPS && b.y0 < g.y1 - EPS;
+}
+
+/** The ground's shell over an xz rectangle as a solid spanning it: top the highest surface, bottom the lowest
+ *  surface less the shell; null without ground there. Physics treats it like any other solid. */
+export function groundBox(idx: SolidIndex, x0: number, z0: number, x1: number, z1: number): Solid | null {
+  const g = idx.ground, sp = g && spanOver(g, x0, z0, x1, z1);
+  return sp ? { x0, z0, x1, z1, y0: sp.lo - g!.thick, y1: sp.hi, mat: 0, ramp: 0, low: 0 } : null;
 }
 
 /** Highest solid top at (x, z) that is at or below y + 1e-3; -Infinity if none. */
@@ -179,6 +191,8 @@ export function groundAt(idx: SolidIndex, x: number, z: number, y: number): numb
     const t = topAt(s, x, z);
     if (t <= y + 1e-3 && t > best) best = t;
   }
+  const t = idx.ground ? heightAt(idx.ground, x, z) : null;
+  if (t !== null && t <= y + 1e-3 && t > best) best = t;
   return best;
 }
 
@@ -267,6 +281,8 @@ export function raycast(idx: SolidIndex, ox: number, oy: number, oz: number, dx:
     if (tCell > maxT) break;
     if (tx < tz) { ix += sx; tx += tdx; } else { iz += sz; tz += tdz; }
   }
+  const g = idx.ground && rayGround(idx.ground, ox, oy, oz, dx, dy, dz, best.t);
+  if (g) return { ...g, id: GROUND_ID };
   return best.id >= 0 ? best : null;
 }
 

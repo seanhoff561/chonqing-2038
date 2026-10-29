@@ -7,6 +7,7 @@ import type { World } from '../world/world';
 import type { Player, Grip } from './player';
 import { movement as M } from '../data/movement';
 import { raycast, topAt, frameIn, frameOut, frameDirOut } from '../world/geom';
+import { heightAt } from '../world/heightfield';
 import { free, moveHorizontal, moveVertical, groundGap } from './physics';
 import { startAction, kickOff } from './parkour';
 import { lim, sfx, lookDelta } from './move';
@@ -38,15 +39,16 @@ export function findGrab(world: World, p: Player): Grip | null {
   }
   const h = raycast(world.index, ex, ey, ez, d.x, d.y, d.z, bestT);
   if (h) {
-    const s = world.index.solids[h.id];
+    // The ground (a cut terrace edge) can be a lip too; only solids have edges to grip from on top.
+    const s = h.id >= 0 ? world.index.solids[h.id] : null;
     const hx = ex + d.x * h.t, hy = ey + d.y * h.t, hz = ez + d.z * h.t;
     best = null;
     if (Math.abs(h.ny) < 0.5) {
       // A wall face just below its top edge is a lip, if nothing sits on the edge.
-      const top = topAt(s, hx, hz);
+      const top = s ? topAt(s, hx, hz) : heightAt(world.index.ground!, hx - h.nx * 0.05, hz - h.nz * 0.05) ?? hy;
       if (top - hy <= G.lipDepth && free(world.index, hx - h.nx * 0.07, top + 0.02, hz - h.nz * 0.07, 0.3, 0.05))
         best = { x: hx, y: top, z: hz, nx: h.nx, nz: h.nz, kind: 'lip', top };
-    } else if (h.ny > 0.7 && !s.ramp) {
+    } else if (s && h.ny > 0.7 && !s.ramp) {
       // On a top surface near an edge facing him: grip that edge (found in a turned solid's own frame).
       const b = s.rot ?? s, [lx, lz] = frameIn(s, hx, hz), dl = frameIn(s, hx + d.x, hz + d.z), ldx = dl[0] - lx, ldz = dl[1] - lz;
       const edges = [
