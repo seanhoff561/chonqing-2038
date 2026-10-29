@@ -23,6 +23,7 @@ import { itemModel, supportPoint } from './render/items3d';
 import { SleepUI } from './ui/sleep-ui';
 import { DeathScreen } from './ui/death';
 import { Furniture } from './render/furniture';
+import { Rain } from './render/rain';
 import { lodRadius } from './render/materials';
 import { PauseMenu } from './ui/pause';
 import { findGrab } from './sim/grip';
@@ -49,6 +50,7 @@ export class Game {
   readonly death = new DeathScreen(this);
   readonly pause: PauseMenu;
   readonly furniture = new Furniture();
+  readonly rain: Rain;
   drawDistance = 160;
   scenario!: Scenario;
   private heldId = '';
@@ -64,6 +66,7 @@ export class Game {
     this.sky = new Sky(this.view);
     this.hands = new Hands3D(this.view.fp.cam);
     this.view.scene.add(this.furniture.group);
+    this.rain = new Rain(this.view.scene);
     this.bodyFx = new BodyFx(this.view.renderer.domElement);
     this.inv = new InventoryUI(this);
     this.sleep = new SleepUI(this);
@@ -156,7 +159,11 @@ export class Game {
     this.updatePrompt();
     this.updateHeld();
     this.furniture.sync(this.state, this.world);
-    this.sky.update(this.state.time, this.view.fp.cam.position, this.hazeDistance(), this.underAmount(dt));
+    const cam = this.view.fp.cam.position;
+    this.sky.update(this.state.time, cam, this.hazeDistance(), this.underAmount(dt), this.state.weather);
+    // Rain stops at a roof or underground.
+    const covered = this.under > 0.5 || !!raycast(this.world.index, cam.x, cam.y, cam.z, 0, 1, 0, 40);
+    this.rain.update(this.state.tick / 60, cam, this.state.weather.rain, covered);
     this.view.render(this.state.tick / 60, this.state.wstate.open);
     this.frames++;
   }

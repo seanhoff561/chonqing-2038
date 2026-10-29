@@ -2,7 +2,7 @@
 
 <!-- status -->
 **Status:** building M3. Next: M3-24 Place references (U-011).
-Features done: 81 / 228 | Last done: M3-12
+Features done: 82 / 228 | Last done: M3-13
 <!-- /status -->
 
 ## Log
@@ -99,3 +99,4 @@ Features done: 81 / 228 | Last done: M3-12
 - M3-08 Grand Tunnel network: Grand Tunnel network: side tunnel to the Shibati gate, plaza exit, hotpot cool room
 - M3-09 Air-raid tunnel shelter site (U-013): air-raid chamber in the tunnel network as a shelter site, vent grate on the plaza
 - M3-12 Weather schedule: seeded weather schedule: morning fog, rain spells, in sim state
+- M3-13 Fog and rain rendering: fog and rain rendering: weather haze, rain streaks, wet sheen

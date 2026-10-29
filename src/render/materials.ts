@@ -108,8 +108,24 @@ const draws: Record<number, [Draw, number]> = {
   [MAT.mark]: [(g, w, h) => { g.fillStyle = '#d4b020'; g.fillRect(0, 0, w, h); g.fillStyle = '#151515'; for (let x = -h; x < w; x += 48) { g.beginPath(); g.moveTo(x, h); g.lineTo(x + h, 0); g.lineTo(x + h + 24, 0); g.lineTo(x + 24, h); g.fill(); } }, 1],
 };
 
-const mats = new Map<string, THREE.MeshLambertMaterial>();
-const glowing: THREE.MeshLambertMaterial[] = [];
+const mats = new Map<string, THREE.MeshPhongMaterial>();
+const glowing: THREE.MeshPhongMaterial[] = [];
+
+/** A dull grey sky to reflect when surfaces are wet (M3-13). */
+let skyEnv: THREE.CubeTexture | null = null;
+function wetSky(): THREE.CubeTexture {
+  if (skyEnv) return skyEnv;
+  const face = (top: boolean, bottom: boolean) => {
+    const c = document.createElement('canvas'); c.width = c.height = 32;
+    const g = c.getContext('2d')!, grd = g.createLinearGradient(0, 0, 0, 32);
+    grd.addColorStop(0, top || !bottom ? '#c4c9cc' : '#3a3b3c'); grd.addColorStop(1, bottom || !top ? '#4a4c4e' : '#c4c9cc');
+    g.fillStyle = bottom ? '#3a3b3c' : top ? '#c4c9cc' : grd; g.fillRect(0, 0, 32, 32);
+    return c;
+  };
+  skyEnv = new THREE.CubeTexture([face(false, false), face(false, false), face(true, false), face(false, true), face(false, false), face(false, false)]);
+  skyEnv.needsUpdate = true;
+  return skyEnv;
+}
 
 /** Detail radius (U-012): detailed chunks draw inside it, the far stand-ins outside it. */
 export const lodRadius = { value: 1e9 };
@@ -129,27 +145,42 @@ function lodCut(m: THREE.Material, lod: Lod) {
 }
 
 /** A world material; vc for meshes that carry vertex colours (the merged world); lod splits near and far. */
-export function material(id: number, vc = false, lod: Lod = 'all'): THREE.MeshLambertMaterial {
+export function material(id: number, vc = false, lod: Lod = 'all'): THREE.MeshPhongMaterial {
   const key = `${id}:${vc}:${lod}`;
   let m = mats.get(key);
   if (m) return m;
   if (id === MAT.lamp) {
-    m = new THREE.MeshLambertMaterial({ color: 0xfff1c0, emissive: 0xffd890, emissiveIntensity: 1.2, vertexColors: vc });
+    m = new THREE.MeshPhongMaterial({ color: 0xfff1c0, emissive: 0xffd890, emissiveIntensity: 1.2, vertexColors: vc });
     lodCut(m, lod);
   } else if (isFacade(id)) {
     const map = canvasTexture(`facade${id}`, 1024, 1024, (g, w) => drawFacade(id, g, w));
     const lights = canvasTexture(`facadeLit${id}`, 512, 512, (g, w) => drawFacadeLights(id, g, w));
-    m = new THREE.MeshLambertMaterial({ map, vertexColors: vc, emissive: 0xffffff, emissiveMap: lights, emissiveIntensity: 0 });
+    m = new THREE.MeshPhongMaterial({ map, vertexColors: vc, emissive: 0xffffff, emissiveMap: lights, emissiveIntensity: 0, ...DRY });
     glowing.push(m);
     lodCut(m, lod);
   } else {
     const [draw] = draws[id] ?? draws[MAT.concrete];
     const tex = canvasTexture(`mat${id}`, 512, 512, draw);
-    m = new THREE.MeshLambertMaterial({ map: tex, vertexColors: vc, transparent: id === MAT.water, opacity: id === MAT.water ? 0.82 : 1 });
+    m = new THREE.MeshPhongMaterial({ map: tex, vertexColors: vc, transparent: id === MAT.water, opacity: id === MAT.water ? 0.82 : 1, ...DRY });
     lodCut(m, lod);
   }
   mats.set(key, m);
   return m;
+}
+
+const DRY = { shininess: 30, specular: 0x000000, reflectivity: 0, combine: THREE.MixOperation };
+let wet = -1;
+/** 0 dry to 1 soaked (M3-13): surfaces darken, pick up a sheen and reflect the grey sky. */
+export function setWet(k: number) {
+  if (Math.abs(k - wet) < 0.01) return;
+  wet = k;
+  for (const m of mats.values()) {
+    if (m.emissiveIntensity > 1) continue;
+    if (k > 0 && !m.envMap) { m.envMap = wetSky(); m.needsUpdate = true; }
+    m.color.setScalar(1 - 0.28 * k);
+    m.specular.setScalar(0.22 * k);
+    m.reflectivity = 0.16 * k;
+  }
 }
 
 /** 0 by day to 1 at night: lit windows glow. */

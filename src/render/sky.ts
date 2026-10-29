@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { daylight, hourOf } from '../sim/clock';
 import { SHADOW_R, type View } from './view';
-import { setNight } from './materials';
+import { setNight, setWet } from './materials';
 
 const DAY_SKY = new THREE.Color(0x9fabb2), DUSK_SKY = new THREE.Color(0x6b5a58), NIGHT_SKY = new THREE.Color(0x151a27);
 const OVERCAST = new THREE.Color(0xb4b8b8);
@@ -18,19 +18,23 @@ export class Sky {
 
   constructor(private view: View) { view.scene.add(this.moon); }
 
-  /** under: 0 in the open, 1 deep underground (sky light shut out) */
-  update(time: number, camPos: THREE.Vector3, farBase: number, under = 0) {
+  /** under: 0 in the open, 1 deep underground (sky light shut out); weather fog and rain 0..1 (M3-13) */
+  update(time: number, camPos: THREE.Vector3, farBase: number, under = 0, weather = { fog: 0, rain: 0 }) {
     const v = this.view, d = daylight(time), h = hourOf(time);
+    // Fog and rain flatten the light like an overcast sky, and fog closes the view from kilometres to ~120 m.
+    const flat = Math.max(this.overcast, weather.fog * 0.9, weather.rain);
+    const fogK = Math.exp(-3.1 * weather.fog);
+    setWet(weather.rain);
     const duskness = Math.max(0, 1 - Math.abs(d - 0.5) * 2) * (d < 1 && d > 0 ? 1 : 0);
     c.copy(NIGHT_SKY).lerp(DAY_SKY, d).lerp(DUSK_SKY, duskness * 0.6);
     (v.scene.background as THREE.Color).copy(c);
     const fog = v.scene.fog as THREE.Fog;
-    c.lerp(OVERCAST, this.overcast * d * 0.6);
+    c.lerp(OVERCAST, flat * d * 0.6);
     (v.scene.background as THREE.Color).copy(c);
     fog.color.copy(c);
-    fog.far = farBase / this.fogMul;
+    fog.far = Math.max(Math.min(farBase, 110), farBase * fogK) / this.fogMul;
     // Overcast haze builds slowly with distance; otherwise the fog closes in near the draw distance.
-    fog.near = this.overcast ? fog.far * 0.14 : Math.min(fog.far * 0.15, 25);
+    fog.near = flat > 0.3 ? fog.far * (weather.fog > 0.3 ? 0.05 : 0.14) : Math.min(fog.far * 0.15, 25);
     // Sun arcs east to west through the day; below the horizon at night.
     const a = ((h - 6) / 12) * Math.PI;
     // The shadow area follows him in whole shadow texels, so edges don't shimmer as he moves.
@@ -38,9 +42,9 @@ export class Sky {
     v.sun.target.position.set(cx, camPos.y, cz);
     v.sun.position.set(cx + Math.cos(a) * 160, camPos.y + Math.max(20, Math.sin(a) * 180), cz + 60);
     v.sun.castShadow = d > 0.05 && under < 0.5;
-    v.sun.intensity = 1.7 * d * (1 - under) * (1 - 0.7 * this.overcast);
+    v.sun.intensity = 1.7 * d * (1 - under) * (1 - 0.7 * flat);
     v.sun.color.setHSL(0.09, 0.5 - 0.3 * d, 0.85 + 0.1 * d);
-    v.hemi.intensity = (1.4 - 0.15 * d) * (1 - under * 0.85) * (1 + 0.1 * this.overcast);
+    v.hemi.intensity = (1.4 - 0.15 * d) * (1 - under * 0.85) * (1 + 0.1 * flat);
     v.hemi.color.copy(NIGHT_SKY).lerp(new THREE.Color(0xc8d4e0), d).lerp(new THREE.Color(0x5f74a8), (1 - d) * 0.9);
     v.hemi.groundColor.copy(NIGHT_GROUND).lerp(DAY_GROUND, d);
     setNight(Math.max(0, 1 - d * 1.6));

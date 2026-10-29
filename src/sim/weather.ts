@@ -39,6 +39,6 @@ export function weatherAt(seed: number, time: number): Weather {
 
 export function stepWeather(s: SimState) {
   const w = weatherAt(s.seed, s.time);
-  s.weather.fog = w.fog;
+  s.weather.fog = Math.max(w.fog, s.flags.fog ?? 0);
   s.weather.rain = Math.max(w.rain, s.flags.rain);
 }
