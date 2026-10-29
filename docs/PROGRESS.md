@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M1. Next: M1-09 Slide.
-Features done: 8 / 204 | Last done: M1-08
+**Status:** building M1. Next: M1-10 Ledge hang, shimmy, climb up and drop.
+Features done: 9 / 204 | Last done: M1-09
 <!-- /status -->
 
 ## Log
@@ -15,3 +15,4 @@ Features done: 8 / 204 | Last done: M1-08
 - M1-06 Ledge mantle: ledge mantle with ledge finder and scripted actions
 - M1-07 Vault: vault
 - M1-08 Crouch and crawl: crouch and crawl through 0.6 m gaps
+- M1-09 Slide: slide from sprint under 0.6 m bars
