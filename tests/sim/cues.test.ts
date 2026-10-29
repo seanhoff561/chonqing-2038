@@ -42,13 +42,15 @@ describe('movement sound cues (M1-31)', () => {
       }
       run(v.state, v.world, secs(1), { my: 1 }, collect);
     }
-    // Wall-run, wall step, wall kick.
+    // Wall kick along a wall.
     const w = setup([solid(-5, -1, 0, 5, 0, 40), solid(-5, -1, -40, 5, 0, -6), solid(-20, -12, -60, 20, -10, 60), solid(-1.2, -10, -40, -1.0, 4, 40)], { x: -0.5, y: 0, z: 30, yaw: 0 });
     sprintJumpAt(w.state, w.world, 0.05);
-    run(w.state, w.world, 6, { my: 1, buttons: B.SPRINT });
     run(w.state, w.world, 1, { my: 1, buttons: B.SPRINT | B.JUMP, pressed: B.JUMP }, collect);
-    run(w.state, w.world, 25, { my: 1 }, collect);
-    run(w.state, w.world, 1, { pressed: B.JUMP, yaw: -0.8 }, collect);
+    // Jump into a wall: cling.
+    const c = setup([floor(), solid(-5, 0, -30, 5, 8, -3)], { x: 0, y: 0, z: 4, yaw: 0 });
+    for (let i = 0; i < secs(4) && c.state.player.pos.z > -1.6; i++) run(c.state, c.world, 1, { my: 1 });
+    run(c.state, c.world, 1, { my: 1, pressed: B.JUMP, buttons: B.JUMP }, collect);
+    run(c.state, c.world, secs(1), { my: 1, buttons: B.JUMP }, collect);
     // Grab, two-hand grab, release, pull-over, dyno, slip.
     const g = setup([floor(), solid(-2, 0, -30, 2, 4.0, -3), solid(-2, 1.9, -3, 2, 2.0, -2.85)], { x: 0, y: 0, z: -2.5, yaw: 0 });
     for (let i = 0; i < 5; i++) { aim(g.state, 0, 1.95, -2.85); run(g.state, g.world, 1, { buttons: LMB }, collect); }
@@ -62,7 +64,7 @@ describe('movement sound cues (M1-31)', () => {
     const sl2 = setup([floor(), solid(-2, 0, -30, 2, 2.0, -3), solid(-2, 2.0, -30, 2, 6, -3.4)], { x: 0, y: 0, z: -2.55, yaw: 0 });
     for (let i = 0; i < 5; i++) { aim(sl2.state, 0, 1.9, -3); run(sl2.state, sl2.world, 1, { buttons: LMB }); }
     run(sl2.state, sl2.world, secs(20), { buttons: LMB }, collect);
-    const want = ['step-crawl', 'step-crouch', 'step-jog', 'step-sprint', 'jump', 'land', 'land-hard', 'roll', 'vault', 'hop', 'slide', 'wallrun', 'wallstep', 'wallkick', 'grab', 'grab2', 'release', 'pullover', 'dyno', 'slip'];
+    const want = ['step-crawl', 'step-crouch', 'step-jog', 'step-sprint', 'jump', 'land', 'land-hard', 'roll', 'vault', 'hop', 'slide', 'wallkick', 'cling', 'grab', 'grab2', 'release', 'pullover', 'dyno', 'slip'];
     expect(want.filter(c => !cues.has(c))).toEqual([]);
     // Every cue has a sound.
     const src = fs.readFileSync('src/audio/moves.ts', 'utf8');

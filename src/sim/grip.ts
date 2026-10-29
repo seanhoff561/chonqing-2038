@@ -10,6 +10,7 @@ import { raycast, topAt } from '../world/geom';
 import { free, moveHorizontal, moveVertical, groundGap } from './physics';
 import { startAction, kickOff } from './parkour';
 import { lim, sfx, lookDelta } from './move';
+import { heldStack } from './use';
 
 const HW = M.width / 2;
 const G = M.grip;
@@ -84,7 +85,8 @@ export function stepHands(s: SimState, world: World, input: InputFrame) {
   for (let i = 0; i < 2; i++) {
     const h = p.hands[i];
     if (busy || !(input.buttons & BITS[i])) { h.grip = null; continue; }
-    if (h.grip || p.regrab > 0 || !L.hang || p.exhausted || p.posture === 'crawl') continue;
+    // Hands full with an item can't grab (U-007).
+    if (h.grip || p.regrab > 0 || !L.hang || p.exhausted || p.posture === 'crawl' || heldStack(s)) continue;
     const g = findGrab(world, p);
     if (!g) continue;
     // Two hands on one lip sit a shoulder-width apart.
@@ -95,7 +97,6 @@ export function stepHands(s: SimState, world: World, input: InputFrame) {
     }
     h.grip = g;
     input.pressed &= ~BITS[i];
-    s.inv.held = 0; // climbing stows whatever was in his hand
     if (p.mode !== 'grip') {
       p.mode = 'grip';
       p.onGround = false;

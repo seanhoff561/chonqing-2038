@@ -19,6 +19,7 @@ import { writeSave, type SaveFile } from './sim/save';
 import { syncWorld } from './sim/doors';
 import { playMove } from './audio/moves';
 import { Hands3D, poseFor, gripPose } from './render/hands3d';
+import { itemModel } from './render/items3d';
 import { SleepUI } from './ui/sleep-ui';
 import { DeathScreen } from './ui/death';
 import { findGrab } from './sim/grip';
@@ -163,8 +164,10 @@ export class Game {
 
   private updateHeld() {
     const st = heldStack(this.state), id = st?.id ?? '';
-    if (id === this.heldId) return;
+    if (id === this.heldId || !this.hands.ready) return;
     this.heldId = id;
+    const slot = this.hands.heldSlot(1);
+    if (slot) { slot.clear(); if (id) { const m = itemModel(id); m.position.set(0, -0.03, -0.075); slot.add(m); } }
     this.hud.setHeld(id ? `${item(id).zh} ${item(id).en}` : '');
   }
 

@@ -33,11 +33,9 @@ export class FPCamera {
     if (walking) this.bob += dt * sp * 2.2;
     const amp = walking ? Math.min(1, sp / 7) : 0;
     this.dip *= Math.exp(-6 * dt);
+    // A slight lean away from the wall while clinging to it.
     let rollTarget = 0;
-    if (p.mode === 'wallrun') {
-      const side = Math.sign(p.wall.nx * Math.cos(yaw) - p.wall.nz * Math.sin(yaw));
-      rollTarget = 0.14 * side;
-    }
+    if (p.mode === 'cling') rollTarget = 0.08 * Math.sign(p.wall.nx * Math.cos(yaw) - p.wall.nz * Math.sin(yaw));
     this.roll += (rollTarget - this.roll) * k;
     // Sprinting has to read clearly (U-003): FOV kick, harder bob, a slight lean.
     const sprinting = walking && sp > 5.5;

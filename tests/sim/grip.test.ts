@@ -4,6 +4,8 @@ import { solid } from '../../src/world/geom';
 import { B, type SimState } from '../../src/sim/types';
 import type { World } from '../../src/world/world';
 import { findGrab } from '../../src/sim/grip';
+import { addItem } from '../../src/sim/inventory';
+import { heldStack } from '../../src/sim/use';
 
 /** A 4 m wide wall north of him with its top at h; he stands just in front. */
 function wall(h: number, extra: ReturnType<typeof solid>[] = []) {
@@ -13,7 +15,7 @@ function wall(h: number, extra: ReturnType<typeof solid>[] = []) {
 }
 
 /** Hold a mouse button while looking at the lip; optionally jump first. */
-function grabLip(state: SimState, world: World, top: number, bits = LMB, jump = false, x = 0) {
+function grabLip(state: SimState, world: World, top: number, bits: number = LMB, jump = false, x = 0) {
   aim(state, x, top - 0.1, -3);
   if (jump) run(state, world, 1, { pressed: B.JUMP, buttons: B.JUMP });
   for (let i = 0; i < 40 && state.player.mode !== 'grip'; i++) { aim(state, x, top - 0.1, -3); run(state, world, 1, { buttons: bits | (jump ? B.JUMP : 0) }); }
@@ -156,11 +158,19 @@ describe('grabbing rules (M1-26)', () => {
     aim(state, 0, 0, -1.2);
     expect(findGrab(world, state.player)).toBeNull();
   });
-  it('grabbing stows the held item and endurance slips the grip', () => {
+  it('holding an item, the hands cannot grab (U-007)', () => {
     const { world, state } = wall(2.7, [solid(-2, 2.7, -30, 2, 6, -3.4)]);
-    state.inv.held = 2;
+    addItem(state, state.inv.pack, 'crowbar');
+    state.inv.hotbar[0] = state.inv.pack.items[0].uid;
+    state.inv.held = 1;
+    grabLip(state, world, 2.7, LMB | RMB, true);
+    expect(state.player.mode).not.toBe('grip');
+    expect(heldStack(state)?.id).toBe('crowbar');
+  });
+  it('endurance slips the grip after about 15 s of hanging', () => {
+    const { world, state } = wall(2.7, [solid(-2, 2.7, -30, 2, 6, -3.4)]);
     grabLip(state, world, 2.7, LMB, true);
-    expect(state.inv.held).toBe(0);
+    expect(state.player.mode).toBe('grip');
     let slipped = -1;
     run(state, world, secs(25), { buttons: LMB }, (s, i) => { if (slipped < 0 && s.player.mode !== 'grip') slipped = i / 60; });
     expect(slipped).toBeGreaterThan(14);

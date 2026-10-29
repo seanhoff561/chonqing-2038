@@ -31,7 +31,8 @@ onCmd((s, c, w) => {
 });
 
 export function stepHeld(s: SimState, w: World, input: InputFrame) {
-  if (input.slot >= 0) s.inv.held = s.inv.held === input.slot && input.slot > 0 ? 0 : input.slot;
+  // No drawing an item while hanging on by the hands.
+  if (input.slot >= 0 && !(s.player.mode === 'grip' && input.slot > 0)) s.inv.held = s.inv.held === input.slot && input.slot > 0 ? 0 : input.slot;
   const st = heldStack(s);
   if (!st) return;
   if ((input.pressed & B.USE) && s.player.mode !== 'dead' && s.player.mode !== 'hidden') useStack(s, w, st, input);

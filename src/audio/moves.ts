@@ -20,8 +20,6 @@ export const MOVE_SOUNDS: Record<string, Play> = {
   slide: (a, t) => a.noise(t, 0.85, 0.22, 'bandpass', 1800, 0.5, 400),
   // The wall kick: a hard rubber thud with a bright snap, always the same.
   wallkick: (a, t) => { a.tone(t, 0.09, 0.5, 160, 70, 'triangle'); a.noise(t, 0.035, 0.35, 'highpass', 3000); breath(a, t + 0.03, 0.09, 0.14, 1100); },
-  wallrun: (a, t) => { a.tone(t, 0.08, 0.35, 150, 80, 'triangle'); a.noise(t, 0.05, 0.2, 'bandpass', 1800); },
-  wallstep: (a, t) => { a.tone(t, 0.06, 0.25, 140, 90, 'triangle'); a.noise(t, 0.04, 0.14, 'bandpass', 2000); },
   // Hands: a dry slap on the hold; two hands slap twice.
   grab: (a, t) => { a.noise(t, 0.05, 0.35, 'bandpass', 2600, 1.2); a.tone(t, 0.04, 0.08, 400, 250); },
   grab2: (a, t) => { a.noise(t, 0.05, 0.35, 'bandpass', 2600, 1.2); a.noise(t + 0.06, 0.05, 0.3, 'bandpass', 2300, 1.2); },

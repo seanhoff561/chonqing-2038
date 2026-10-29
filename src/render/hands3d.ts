@@ -26,7 +26,7 @@ interface Hand {
   held: THREE.Group;
 }
 
-export const CALIB = { thumbMix: 0.6 };
+export const CALIB = { thumbMix: 0.6, flip: 1 };
 
 const tmpQ = new THREE.Quaternion(), tmpV = new THREE.Vector3();
 
@@ -55,10 +55,10 @@ export class Hands3D {
       const F = rest.get('middle-finger-phalanx-proximal')!.p.clone().sub(wrist).normalize();
       const L = rest.get('index-finger-phalanx-proximal')!.p.clone().sub(rest.get('pinky-finger-phalanx-proximal')!.p);
       L.sub(F.clone().multiplyScalar(L.dot(F))).normalize();
-      const Bk = F.clone().cross(L).multiplyScalar(side);
-      // Map it so the back faces up, fingers point forward and the index side turns inward.
-      const model = new THREE.Matrix4().makeBasis(Bk, F, L);
-      const target = new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, -1), new THREE.Vector3(-side, 0, 0));
+      const Bk = F.clone().cross(L).multiplyScalar(side * CALIB.flip);
+      // Map a right-handed frame (back, fingers, back x fingers) so the back faces up and the fingers point forward.
+      const model = new THREE.Matrix4().makeBasis(Bk, F, Bk.clone().cross(F));
+      const target = new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, -1), new THREE.Vector3(-1, 0, 0));
       const orient = new THREE.Group();
       orient.quaternion.setFromRotationMatrix(target.multiply(model.transpose()));
       orient.add(root);
@@ -70,8 +70,8 @@ export class Hands3D {
       const held = new THREE.Group();
       pivot.add(held);
       this.group.add(pivot);
-      const curlAxis = L.clone().multiplyScalar(side);
-      const thumbAxis = F.clone().multiplyScalar(side * CALIB.thumbMix).add(L.clone().multiplyScalar(side * (1 - CALIB.thumbMix))).normalize();
+      const curlAxis = L.clone().multiplyScalar(side * CALIB.flip);
+      const thumbAxis = F.clone().multiplyScalar(side * CALIB.flip * CALIB.thumbMix).add(L.clone().multiplyScalar(side * CALIB.flip * (1 - CALIB.thumbMix))).normalize();
       this.hands[i] = { pivot, curlAxis, thumbAxis, bones, rest, side, curl: 0.3, thumb: 0.3, held };
       if (++loaded === 2) this.ready = true;
     }, undefined, () => { /* missing model: no hands */ }));
@@ -137,7 +137,8 @@ export function poseFor(p: Player, i: number, readied: boolean, holding: boolean
   if (gripCam) return gripCam;
   if (p.mode === 'cling') return { curl: 0.05, thumb: 0.15, pos: P(0.2, 0.02, -0.34), rot: R(0.9, 0, 0) };
   if (p.mode === 'action') return { curl: 0.2, thumb: 0.2, pos: P(0.22, -0.2, -0.42), rot: R(-0.3, 0, 0) };
-  if (holding && i === 1) return { curl: 0.95, thumb: 0.8, pos: P(0.19, -0.2, -0.36), rot: R(0.1, 0.1, 0) };
+  // Handshake grip: back of the hand outward, so whatever is held stands up through the fist.
+  if (holding && i === 1) return { curl: 0.95, thumb: 0.8, pos: P(0.17, -0.2, -0.38), rot: R(0.25, 0.12, -1.35) };
   if (readied) return { curl: 0.1, thumb: 0.15, pos: P(0.16, -0.12, -0.38), rot: R(0.9, 0.15, 0.1) };
   return { curl: 0.4, thumb: 0.3, pos: P(0.2, -0.2, -0.36), rot: R(0.15, 0.2, 0.15) };
 }
