@@ -2,7 +2,7 @@
 
 <!-- status -->
 **Status:** building M1. Next: M1-28 Gym climbing routes.
-Features done: 48 / 216 | Last done: M1-35
+Features done: 49 / 216 | Last done: M1-32
 <!-- /status -->
 
 ## Log
@@ -63,3 +63,4 @@ Features done: 48 / 216 | Last done: M1-35
 - M1-31 Movement sound cues: movement sound cues (U-004)
 - M1-36 Tap and hold jump height: tap and hold jump height (U-005)
 - M1-35 Wall cling window: wall cling window (U-005)
+- M1-32 Push-off from a hang: push-off from a hang (U-005)
