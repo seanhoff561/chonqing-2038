@@ -2,7 +2,7 @@
 
 <!-- status -->
 **Status:** building M1. Next: M1-28 Gym climbing routes.
-Features done: 50 / 216 | Last done: M1-33
+Features done: 51 / 216 | Last done: M1-34
 <!-- /status -->
 
 ## Log
@@ -65,3 +65,4 @@ Features done: 50 / 216 | Last done: M1-33
 - M1-35 Wall cling window: wall cling window (U-005)
 - M1-32 Push-off from a hang: push-off from a hang (U-005)
 - M1-33 Mouse pull while gripping: mouse pull while gripping (U-005)
+- M1-34 Bar swing and lache: bar swing and lache (U-005)
