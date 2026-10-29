@@ -39,7 +39,7 @@ export function buildYuzhong(): World {
   plans.forEach((p, n) => plots.push(buildPlan(p, n, out, g)));
   rowAlleys(plans, out);
   const decor: Solid[] = [];
-  // Streets are painted on the ground itself (its surf); stairs get their steps; bridges their decks.
+  // Streets are drawn along their lines (render/streets.ts); stairs get their steps here, bridges their decks.
   for (const s of sts) if (onGround(s) && s.steps) surface(s, g, decor); else if (s.bridge && s.layer > 0) bridge(s, g, out.solids);
   const [W, H] = GEO.size;
   const L = GEO.landmarks, at = (k: string, yaw = 0): Teleport => ({ name: k, x: L[k].x, y: hAt(g, L[k].x, L[k].z) + 1.5, z: L[k].z, yaw });
@@ -65,7 +65,7 @@ export function buildYuzhong(): World {
     name: 'yuzhong', solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? []),
     props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], dress.props), inter, climbables: out.climbables.concat(line.climbables, site?.climbables ?? []),
     hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones,
-    far: out.far, ground: g, plots, features: out.features, water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
+    far: out.far, ground: g, plots, features: out.features, streets: sts.filter(onGround).map(s => ({ kind: s.kind, w: s.w, steps: s.steps, pts: s.pts })), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
     teleports, spawn: hide,
   });
 }

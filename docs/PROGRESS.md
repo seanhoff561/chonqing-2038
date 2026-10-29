@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-54 Smooth streets (U-022).
-Features done: 100 / 261 | Last done: M3-53
+**Status:** building M3. Next: M3-55 Buildings that look like buildings, in 2038 (U-022, U-024).
+Features done: 101 / 261 | Last done: M3-54
 <!-- /status -->
 
 ## Log
@@ -118,3 +118,4 @@ Features done: 100 / 261 | Last done: M3-53
 - M3-46 Building variety (U-020): building colour and form variety, cyberpunk centres, streets painted on the ground
 - M3-41c Everything moves to Yuzhong (D-016): the set pieces on the real map: the Grand Tunnel and the hideout under a Shibati street, Line 2 and its stalled train, the construction site, Shibati's terraces, street dressing; the old tile city removed
 - M3-53 Performance: a 150 fps budget (U-022): a frame budget: the static city's transforms frozen, chunks in cells, fewer draw calls, shadows redrawn on change, frame time and a GPU bench in the dev panel, a Resolution setting
+- M3-54 Smooth streets (U-022): streets as meshes along their real lines: asphalt with lines, gutters, drains, manholes and crossings, kerbs and pavements; no cell-stepped edges

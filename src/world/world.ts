@@ -27,6 +27,9 @@ export interface Site {
 /** Areas with special rules: 'under' = underground (no sky light). */
 export interface Zone { kind: string; box: Box }
 
+/** A street's line on the ground: its kind (OSM highway), width, whether it's a stair, its points. */
+export interface StreetLine { kind: string; w: number; steps: boolean; pts: [number, number][] }
+
 /** A hold, hide spot or alley piece: one group per hand-route column. */
 export interface Feature { kind: string; x: number; y: number; z: number; group: number }
 
@@ -50,6 +53,8 @@ export interface World {
   /** heightfield ground (M3-41a), also in the index */
   ground?: Heightfield;
   plots: Plot[];
+  /** the streets on the ground, drawn as meshes along their lines (M3-54) */
+  streets: StreetLine[];
   /** holds, hide spots and alley pieces as built (Yuzhong), for tests and tools */
   features: Feature[];
   index: SolidIndex;
@@ -77,6 +82,7 @@ export interface WorldParts {
   /** heightfield ground (M3-41a) */
   ground?: Heightfield;
   plots?: Plot[];
+  streets?: StreetLine[];
   features?: Feature[];
   spawn: World['spawn'];
 }
@@ -88,6 +94,7 @@ export function makeWorld(p: WorldParts): World {
     solids: p.solids,
     ground: p.ground,
     plots: p.plots ?? [],
+    streets: p.streets ?? [],
     features: p.features ?? [],
     index: buildIndex(p.solids, p.ground),
     water: p.water ?? [],

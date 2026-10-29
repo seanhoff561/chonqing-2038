@@ -31,9 +31,8 @@ function surface(g: Heightfield, i0: number, j0: number, i1: number, j1: number,
     const l = Math.hypot(sx, 1, sz);
     return [-sx / l, 1 / l, -sz / l];
   };
-  // The level faces share one grid of vertices (M3-53: a sixth of the vertices of separate triangles), with an
-  // index list per surface: ground, asphalt and paving (streets laid on the ground, M3-46). Retaining walls,
-  // textured on their own planes, keep vertices of their own.
+  // The level faces share one grid of vertices (M3-53: a sixth of the vertices of separate triangles), indexed.
+  // Retaining walls, textured on their own planes, keep vertices of their own.
   const cols = Math.ceil((i1 - i0) / k) + 1, rows = Math.ceil((j1 - j0) / k) + 1, n = cols * rows;
   const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), uv = new Float32Array(n * 2), col = new Float32Array(n * 3);
   const flat = 1 / texScale(MAT.concrete), wall = 1 / texScale(MAT.stone);
@@ -42,9 +41,9 @@ function surface(g: Heightfield, i0: number, j0: number, i1: number, j1: number,
     const v = r * cols + c, i = gi(c), j = gj(r), x = g.x0 + i * g.cell, z = g.z0 + j * g.cell, [nx, ny, nz] = nrm(i, j), sh = shade(x, z);
     pos.set([x, at(i, j), z], v * 3); nor.set([nx, ny, nz], v * 3); uv.set([x * flat, z * flat], v * 2); col.set([sh, sh, sh], v * 3);
   }
-  const lists: number[][] = [[], [], []], mats = [MAT.concrete, MAT.asphalt, MAT.stone], steepBuf = new Buf();
+  const lists: number[][] = [[]], mats = [MAT.concrete], steepBuf = new Buf();
   for (let r = 0; r + 1 < rows; r++) for (let c = 0; c + 1 < cols; c++) {
-    const i = gi(c), j = gj(r), ie = gi(c + 1), je = gj(r + 1);
+    const i = gi(c), j = gj(r);
     if (k === 1 && g.hole[j * (W - 1) + i]) continue;
     const v00 = r * cols + c, v10 = v00 + 1, v01 = v00 + cols, v11 = v01 + 1;
     for (const tri of [[v00, v11, v10], [v00, v01, v11]]) {
@@ -56,8 +55,8 @@ function surface(g: Heightfield, i0: number, j0: number, i1: number, j1: number,
         for (const v of tri) steepBuf.push([pos[v * 3], pos[v * 3 + 1], pos[v * 3 + 2]], [nor[v * 3], nor[v * 3 + 1], nor[v * 3 + 2]], [(fx ? pos[v * 3 + 2] : pos[v * 3]) * wall, pos[v * 3 + 1] * wall], col[v * 3]);
         continue;
       }
-      const sf = g.surf && k === 1 ? g.surf[j * W + i] || g.surf[je * W + ie] : 0;
-      lists[sf].push(...tri);
+      // Streets are meshes of their own along their lines (M3-54); the ground under them is plain.
+      lists[0].push(...tri);
     }
   }
   const attrs = { position: new THREE.BufferAttribute(pos, 3), normal: new THREE.BufferAttribute(nor, 3), uv: new THREE.BufferAttribute(uv, 2), color: new THREE.BufferAttribute(col, 3) };

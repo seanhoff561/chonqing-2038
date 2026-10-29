@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import type { World } from '../world/world';
 import { buildSolidMeshes, ChunkMerger, CASTER_LAYER } from './world-mesh';
 import { buildGroundMeshes, buildFarGround } from './ground-mesh';
+import { buildStreetMeshes } from './streets';
 import { buildLabels } from './labels';
 import { material, lodRadius } from './materials';
 import { MAT } from '../world/mats';
@@ -80,7 +81,7 @@ export class View {
     // Big worlds draw detail near the camera and one cheap stand-in per block beyond (U-012).
     this.hasFar = w.far.length > 0;
     const meshes = buildSolidMeshes(w.solids.concat(w.decor), this.hasFar ? 'near' : 'all', undefined, w.index);
-    if (w.ground) meshes.add(...buildGroundMeshes(w.ground, this.hasFar ? 'near' : 'all'));
+    if (w.ground) meshes.add(...buildGroundMeshes(w.ground, this.hasFar ? 'near' : 'all'), ...buildStreetMeshes(w.ground, w.streets, this.hasFar ? 'near' : 'all'));
     const props = buildProps(w.props);
     this.world.add(meshes, buildLabels(w.labels), props);
     if (this.hasFar) {
