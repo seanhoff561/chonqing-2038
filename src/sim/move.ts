@@ -5,7 +5,7 @@ import type { World } from '../world/world';
 import type { Player, Posture } from './player';
 import { movement as M } from '../data/movement';
 import { free, moveHorizontal, moveVertical, groundGap } from './physics';
-import { groundParkour, airParkour, airWall, stepAction, stepWallClimb, stepCling } from './parkour';
+import { groundParkour, airParkour, airWall, stepAction, stepWallRun, stepWallClimb, stepCling } from './parkour';
 import { stepHands, stepGrip } from './grip';
 import { startCling } from './parkour';
 import { hideNear, enterHide, stepHidden } from './hide';
@@ -62,6 +62,7 @@ export function stepPlayer(state: SimState, world: World, input: InputFrame): vo
     case 'action': stepAction(state, world); return;
     case 'grip': stepGrip(state, world, input); return;
     case 'cling': stepCling(state, world, input); return;
+    case 'wallrun': stepWallRun(state, world, input); return;
     case 'wallclimb': stepWallClimb(state, world, input); return;
     case 'hidden': stepHidden(state, world, input); return;
     case 'swim': stepSwim(state, world, input); return;

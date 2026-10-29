@@ -1,4 +1,4 @@
-// First-person camera: eye height by posture, head bob, landing dip, wall-run tilt.
+// First-person camera: eye height by posture, head bob, landing dip, wall-run and cling lean.
 import * as THREE from 'three';
 import type { Player } from '../sim/player';
 import type { Vec3 } from '../sim/types';
@@ -10,7 +10,8 @@ export class FPCamera {
   /** 0 none, 0.5 sprain, 1 broken leg: an uneven step */
   limp = 0;
   private eye = M.eye.stand;
-  private bob = 0;
+  /** stride phase: one step per half turn, so arms swing with sin(bob) */
+  bob = 0;
   private dip = 0;
   private roll = 0;
   private fov = 75;
@@ -33,9 +34,9 @@ export class FPCamera {
     if (walking) this.bob += dt * sp * 2.2;
     const amp = walking ? Math.min(1, sp / 7) : 0;
     this.dip *= Math.exp(-6 * dt);
-    // A slight lean away from the wall while clinging to it.
+    // Lean away from the wall on a wall-run, slightly while clinging to it.
     let rollTarget = 0;
-    if (p.mode === 'cling') rollTarget = 0.08 * Math.sign(p.wall.nx * Math.cos(yaw) - p.wall.nz * Math.sin(yaw));
+    if (p.mode === 'wallrun' || p.mode === 'cling') rollTarget = (p.mode === 'wallrun' ? 0.14 : 0.08) * Math.sign(p.wall.nx * Math.cos(yaw) - p.wall.nz * Math.sin(yaw));
     this.roll += (rollTarget - this.roll) * k;
     // Sprinting has to read clearly (U-003): FOV kick, harder bob, a slight lean.
     const sprinting = walking && sp > 5.5;

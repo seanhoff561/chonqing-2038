@@ -21,9 +21,10 @@ export const movement = {
   mantle: { min: 0.5, max: 2.4, hop: 1.2, reach: 0.7, lowTime: 0.35, highTime: 0.8, lowLimit: 1.0 },
   vault: { minH: 0.5, maxH: 1.2, maxDepth: 1.2, minSpeed: 2.5, time: 0.45, keep: 0.85 },
   slide: { minSpeed: 6.0, time: 1.0, start: 7.5, end: 3.0 },
+  wallRun: { maxTime: 0.9, speed: 6.5, upSpeed: 3.0, minSpeed: 5.5, stepEvery: 0.3, gravityScale: 0.6, wallDist: 0.8, maxAngle: 35, leapSpeed: 5.0, leapUp: 3.0 },
   wallClimb: { time: 0.6 },
   /** second Space in the air near a wall, read from the camera (U-004) */
-  wallKick: { reach: 0.8, max: 2, upPitch: 0.45, upSpeed: 4.6, speed: 5.5, up: 3.4, pitchUp: 1.5, minAway: 0.35 },
+  wallKick: { reach: 0.8, max: 2, upPitch: 0.45, upSpeed: 4.6, speed: 5.5, up: 3.4, pitchUp: 1.5, minAway: 0.35, alongMax: 0.5 },
   /** hand climbing (U-002): grips, reach, reeling, mantles over lips, dynos */
   grip: {
     rayReach: 1.6, heightReach: 2.2, lowest: 0.9, lowestCrouched: -0.3, lipDepth: 0.35, edgeBand: 0.4, pipeRadius: 0.3,

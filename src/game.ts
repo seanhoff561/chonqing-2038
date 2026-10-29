@@ -18,8 +18,8 @@ import { teleport } from './sim/player';
 import { writeSave, type SaveFile } from './sim/save';
 import { syncWorld } from './sim/doors';
 import { playMove } from './audio/moves';
-import { Hands3D, poseFor, gripPose } from './render/hands3d';
-import { itemModel } from './render/items3d';
+import { Hands3D, poseFor, gripPose, HELD_AT } from './render/hands3d';
+import { itemModel, supportPoint } from './render/items3d';
 import { SleepUI } from './ui/sleep-ui';
 import { DeathScreen } from './ui/death';
 import { findGrab } from './sim/grip';
@@ -147,16 +147,17 @@ export class Game {
     const p = this.state.player, cam = this.view.fp.cam;
     this.hands.group.visible = p.mode !== 'dead' && p.mode !== 'hidden' && !this.input.uiOpen;
     if (!this.hands.ready || !this.hands.group.visible) return;
-    const readied = findGrab(this.world, p) !== null;
-    const holding = heldStack(this.state) !== null;
-    const k = 1 - Math.exp(-14 * dt);
+    const held = heldStack(this.state), support = held ? supportPoint(held.id) : null;
+    const readied = !held && findGrab(this.world, p) !== null;
+    // Faster easing while striding so the arm swing keeps up with the steps.
+    const k = 1 - Math.exp(-(p.mode === 'ground' && p.onGround ? 26 : 14) * dt);
     // Keep free hands out of a wall right in front of him.
     const d = { x: -Math.sin(p.yaw) * Math.cos(p.pitch), y: Math.sin(p.pitch), z: -Math.cos(p.yaw) * Math.cos(p.pitch) };
     const hit = raycast(this.world.index, cam.position.x, cam.position.y, cam.position.z, d.x, d.y, d.z, 0.6);
     const room = hit ? hit.t : 0.6;
     p.hands.forEach((h, i) => {
       const g = h.grip ? gripPose(cam, h.grip.x, h.grip.y, h.grip.z, h.grip.nx, h.grip.nz, i === 0 ? -1 : 1) : null;
-      const pose = poseFor(p, i, readied, holding, g);
+      const pose = poseFor(p, i, readied, !!held, g, this.view.fp.bob, support);
       if (!g && -pose.pos.z > room - 0.12) pose.pos.z = -Math.max(0.12, room - 0.12);
       this.hands.setPose(i, pose, k);
     });
@@ -167,7 +168,7 @@ export class Game {
     if (id === this.heldId || !this.hands.ready) return;
     this.heldId = id;
     const slot = this.hands.heldSlot(1);
-    if (slot) { slot.clear(); if (id) { const m = itemModel(id); m.position.set(0, -0.03, -0.075); slot.add(m); } }
+    if (slot) { slot.clear(); if (id) { const m = itemModel(id); m.position.copy(HELD_AT); slot.add(m); } }
     this.hud.setHeld(id ? `${item(id).zh} ${item(id).en}` : '');
   }
 

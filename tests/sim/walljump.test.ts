@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { setup, run, floor, sprintJumpAt } from './helpers';
+import { setup, run, floor } from './helpers';
 import { solid } from '../../src/world/geom';
 import { B } from '../../src/sim/types';
 
@@ -41,25 +41,5 @@ describe('wall jump by camera direction (M1-30)', () => {
     r.state.player.kicks = 2;
     run(r.state, r.world, 3);
     expect(r.state.player.kicks).toBe(0);
-  });
-});
-
-describe('wall moves without wall-runs (U-007)', () => {
-  it('Space looking along the wall kicks him along it, slightly off it', () => {
-    const s = kick(0);
-    expect(s.player.mode).toBe('air');
-    expect(s.player.vel.z).toBeLessThan(-4.5);
-    expect(s.player.vel.x).toBeGreaterThan(1.5);
-  });
-  it('a wall beside a 6 m gap is what makes it crossable: one kick along it carries him over', () => {
-    const gap = (wall: boolean) => {
-      const r = setup([solid(-5, -1, 0, 5, 0, 40), solid(-5, -1, -40, 5, 0, -6), solid(-20, -12, -60, 20, -10, 60), ...(wall ? [solid(-1.2, -10, -40, -1.0, 4, 40)] : [])], { x: -0.5, y: 0, z: 30, yaw: 0 });
-      sprintJumpAt(r.state, r.world, 0.05);
-      run(r.state, r.world, 1, { my: 1, buttons: B.SPRINT | B.JUMP, pressed: B.JUMP });
-      run(r.state, r.world, 120, { my: 1, buttons: B.SPRINT });
-      return r.state.player.pos.y;
-    };
-    expect(gap(false)).toBeLessThan(-0.5);
-    expect(gap(true)).toBeGreaterThan(-0.05);
   });
 });

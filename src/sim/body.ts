@@ -28,7 +28,7 @@ export interface Body {
 }
 
 /** What his body lets him do this tick; movement code reads it. */
-export interface Limits { sprint: boolean; sprintScale: number; jumpScale: number; maxMantle: number; wallMoves: boolean; climb: boolean; hang: boolean; pull: boolean; mantleFrom: number; climbScale: number; speedCap: number; regenScale: number }
+export interface Limits { sprint: boolean; sprintScale: number; jumpScale: number; maxMantle: number; wallRun: boolean; climb: boolean; hang: boolean; pull: boolean; mantleFrom: number; climbScale: number; speedCap: number; regenScale: number }
 
 export function createBody(): Body {
   return {
@@ -40,19 +40,19 @@ export function createBody(): Body {
 
 export function limits(state: SimState): Limits {
   const b = state.body, pk = state.time < b.painkillerUntil;
-  const L: Limits = { sprint: true, sprintScale: 1, jumpScale: 1, maxMantle: M.mantle.max, wallMoves: true, climb: true, hang: true, pull: true, mantleFrom: M.grip.mantleFrom, climbScale: 1, speedCap: Infinity, regenScale: 1 };
+  const L: Limits = { sprint: true, sprintScale: 1, jumpScale: 1, maxMantle: M.mantle.max, wallRun: true, climb: true, hang: true, pull: true, mantleFrom: M.grip.mantleFrom, climbScale: 1, speedCap: Infinity, regenScale: 1 };
   const sprained = b.leg === 'sprain' || (b.leg === 'fracture' && b.legSplint);
   if (b.leg === 'fracture' && !b.legSplint) {
-    L.sprint = false; L.jumpScale = 0; L.maxMantle = S.injury.fractureMantle; L.mantleFrom = S.injury.fractureMantle; L.wallMoves = false; L.speedCap = pk ? 2.5 : M.speed.limp;
+    L.sprint = false; L.jumpScale = 0; L.maxMantle = S.injury.fractureMantle; L.mantleFrom = S.injury.fractureMantle; L.wallRun = false; L.speedCap = pk ? 2.5 : M.speed.limp;
   } else if (sprained && !pk) {
     L.sprint = false; L.jumpScale = 0.5;
   }
-  if (b.leg === 'fracture' && b.legSplint) { L.jumpScale = 0; L.wallMoves = false; }
+  if (b.leg === 'fracture' && b.legSplint) { L.jumpScale = 0; L.wallRun = false; }
   if (b.arm === 'fracture') { if (b.armSplint) L.climbScale = 0.5; else { L.climb = false; L.hang = false; } }
   if (b.energy < S.needs.low) L.sprintScale = 0.8;
   // Load: heavy slows sprint and jump; overloaded stops sprinting, wall-runs and high mantles.
   const kg = weight(state.inv.pack), E = M.encumbrance;
-  if (kg > E.overloaded) { L.sprint = false; L.wallMoves = false; L.pull = false; L.mantleFrom = E.overloadedMantle; L.maxMantle = Math.min(L.maxMantle, E.overloadedMantle); }
+  if (kg > E.overloaded) { L.sprint = false; L.wallRun = false; L.pull = false; L.mantleFrom = E.overloadedMantle; L.maxMantle = Math.min(L.maxMantle, E.overloadedMantle); }
   else if (kg > E.heavy) { L.sprintScale *= 1 - E.penalty; L.jumpScale *= (1 - E.penalty) ** 2; }
   if (b.hydration < S.needs.low) L.regenScale *= 0.7;
   if (b.satiety < S.needs.low) L.regenScale *= 0.7;

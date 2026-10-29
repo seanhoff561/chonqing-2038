@@ -58,6 +58,28 @@ const models: Record<string, () => THREE.Object3D> = {
 
 const CAT_COLOR: Record<string, number> = { food: 0xb08a3a, drink: 0x5a8ab0, tool: 0x5a5e62, weapon: 0x2a2c2e, ammo: 0x8a7a40, med: 0xd0ccc0, part: 0x40707a, key: 0xc8a840, wear: 0x4a5a3a, throw: 0x6a4a3a, device: 0x2a3a40, misc: 0x707070 };
 
+// Where the left hand grips on two-handed items (model space); others get a fist stacked above the right one.
+const SUPPORT: Record<string, [number, number, number]> = {
+  crowbar: [-0.18, 0, 0], boltcutters: [-0.12, 0, -0.04], shotgun: [0, 0.05, -0.32], nailgun: [-0.07, 0, -0.15], pistol: [0.035, -0.05, 0.01],
+  extinguisher: [0.1, -0.06, 0], oxygen: [0.12, -0.05, 0], grinder: [-0.12, 0, 0], ladder: [0.05, -0.2, 0], jerrycan: [0.05, -0.2, 0], carbattery: [0.06, -0.22, 0],
+  binoculars: [0.09, 0, 0], water: [-0.09, 0, 0], riverwater: [-0.09, 0, 0], bottle: [-0.09, 0, 0],
+};
+
+/** Small things (keys, cards, pills, a phone, small devices) and the knife are held in one hand (U-007). */
+export function oneHanded(id: string): boolean {
+  const d = item(id);
+  return id === 'knife' || d.cat === 'key' || (d.w * d.h === 1 && d.kg <= 0.4);
+}
+
+/** Where the left hand grips the held item, in model space; null for one-handed items. */
+export function supportPoint(id: string): THREE.Vector3 | null {
+  if (oneHanded(id)) return null;
+  const at = SUPPORT[id];
+  if (at) return new THREE.Vector3(...at);
+  const d = item(id);
+  return new THREE.Vector3(-Math.min(0.25, Math.max(0.09, Math.max(d.w, d.h) * 0.04)), 0, 0);
+}
+
 /** The item model for a held item: a dedicated shape, or a box sized from its backpack footprint. */
 export function itemModel(id: string): THREE.Object3D {
   const make = models[id];

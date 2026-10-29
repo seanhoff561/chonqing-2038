@@ -129,8 +129,14 @@ export function gripPose(cam: THREE.Camera, gx: number, gy: number, gz: number, 
   return { curl: 0.85, thumb: 0.6, pos: local, rot: new THREE.Euler().setFromQuaternion(camQ.multiply(qWorld)) };
 }
 
-/** Poses by situation (camera space, metres). */
-export function poseFor(p: Player, i: number, readied: boolean, holding: boolean, gripCam: HandPose | null): HandPose {
+/** Where a held item sits on the right hand's pivot. */
+export const HELD_AT = new THREE.Vector3(0, -0.03, -0.075);
+const HOLD_POS = new THREE.Vector3(0.18, -0.25, -0.4), HOLD_ROT = new THREE.Euler(0.25, 0.12, -1.35);
+const LEFT_ROT = new THREE.Euler(0.25, -0.6, 1.35);
+
+/** Poses by situation (camera space, metres). stride is the camera's step phase; support is where the
+ *  left hand grips a two-handed item (item model space), null for one-handed items. */
+export function poseFor(p: Player, i: number, readied: boolean, holding: boolean, gripCam: HandPose | null, stride: number, support: THREE.Vector3 | null = null): HandPose {
   const s = i === 0 ? -1 : 1;
   const P = (x: number, y: number, z: number) => new THREE.Vector3(x * s, y, z);
   const R = (x: number, y: number, z: number) => new THREE.Euler(x, y * s, z * s);
@@ -138,7 +144,27 @@ export function poseFor(p: Player, i: number, readied: boolean, holding: boolean
   if (p.mode === 'cling') return { curl: 0.05, thumb: 0.15, pos: P(0.2, 0.02, -0.34), rot: R(0.9, 0, 0) };
   if (p.mode === 'action') return { curl: 0.2, thumb: 0.2, pos: P(0.22, -0.2, -0.42), rot: R(-0.3, 0, 0) };
   // Handshake grip: back of the hand outward, so whatever is held stands up through the fist.
-  if (holding && i === 1) return { curl: 0.95, thumb: 0.8, pos: P(0.17, -0.2, -0.38), rot: R(0.25, 0.12, -1.35) };
+  if (holding && i === 1) return { curl: 0.95, thumb: 0.8, pos: HOLD_POS.clone(), rot: HOLD_ROT.clone() };
+  // The left hand wraps the item at its support point: its fist centre (the mirror of HELD_AT) lands there.
+  if (holding && support) {
+    const grip = support.clone().add(HELD_AT).applyEuler(HOLD_ROT).add(HOLD_POS);
+    const fist = HELD_AT.clone().applyEuler(LEFT_ROT);
+    return { curl: 0.85, thumb: 0.7, pos: grip.sub(fist), rot: LEFT_ROT.clone() };
+  }
   if (readied) return { curl: 0.1, thumb: 0.15, pos: P(0.16, -0.12, -0.38), rot: R(0.9, 0.15, 0.1) };
+  // On his feet (U-007): hands low at his sides, forearms running down out of view, swinging with the stride;
+  // running pumps loose fists up into the corners of the view.
+  if (p.mode === 'ground' && p.posture !== 'crawl') {
+    const sp = Math.hypot(p.vel.x, p.vel.z);
+    const run = Math.min(1, Math.max(0, (sp - 3.6) / 3));
+    const amp = Math.min(1, sp / 3) * (0.35 + 0.65 * run);
+    const sw = Math.sin(stride) * -s * amp;
+    const up = Math.max(0, sw);
+    return {
+      curl: 0.45 + run * 0.5, thumb: 0.35 + run * 0.45,
+      pos: P(0.3 - up * 0.03 * run, -0.33 + up * (0.03 + 0.05 * run) + Math.min(0, sw) * 0.05, -0.36 - sw * (0.05 + 0.02 * run)),
+      rot: R(0.2 + run * 0.1 + sw * (0.2 + 0.1 * run), 0.1, -0.9 - run * 0.4),
+    };
+  }
   return { curl: 0.4, thumb: 0.3, pos: P(0.2, -0.2, -0.36), rot: R(0.15, 0.2, 0.15) };
 }

@@ -128,16 +128,17 @@ export function kickOff(state: SimState, nx: number, nz: number) {
 }
 
 /**
- * The second Space in the air (U-004): looking up at a wall kicks up it; anything else kicks off in the
- * look direction, along the wall included (wall-runs were removed by U-007). Two wall moves per airtime.
+ * The second Space in the air (U-004): looking up at a wall kicks up it, looking along it at speed
+ * starts a wall-run, anything else kicks off in the look direction. Two wall moves per airtime.
  */
 export function airWall(state: SimState, world: World): boolean {
   const p = state.player, K = M.wallKick;
-  if (p.kicks >= K.max || !lim().wallMoves || p.posture !== 'stand') return false;
+  if (p.kicks >= K.max || !lim().wallRun || p.posture !== 'stand') return false;
   const w = wallNear(world, p, K.reach);
   if (!w) return false;
   const { hx, hz } = lookFlat(p, w.nx, w.nz);
   const into = -(hx * w.nx + hz * w.nz);
+  const speed = Math.hypot(p.vel.x, p.vel.z);
   p.kicks++;
   if (into > 0.5 && p.pitch > K.upPitch) {
     p.mode = 'wallclimb';
@@ -145,6 +146,15 @@ export function airWall(state: SimState, world: World): boolean {
     p.vel.x = -w.nx * 0.6; p.vel.z = -w.nz * 0.6; p.vel.y = K.upSpeed;
     sfx(state, 'wallkick');
     noise(state, M.noise.vault, 'wallkick');
+    return true;
+  }
+  if (Math.abs(into) < K.alongMax && speed >= M.wallRun.minSpeed) {
+    let tx = -w.nz, tz = w.nx;
+    if (tx * hx + tz * hz < 0) { tx = -tx; tz = -tz; }
+    p.mode = 'wallrun';
+    p.wall = { nx: w.nx, nz: w.nz, t: 0, y: p.pos.y, id: -1 };
+    p.vel.x = tx * M.wallRun.speed; p.vel.z = tz * M.wallRun.speed; p.vel.y = M.wallRun.upSpeed;
+    sfx(state, 'wallrun');
     return true;
   }
   kickOff(state, w.nx, w.nz);
@@ -158,6 +168,25 @@ export function airParkour(state: SimState, world: World, input: InputFrame): bo
   const l = findLedge(world, p, 0.6, 1.1);
   if (!l || !isFinite(l.h) || l.h < 0.3 || l.h >= 1.0) return false;
   return tryMantle(world, p, l, M.mantle.lowTime);
+}
+
+export function stepWallRun(state: SimState, world: World, input: InputFrame) {
+  const p = state.player;
+  const w = p.wall;
+  w.t += DT;
+  if ((input.pressed & B.JUMP) && p.kicks < M.wallKick.max) {
+    p.kicks++;
+    kickOff(state, w.nx, w.nz);
+    return;
+  }
+  p.vel.y -= M.gravity * M.wallRun.gravityScale * DT;
+  if (Math.floor(w.t / M.wallRun.stepEvery) !== Math.floor((w.t - DT) / M.wallRun.stepEvery)) { noise(state, M.noise.sprint, 'step'); sfx(state, 'wallstep'); }
+  const blocked = moveHorizontal(world.index, p.pos, M.height.stand, p.vel.x * DT, p.vel.z * DT, 0.05);
+  const hit = moveVertical(world.index, p.pos, M.height.stand, p.vel.y * DT);
+  if (hit === 1) { p.mode = 'ground'; p.onGround = true; p.vel.y = 0; return; }
+  if (hit === -1) p.vel.y = Math.min(0, p.vel.y);
+  const still = raycast(world.index, p.pos.x, p.pos.y + 1.0, p.pos.z, -w.nx, 0, -w.nz, HW + M.wallRun.wallDist + 0.1);
+  if (blocked || w.t >= M.wallRun.maxTime || !still) p.mode = 'air';
 }
 
 export function stepWallClimb(state: SimState, world: World, input: InputFrame) {
