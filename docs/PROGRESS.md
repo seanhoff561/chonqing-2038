@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M1. Next: M1-21 First-person camera.
-Features done: 20 / 204 | Last done: M1-20
+**Status:** building M1. Next: M1-22 First-person arms.
+Features done: 21 / 204 | Last done: M1-21
 <!-- /status -->
 
 ## Log
@@ -27,3 +27,4 @@ Features done: 20 / 204 | Last done: M1-20
 - M1-18 Movement noise events: movement noise events
 - M1-19 Movement tuning in data: movement tuning in data
 - M1-20 Browser boot and fixed-step loop: browser boot, input frames and fixed-step loop with interpolation
+- M1-21 First-person camera: first-person camera

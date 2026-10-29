@@ -74,6 +74,6 @@ export class Game {
   /** Deterministic stepping for tests: n ticks, then one render. */
   runFrames(n: number) {
     for (let i = 0; i < n; i++) this.tick();
-    this.render(1, DT);
+    this.render(1, Math.max(1, n) * DT);
   }
 }
