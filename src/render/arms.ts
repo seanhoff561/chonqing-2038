@@ -16,15 +16,15 @@ export class Arms {
 
   constructor() {
     const skin = new THREE.MeshLambertMaterial({ color: 0xb98a6a });
-    const sleeve = new THREE.MeshLambertMaterial({ color: 0x2a2f36 });
+    const sleeve = new THREE.MeshLambertMaterial({ color: 0x46505a });
     const arm = (side: number) => {
       const g = new THREE.Group();
       const fore = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.075, 0.42), sleeve);
       fore.position.z = 0.2;
-      const hand = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.04, 0.11), skin);
-      hand.position.z = -0.03;
-      const fingers = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.03, 0.06), skin);
-      fingers.position.set(0, -0.015, -0.1);
+      const hand = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, 0.12), skin);
+      hand.position.z = -0.05;
+      const fingers = new THREE.Mesh(new THREE.BoxGeometry(0.095, 0.035, 0.07), skin);
+      fingers.position.set(0, -0.02, -0.13);
       fingers.rotation.x = -0.5;
       g.add(fore, hand, fingers);
       g.position.x = side * 0.2;
@@ -40,7 +40,7 @@ export class Arms {
   private pose(p: Player): Pose {
     const s = Math.sin(this.t * 6);
     switch (p.mode) {
-      case 'hang': return P(-0.22, 0.42, -0.42, 0.22, 0.42, -0.42, 1.1, 1.1);
+      case 'hang': return P(-0.25, 0.29, -0.235, 0.25, 0.29, -0.235, 1.35, 1.35);
       case 'climb': return P(-0.18, 0.3 + s * 0.12, -0.38, 0.18, 0.3 - s * 0.12, -0.38, 1.0, 1.0);
       case 'action': {
         const a = p.act!;
@@ -58,12 +58,15 @@ export class Arms {
     }
   }
 
-  update(p: Player, dt: number) {
+  update(p: Player, dt: number, pitch: number) {
     this.t += dt;
     const q = this.pose(p);
     this.group.visible = q.vis;
     if (!q.vis) return;
     const k = 1 - Math.exp(-14 * dt);
+    // Holds on the world (ledges, pipes, mantles) stay put when he looks up or down.
+    const anchored = p.mode === 'hang' || p.mode === 'climb' || p.mode === 'action';
+    this.group.rotation.x += ((anchored ? -pitch : 0) - this.group.rotation.x) * k;
     this.left.position.lerp(q.l, k);
     this.right.position.lerp(q.r, k);
     this.left.rotation.x += (q.lr - this.left.rotation.x) * k;

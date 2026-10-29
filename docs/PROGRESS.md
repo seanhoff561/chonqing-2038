@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M1. Next: M1-22 First-person arms.
-Features done: 21 / 204 | Last done: M1-21
+**Status:** building M1. Next: M1-23 Gym scenario.
+Features done: 22 / 204 | Last done: M1-22
 <!-- /status -->
 
 ## Log
@@ -28,3 +28,4 @@ Features done: 21 / 204 | Last done: M1-21
 - M1-19 Movement tuning in data: movement tuning in data
 - M1-20 Browser boot and fixed-step loop: browser boot, input frames and fixed-step loop with interpolation
 - M1-21 First-person camera: first-person camera
+- M1-22 First-person arms: first-person arms

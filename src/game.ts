@@ -54,7 +54,7 @@ export class Game {
     const p = this.state.player;
     const pos = { x: this.prev.x + (p.pos.x - this.prev.x) * alpha, y: this.prev.y + (p.pos.y - this.prev.y) * alpha, z: this.prev.z + (p.pos.z - this.prev.z) * alpha };
     this.view.fp.update(p, pos, this.input.yaw, this.input.pitch, dt);
-    this.view.arms.update(p, dt);
+    this.view.arms.update(p, dt, this.input.pitch);
     this.view.render();
     this.frames++;
   }
