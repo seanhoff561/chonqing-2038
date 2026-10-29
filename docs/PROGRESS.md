@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-28 Setting up a shelter (U-013).
-Features done: 72 / 228 | Last done: M3-27
+**Status:** building M3. Next: M3-29 Shelter sites in Shibati and Jiaochangkou (U-013).
+Features done: 73 / 228 | Last done: M3-28
 <!-- /status -->
 
 ## Log
@@ -90,3 +90,4 @@ Features done: 72 / 228 | Last done: M3-27
 - M3-11 Chunk streaming and fog cover: chunks past the fog hidden; pipes, ladders and props merged per chunk
 - M3-23 Reference hillside (U-010): reference hillside rebuilt from look-01 with a vantage roof, first pass
 - M3-27 Run start without a shelter (U-013): runs start in Shibati with no shelter; sleep rough anywhere
+- M3-28 Setting up a shelter (U-013): claim or lay down a bed, toolbox workbench, stash near the bed

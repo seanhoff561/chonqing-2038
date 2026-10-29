@@ -19,6 +19,9 @@ const FURNITURE = {
   fridge: { w: 0.7, d: 0.7, h: 1.7, mat: MAT.metal, zh: '冰箱', en: 'Fridge', loot: 'kitchen' },
   locker: { w: 0.5, d: 0.5, h: 1.9, mat: MAT.metal, zh: '储物柜', en: 'Locker', loot: 'bedroom' },
   crate: { w: 1.0, d: 0.8, h: 0.8, mat: MAT.wood, zh: '货箱', en: 'Crate', loot: 'shop' },
+  // Not containers: a bed to claim, a table that becomes a workbench with a toolbox (U-013).
+  bed: { w: 2.0, d: 1.0, h: 0.5, mat: MAT.wood, zh: '床', en: 'Bed', use: 'mattress' },
+  table: { w: 1.2, d: 0.7, h: 0.78, mat: MAT.wood, zh: '桌子', en: 'Table', use: 'table' },
 } as const;
 type Piece = keyof typeof FURNITURE;
 
@@ -113,7 +116,7 @@ export function hollow(l: Lot, r: Rng, out: Fabric) {
     const m = 1 + randInt(r, 3);
     const placed: [number, number, number, number][] = [];
     for (let i = 0; i < m; i++) {
-      const kind: Piece = shop && i === 0 ? 'crate' : (['cabinet', 'drawer', 'fridge', 'locker'] as const)[randInt(r, 4)];
+      const kind: Piece = shop && i === 0 ? 'crate' : (['cabinet', 'drawer', 'fridge', 'locker', 'bed', 'table'] as const)[randInt(r, 6)];
       const f = FURNITURE[kind];
       // Against the far wall (u = U, which has the door) or the side wall (v = V): [u0, v0, u1, v1].
       const far = rand(r) < 0.5, t = rand(r);
@@ -128,10 +131,9 @@ export function hollow(l: Lot, r: Rng, out: Fabric) {
       out.solids.push(B(box[0], y, box[1], box[2], y + f.h, box[3], f.mat));
       // The front face, where he reaches in.
       const [fx, fz] = far ? at(box[0] - 0.05, (box[1] + box[3]) / 2) : at((box[0] + box[2]) / 2, box[1] - 0.05);
-      out.inter.push({
-        id: `b${l.id}.${k}.${i}`, kind: 'container', x: fx, y: y + Math.min(1.0, f.h / 2), z: fz, r: 0.6,
-        zh: f.zh, en: f.en, data: { type: kind, loot: f.loot },
-      });
+      out.inter.push('use' in f
+        ? { id: `b${l.id}.${k}.${i}`, kind: f.use, x: fx, y: y + f.h, z: fz, r: 0.8, zh: f.zh, en: f.en }
+        : { id: `b${l.id}.${k}.${i}`, kind: 'container', x: fx, y: y + Math.min(1.0, f.h / 2), z: fz, r: 0.6, zh: f.zh, en: f.en, data: { type: kind, loot: f.loot } });
     }
   }
 

@@ -10,14 +10,17 @@ export const loot: Record<string, LootTable> = {
     { id: 'peaches', w: 2 }, { id: 'bread', w: 2 }, { id: 'sausage', w: 2 }, { id: 'knife', w: 1 }, { id: 'alcohol', w: 1 }, { id: 'tape', w: 1 },
   ] },
   bedroom: { rolls: [0, 2], empty: 0.3, items: [
+    { id: 'bedroll', w: 2 },
     { id: 'hairpins', w: 4 }, { id: 'cloth', w: 4 }, { id: 'painkillers', w: 2 }, { id: 'bandage', w: 2 }, { id: 'phone', w: 1 },
     { id: 'chocolate', w: 2 }, { id: 'energy', w: 2 }, { id: 'headlamp', w: 1 }, { id: 'mylar', w: 1 },
   ] },
   shop: { rolls: [1, 3], empty: 0.15, items: [
+    { id: 'foldcrate', w: 1 }, { id: 'bedroll', w: 1 },
     { id: 'noodles', w: 5, n: [1, 4] }, { id: 'water', w: 5, n: [1, 2] }, { id: 'energy', w: 3 }, { id: 'chocolate', w: 3 },
     { id: 'crackers', w: 3 }, { id: 'zhacai', w: 3 }, { id: 'firecrackers', w: 1 }, { id: 'tape', w: 2 }, { id: 'tablets', w: 1, n: [2, 5] },
   ] },
   workshop: { rolls: [1, 2], empty: 0.3, items: [
+    { id: 'toolbox', w: 3 }, { id: 'foldcrate', w: 2 },
     { id: 'tape', w: 4 }, { id: 'rods', w: 3 }, { id: 'crowbar', w: 1 }, { id: 'clips', w: 2 }, { id: 'cable', w: 2 },
     { id: 'scootercells', w: 2 }, { id: 'gloves', w: 1 }, { id: 'rope', w: 1 }, { id: 'carabiner', w: 2, n: [1, 2] },
   ] },

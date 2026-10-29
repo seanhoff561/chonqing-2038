@@ -10,14 +10,15 @@ import { checkCollapse } from './sleep';
 import { grid } from './inventory';
 import { applyCmds } from './commands';
 import { stepHeld } from './use';
-import { stepInteract } from './interact';
+import { stepInteract, allInters } from './interact';
 import { stepContainers } from './containers';
 import './loot';
 import { syncWorld } from './doors';
 import './food';
+import './shelter';
 import { survival } from '../data/survival';
 
-export const STATE_VERSION = 1;
+export const STATE_VERSION = 2;
 
 export function createState(seed: number, world: World): SimState {
   const s = world.spawn;
@@ -32,7 +33,8 @@ export function createState(seed: number, world: World): SimState {
     inv: { pack: grid(8, 6), hotbar: [null, null, null, null, null], held: 0 },
     containers: {},
     nextUid: 0,
-    shelter: { id: '', battery: 0, compromised: false },
+    shelter: { id: '', x: 0, y: 0, z: 0, battery: 0, compromised: false },
+    placed: [],
     openContainer: null,
     target: null,
     task: null,
@@ -51,7 +53,7 @@ export function step(state: SimState, world: World, input: InputFrame): void {
   stepInteract(state, world, input);
   stepPlayer(state, world, input);
   stepHeld(state, world, input);
-  stepContainers(state, world);
+  stepContainers(state, { inter: allInters(state, world) });
   stepBody(state);
   checkCollapse(state);
   state.tick++;

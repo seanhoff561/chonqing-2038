@@ -41,6 +41,12 @@ export const items: ItemDef[] = [
   I('firstaid', '急救包', 'First-aid kit', 2, 2, 0.8, 'med', 'Stops all bleeding and restores 30 health.', { uses: ['first-aid'] }),
   I('mylar', '急救毯', 'Mylar blanket', 1, 1, 0.1, 'wear', 'Hides body heat from thermal sensors.', { uses: ['beat-thermal', 'warm-up'] }),
 
+  // Shelter (U-013).
+  I('bedroll', '睡袋', 'Sleeping bag', 3, 1, 1.4, 'misc', 'Rolled up. Put it down anywhere to make a bed.', { uses: ['place-bed'] }),
+  I('mattress', '泡沫床垫', 'Foam mattress', 4, 2, 3, 'misc', 'Folded foam. A proper bed once laid out.', { uses: ['place-bed'] }),
+  I('toolbox', '工具箱', 'Toolbox', 2, 2, 4, 'tool', 'Put it on a table to make a workbench.', { uses: ['make-bench'] }),
+  I('foldcrate', '折叠箱', 'Folding crate', 2, 2, 1.2, 'misc', 'Set it up for storage at your shelter.', { uses: ['place-crate'] }),
+
   // Tools.
   I('grapple', '抓钩', 'Grappling hook', 2, 2, 1.5, 'tool', 'Hook and 20 m of rope.', { uses: ['climb-grapple', 'rappel', 'pull-down'] }),
   I('ladder', '伸缩梯', 'Telescoping ladder', 1, 4, 7, 'tool', 'Extends to 4 m.', { uses: ['ladder-wall', 'ladder-bridge', 'drop-noise'] }),

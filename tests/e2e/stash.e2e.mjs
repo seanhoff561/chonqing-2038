@@ -4,7 +4,7 @@ export default async function ({ open, fail, screenshot }) {
   await page.evaluate(`(() => { const g = window.__cq.game; Object.assign(g.state.player.pos, { x: 12.6, y: 0, z: 0.2 }); g.input.yaw = -2.75; g.input.pitch = -0.6; g.runFrames(5); })()`);
   const target = await page.evaluate('window.__cq.game.state.target');
   if (target !== 'stash') fail('stash', `looking at ${target}`);
-  await page.evaluate(`window.__cq.give('crowbar')`);
+  await page.evaluate(`window.__cq.game.state.inv.pack.items.length = 0; window.__cq.give('crowbar')`);
   await page.keyboard.down('KeyE');
   await page.evaluate('window.__cq.runFrames(3)');
   await page.keyboard.up('KeyE');

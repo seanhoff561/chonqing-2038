@@ -15,7 +15,7 @@ const supply = (s: SimState, g: Grid) => {
 
 export function startRun(s: SimState) {
   supply(s, s.inv.pack);
-  s.shelter = { id: '', battery: 0, compromised: false };
+  s.shelter = { id: '', x: 0, y: 0, z: 0, battery: 0, compromised: false };
 }
 
 /** The furnished test shelter: supplies in its stash and a car battery at 60%. */
@@ -24,5 +24,6 @@ export function furnish(s: SimState, w: World) {
     supply(s, (s.containers.stash = grid(CONTAINER.stash.w, CONTAINER.stash.h)));
     s.wstate.searched.stash = true;
   }
-  s.shelter = { id: 'hideout', battery: 60, compromised: false };
+  const bed = w.inter.find(i => i.kind === 'mattress');
+  s.shelter = { id: bed?.id ?? '', x: bed?.x ?? 0, y: bed?.y ?? 0, z: bed?.z ?? 0, battery: 60, compromised: false };
 }

@@ -22,8 +22,10 @@ import { Hands3D, poseFor, gripPose, HELD_AT } from './render/hands3d';
 import { itemModel, supportPoint } from './render/items3d';
 import { SleepUI } from './ui/sleep-ui';
 import { DeathScreen } from './ui/death';
+import { Furniture } from './render/furniture';
 import { PauseMenu } from './ui/pause';
 import { findGrab } from './sim/grip';
+import { allInters } from './sim/interact';
 import { raycast } from './world/geom';
 
 export interface GameOpts { scenario: string; seed: number; dev: boolean }
@@ -42,6 +44,7 @@ export class Game {
   readonly sleep: SleepUI;
   readonly death = new DeathScreen(this);
   readonly pause: PauseMenu;
+  readonly furniture = new Furniture();
   drawDistance = 160;
   scenario!: Scenario;
   private heldId = '';
@@ -56,6 +59,7 @@ export class Game {
     this.input = new Input(this.view.renderer.domElement);
     this.sky = new Sky(this.view);
     this.hands = new Hands3D(this.view.fp.cam);
+    this.view.scene.add(this.furniture.group);
     this.bodyFx = new BodyFx(this.view.renderer.domElement);
     this.inv = new InventoryUI(this);
     this.sleep = new SleepUI(this);
@@ -142,6 +146,7 @@ export class Game {
     this.inv.update();
     this.updatePrompt();
     this.updateHeld();
+    this.furniture.sync(this.state, this.world);
     this.sky.update(this.state.time, this.view.fp.cam.position, this.drawDistance, this.underAmount(dt));
     this.view.render(this.state.tick / 60, this.state.wstate.open);
     this.frames++;
@@ -159,7 +164,7 @@ export class Game {
   private updatePrompt() {
     const s = this.state;
     if (s.task) { const n = Math.round((s.task.t / s.task.dur) * 10); this.hud.setPrompt(`${'■'.repeat(n)}${'□'.repeat(10 - n)}`); return; }
-    const it = s.target ? this.world.inter.find(i => i.id === s.target) : null;
+    const it = s.target ? allInters(s, this.world).find(i => i.id === s.target) : null;
     this.hud.setPrompt(it && !this.input.uiOpen ? `E  ${it.zh}  ${it.en}` : '');
   }
 

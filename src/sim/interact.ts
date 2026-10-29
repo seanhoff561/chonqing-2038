@@ -19,6 +19,14 @@ export function onInteract(kind: string, h: { now?: Handler; done?: Handler; dur
   handlers.set(kind, h);
 }
 
+/** Interactables that live in sim state rather than the static world (placed furniture). */
+export const extraInters: ((s: SimState) => Inter[])[] = [];
+
+/** Every interactable: the world's and the ones in state. */
+export function allInters(s: SimState, w: World): Inter[] {
+  return extraInters.length ? w.inter.concat(...extraInters.map(f => f(s))) : w.inter;
+}
+
 function eye(s: SimState) {
   const p = s.player;
   return { x: p.pos.x, y: p.pos.y + M.eye[p.posture], z: p.pos.z };
@@ -29,7 +37,7 @@ export function lookTarget(s: SimState, w: World): Inter | null {
   const p = s.player, e = eye(s);
   const dx = -Math.sin(p.yaw) * Math.cos(p.pitch), dy = Math.sin(p.pitch), dz = -Math.cos(p.yaw) * Math.cos(p.pitch);
   let best: Inter | null = null, bestScore = Infinity;
-  for (const it of w.inter) {
+  for (const it of allInters(s, w)) {
     if (s.wstate.gone[it.id]) continue;
     const vx = it.x - e.x, vy = it.y - e.y, vz = it.z - e.z;
     const along = vx * dx + vy * dy + vz * dz;
@@ -57,7 +65,7 @@ export function stepInteract(s: SimState, w: World, input: InputFrame) {
     return;
   }
   if (task) {
-    const it = w.inter.find(i => i.id === task.id);
+    const it = allInters(s, w).find(i => i.id === task.id);
     const still = it && lookTarget(s, w)?.id === it.id;
     if (!(input.buttons & B.INTERACT) || !still || p.mode !== 'ground') { s.task = null; s.events.push({ t: 'msg', text: 'interrupted' }); return; }
     task.t += DT;

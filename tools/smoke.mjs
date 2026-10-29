@@ -40,7 +40,7 @@ try {
   const scenarios = await first.evaluate('window.__cq.scenarios');
   await first.close();
   passes++;
-  for (const s of scenarios) {
+  for (const s of process.env.SMOKE_ONLY ? [] : scenarios) {
     const page = await open(`?scenario=${s}`, `scenario ${s}`);
     await page.evaluate('window.__cq.runFrames(30)');
     await page.close();

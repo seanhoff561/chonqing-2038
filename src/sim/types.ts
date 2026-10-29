@@ -42,6 +42,9 @@ export type SimEvent =
   | { t: 'ate'; id: string; sick: boolean }
   | { t: 'msg'; text: string };
 
+/** A piece of furniture he placed: its item id and where it stands. */
+export interface Placed { id: string; item: string; x: number; y: number; z: number; yaw: number }
+
 export interface FallOutcome { damage: number; sprain: boolean; fracture: boolean; arm: boolean; lethal: boolean }
 
 export interface SimState {
@@ -57,15 +60,18 @@ export interface SimState {
   /** container grids by id, created when first opened */
   containers: Record<string, import('./inventory').Grid>;
   nextUid: number;
-  /** his current shelter: car battery charge (%) and whether the machines know where it is */
-  shelter: { id: string; battery: number; compromised: boolean };
+  /** his shelter (U-013): the claimed bed (id '' for none) and where it is, car battery charge (%) and whether
+   *  the machines know where it is */
+  shelter: { id: string; x: number; y: number; z: number; battery: number; compromised: boolean };
+  /** furniture he has put down: beds, crates */
+  placed: Placed[];
   /** container currently open beside the backpack, or null */
   openContainer: string | null;
   /** interactable id he's looking at, and a running hold-E task */
   target: string | null;
   task: { id: string; t: number; dur: number } | null;
   /** dynamic world state: searched containers, opened doors, removed things */
-  wstate: { searched: Record<string, true>; open: Record<string, boolean>; gone: Record<string, true>; unlocked?: Record<string, true> };
+  wstate: { searched: Record<string, true>; open: Record<string, boolean>; gone: Record<string, true>; unlocked?: Record<string, true>; benches?: Record<string, true> };
   /** cause of death, or null while alive */
   dead: string | null;
   /** events emitted during the latest tick */

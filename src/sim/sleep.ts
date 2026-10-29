@@ -5,6 +5,7 @@ import { survival as S } from '../data/survival';
 import { onInteract } from './interact';
 import { onCmd } from './commands';
 import { nextHour } from './clock';
+import { claimBed } from './shelter';
 
 /** Sleep until game time `until`. Heavy bleeding while asleep is fatal; light bleeds clot. */
 export function sleepUntil(state: SimState, until: number, where: 'bed' | 'rough' | 'collapse') {
@@ -31,7 +32,8 @@ export function checkCollapse(state: SimState) {
 /** Hooks that run when he wakes (the save) or when the night is interrupted (raids). */
 export const sleepHooks: { beforeSleep: ((s: SimState, until: number) => number)[]; afterWake: ((s: SimState) => void)[] } = { beforeSleep: [], afterWake: [] };
 
-onInteract('mattress', { now: (s, _w, it) => { s.events.push({ t: 'sleep-menu', id: it.id }); } });
+// A bed: E claims it as his shelter's (U-013) and opens the sleep menu.
+onInteract('mattress', { now: (s, _w, it) => { claimBed(s, it); s.events.push({ t: 'sleep-menu', id: it.id }); } });
 
 onCmd((s, c) => {
   if (c.c !== 'act' || c.name !== 'sleep' || s.dead) return;
