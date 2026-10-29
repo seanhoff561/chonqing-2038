@@ -2,7 +2,7 @@
 
 <!-- status -->
 **Status:** building M3. Next: M3-24 Place references (U-011).
-Features done: 77 / 228 | Last done: M3-22
+Features done: 78 / 228 | Last done: M3-07
 <!-- /status -->
 
 ## Log
@@ -95,3 +95,4 @@ Features done: 77 / 228 | Last done: M3-22
 - M3-25 Whole-city far view (U-012): whole city visible: far stand-ins beyond the detail radius, aerial haze
 - M3-26 Lighting and shadows (U-012): soft sun shadows, baked alley occlusion, filmic light, moonlit nights
 - M3-22 Reference look (U-009): reference look across the city: slabs, setbacks, balconies, gardens, cables, overcast
+- M3-07 Jiaochangkou and the Line 2 beam: Jiaochangkou junction, Line 2 terminus, the walkable beam west
