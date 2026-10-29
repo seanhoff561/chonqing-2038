@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit -p .",
     "test": "vitest run",
     "status": "node tools/status.mjs",
+    "plan": "node tools/plan.mjs",
     "next": "node tools/next.mjs",
     "check": "node tools/check.mjs",
     "verify": "node tools/verify.mjs"

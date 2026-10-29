@@ -1,0 +1,927 @@
+# Roadmap
+
+Generated from features.json by `npm run plan`; do not edit by hand. [x] done, [ ] to do, [-] dropped by a director's note.
+
+## M1: 38 of 40 done
+
+M1 Movement: the first-person controller and the full parkour set, in a dev "gym" scenario with labeled obstacles of standard sizes.
+
+- [x] **M1-01** Fixed-step deterministic sim core
+  - The sim state is one plain JSON-serializable object advanced by step(state, world, input) at a fixed 60 Hz
+  - A seeded RNG (mulberry32) lives in the state; src/sim and src/world never call Math.random or Date
+  - The same seed and inputs give an identical state hash after 600 ticks; a sim test proves it
+  - src/sim imports nothing from the DOM, WebGL or three.js renderer code and runs in Node
+- [x] **M1-02** Box and ramp collision world
+  - Solids are axis-aligned boxes or ramps (a box whose top slopes along one axis) indexed in a 4 m uniform grid
+  - Queries: box overlap, ground height under a point, and a raycast returning distance and normal of the first hit
+  - Unit tests cover box overlap, ramp surface height, ray hits on boxes and ramps, and misses
+- [x] **M1-03** AABB carving
+  - carve(solids, box) replaces every overlapped solid with up to 6 boxes covering its remainder
+  - Unit tests: a tunnel carved through a block leaves walls, floor and ceiling around an empty interior, and volume is conserved minus the carved part
+- [x] **M1-04** Player kinematics: jog, sprint, crouch, gravity, stairs
+  - Jog 3.2, sprint 7.0 and crouch 1.6 m/s on flat ground within 3% once accelerated
+  - Walls stop the player with no tunnelling at sprint speed or in a 30 m/s fall
+  - Steps up to 0.45 m are climbed automatically; a 30-degree stair ramp is climbed at jog speed and descended without leaving the ground
+  - Crouching under a 1.3 m ceiling works and standing up there is refused
+- [x] **M1-05** Jump
+  - Standing jump apex is between 0.6 and 0.7 m (U-004: more vertical)
+  - A running jump at sprint clears a 4.5 m gap and lands on the far side; a 5.2 m gap is not cleared to a standing landing
+  - Air acceleration is limited to 4 m/s^2
+- [x] **M1-06** Space hops and the hand mantle
+  - Space onto a ledge 0.5-1.2 m above the feet hops up (about 0.35 s); higher ledges are refused for Space (U-002)
+  - Gripping a ledge lip and pulling up (W or Space) with the body high enough mantles onto the top when there is room for a crouched body
+  - A standing grab reaches ledge lips up to 2.3 m and a jump up to 2.8 m, so 2.4 m ledges are climbable and a 3.0 m lip needs a run-up
+  - Sim tests cover hops, refusals and hand mantles
+- [x] **M1-07** Vault
+  - At 2.5 m/s or more, jump at an obstacle 0.5-1.2 m high and at most 1.2 m deep vaults over it in about 0.45 s keeping at least 80% of speed
+  - A deeper obstacle, or one without landing space, is mantled onto instead
+  - A sim test covers the vault and the mantle-instead case
+- [x] **M1-08** Crouch and crawl
+  - Crawling (0.5 m tall) passes a 0.6 m gap that crouching (1.1 m) cannot
+  - Getting up from a crawl or crouch is refused under a low ceiling
+  - A sim test drives the player through a 0.6 m crawl gap
+- [x] **M1-09** Slide
+  - Crouch while sprinting at 6 m/s or more starts a 1.0 s slide decelerating from about 7.5 to 3 m/s
+  - The slide passes under a bar with 0.6 m clearance and ends crouched
+  - A sim test covers it
+- [x] **M1-10** Hanging and hand-over-hand traverse
+  - Gripping hangs him below the grip with gravity off; S lets the arms extend, W pulls up, releasing every hand drops him
+  - Grabbing a point further along the ledge and releasing the other hand moves him along it (hand over hand)
+  - Falling past a ledge while holding a mouse button looking at its lip catches it (a jump falling short of a 5.2 m gap can be saved)
+  - Sim tests cover hanging, traversing and the mid-air catch
+- [x] **M1-11** Wall-run on a second Space
+  - In the air within 0.8 m of a wall, moving 4 m/s or more and looking along the wall, Space starts a wall-run of up to 3 steps (about 0.9 s) in the look direction (U-004)
+  - A wall-run crosses a 6 m gap along a wall that a plain running jump cannot
+  - Space during a wall-run kicks off the wall in the camera direction
+  - Space on the ground never starts a wall-run
+  - Sim tests cover it
+- [x] **M1-12** Run-up kick and dyno
+  - Jump at a wall, then Space again looking up at it, kicks him up the wall (no automatic grab); grabbing at the top of the kick reaches lips up to about 3.8 m (U-004)
+  - Space while gripping launches a dyno upward that must be caught by another grab
+  - Sim tests cover a 3.5 m wall by jump, up-kick and grab, and a 4.5 m wall refused
+- [x] **M1-13** Pipes and ladders by hand
+  - Drain pipes and ladder rungs are grabbable anywhere along their length; climbing them is alternate grabs
+  - Ladders climb faster (less grip drain) than pipes
+  - A sim test climbs a 6 m pipe and a 4 m ladder by hand and steps off at the top
+- [x] **M1-14** Fall outcomes and landing roll
+  - Falls up to 4 m have no consequence; longer falls emit damage and injury events per DESIGN section 3; over 12 m is lethal
+  - Holding crouch within 0.3 s before landing rolls, so a 6.5 m drop has no consequence
+  - Sim tests for 3.5 m, 6.5 m with and without a roll, 9 m and 13 m
+- [x] **M1-15** Hide in a box
+  - E at a hiding box with an interior of 0.8 m or more curls him in (0.75 m, posture hidden) in 0.6 s; E again exits in 0.5 s
+  - Movement is blocked while hidden and the eye sits inside the box
+  - A sim test enters and exits a 0.8 m box and is refused by a 0.6 m one
+- [x] **M1-16** Grip endurance (no running stamina)
+  - Running, jumping, vaults and wall-runs cost nothing (U-003); low energy and injuries are what slow him
+  - Grip endurance drains while hanging (one hand faster than two, ladders slower) and refills when the hands are free; at zero the grip slips
+  - Sim tests cover unlimited sprinting and grip slip and recovery
+- [x] **M1-17** Swimming and diving
+  - Water volumes: surface swim 1.4 m/s (2.2 sprinting), C dives, breath lasts 40 s, then drowning damage events
+  - He can climb out onto a bank up to 0.6 m above the surface
+  - He stays wet for 120 game minutes after leaving the water
+  - A sim test covers swimming, diving and climbing out
+- [x] **M1-18** Movement noise events
+  - Footsteps emit noise events with radii crawl 1, crouch 2, jog 8, sprint 16 m; landings from over 2 m emit 15 m; vaults 6 m
+  - Rain halves footstep radii
+  - A unit test checks the emitted events
+- [x] **M1-19** Movement tuning in data
+  - All movement numbers live in src/data/movement.ts and the sim reads them from there
+  - A test runs the sim with a modified tuning copy and sees the change (sprint speed)
+- [x] **M1-20** Browser boot and fixed-step loop
+  - index.html boots three.js and runs the sim at 60 Hz with render interpolation
+  - Click captures the pointer; keyboard and mouse build per-tick input frames
+  - The smoke test boots with no console errors and a key press moves the player
+- [x] **M1-21** First-person camera
+  - The camera sits at eye height for each posture with smooth transitions
+  - Head bob by speed, a landing dip, tilt during wall-runs, and an FOV setting
+  - A screenshot of the gym from the player's eyes
+- [-] **M1-22** First-person arms
+  - Simple arms and hands show during mantles, vaults, hangs, shimmies, pipes and ladders, and hold the selected item
+  - A screenshot while hanging shows both hands on the ledge
+- [x] **M1-23** Gym scenario
+  - ?scenario=gym loads a lit test yard with labelled obstacles: ledges 1.0/1.5/2.0/2.4/2.6 m, gaps 3/4/4.5/5.2 m, vaults 0.8/1.1 m, a 0.6 m crawl gap, a 0.6 m slide bar, wall-run walls with a 6 m gap, run-up walls 3.5/4.2 m, pipes, a ladder, drops 3.5/6.5/9 m, a pool and hide boxes 0.6/0.8 m
+  - Labels are canvas text on the obstacles
+  - A screenshot of the yard
+- [x] **M1-24** Dev panel and scenario loader
+  - ?dev=1 shows a dev panel with noclip, god mode, a teleport list and an fps / draw-call readout
+  - ?scenario=<name> and ?seed=<n> are parsed; scenarios are data in src/data/scenarios.ts
+  - The smoke test loads ?dev=1&scenario=gym without errors
+- [x] **M1-25** Hold-to-crouch on Ctrl and slide cancel
+  - Ctrl (and C) is hold-to-crouch; releasing stands him up when there is room
+  - Pressing it while sprinting slides; releasing during the slide stands him up keeping some speed
+  - Pressing it just before landing rolls
+  - Fullscreen plus keyboard lock is requested with pointer capture so Ctrl+W cannot close the tab
+  - Sim tests cover hold, slide cancel and roll
+- [x] **M1-26** Hand grab core (White Knuckle style)
+  - Holding left or right mouse while looking at a grabbable (ledge lip, sill, pipe, rung, handhold) within reach grips it with that hand; releasing lets go
+  - With any grip the body hangs and reels toward the grip with collision; two hands drain grip stamina slower than one; at 0 stamina the hands slip
+  - Grabbing keeps momentum: one hand holds his weight when he is slow but, moving fast, slips after redirecting him; two hands can stop a sprint or a short fall (U-004)
+  - Smooth walls, glass and open air are not grabbable
+  - While he holds an item the hands cannot grab (U-007); with nothing grabbable in reach left mouse uses the item
+  - Sim tests cover grip, release, reel, stamina slip and refusals
+- [-] **M1-27** Hand sprites
+  - Original code-drawn hand sprites in a dithered white-outline style (no third-party art): idle, readied when a grabbable is in reach, gripping, pulling
+  - Left and right hands mirror; a gripping hand sits at the grip point on screen
+  - A screenshot while climbing shows both hands gripping
+- [x] **M1-28** Gym climbing routes
+  - The gym gains hand routes: a sill ladder up a 9 m wall, a ledge traverse with a gap to dyno, a smooth wall that cannot be climbed, and pipe and ladder towers
+  - Labels name each; a sim test climbs the sill route to the top
+- [x] **M1-29** Sprinting reads clearly
+  - Sprinting shows a clear FOV kick, stronger head bob and a slight forward lean that ease in and out
+  - An e2e check reads the camera FOV jog vs sprint (at least +6 degrees)
+- [x] **M1-30** Wall jump by camera direction
+  - In the air within 0.8 m of a wall, Space kicks off the wall in the look direction, never into the wall, with a fixed push away from it (U-004)
+  - At most two wall moves per airtime; landing or grabbing resets them
+  - Sim tests: kicking off at 90 degrees and 45 degrees lands where the camera pointed; a third kick is refused
+- [x] **M1-31** Movement sound cues
+  - The sim emits a sound cue for every movement action: steps by gait, jump, land, roll, vault, hop, slide, wall kick, wall-run step, grab, two-hand catch, slip, release, pull-over, crawl (U-004)
+  - Each cue plays one fixed, recognisable synthesized sound (Web Audio) so the player knows what he did
+  - A unit test checks each action emits its cue; the smoke test plays all cues without errors
+- [x] **M1-32** Push-off from a hang
+  - Space while gripping with a wall under his feet pushes off by the camera: looking up dynos upward, looking away kicks off the wall that way (U-005)
+  - With no foothold, Space does not push off (it swings, M1-34)
+  - Sim tests cover the up dyno, a kick-off sideways and the no-foothold case
+- [x] **M1-33** Mouse pull while gripping
+  - While gripping, dragging the mouse moves his body relative to the hands: down hauls him up, sideways swings him along the wall, at about 70% of White Knuckle (U-005)
+  - The camera still turns so the free hand can aim
+  - A sim test hauls him up with a mouse drag and shifts him sideways
+- [x] **M1-34** Bar swing and lache
+  - Gripping a hold with nothing under the feet (bar, beam, sign frame) lets him swing like a pendulum; Space pumps the swing toward where he looks (U-005)
+  - Letting go mid-swing keeps the swing velocity: a lache across a 4 m gap between bars works
+  - Sim tests cover pumping, the swing amplitude limit and a lache
+- [x] **M1-35** Wall cling window
+  - Jumping into a wall (moving into it in the air) clings for about 0.35 s once per wall per airtime, sliding down at about 1.4 m/s and keeping all his speed along the wall (U-005, U-006)
+  - During the cling he can kick, wall-run, up-kick or grab; after it he slides down
+  - A palm-on-the-wall hand sprite and a soft pat sound mark the cling
+  - Sim tests cover the cling time, actions from it and the slide after
+- [x] **M1-36** Tap and hold jump height
+  - Releasing Space early cuts the jump: a tap reaches about 40% of the full height, holding reaches the full 0.6-0.7 m (U-005)
+  - Wall kicks and push-offs are not cut
+  - A sim test compares tap and hold apex
+- [x] **M1-37** 3D hands
+  - A rigged 3D hand model under a permissive licence (listed in CREDITS.md), shipped with the game, never fetched at runtime (U-006)
+  - Both hands visible at all times at a natural first-person scale, with sleeves: relaxed while moving, raised and open when something is grabbable, curled on a grip at the hold, palms flat in a cling, braced during pull-overs
+  - A screenshot each of idle, readied and gripping
+- [x] **M1-38** Held items in the hands
+  - The held item shows in the right hand as a 3D model in the same style as the hands, the fingers wrapped on it (U-006)
+  - Items are held in both hands unless small (keys, cards, pills, phone, small devices), U-007
+  - Every item has a model: dedicated shapes for tools, weapons, devices, food and drink; a fitted generic shape for the rest
+  - A screenshot holding a crowbar, a bottle and the pistol
+- [x] **M1-39** Walking and running hands
+  - On the ground the hands sit low at his sides with little sleeve showing and swing with his stride, faster and wider when running (U-007)
+  - In the air, on walls, while climbing and while crawling the hands take the reaching pose
+  - Screenshots walking, running and in the air
+- [x] **M1-40** Pause menu with the movement gym
+  - = pauses and shows the controls (U-009; Esc too); losing fullscreen or the mouse also pauses (U-007)
+  - Buttons: resume (back into fullscreen), the movement gym and a list of its areas to jump to, and the game
+  - The smoke test opens it and switches to the gym
+
+## M2: 24 of 24 done
+
+M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, hunger, thirst, fatigue, health and injuries, the grid inventory with item shapes and rotation, the stash, the ironman save, and permadeath.
+
+- [x] **M2-01** Game clock and day phases
+  - A game day lasts 36 real minutes; time of day, day number and phase (dawn, day, dusk, night) derive from the tick count
+  - A run starts on day 1 at 06:00
+  - Unit tests cover phase boundaries and the day rollover
+- [x] **M2-02** Sky, sun, moon and ambient light by time
+  - Sun and moon direction, sky, ambient and fog colour follow the clock; nights are dark with a sodium and neon tint
+  - The dev panel's time control changes it live
+  - Screenshots at noon and at midnight
+- [x] **M2-03** Health, damage and death
+  - Health is 100; damage events (falls, drowning, later weapons) reduce it; at 0 the player is dead and input is ignored
+  - Dev god mode ignores damage
+  - Sim tests: a 13 m fall kills; a 9 m fall deals the table's damage
+- [x] **M2-04** Bleeding
+  - Light bleeding drains 0.2 HP/s and clots after 90 s; heavy bleeding drains 1.0 HP/s and never clots
+  - A sim test covers both
+- [x] **M2-05** Limb injuries
+  - Sprained leg: no sprint, half jump; broken leg: limp at 1.5 m/s, no jump, mantle max 1.0 m, no wall-run; broken arm: no pipes, ropes or hanging
+  - Fall outcomes apply sprains and fractures per DESIGN section 3 with the seeded RNG
+  - A sprain heals after 36 game hours
+  - Sim tests cover each restriction
+- [x] **M2-06** Hunger, thirst and fatigue
+  - Satiety, hydration and energy drain per game hour as in DESIGN section 4, with activity multipliers
+  - The below-20 and at-0 effects apply (stamina regen, blur flags, HP loss, collapsing asleep)
+  - A sim test over a simulated game day
+- [x] **M2-07** Natural healing
+  - +1 HP per game hour awake when satiety and hydration are 30 or more, +3 asleep, none while sick or starving
+  - A sim test covers it
+- [x] **M2-08** Body feedback without meters
+  - Blur and vignette for low hydration, energy and health, limp sway for leg injuries, slow blinks when exhausted
+  - No numeric meters or bars on screen
+  - A screenshot at low health
+- [x] **M2-09** Item database
+  - src/data/items.ts defines every item: id, zh and en names, grid size, weight, category, stack size and description
+  - A unit test checks unique ids, valid sizes and bilingual names
+- [x] **M2-10** Grid inventory
+  - An 8x6 backpack: place, remove, move and rotate items with bounds and overlap checks; auto-place finds the first fit
+  - Stackable items stack
+  - Unit tests cover packing, rotation and rejecting a full bag
+- [x] **M2-11** Backpack UI
+  - Tab opens the grid backpack: drag and drop, R rotates while dragging, hover shows the zh/en name and weight
+  - The game keeps running while it's open
+  - The smoke test opens it, moves an item, and the sim inventory changes
+- [x] **M2-12** Hotbar and held item
+  - Keys 1-5 select bound items; 0 and ` empty the hands (U-009); slots are bound from the backpack UI
+  - The held item is in sim state and shown in the first-person view
+  - A sim test covers selecting and using a slot
+- [x] **M2-13** Encumbrance
+  - Over 15 kg: sprint and jump -15%; over 25 kg: no sprint, no wall-run, mantle max 1.6 m
+  - A sim test with a 15 kg car battery plus gear
+- [x] **M2-14** Eating, drinking and spoilage
+  - Eating and drinking restore satiety and hydration per item
+  - Each food has a manufacture time and a shelf life; spoiled food brings 12 game hours of sickness with vomiting
+  - Tests: bread spoils after 3 days, noodles keep, spoiled bread makes him sick
+- [x] **M2-15** Hideout set piece
+  - The brick-arched air-raid tunnel of DESIGN section 9 with mattress, workbench, stash crate, car battery and inverter, camping lamp and damp walls
+  - ?scenario=hideout starts him there
+  - A screenshot
+- [x] **M2-16** Vent grate view
+  - A 9 m shaft rises to a grate showing neon, sweeping searchlights and scripted patrols crossing above
+  - The scripted units above are decor and can't perceive him
+  - A screenshot looking up at night
+- [x] **M2-17** Interaction system
+  - Interactables (doors, containers, mattress, bench, stash, loose items) show a context prompt when looked at within 2 m
+  - E interacts; hold-E actions have a duration and can be interrupted
+  - A sim test opens a container with scripted input
+- [x] **M2-18** Containers, stash and transfer
+  - Containers have their own grid and open beside the backpack; items drag between them
+  - The hideout stash is 10x8
+  - The smoke test moves an item into the stash
+- [x] **M2-19** Loot placement by seed
+  - Containers draw contents from loot tables in src/data/loot.ts with the run seed; the same seed gives the same loot
+  - Searching takes time and makes noise by container type
+  - A unit test: deterministic loot for one seed, different for another
+- [x] **M2-20** Doors
+  - Doors open and close and their collision follows; locked doors refuse without their key
+  - A sim test covers it
+- [x] **M2-21** Sleep
+  - At a mattress he chooses a wake time; time skips and energy, needs and healing apply over the skipped hours
+  - Collapsing from exhaustion sleeps where he stands
+  - A sim test: sleeping 22:00 to 06:00 restores energy and advances the day
+- [x] **M2-22** Starting supplies
+  - A new run's stash holds 2 instant noodles, 1 luncheon meat, 1 bread (1 day old), 3 water bottles and 1 bandage; the car battery is at 60%
+  - A unit test checks it
+- [x] **M2-23** Ironman save
+  - On waking the whole sim state is saved to localStorage in one slot; boot offers Continue when a save exists
+  - A save/load round trip is identical (sim test with a storage shim)
+- [x] **M2-24** Permadeath and new run
+  - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
+  - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
+
+## M3: 35 of 55 done
+
+M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
+
+- [x] **M3-01** Map data and parser
+  - src/data/map.ts holds 70x35 ASCII layers (20 m tiles) for tile type and ground level across the whole peninsula
+  - The parser yields tiles with type, ground height and district; a unit test checks dimensions and the legend
+- [x] **M3-02** Terrain and terraces
+  - Ground solids per tile at its level, retaining walls between levels, and stair streets (ramps with visible steps) where marked
+  - A sim test walks from the bottom of Shibati to Jiaochangkou along the stairs
+- [x] **M3-03** Building generator
+  - Building tiles split into 1-4 buildings with 1.5-4 m alleys, heights by district, roof clutter (water tanks, AC units)
+  - Neighbouring roofs are often within jumping range
+  - A sim test runs a rooftop route across at least 4 buildings in Shibati
+- [x] **M3-04** Enterable buildings
+  - A share of buildings get carved stairwell cores (street to roof) and rooms with containers
+  - A sim test climbs a stairwell to a roof
+- [x] **M3-05** Fabric climbables and hiding spots
+  - Drain pipes, fire-escape ladders, balconies and AC units as ledges; boxes, dumpsters and crawlspaces in alleys
+  - A unit test counts them per district; a sim test climbs a generated pipe
+  - Climbable facades carry hand routes (sills, pipes, AC brackets, balcony rails) every 1.2-2.0 m vertically; glass and smooth render offer none (U-002)
+  - The fabric is built for the movement set (U-005): bars, scaffolds and sign frames for swings and laches, cling walls beside gaps, footholds under lips, sill spacing that needs push-offs and run-ups
+- [x] **M3-06** Shibati set piece
+  - A traditional-style stair street descending from 40 m to 14 m: grey brick, timber eaves, tiled roofs, landings and side alleys
+  - A screenshot
+- [x] **M3-10** Chunk meshes and textures
+  - Solids merge into one mesh per material per 64 m chunk with world-scale UVs
+  - Canvas textures for tile, brick, concrete, moss, lit and unlit windows, metal and wood
+  - The smoke test boots ?scenario=shibati without errors
+- [x] **M3-23** Reference hillside (U-010)
+  - A place in the game built to match docs/reference/look-01.jpg building by building: the brick low-rises with roof gardens, lattice screens and the teal metal roof in front; the concrete walk-ups and the weathered 14-storey block in the middle; the salmon-tile slab with white bands on the right and the white slabs behind; balconies, cages, AC units, moss, streaks, trees and blossom
+  - A vantage point frames the same view; ?scenario=reference spawns there and the pause menu lists it
+  - It plays: rooftop routes across the low-rises, climbable facades, enterable blocks and a way down to the street, within the movement limits (sim test)
+  - A screenshot from the vantage point beside the reference, refined in passes; a PT entry asks the director to compare
+- [x] **M3-27** Run start without a shelter (U-013)
+  - A new run starts on day 1 at 06:00 in the city (in Shibati until the intro exists) with the starting supplies in his backpack and no shelter
+  - He can sleep rough anywhere: holding E on open floor opens the sleep menu; it restores 40% less energy and the run saves
+  - ?scenario=hideout stays a furnished test scene
+  - Sim tests: the starting backpack, rough sleep recovery and its save
+- [x] **M3-28** Setting up a shelter (U-013)
+  - Beds in the world (mattresses in flats, bunks) can be claimed; a carried bedroll or mattress can be placed on open floor
+  - A table or bench becomes a workbench when a toolbox is placed on it; a container within 15 m of the bed becomes the stash, or a placed crate
+  - The shelter is the claimed bed and what lies within 15 m; sleeping there restores fully and saves; claiming a new bed moves the shelter
+  - Placed furniture is in sim state, rendered, and survives save and load
+  - Sim tests cover claiming, placing, the bench, the stash and moving shelter
+- [x] **M3-29** Shelter sites in Shibati and Jiaochangkou (U-013)
+  - Enterable buildings, roof huts and back rooms in the district offer candidate sites with a bed, a table or containers; some carry bedroll, mattress and toolbox loot
+  - Each site has data for its exposure (patrol and drone routes nearby, light leak, exits) for M4 patrols and Anna
+  - A unit test counts at least 8 sites in the district; a sim test sets up a shelter in one
+- [x] **M3-25** Whole-city far view (U-012)
+  - No visible render distance: beyond the detailed chunks every block is drawn as a cheap low-detail box with a painted far facade, so from a high roof the whole city is visible to the rivers
+  - Aerial haze greys distance instead of a fog wall; detail fades in near the camera
+  - A browser test from the highest roof and from street level: draw calls and triangles stay within the preset budget; a screenshot of the whole city
+- [x] **M3-26** Lighting and shadows (U-012)
+  - A soft sun shadow map that follows the camera over the near area; baked ambient occlusion darkens corners, the feet of walls and alleys; filmic tone mapping; sky light by time of day and weather
+  - Frame cost stays within budget: a browser test compares frame time with shadows on and off at a Shibati viewpoint
+  - Screenshots by day, at dusk and at night
+- [x] **M3-11** Chunk streaming and fog cover
+  - Chunks inside the preset's draw distance are built and shown, far ones dropped; fog ends at the draw distance
+  - A browser test: draw calls stay within the Medium budget at three Shibati viewpoints
+- [x] **M3-24** Place references (U-011)
+  - Reference photos for every district and set piece in DESIGN section 10, freely licensed ones saved under docs/reference/places/ and credited in CREDITS.md, others linked
+  - docs/reference/PLACES.md: per place, what to model (layout, materials, landmarks, how it plays) and its look: look-01 by default, neon only in formerly crowded centres
+- [x] **M3-22** Reference look (U-009)
+  - Facades read like the director's reference photo (docs/reference/look-01.jpg, described in DESIGN section 15): weathered concrete, tile and brick textures with rain streaks, grime, moss and patching; window grids of dark recessed openings, some glazed or barred, lit ones at night
+  - Per-building detail: balconies and enclosed balcony cages, AC units, water tanks, rooftop gardens and plants, laundry, pipes and cables, floor bands and setbacks, varied heights
+  - Verticality: residential slabs of 15-30 floors rising behind and above mid-rises and old brick low-rises on the slopes; overcast diffuse light and haze
+  - Screenshots from Shibati vantage points against the reference, refined in passes; a PT entry asks the director to compare
+- [x] **M3-07** Jiaochangkou and the Line 2 beam
+  - The junction plaza, the Line 2 terminus station and the elevated beam running west, walkable on top with ladders at stations
+  - A sim test walks the beam; a screenshot of the junction
+- [x] **M3-08** Grand Tunnel network
+  - src/data/tunnels.ts polylines carved under the district: the Grand Tunnel, the hideout side tunnel, exits to Shibati (gate), Jiaochangkou and a hotpot cool room
+  - A sim test walks from the hideout to two exits
+- [x] **M3-09** Air-raid tunnel shelter site (U-013)
+  - The brick-arched air-raid side tunnel sits in the tunnel network as one candidate shelter site (empty but for junk and a rotten mattress); its gate opens in a Shibati retaining wall and its vent shaft reaches the Jiaochangkou grate
+  - A collapsed side passage and the vent grate exist as raid-prep options
+  - A sim test walks from the chamber to the street
+- [x] **M3-12** Weather schedule
+  - A seeded schedule of fog (none, light, heavy) and rain spells, with morning fog common
+  - Sim state exposes fog and rain factors; a unit test checks determinism and the mix over 10 days
+- [x] **M3-13** Fog and rain rendering
+  - Fog density follows the weather; rain streaks near the camera and a wet sheen on surfaces
+  - Screenshots in rain and in heavy fog
+- [x] **M3-30** Body status indicator (U-014)
+  - A small body figure on the HUD shows where he is hurt: sprained or broken legs and arms (splinted marked), bleeding light or heavy, and low food, water, energy, sickness and grip endurance
+  - It brightens when something changes and fades when he is fine
+  - A screenshot with a sprained leg and light bleeding; an e2e check reads the indicator's states
+- [x] **M3-31** Esc unbound (U-014)
+  - No game action uses Esc (it only leaves fullscreen); the backpack closes with Tab, the sleep menu with E, Tab, right-click or its stay-awake button; pause and settings use =
+  - The smoke test closes each menu without Esc
+- [x] **M3-32** Easier parapets and windows (U-014)
+  - Roof parapets are 0.6 m: a hop or a running jump clears them
+  - Real window openings are 1.4 m wide and 1.9 m tall with an 0.8 m sill: he hops onto the sill and drops in, or vaults through at a run
+  - Sim tests: over a parapet onto the next roof; in through a window from outside and out again
+- [x] **M3-33** Closed facades read closed (U-014)
+  - Painted windows are never empty black holes: each is barred, shuttered (roller or wooden), boarded or bricked up, so a building he can't enter looks sealed, and the open ones are real openings
+  - A screenshot of a street of mixed blocks
+- [x] **M3-34** Props, vehicles, debris and foliage (U-014)
+  - A library of code-built, instanced props in the look-01 style: wrecked cars, vans, scooters and bikes, buses; barricades, rubble piles, fallen signs, scattered boxes and trash; street furniture (lampposts, benches, bins, railings, bollards, kiosks, stalls); foliage (trees with real canopies, fig roots on walls, vines, weeds in cracks, potted plants); ASI hardware (drone docks, scanner gates, cameras, LED edict boards, cable bundles)
+  - Streets, alleys, plazas and roofs are dressed densely by rules plus hand placement; within the render budgets
+  - U-016: props are modelled on the reference photos (docs/reference/places) made futuristic and post-apocalyptic, with realistic textures; one library covers props, vehicles including the Line 2 train, signs and decorations
+  - Screenshots of a dressed street, an alley and a plaza
+- [x] **M3-39** Geo data for Yuzhong (U-017)
+  - Elevation for the eastern Yuzhong peninsula (Jiaochangkou to Chaotianmen with both river banks) from public DEM tiles, smoothed, stored in src/data/geo at 10 m or finer
+  - From OpenStreetMap: streets (type, width, steps), building footprints with levels where tagged, parks, the Line 2 route and stations, bridges, the cableway, river banks; in local metres (x east, z south), stored compactly in src/data/geo; the fetch tool is in tools/ and credits go in CREDITS.md
+  - Unit tests: Jiefangbei, Shibati, Hongyadong and Chaotianmen land at their real positions and heights (within 5 m and 3 m)
+- [x] **M3-42** Start hideout and many hideouts (U-018)
+  - A run starts in the hideout at the Grand Tunnel vent junction: a bedroll, a stash, the grate overhead with neon, searchlights and patrols passing above
+  - He can make more hideouts anywhere (a bed and storage), each keeping its own storage; sleeping, saving and crafting work at any of them; the journal lists them
+  - Sim tests: start in the vent hideout, make a second, store items in each, sleep in either; e2e screenshot looking up through the grate
+- [ ] **M3-43** The subway way in (U-018)
+  - The underground Line 1/2 station at Jiaochangkou (platforms, concourse, dead escalators, screen doors) and a running tunnel joining the Grand Tunnel system near Shibati
+  - A sim test walks from the station to the vent hideout underground
+- [x] **M3-40** Rotated solids (U-017)
+  - A solid can carry a yaw about its own centre; collision, ray casts, ledges, vaults, wall-runs and climbing work on rotated walls as on axis-aligned ones
+  - Rendering, shadows, chunking and far stand-ins handle rotated solids
+  - Unit tests: walk into, climb onto, vault and wall-run a 30-degree-turned wall; e2e screenshot
+- [x] **M3-45** The headlamp works (U-019)
+  - With a headlamp in the backpack H cycles off, white, red; a spot light on his head lights the way (white bright, red dim); white lasts 8 game hours, red 24, then it dies; a battery pack recharges it; it goes off when he sleeps; the friends' crate holds one at 60%
+  - Sim tests for each; e2e: at night white lights the street ahead, red a little
+- [x] **M3-41a** Heightfield ground (D-016)
+  - A heightfield primitive in the collision index: a 2 m grid of heights with a collision shell below the surface and holes; walking, step-up on slopes, landing, falls, ray casts (with slope normals) and the parkour moves work on it alongside solids
+  - Rendered in chunks with slope materials (ground, soil, retaining-wall faces on steep slopes) and a coarse far mesh
+  - Unit tests: walk up and down a 30% slope, stand at the right height, a ray hits it, a tunnel under it is clear, a hole lets him through; e2e screenshot
+- [x] **M3-41b** The Yuzhong base world (D-016)
+  - World 'yuzhong' from the geo data at 1:1: heightfield ground from the DEM with the rivers at their level, levelled under buildings and across streets; street and stair surfaces from OSM; every OSM building as turned, hollowed and detailed blocks with heights from levels; turned infill lots along streets where OSM has none; both far banks as far stand-ins
+  - ?scenario=yuzhong to walk it; boot within budget; draw calls within budget at three viewpoints
+  - Unit tests: buildings sit on the ground (no floating, no buried doors), streets are walkable end to end, no building overlaps a street
+- [x] **M1-41** Movement realism (U-020)
+  - A slide down a slope or stairs gathers speed with the grade (and bleeds it uphill); on the flat it runs out in about 1.3 s
+  - Above a high fall speed (a fall of about 12 m or more) a grab with one or both hands tears loose, and wall kicks, wall-runs and clings are refused
+  - Ground steeper than about 45 degrees is a wall: he can't walk or run up it, slides and falls off it, and climbs it with the wall moves
+  - A wall kick while facing the wall goes up it; facing away it kicks out the way he looks
+  - Sim tests for each
+- [x] **M3-46** Building variety (U-020)
+  - Colours and materials by district and building type after the reference photos: no single colour dominates, the salmon tile is rare; towers vary in form (podiums, setbacks, crowns, curtain-wall colours, LED screens); old walk-ups, slabs, shop houses, offices and malls read as their type
+  - Cyberpunk in the formerly crowded centres (Jiefangbei, Jiaochangkou, Hongyadong) and quiet dystopia elsewhere; just after the takeover, not ruined
+  - Screenshots of Jiefangbei, a residential slope and Shibati beside reference photos
+- [ ] **M3-41c** Everything moves to Yuzhong (D-016)
+  - Shibati's shop houses along the real Eighteen Stairs, the Line 2 route and stations from OSM (the stalled train on an elevated stretch), the construction site on a real construction plot, the Grand Tunnel on the real 十八梯大隧道 alignment with the vent hideout under a plaza, dressing along the real streets, districts by place, sites, teleports and spawns
+  - 'run' and 'shibati' use the new world; the old tile city is removed; every test updated
+- [ ] **M3-47** Hiding, seen from inside; more places to hide (U-021)
+  - Hidden, he sees the inside of what he's in (crate slats with light between, a dumpster under a lifted lid, a wardrobe's door crack, a car boot), not through it
+  - Many more places to hide across the city: dumpsters and big bins on streets and in alleys, wardrobes and cupboards in flats, stall cabinets, water tanks on roofs, car boots, barrels; each with a prompt
+  - Sim tests for entering each kind; screenshots from inside three
+- [ ] **M3-48** Underwater (U-021)
+  - Under the surface the view turns murky green-brown with short sight, dim wavering light and drifting particles; the surface seen from below; sound muffles
+  - Back above it, it clears at once; e2e screenshots under and over
+- [ ] **M3-50** The movement envelope (U-021)
+  - src/data/envelope.ts: measured from the sim, the gaps and heights of standing and running jumps, mantles, hand reaches, wall kicks and wall-runs, slide distances (flat and downhill), safe drops, swing and lache distances, each with a comfortable and a maximum value
+  - Unit tests regenerate each number from the sim and fail when movement changes it; DESIGN section 3 shows the table; generators and hand layouts read it
+- [ ] **M3-51** Sandbox parkour areas (U-021)
+  - Skatepark-style areas in the plain parts of the city: dense, varied geometry (roofs at mixed heights, walls, poles, bars, slopes, scaffolds, cables) built to the envelope, with many lines through and no single solution; riskier (more patrols, less cover)
+  - A bot test finds at least three different routes across each area
+- [ ] **M3-52** Ziplines (U-021)
+  - With a rope and two hooks he rigs a line between two anchors in reach (railings, poles, roof edges, up to 40 m, falling at least 1 in 10); hanging from it by a hook, pulley or gloved hands he rides down it, faster on steeper lines, and lets go with Ctrl
+  - Existing cables strung between buildings ride the same way; a live power line shocks him
+  - Sim tests: rig and ride, ride a cable, fall off at the end, the shock
+- [ ] **M3-49** Real skies (U-021)
+  - A sky dome with real-looking clouds (overcast layers, broken cloud, low fog banks), sunrise and sunset colour, a starry night with the moon and the city's glow on low cloud, following the clock and the weather; from CC0 sky images or painted in code
+  - E2e screenshots at dawn, noon, dusk and night in clear and overcast weather
+- [ ] **M3-41** The city at 1:1 (U-017)
+  - Terrain, streets and buildings of the play area follow the geo data at real size: real street widths, stairs and footprints, building heights from levels (typical by kind where untagged)
+  - Every set piece, tunnel, district and spawn moves to its real place; tests follow
+  - Boot, draw-call and triangle budgets hold (DESIGN 16); screenshots of Jiefangbei, Shibati and Chaotianmen beside their reference photos
+- [ ] **M3-35** Shibati and Jiaochangkou from the references (U-014)
+  - Terrain, street layout and building placement follow the real places in docs/reference (photos and notes): organic, not a grid; buildings sit on the slope with stepped bases and retaining walls
+  - The streets look like the real ones, made dystopian: dressing per M3-34, the ASI's marks
+  - Screenshots beside reference photos of the same spots
+- [ ] **M3-36** Building access by design (U-014)
+  - Hand-made building templates in several variations each: most doors locked or jammed, stair doors chained, only a few rooms open, the rest collapsed or blocked; ways in like a window off a neighbour's roof, a hole in a floor, a balcony to crawl along, a fire door opened from inside
+  - Generic pipes, ladders and hold columns are removed; climbables appear only where a template or route places them
+  - Loot is scarce: a few containers per open building, most rooms empty or picked over
+  - Sim tests take one way into each template and find the locked alternatives refuse him
+- [ ] **M3-37** The ant-hill route network (U-014, U-021)
+  - Hand-designed main routes like highways across the district over roofs, through buildings, along beams and through tunnels, carrying the sites and key supplies needed to finish the game; branching neighbourhood routes off them; streets are the dangerous shortcut
+  - Every gap, height and reach on a route is within the movement envelope (M3-50), comfortable on the main routes, near the maximum on the risky branches
+  - A readable visual language: planks, open windows, broken railings and worn paths mark the way; dead ends read as dead ends
+  - Route and patrol data: the routes as graphs, patrols laid against them; a patrol route and a drone corridor pass over the start hideout's vent grate at night (U-018)
+  - A bot walks each main route end to end; screenshots of three junctions
+- [ ] **M3-38** Interiors with variety (U-014)
+  - Room templates (flats, stairwells, corridors, shops, restaurants, offices, workshops) furnished from a furniture and clutter set in states of decay: collapsed ceilings, debris, water damage, overturned furniture
+  - Several variants per template so rooms rarely repeat; references from docs/reference interiors
+  - Screenshots of five different rooms
+- [ ] **M3-14** Neon and signage
+  - Canvas signs in simplified Chinese with the CJK font stack: shop signs, neon, vertical banners, red banners, QR stickers and animated LED boards
+  - Emissive at night
+  - A screenshot of Shibati at night
+- [x] **M3-15** Street props
+  - Instanced props: smart lampposts, scooters, shared bikes, bangbang poles, mahjong tables, noodle stalls, laundry poles, fig trees with roots on walls, AC units and water tanks
+  - A screenshot
+- [ ] **M3-16** Sim light map
+  - Light sources (lampposts, neon, interior lights) are world data; lightAt(pos, time) combines ambient and local light
+  - Unit tests: under a lamppost at night above 0.6; a dark alley at night about 0.12
+- [ ] **M3-17** Graphics presets
+  - Low, Medium and High set draw distance, pixel ratio, shadows and prop density
+  - The smoke test switches presets without errors
+- [ ] **M3-18** District teleports and scenarios
+  - The teleport list covers Shibati top and bottom, Jiaochangkou, the beam, the hideout and tunnel junctions
+  - ?scenario=shibati and ?scenario=tunnels load in the smoke test
+- [ ] **M3-19** The Li family flat
+  - A ransacked upper-Shibati flat holding his father's substation badge and a cracked phone with a voicemail
+  - A screenshot
+- [ ] **M3-20** Shibati's Yangtze riverfront
+  - The lower city meets the riverfront road, prefab barrier walls and the Yangtze water volume
+  - A sim test walks to the water and swims
+- [ ] **M3-21** Three layers of routes
+  - Four key points of the district (hideout gate, Shibati top, Jiaochangkou, the riverfront) are linked by a street route, a rooftop or beam route and an underground or interior route
+  - A sim test checks each link with the nav and movement limits
+
+## M4: 0 of 35 done
+
+M4 The machines: cameras, drones and their docks, ground robots, turrets; perception (light, distance, motion, posture, cover, sound, thermal); patrol schedules; alert states, the hivemind broadcast, convergence, drone launches, the search and the heightened district; combat and damage; tracking home and the hideout raid; death and restart. After M4 the core loop is playable start to finish.
+
+- [ ] **M4-01** Unit framework and scheduled patrols
+  - Units are plain data (type, route, schedule, state); while Unaware a unit's pose is a pure function of game time plus its run-seed phase offset (at most 8% of its loop)
+  - Routes have dwell times and units have active hours
+  - A unit test: the same pose for the same time however that time was reached
+- [ ] **M4-02** Navigation graph and pathing
+  - A nav graph built from streets, stairs and tunnels with levels; A* between any two reachable nodes
+  - Unit types filter edges (delivery robots avoid stairs)
+  - A sim test: a quadruped paths from Shibati's bottom to Jiaochangkou over the stairs
+- [ ] **M4-03** Vision perception
+  - Visibility per DESIGN section 5: 5 body points with line-of-sight rays, light, posture, motion, falloff, weather and night-vision floors
+  - Unit tests: standing and jogging at 10 m by day is spotted in about 0.5 s; crouched and still in shadow at 15 m at night never; behind a wall never
+- [ ] **M4-04** Awareness and investigation
+  - Awareness accumulates and decays per unit; 0.3 is Suspicious and 1.0 Engaged
+  - A Suspicious unit walks to the point, scans for 8 s and returns to its route
+  - A sim test covers it
+  - Patrol routes shift over time: by day of the run, and after the hive has seen him somewhere (U-021)
+- [ ] **M4-05** Hearing
+  - Units hear noise events within radius x hearing multiplier (x0.6 when occluded); acoustic sensors hear x2
+  - A heard noise makes the unit investigate; hostile noises start a search
+  - Sim tests: sprinting past a quadruped behind a wall draws it; crouching past doesn't
+- [ ] **M4-06** Thermal senses at night
+  - Thermal units at night ignore light; mylar x0.1, wet x0.3, deep water 0
+  - A sim test: a drone at night sees a crouched player in darkness, and with mylar it doesn't
+- [ ] **M4-07** Cameras
+  - Fixed, sweeping and lamppost cameras with FOV and ranges from data; sweepers pan on a fixed period
+  - A sim test: walking through a cone engages; timing the sweep gets past
+- [ ] **M4-08** Patrol drones and docks
+  - Drones fly loop routes at altitude with a searchlight cone at night and go home to recharge (6 min flight, 2 min charge)
+  - Rooftop docks launch and recall them
+  - A sim test shows the coverage gap while a drone recharges
+- [ ] **M4-09** Quadrupeds
+  - Patrol at 3 m/s, chase at 8 m/s on the nav graph, take stairs and 1 m jumps, never climb; loud servos
+  - A sim test: a chase over stairs, and no way to follow up a 2.4 m mantle
+- [ ] **M4-10** Humanoids
+  - 2.5 m/s walk, 4.5 m/s run, stairs only, armoured, armed
+  - A sim test covers patrol and pursuit speed
+- [ ] **M4-11** Turrets, motion sensors, tripwires and acoustic sensors
+  - Static sensors behave per DESIGN section 7; turrets fire when Engaged
+  - Sim tests: crossing a tripwire engages; a motion sensor ignores a slow crawl
+- [ ] **M4-12** District alert state machine
+  - Unaware, Suspicious, Engaged, Searching and Heightened transitions per DESIGN section 5
+  - Unit tests cover each transition and its timing
+- [ ] **M4-13** Hivemind broadcast
+  - An Engaged unit broadcasts after its type's delay; the last known position updates live while broadcasting units see him
+  - Contact spreads to the district and to units within 300 m in neighbouring districts
+  - A sim test: disabling the unit before its delay keeps the network unaware
+- [ ] **M4-14** Convergence and escalation
+  - Ground units within 250 m path to the last known position and drones within 400 m fly to it; docks launch hunter drones every 20 s (3 per dock); a humanoid squad deploys after 45 s
+  - A sim test checks unit counts over time
+- [ ] **M4-15** Search
+  - The search area follows DESIGN section 5 (centre projected along the heading, radius 6 + 3t up to 140 m); search points favour hiding spots, level changes and the heading
+  - Searchers within 1.5 m of a hiding spot check it with 60% chance
+  - Unit tests for area growth and point sampling; a sim test finds a player hiding at the last known position
+- [ ] **M4-16** Wind-down and Heightened district
+  - A search ends 150 s after the last contact; the district stays Heightened until 06:00 with +50% patrols, every camera active and awareness x1.3
+  - A sim test covers it
+- [ ] **M4-17** Silent units
+  - A unit disabled or jammed while aware or with a broadcast pending draws an investigation after 12 s; finding a destroyed unit starts a small search
+  - A sim test covers it
+- [ ] **M4-18** Enemy fire and wounds
+  - Hit chances and damage per DESIGN section 6; hits cause damage, bleeding and limb injuries
+  - Sim tests: standing in a turret's view is lethal within seconds; sprinting 60 m from a humanoid survives a few seconds
+- [ ] **M4-19** Unit damage and weak points
+  - Units have HP and hit zones with multipliers, and states blinded, immobilised, shut down and destroyed
+  - Unit tests per unit type
+- [ ] **M4-20** Knife, crowbar and takedowns
+  - Knife and crowbar melee; one knife hit downs a patrol drone; a takedown from behind (1.5 m, rear 120 degrees, unit not Engaged) shuts a robot down in 2 s
+  - A sim test covers both
+- [ ] **M4-21** Pistol
+  - Hitscan with spread and sway, magazines and reloads; each shot is a hostile 150 m noise
+  - A sim test: head shots blind a quadruped
+- [ ] **M4-22** Tracking tags
+  - A quadruped's tag launcher sticks a tracking tag to his clothes on a hit; it stays until removed
+  - A sim test covers it
+- [ ] **M4-23** Tracking home
+  - Entering the shelter's area (within 25 m of his bed) within 10 s of any unit's line of sight, or with a tag, marks the shelter compromised (U-013)
+  - Sim tests: a clean return stays safe; a tagged return compromises it
+- [ ] **M4-24** Hideout raid
+  - A compromised shelter is raided at a seeded time between 01:00 and 04:00; he wakes with 10 s before units reach the chamber
+  - He survives by a prepared second exit, the vent with a ladder in it, or an EMP trap; otherwise he dies
+  - Sim tests for a prepared escape and an unprepared death
+- [ ] **M4-25** Lost shelter (U-013)
+  - After a survived raid the stash is destroyed and the shelter unusable; he must make a new shelter elsewhere (M3-28)
+  - A sim test covers it
+- [ ] **M4-26** Machine models
+  - Code-built meshes: cameras, lamppost cameras, patrol and hunter drones with spinning rotors, quadrupeds with leg animation, humanoids, turrets and docks
+  - ?scenario=units shows a lineup; a screenshot
+- [ ] **M4-27** The world shows the alert state
+  - Unit lights go white, amber or red by state; LED boards switch to alert text; sirens sound
+  - No HUD indicator; screenshots Unaware and Engaged
+- [ ] **M4-28** Street speakers and announcements
+  - Speakers and LED boards run the machine's calm announcements by state and time (curfew at night, alerts, search, heightened)
+  - A unit test picks the right line for each state
+- [ ] **M4-29** Machines in the first district
+  - Patrol data for Shibati, Jiaochangkou and the tunnels: cameras, lampposts, 2 drone docks, quadrupeds, humanoids, delivery robots
+  - A sim test runs a full game day with no stuck units
+- [ ] **M4-30** Dev perception overlay
+  - ?dev=1 toggles perception cones, awareness bars, the alert overlay and a unit list
+  - The smoke test toggles it
+- [ ] **M4-31** Core loop end to end
+  - Boot, set up a shelter (claim a bed), leave, get engaged, die, death screen, new run; and leave, loot a container, return clean, sleep, save (U-013)
+  - A browser test drives both through the dev hook
+- [ ] **M4-32** Pursuit escapes in the first district
+  - Scripted escapes for three pursuits (a drone tail on the stairs, a quadruped chase in the alleys, a camera spot at Jiaochangkou) break contact and the search ends without finding him
+  - The pursuits load as ?scenario=pursuit-*
+- [ ] **M4-33** Audio engine and machine sounds
+  - Web Audio engine with 3D panning; synthesized rotor buzz with Doppler, servo whine, gunfire, footsteps and sirens; more drones are louder
+  - The smoke test starts audio after a click with no errors
+- [ ] **M4-34** Delivery robots
+  - Wheeled robots at 2 m/s on flat streets (no stairs) with short sight; loud noise sends them off route
+  - A sim test covers patrol and a stairs refusal
+- [ ] **M4-35** Tower searchlights
+  - Rooftop searchlights sweep at night, adding full light inside their cone; on contact they converge on the last known position
+  - A sim test covers sweep and convergence
+
+## M5: 0 of 32 done
+
+M5 Anna and tech: the laptop interface, scanning, food checks, the auto-map and patrol logs, hacking cameras and drones, jamming, crafting at the workbench, healing items, weapons, and the full item set.
+
+- [ ] **M5-01** Laptop shell
+  - L opens Anna's laptop over the view without pausing; at night its glow adds 0.5 light at his position
+  - The laptop battery drains while open (2 game hours) and charges at a powered shelter
+  - Dense, dim, bilingual terminal styling per DESIGN section 12; the smoke test opens it
+- [ ] **M5-02** Laptop pages and navigation
+  - Pages 状态 Status, 扫描 Scan, 地图 Map, 日志 Logs, 摄像头 Cams, 无人机 Drone and 笔记 Notes switch by keys and clicks; locked pages say what they need
+  - A screenshot of the status page
+  - The journal lists his hideouts (U-018)
+- [ ] **M5-03** Status page
+  - Shows health, wounds, bleeding, sprains and fractures, satiety, hydration, energy and sickness in both languages
+  - The smoke test reads values that match the sim state
+- [ ] **M5-04** Scanning
+  - With the laptop open, looking at an item, unit or device for 2 s scans it; Anna gives its name, purpose and uses from data
+  - Scans are kept in state; a unit test checks every item and unit type has scan text
+- [ ] **M5-05** Food checks
+  - Scanned food shows its remaining shelf life or that it's spoiled; unscanned food shows nothing
+  - A unit test covers it
+- [ ] **M5-06** Auto-map
+  - Visited 10 m cells are recorded with their level; the map page draws them top-down by layer
+  - The smoke test walks and sees explored cells
+- [ ] **M5-07** Binoculars and patrol logs
+  - Binoculars zoom; watching a unit for 3 s logs its type, place, time and heading; repeated sightings draw its route on the map
+  - A sim test covers it
+- [ ] **M5-08** SDR dongle
+  - Carrying the SDR and listening for 30 s reveals the district's drone routes and dock times on the map
+  - It detects a tracking tag and lets him remove it
+  - Sim tests cover both
+- [ ] **M5-09** Camera tap
+  - Fitting a tap to a camera's junction box (8 s) gives its live feed in the laptop; looping blinds it for 90 s without a silent-unit alarm
+  - A sim test covers it
+- [ ] **M5-10** Network credentials
+  - Using the telecom credentials at an exchange terminal opens every camera feed in the districts it serves
+  - A sim test covers it
+- [ ] **M5-11** Hacked drone
+  - A salvaged drone plus the controller flies from the laptop (8 min battery); units can spot it; its flights reveal the aerial map
+  - A sim test covers flight, battery and map reveal
+- [ ] **M5-12** Robot weak points
+  - Scanning a disabled unit reveals that type's weak-point diagram in Anna
+  - A sim test covers it
+- [ ] **M5-13** Signal jammer
+  - Cuts the hive link within 25 m: pending broadcasts lost, drones hover blind; after 20 s running it becomes a beacon
+  - Sim tests cover the cut and the beacon
+- [ ] **M5-14** EMP device
+  - 6 m radius effects per DESIGN section 6 with 3 charges; it can be rigged as a trap at a shelter entrance
+  - A sim test covers drones, robots and the trap
+- [ ] **M5-15** Workbench crafting
+  - Recipes live in src/data/recipes.ts; the bench lists recipes with missing parts; crafting consumes parts and takes time
+  - A unit test checks every recipe part exists as an item; the smoke test crafts a bandage
+- [ ] **M5-16** Salvage
+  - Downed drones and disabled robots can be dismantled (hold E, tool needed) for the parts in DESIGN section 8
+  - A sim test covers it
+- [ ] **M5-17** Healing items
+  - Bandage, tourniquet, splint, painkillers and first-aid kit behave as in DESIGN section 4 with use times
+  - Sim tests cover each
+- [ ] **M5-18** Shotgun and nail gun
+  - Shotgun pellets and shells with a 180 m noise; the nail gun is quiet (25 m), short-ranged and can pin a door shut
+  - Sim tests cover both
+- [ ] **M5-19** Throwables
+  - A throw arc; grenade (6 m, breaches weak doors), fire extinguisher smoke (blocks sight and thermal for 20 s), firecrackers (120 m decoy), thrown bottles and stones (small noise)
+  - Sim tests: a decoy draws a quadruped; smoke breaks line of sight
+- [ ] **M5-20** Grappling hook
+  - Aim at a ledge up to 20 m above and throw; it hooks if a ledge edge is near the aim point; climb or rappel the rope; retrieve it
+  - A sim test climbs a 12 m wall
+- [ ] **M5-21** Rope and rappel
+  - Anchor the rope at an edge and rappel up to 20 m; it stays as a fixed line until taken
+  - A sim test covers it
+- [ ] **M5-22** Telescoping ladder
+  - Place it against a wall (climbable to 4 m) or flat across a gap up to 3.8 m (walkable at crouch speed); dropping it is a 30 m noise
+  - Sim tests cover both placements
+- [ ] **M5-23** Crowbar prying
+  - Pry doors (not secure ones), shutters, vent covers, crates and scooter batteries with a 20 m noise and a duration
+  - A sim test covers it
+- [ ] **M5-24** Locks, keys, lockpicks and keycards
+  - Lock grades: bad (lockpick works), good (key or crowbar), secure (keycard only); the cloner copies a card from a reader or a unit
+  - Sim tests cover each grade
+- [ ] **M5-25** Bolt cutters
+  - Cut chains, padlocks, fences (opens a crawl gap), grates and cables
+  - A sim test covers it
+- [ ] **M5-26** Wearables: gloves, headlamp, mylar
+  - Climbing gloves halve hang and pipe stamina; the headlamp (white or red) sets his light level; worn mylar beats thermal
+  - Sim tests cover each
+- [ ] **M5-27** Shelter power
+  - The car battery and inverter charge the laptop and run bench power tools and drain by use; car batteries come out of abandoned cars; a solar charger adds 5% a day
+  - A sim test covers it
+- [ ] **M5-28** Every tool has two uses
+  - A data test: every tool lists at least two uses and each use maps to an implemented action
+  - No single tool opens every lock grade or hazard
+- [ ] **M5-29** Water
+  - Bottles refill clean at taps, or from the river (sickness 50% unless purified with a tablet)
+  - A sim test covers it
+- [ ] **M5-30** Backpack upgrade
+  - The hiking pack raises the grid to 10x7 and keeps its contents
+  - A unit test covers it
+- [ ] **M5-31** Loot tiers
+  - Loot tables for tiers 1-4 hold the items in DESIGN section 10; site containers use their tier
+  - A unit test: tier 4 has the drone-hub parts and tier 1 holds no escape components
+- [ ] **M5-32** Anna's remarks
+  - Anna remarks (subtitled dialogue lines) on scans, injuries, low battery, nearby drones with the SDR, and tags
+  - A unit test checks every trigger maps to an existing dialogue id
+
+## M6: 0 of 27 done
+
+M6 The city: the rest of the map (Jiefangbei, Hongyadong, Chaotianmen and Raffles City, the cableway station, both riverfronts, Dongshuimen Bridge) with every high-security site and loot tier.
+
+- [ ] **M6-01** Jiefangbei district
+  - CBD towers, malls with enterable floors, pedestrian streets on the ridge and the Liberation Monument plaza
+  - A sim test crosses the district by street and by rooftops
+- [ ] **M6-02** Jiefangbei look
+  - The monument, giant LED screens running the machine's announcements, mall facades and towers
+  - A screenshot
+- [ ] **M6-03** Hongyadong
+  - The stilt complex stacked down the Jialing cliff with street entrances at 44, 30 and 12 m, balconies and walkways
+  - A sim test climbs from the riverfront to the top through it
+- [ ] **M6-04** Chaotianmen and Raffles City
+  - The tip plaza, the Raffles towers and The Crystal sky conservatory at about 250 m, and the meeting of the rivers
+  - A sim test reaches the plaza from Xiaoshizi
+- [ ] **M6-05** Xinhua Road and Xiaoshizi
+  - The lower Yangtze-side streets, the Line 6 station entrance and the bridge approach
+  - A sim test walks from Shibati to Xiaoshizi
+- [ ] **M6-06** Riverfronts
+  - Jialing (north) and Yangtze (south) riverside roads, docks and barrier walls with water volumes all round the peninsula
+  - A sim test walks the Yangtze riverfront from Shibati to Chaotianmen
+- [ ] **M6-07** Bridges and the far banks
+  - Dongshuimen's double-deck truss with pylon and cables, Qiansimen with its collapsed span, and Nan'an and Jiangbei as backdrop
+  - A screenshot
+- [ ] **M6-08** Dongshuimen Bridge collision
+  - The road deck, the Line 6 rail deck inside the truss as a parkour route, and the north pier climb
+  - A sim test crosses the truss from the north end to the south bank
+- [ ] **M6-09** Western border wall
+  - A floodlit wall across the Eling neck with turrets; no passage over it
+  - A sim test: no route across it within movement limits
+- [ ] **M6-10** Construction site and tower crane
+  - Li Wei's half-built tower and crane per DESIGN section 10: four ways in, tier 2 tools, the loose-plank and crane-load hazards
+  - Sim tests take each way in and trigger each hazard
+- [ ] **M6-11** Hospital
+  - Four ways in, tier 2 medical loot, the pressure-plate pharmacy and motion-sensor wards
+  - Sim tests take each way in and trigger the hazard
+- [ ] **M6-12** Police station
+  - Four ways in, tier 3 weapons and keys, the armoury ceiling turret
+  - Sim tests take each way in and trigger the hazard
+- [ ] **M6-13** Electronics market
+  - Four ways in, tier 2-3 electronics, acoustic sensor arrays on shop floors
+  - Sim tests take each way in and trigger the hazard
+- [ ] **M6-14** Telecom exchange
+  - Four ways in, tier 3 network loot and terminal, server-hall gas suppression and the camera mesh; it is the district relay node
+  - Sim tests take each way in and trigger the hazard
+- [ ] **M6-15** Substation
+  - Four ways in (one with his father's badge), tier 2 electrical loot, the single spare HV fuse, feeder panels and relay cabinet, the live HV yard
+  - Sim tests take each way in and trigger the hazard
+- [ ] **M6-16** Cableway station
+  - Three ways in, the operator key, the cabin, towers and the haul rope across the Yangtze, the bullwheel hazard
+  - Sim tests take each way in and trigger the hazard
+- [ ] **M6-17** Metro control room
+  - Four ways in, tier 3 keys, the pump panel and track door, the third rail and face-recognition gates
+  - Sim tests take each way in and trigger each hazard
+- [ ] **M6-18** Raffles drone hub and The Crystal
+  - Four ways in, tier 4 loot including the second HV fuse, wind gusts and glass-floor pressure sensors
+  - Sim tests take each way in and trigger each hazard
+- [ ] **M6-19** Bridge checkpoint
+  - Three ways in, the military crate, turret cluster and scanner gates
+  - Sim tests take each way in and trigger the hazard
+- [ ] **M6-20** River-police pier
+  - Three ways in, the patrol boat, sonar buoys and river drone boats
+  - Sim tests take each way in and trigger the hazard
+- [ ] **M6-21** City tunnels
+  - Air-raid tunnels across districts, the hospital basement link, the telecom cable tunnel, the Line 1 and Line 6 tunnels and the flood culvert
+  - A sim test walks from the hideout to Xiaoshizi underground
+- [ ] **M6-22** Machines across the city
+  - Patrol data for every district: cameras, lampposts, docks, drones, quadrupeds, humanoids, delivery robots, turrets, garages for squads
+  - A sim test runs a full game day across the city with no stuck units in under 30 s of wall time
+- [ ] **M6-23** Coverage tool
+  - A tool computes, over a game day, the unwatched windows on each site's approaches
+  - A test: every high-security site has at least one approach with an unwatched window of 10 s or more
+- [ ] **M6-24** Shelter sites across the city (U-013)
+  - Every district offers several candidate shelter sites (flats, roof huts, back rooms, basements, the Hongyadong cliff cellar, the Xiaoshizi metro service room, tunnel chambers) with beds, tables or containers to claim
+  - A unit test counts sites per district; a sim test sets up a shelter in two of them
+- [ ] **M6-25** Teleports and scenarios for every site
+  - The teleport list and ?scenario= cover every district and site approach
+  - The smoke test loads each site scenario without errors
+- [ ] **M6-26** Whole-city render budgets
+  - Draw calls and triangles stay within each preset's budget at 10 viewpoints across the city
+  - A browser test records them
+- [ ] **M6-27** River border enforcement
+  - Swimming more than 60 m from either bank outside a route draws river drone boats with sonar and thermal; unprepared crossings fail
+  - A sim test covers it
+
+## M7: 0 of 15 done
+
+M7 Escapes: every escape route end to end, each with its ending.
+
+- [ ] **M7-01** Escape and ending framework
+  - Route progress lives in sim state; ending trigger zones end the run with a route id; the run summary records days, sites entered and times seen
+  - A sim test triggers an ending and checks the save is cleared
+- [ ] **M7-02** Route A: bridge sensor relay
+  - Cutting the relay at the substation (bolt cutters and insulated gloves) takes the bridge deck sensors offline until the next 06:00 repair
+  - A sim test covers the cut and the repair
+- [ ] **M7-03** Route A: the rail deck
+  - The rail deck has maintenance drones on a schedule; with sensors offline and a jammer the truss can be crossed; the Nan'an end triggers the 桥下 ending
+  - A sim test crosses with the right preparation and is caught without it
+- [ ] **M7-04** Route A test
+  - A fresh run teleports between route A's steps, gathers each component at its site, crafts the jammer, cuts the relay, crosses and reaches the ending
+- [ ] **M7-05** Route B: the cabin
+  - The spare HV fuse restores the cableway feeder; the operator key starts a cabin; the 60 s ride passes the line drone; arrival triggers the 索道 ending
+  - A sim test covers the ride with and without being spotted
+- [ ] **M7-06** Route B: the trolley
+  - The crafted haul-rope trolley lets him climb the station tower and slide the haul rope in 40 s to the far side
+  - A sim test covers it
+- [ ] **M7-07** Route B tests
+  - Route tests from a fresh run for both the cabin and the trolley reach the ending
+- [ ] **M7-08** Route C: the boat
+  - The river-police boat needs 20 L of fuel, a car battery and the key or a CAN hotwire; simple boat handling with engine noise
+  - A sim test starts and steers it
+- [ ] **M7-09** Route C: the crossing
+  - Sonar buoys hear the engine within 50 m; drifting with the engine off in fog at night slips past; jammer or EMP also work; reaching the far reach triggers the 雾中 ending
+  - Sim tests for a drifting success and a loud failure
+- [ ] **M7-10** Route C test
+  - A route test from a fresh run gathers fuel, battery and ignition, launches and reaches the ending
+- [ ] **M7-11** Route D: underground
+  - The flooded section drains with the pumps (spare HV fuse to the metro feeder plus the pump panel) or is swum with the oxygen kit; the blast door opens by grinder, breaching charge or keycard; seismic sensors catch fast movement; the exit beyond the wall triggers the 隧道尽头 ending
+  - Sim tests for each bypass
+- [ ] **M7-12** Route D test
+  - A route test from a fresh run takes route D to its ending
+- [ ] **M7-13** Shared scarce components
+  - The spare HV fuse powers only one feeder; the second fuse at the Raffles hub allows both
+  - A sim test covers the choice
+- [ ] **M7-14** Solvability proofs
+  - For every route a test proves each required component exists and is reachable, each lock has a key or bypass, and each gap is within movement limits or bridgeable with a carried item
+- [ ] **M7-15** Ending sequences
+  - Each of the four endings plays a short scripted sequence with subtitles, then the run summary and the menu
+  - The smoke test plays each through ?scenario=ending-*
+
+## M8: 1 of 16 done
+
+M8 Story and sound: the intro cutscene, endings, the voice system with subtitles, a procedural audio pass (including pursuit music that rises with the alert state), menus, and settings.
+
+- [x] **M8-25** Intro screenplay for AI video (U-018)
+  - docs/cinematics/INTRO.md: style bible (3D Chinese anime look tied to the game's references), character sheets (Li Wei, his father 李国荣, his mother and sister, his friends, the drones and robot soldiers, the ASI's face), location sheets, and the screenplay: the news of the AI's rise, Li Wei at work, the attack, his family's deaths, the flight through Shibati and the subway to the grate hideout
+  - A shot list per scene: shot id, duration, camera, action, lighting, a ready generator prompt with negative prompt and consistency notes, VO and subtitles in zh and en, music and sound; a trailer cut list from the same shots
+  - A unit test checks every shot has a prompt, duration and camera and every line has zh and en
+- [ ] **M8-01** Dialogue data
+  - src/data/dialogue holds every line (id, speaker, zh, en) for the intro, Anna, Li Wei, his father, announcements and endings; Li Wei's lines use Chongqing dialect
+  - A unit test checks every referenced id exists and every line has both languages
+- [ ] **M8-02** Voice playback chain
+  - Playback uses public/audio/vo/<id>.mp3 if it exists, then Web Speech zh-CN, then subtitles alone; never blocks
+  - The smoke test plays a line with no files and no speech voice without errors
+- [ ] **M8-03** tools/make-voice
+  - A script the director runs locally to generate every mp3 with a TTS of their choice, with distinct voices per speaker
+  - A unit test runs it in dry-run mode and lists every line with its voice
+- [ ] **M8-04** Subtitles
+  - Subtitles show the speaker and text in English, Chinese or both, at the chosen size
+  - The smoke test switches the language setting
+- [ ] **M8-05** Intro cutscene
+  - The scripted intro from DESIGN section 13 and docs/cinematics/INTRO.md (news of the AI, Li Wei at the construction site, his father's call, the attack, the flight through Shibati and the subway, Anna wakes) ending on day 1 at 06:00 in the grate hideout under Shibati (U-018)
+  - The smoke test plays it to the end
+  - Plays the generated clips in public/cinematics when present (subtitled, zh and en), else the in-engine version
+- [ ] **M8-06** Intro skip after the first run
+  - After a first run the intro can be skipped with a key; the first run can't skip it
+  - The smoke test covers both
+- [ ] **M8-07** Audio mixer and buses
+  - Master, voice, effects, ambience and music buses with volume settings applied live
+  - The smoke test changes volumes without errors
+- [ ] **M8-08** Sound effects pass
+  - Every parkour action keeps one distinct sound (U-004), mixed in 3D with the rest
+  - Footsteps by surface, parkour, landings, tools, weapons, doors, containers and body sounds (breathing, heartbeat, stomach)
+  - The smoke test triggers each category without errors
+- [ ] **M8-09** Ambience
+  - City hum, rain, wind, river, tunnel drips and distant announcements, mixed by place, weather and time
+  - The smoke test runs ambience in three places
+- [ ] **M8-10** Music
+  - Ambient day and night pads and a pursuit layer whose intensity follows the alert state
+  - A unit test maps each alert state to its intensity
+- [ ] **M8-11** Main menu
+  - Continue (when a save exists), New Run, Settings and Credits, in the game's dim style
+  - The smoke test navigates it
+- [ ] **M8-12** Pause menu
+  - Esc pauses and lists the controls; resume, settings, quit to menu
+  - The smoke test opens it
+- [ ] **M8-13** Settings
+  - Settings open from the pause menu (= key, U-009)
+  - Every control can be rebound; mouse sensitivity is a slider (U-001)
+  - Mouse sensitivity, invert Y, FOV, master/voice/effects/ambience volume, subtitle size and language, graphics preset; persisted
+  - The smoke test changes and reloads them
+- [ ] **M8-14** Voiced announcements
+  - The machine's announcements play through speakers in the world, positioned, in calm Mandarin with subtitles when near
+  - A unit test checks each announcement id resolves
+- [ ] **M8-15** Story beats in the world
+  - His father's voicemail, friends' marks in the tunnels and Anna's first-night lines play once each per run
+  - A sim test triggers each once
+
+## M9: 0 of 11 done
+
+M9 Balance and polish: difficulty, performance on budget, solvability proofs, a bug sweep, and the final playtest checklist.
+
+- [ ] **M9-01** Difficulty tuning
+  - Sim statistics for detection times, pursuit escape rates and survival days are logged; tuning changes go in DECISIONS
+  - A test keeps detection and escape rates inside the target bands
+- [ ] **M9-02** Performance pass
+  - Budgets hold at every preset along all four escape routes; instancing and chunk merges fixed where they don't
+  - A browser test records draw calls and triangles; real frame rates go to PLAYTEST
+- [ ] **M9-03** Stability soak
+  - Three game days with every unit: no NaN, no stuck units, no unbounded arrays
+  - A slow sim test
+- [ ] **M9-04** Every scenario loads
+  - The smoke test loads every scenario and reports no console errors
+- [ ] **M9-05** Save robustness
+  - Saves carry a version; a corrupt or old save is reported and set aside instead of crashing
+  - A unit test covers it
+- [ ] **M9-06** Full run
+  - A sim test plays a fresh run: finding and setting up a shelter, days of scavenging, components from high-security sites, an escape and its ending; and the death loop to a fresh run
+- [ ] **M9-07** Fuzz sweep
+  - Every scenario survives two minutes of seeded random input with no exceptions or NaN
+  - A slow sim test
+- [ ] **M9-08** Load time and bundle size
+  - The production bundle is under 3 MB gzipped and boots headless in under 10 s
+  - Checked in verify
+- [ ] **M9-09** Pursuit escapes across the city
+  - One scripted pursuit escape per district breaks contact and the search ends without finding him
+- [ ] **M9-10** Docs match the game
+  - README, DESIGN and CREDITS match the shipped game; a test checks README lists every scenario and control
+- [ ] **M9-11** Final playtest checklist
+  - docs/PLAYTEST.md ends with a full-run checklist for the director
