@@ -48,3 +48,7 @@ Start: the game (no scenario): a run starts in the friends' hideout under the ve
 Try: get out of the hideout along the side tunnel and the Grand Tunnel, open the rusted gate and climb the stairway to the Shibati street; walk the Eighteen Stairs and run the rooftops of the shop houses either side; walk into a few buildings (more now open) and up their stairs; climb the half-built tower's stair core and the crane ladder; walk the Line 2 beam through the stalled train.
 Report: is the hideout's way out readable underground? Do the Shibati terraces and their rooftops work as a route? Anywhere you got stuck, fell through or saw into the void (stairway mouths, the grate, building doors)?
 
+## PT-010 Frame rate (M3-53, U-022)
+Start: `?scenario=shibati&dev=1` in your usual browser, fullscreen at 1080p.
+Try: read the dev panel at four places (the Shibati stairs, a rooftop, the hideout via the "Friends' hideout" teleport, and 120 m up over Jiefangbei): its fps and ms a frame, then press **bench** at each and note the result. Try Resolution High, Balanced and Fast in the pause menu (=).
+Report: the bench result at each place and setting, your monitor's refresh rate, and your GPU. A 60 Hz monitor always shows 60 fps; the bench shows how far past that the machine could go (target 6.7 ms = 150 fps).

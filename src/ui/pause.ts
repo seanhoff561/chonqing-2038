@@ -3,6 +3,8 @@
 // Settings join it in M8-13.
 import type { Game } from '../game';
 import { teleport } from '../sim/player';
+import type { Resolution } from '../render/view';
+import { deleteSave } from '../sim/save';
 
 const CONTROLS: [string, string][] = [
   ['WASD / mouse', 'move / look'],
@@ -25,6 +27,7 @@ export class PauseMenu {
   open = false;
   private el: HTMLDivElement;
   private openedAt = 0;
+  private confirmNew = false;
 
   constructor(private game: Game) {
     this.el = document.createElement('div');
@@ -56,6 +59,7 @@ export class PauseMenu {
   show() {
     this.open = true;
     this.openedAt = performance.now();
+    this.confirmNew = false;
     this.game.input.uiOpen = true;
     document.exitPointerLock?.();
     this.render();
@@ -77,13 +81,24 @@ export class PauseMenu {
         `<button data-a="game">回到游戏 Back to the game</button>`
       : `<button data-a="gym">运动训练场 Movement gym</button>` +
         (g.scenario.run ? `<div class="pz-note">Leaves this run; your last sleep is saved.</div>` : '');
-    this.el.innerHTML = `<div class="pz-col"><div class="pz-title">暂停 PAUSED</div><button data-a="resume">继续 Resume</button>${left}<div class="pz-note pz-credit">Map data © OpenStreetMap contributors (ODbL). Elevation: SRTM via Terrain Tiles.</div></div>
+    const newRun = this.confirmNew ? `<button data-a="newrun" class="on">确定？ Sure? This run is lost</button>` : `<button data-a="newrun">新的一局 New run</button>`;
+    const res = g.view.resolution;
+    const quality = `<div class="pz-h">画质 Resolution</div><div class="pz-row">${(['high', 'balanced', 'fast'] as const).map(r => `<button data-res="${r}"${r === res ? ' class="on"' : ''}>${{ high: '高 High', balanced: '中 Balanced', fast: '快 Fast' }[r]}</button>`).join('')}</div>`;
+    this.el.innerHTML = `<div class="pz-col"><div class="pz-title">暂停 PAUSED</div><button data-a="resume">继续 Resume</button>${left}${newRun}${quality}<div class="pz-note pz-credit">Map data © OpenStreetMap contributors (ODbL). Elevation: SRTM via Terrain Tiles.</div></div>
       <div class="pz-col pz-keys"><div class="pz-h">操作 Controls</div>${CONTROLS.map(([k, a]) => `<div><b>${k}</b><span>${a}</span></div>`).join('')}</div>`;
     this.el.querySelectorAll<HTMLButtonElement>('button').forEach(b => { b.onclick = () => this.act(b.dataset); });
   }
 
   private act(d: DOMStringMap) {
     const g = this.game;
+    // New run (U-025): a second click confirms; the save is gone and day 1 starts in the friends' hideout.
+    if (d.a === 'newrun') {
+      if (!this.confirmNew) { this.confirmNew = true; this.render(); return; }
+      deleteSave(localStorage);
+      g.switchTo('');
+    }
+    this.confirmNew = false;
+    if (d.res) { g.view.setResolution(d.res as Resolution); this.render(); return; }
     if (d.tp) {
       const t = g.world.teleports[Number(d.tp)];
       teleport(g.state.player, t.x, t.y + 0.05, t.z);

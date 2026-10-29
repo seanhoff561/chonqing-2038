@@ -365,13 +365,23 @@ There is no visible draw distance (U-012): detail is drawn within the preset's r
 
 ## 16. Performance budgets
 
-| Preset | Draw distance (fog) | Draw calls | Triangles | Pixel ratio | Shadows |
-|---|---|---|---|---|---|
-| Low | 110 m | 200 | 0.8 M | 0.75 | off |
-| Medium | 160 m | 300 | 1.5 M | 1.0 | off |
-| High | 220 m | 450 | 2.5 M | 1.0 | sun only |
+Target (U-022): 150 fps, 6.7 ms a frame, at 1080p on the director's machine. The browser never draws faster than
+the display refreshes (a 60 Hz screen shows 60), so the dev panel shows frame time in milliseconds (sim, render CPU,
+whole frame) and a **bench** button: 60 frames back to back, waited out on the GPU, as ms a frame and the frame rate
+that makes.
 
-Target 60 fps at 1080p on a mid-range laptop GPU (judged by the director). Headless tests track draw calls and triangles. Sim tick budget: under 2 ms at 60 Hz with all units.
+| Budget (per frame) | Value | Held by |
+|---|---|---|
+| Draw calls | 250 | tests/e2e/perf.e2e.mjs at a street, a rooftop, the tunnel and the overview |
+| Triangles | 1.2 M | the same |
+| CPU (sim tick + render submission) | 4 ms | the same |
+| Sim tick, all units | 2 ms | sim tests |
+
+How: city solids merge into one mesh per material per 64 m chunk and props into the same chunks; chunks past the
+detail radius are hidden and one stand-in block each (and an eighth-resolution ground) draws beyond; the ground is
+indexed (one shared vertex grid per chunk); the sun's shadow covers the area round him and is redrawn only when it
+or the sun moves (and every sixth frame); Resolution in the pause menu (High: the display's own up to 1.5 pixels a
+CSS pixel, Balanced: one, Fast: 0.7).
 
 ## 17. Architecture
 

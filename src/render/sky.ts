@@ -40,9 +40,12 @@ export class Sky {
     // Sun arcs east to west through the day; below the horizon at night.
     const a = ((h - 6) / 12) * Math.PI;
     // The shadow area follows him in whole shadow texels, so edges don't shimmer as he moves.
-    const tx = (2 * SHADOW_R) / v.sun.shadow.mapSize.x, cx = Math.round(camPos.x / tx) * tx, cz = Math.round(camPos.z / tx) * tx;
-    v.sun.target.position.set(cx, camPos.y, cz);
-    v.sun.position.set(cx + Math.cos(a) * 160, camPos.y + Math.max(20, Math.sin(a) * 180), cz + 60);
+    // Its height follows in 4 m steps and the sun turns in steps of a tenth of a degree, so the map is redrawn only
+    // when something about it has moved (View.render).
+    const tx = (2 * SHADOW_R) / v.sun.shadow.mapSize.x, cx = Math.round(camPos.x / tx) * tx, cz = Math.round(camPos.z / tx) * tx, cy = Math.round(camPos.y / 4) * 4;
+    const as = Math.round(a / 0.0017) * 0.0017;
+    v.sun.target.position.set(cx, cy, cz);
+    v.sun.position.set(cx + Math.cos(as) * 160, cy + Math.max(20, Math.sin(as) * 180), cz + 60);
     v.sun.castShadow = d > 0.05 && under < 0.5;
     v.sun.intensity = 1.7 * d * (1 - under) * (1 - 0.7 * flat) * (1 - 0.5 * weather.rain);
     v.sun.color.setHSL(0.09, 0.5 - 0.3 * d, 0.85 + 0.1 * d);

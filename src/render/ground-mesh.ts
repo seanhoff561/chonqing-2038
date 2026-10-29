@@ -31,27 +31,50 @@ function surface(g: Heightfield, i0: number, j0: number, i1: number, j1: number,
     const l = Math.hypot(sx, 1, sz);
     return [-sx / l, 1 / l, -sz / l];
   };
-  // Ground, retaining wall, asphalt and paving (streets laid on the ground, M3-46).
-  const bufs = [new Buf(), new Buf(), new Buf(), new Buf()], mats = [MAT.concrete, MAT.stone, MAT.asphalt, MAT.stone];
+  // The level faces share one grid of vertices (M3-53: a sixth of the vertices of separate triangles), with an
+  // index list per surface: ground, asphalt and paving (streets laid on the ground, M3-46). Retaining walls,
+  // textured on their own planes, keep vertices of their own.
+  const cols = Math.ceil((i1 - i0) / k) + 1, rows = Math.ceil((j1 - j0) / k) + 1, n = cols * rows;
+  const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), uv = new Float32Array(n * 2), col = new Float32Array(n * 3);
   const flat = 1 / texScale(MAT.concrete), wall = 1 / texScale(MAT.stone);
-  for (let j = j0; j < j1; j += k) for (let i = i0; i < i1; i += k) {
-    const ie = Math.min(i + k, W - 1), je = Math.min(j + k, g.h - 1);
+  const gi = (c: number) => Math.min(i0 + c * k, W - 1), gj = (r: number) => Math.min(j0 + r * k, g.h - 1);
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const v = r * cols + c, i = gi(c), j = gj(r), x = g.x0 + i * g.cell, z = g.z0 + j * g.cell, [nx, ny, nz] = nrm(i, j), sh = shade(x, z);
+    pos.set([x, at(i, j), z], v * 3); nor.set([nx, ny, nz], v * 3); uv.set([x * flat, z * flat], v * 2); col.set([sh, sh, sh], v * 3);
+  }
+  const lists: number[][] = [[], [], []], mats = [MAT.concrete, MAT.asphalt, MAT.stone], steepBuf = new Buf();
+  for (let r = 0; r + 1 < rows; r++) for (let c = 0; c + 1 < cols; c++) {
+    const i = gi(c), j = gj(r), ie = gi(c + 1), je = gj(r + 1);
     if (k === 1 && g.hole[j * (W - 1) + i]) continue;
-    const p = (a: number, b: number): [number, number, number] => [g.x0 + a * g.cell, at(a, b), g.z0 + b * g.cell];
-    for (const tri of [[p(i, j), p(ie, je), p(ie, j)], [p(i, j), p(i, je), p(ie, je)]]) {
-      const [a, b, c] = tri;
-      const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2];
+    const v00 = r * cols + c, v10 = v00 + 1, v01 = v00 + cols, v11 = v01 + 1;
+    for (const tri of [[v00, v11, v10], [v00, v01, v11]]) {
+      const [a, b, cc] = tri.map(v => [pos[v * 3], pos[v * 3 + 1], pos[v * 3 + 2]]);
+      const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = cc[0] - a[0], vy = cc[1] - a[1], vz = cc[2] - a[2];
       const ny = (uz * vx - ux * vz) / (Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) || 1);
-      const steep = ny < STEEP, sf = g.surf && k === 1 ? g.surf[j * W + i] || g.surf[je * W + ie] : 0;
-      const o = bufs[steep ? 1 : sf ? sf + 1 : 0];
-      const fx = Math.abs(uy * vz - uz * vy) > Math.abs(ux * vy - uy * vx);
-      for (const v of tri) {
-        const [nx, nyy, nz] = nrm(Math.round((v[0] - g.x0) / g.cell), Math.round((v[2] - g.z0) / g.cell));
-        o.push(v, [nx, nyy, nz], steep ? [(fx ? v[2] : v[0]) * wall, v[1] * wall] : [v[0] * flat, v[2] * flat], shade(v[0], v[2]));
+      if (ny < STEEP) {
+        const fx = Math.abs(uy * vz - uz * vy) > Math.abs(ux * vy - uy * vx);
+        for (const v of tri) steepBuf.push([pos[v * 3], pos[v * 3 + 1], pos[v * 3 + 2]], [nor[v * 3], nor[v * 3 + 1], nor[v * 3 + 2]], [(fx ? pos[v * 3 + 2] : pos[v * 3]) * wall, pos[v * 3 + 1] * wall], col[v * 3]);
+        continue;
       }
+      const sf = g.surf && k === 1 ? g.surf[j * W + i] || g.surf[je * W + ie] : 0;
+      lists[sf].push(...tri);
     }
   }
-  return bufs.map((b, s) => b.mesh(material(mats[s], true, lod))).filter((m): m is THREE.Mesh => !!m);
+  const attrs = { position: new THREE.BufferAttribute(pos, 3), normal: new THREE.BufferAttribute(nor, 3), uv: new THREE.BufferAttribute(uv, 2), color: new THREE.BufferAttribute(col, 3) };
+  const out: THREE.Mesh[] = [];
+  lists.forEach((idx, s) => {
+    if (!idx.length) return;
+    const geo = new THREE.BufferGeometry();
+    for (const [name, at] of Object.entries(attrs)) geo.setAttribute(name, at);
+    geo.setIndex(new THREE.BufferAttribute(n > 65535 ? new Uint32Array(idx) : new Uint16Array(idx), 1));
+    geo.computeBoundingSphere();
+    const m = new THREE.Mesh(geo, material(mats[s], true, lod));
+    m.receiveShadow = true;
+    out.push(m);
+  });
+  const steep = steepBuf.mesh(material(MAT.stone, true, lod));
+  if (steep) out.push(steep);
+  return out;
 }
 
 /** A little variation in the ground's tone, stable per place. */
@@ -60,7 +83,7 @@ function shade(x: number, z: number): number {
   return 0.82 + 0.12 * h;
 }
 
-class Buf {
+export class Buf {
   pos: number[] = []; nor: number[] = []; uv: number[] = []; col: number[] = [];
   push(p: number[], n: number[], u: number[], c: number) {
     const l = Math.hypot(n[0], n[1], n[2]) || 1;

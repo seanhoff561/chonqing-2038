@@ -25,10 +25,12 @@ export class View {
   readonly world = new THREE.Group();
   private chunks: THREE.Mesh[] = [];
   private hasFar = false;
+  private shadowKey = '';
+  private shadowAge = 0;
 
   constructor(container: HTMLElement) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+    this.setResolution(loadResolution());
     this.renderer.setSize(innerWidth, innerHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     // Filmic response: highlights roll off, shadows keep detail (U-012).
@@ -108,6 +110,16 @@ export class View {
     }
   }
 
+  /** Pixels drawn per screen pixel (M3-53): high is the display's own up to 1.5x, balanced one per CSS pixel,
+   *  fast 0.7 of that. Remembered between visits. */
+  resolution: Resolution = 'balanced';
+  setResolution(r: Resolution) {
+    this.resolution = r;
+    this.renderer.setPixelRatio(r === 'high' ? Math.min(devicePixelRatio, 1.5) : r === 'fast' ? 0.7 : 1);
+    this.renderer.setSize(innerWidth, innerHeight);
+    try { localStorage.setItem(RES_KEY, r); } catch { /* private mode: not remembered */ }
+  }
+
   /** 0 off, 1 white (bright, 40 m), 2 red (dim, 12 m: keeps night vision, shows less). */
   setLamp(mode: number) {
     this.lamp.intensity = mode === 1 ? 90 : mode === 2 ? 5 : 0;
@@ -125,9 +137,22 @@ export class View {
     tickProps(t, open);
     const r = this.renderer;
     r.info.reset();
-    if (this.sun.castShadow) { r.shadowMap.needsUpdate = true; r.render(this.scene, this.shadowEye); }
+    // The sun's shadow map is redrawn when its area or the sun has moved (Sky snaps both), and every sixth frame
+    // for what moves in it; the frames between reuse it (M3-53).
+    const sp = this.sun.position, key = `${sp.x.toFixed(1)},${sp.y.toFixed(1)},${sp.z.toFixed(1)}`;
+    if (this.sun.castShadow && (key !== this.shadowKey || ++this.shadowAge >= 6)) {
+      r.shadowMap.needsUpdate = true; r.render(this.scene, this.shadowEye);
+      this.shadowKey = key; this.shadowAge = 0;
+    }
     r.render(this.scene, this.fp.cam);
   }
+}
+
+export type Resolution = 'high' | 'balanced' | 'fast';
+const RES_KEY = 'cq2038.resolution';
+function loadResolution(): Resolution {
+  try { const r = localStorage.getItem(RES_KEY); if (r === 'high' || r === 'fast') return r; } catch { /* default */ }
+  return 'balanced';
 }
 
 function ladderGeometry(h: number): THREE.BufferGeometry {

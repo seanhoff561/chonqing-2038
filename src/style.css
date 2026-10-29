@@ -44,6 +44,9 @@ canvas { display: block; }
 @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
 #pause { position: fixed; inset: 0; background: rgba(5,6,7,0.86); display: flex; align-items: flex-start; justify-content: center; gap: 28px; padding-top: 12vh; z-index: 15; }
 #pause .pz-col { display: flex; flex-direction: column; gap: 4px; width: 280px; }
+#pause .pz-row { display: flex; gap: 4px; }
+#pause .pz-row button { flex: 1; text-align: center; padding: 5px 4px; }
+#pause button.on { border-color: #c9a64a; color: #e8dcb8; }
 #pause .pz-credit { margin-top: auto; font-size: 10px; opacity: 0.6; }
 #pause .pz-title { font-size: 24px; color: #c9c0a4; letter-spacing: 5px; margin-bottom: 10px; }
 #pause .pz-h { font-size: 11px; color: #8a8270; margin: 10px 0 2px; letter-spacing: 1px; }

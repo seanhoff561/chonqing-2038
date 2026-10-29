@@ -63,6 +63,8 @@ export class Game {
   private acc = 0;
   private last = 0;
   frames = 0;
+  /** milliseconds a frame, smoothed: sim ticks, render CPU, and the whole frame (capped by the display) */
+  readonly perf = { sim: 0, render: 0, frame: 16.7 };
   ticks = 0;
 
   constructor(readonly opts: GameOpts) {
@@ -229,8 +231,13 @@ export class Game {
       this.last = now;
       this.acc += dt;
       if (this.pause.open) this.acc = 0;
+      const t0 = performance.now();
       while (this.acc >= DT) { this.tick(); this.acc -= DT; }
+      const t1 = performance.now();
       this.render(this.acc / DT, dt);
+      // Frame time (M3-53), smoothed: the sim's ticks and the render's CPU this frame.
+      const k = 0.05, f = this.perf;
+      f.sim += (t1 - t0 - f.sim) * k; f.render += (performance.now() - t1 - f.render) * k; f.frame += (dt * 1000 - f.frame) * k;
       requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);

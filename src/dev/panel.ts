@@ -1,4 +1,4 @@
-// ?dev=1 panel: noclip, god mode, teleports, scenario switch, fps and draw-call readout.
+// ?dev=1 panel: noclip, god mode, teleports, scenario switch, fps, frame time and draw-call readout, a GPU bench.
 import type { Game } from '../game';
 import { scenarios } from '../data/scenarios';
 import { clockText } from '../sim/clock';
@@ -16,6 +16,7 @@ export class DevPanel {
     el.id = 'dev';
     el.innerHTML = `<div><b>DEV</b> <span class="seed"></span></div>
       <div class="row stats"></div>
+      <div class="row"><button class="bench">bench</button> <span class="benchout"></span></div>
       <div class="row"><label><input type="checkbox" class="noclip"> noclip</label> <label><input type="checkbox" class="god"> god</label></div>
       <div class="row">teleport <select class="tp"></select></div>
       <div class="row">scenario <select class="sc">${scenarios.map(s => `<option>${s.name}</option>`).join('')}</select></div>
@@ -35,6 +36,8 @@ export class DevPanel {
       const t = game.state.time;
       game.state.time = Math.floor(t / 86400) * 86400 + Number(time.value) * 3600;
     };
+    const bench = el.querySelector<HTMLButtonElement>('.bench')!;
+    bench.onclick = () => { bench.blur(); el.querySelector('.benchout')!.textContent = this.bench(); };
     this.fillTeleports();
     setInterval(() => this.update(), 500);
     el.addEventListener('keydown', e => e.stopPropagation());
@@ -55,6 +58,18 @@ export class DevPanel {
     };
   }
 
+  /** What this machine can draw, past the display's refresh cap: 60 frames back to back, waiting for the GPU
+   *  to finish them (a one-pixel read), as milliseconds a frame and the frame rate that makes. */
+  private bench(): string {
+    const v = this.game.view, gl = v.renderer.getContext(), px = new Uint8Array(4);
+    v.render(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    const t0 = performance.now();
+    for (let i = 0; i < 60; i++) v.render(this.game.state.tick / 60, this.game.state.wstate.open);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    const ms = (performance.now() - t0) / 60;
+    return `${ms.toFixed(1)} ms = ${(1000 / ms).toFixed(0)} fps`;
+  }
+
   private update() {
     const now = performance.now();
     const fps = ((this.game.frames - this.lastFrames) * 1000) / (now - this.lastTime);
@@ -63,7 +78,8 @@ export class DevPanel {
     const p = this.game.state.player;
     this.el.querySelector('.seed')!.textContent = `seed ${this.game.state.seed}`;
     this.el.querySelector('.clock')!.textContent = clockText(this.game.state.time);
-    this.stats.innerHTML = `${fps.toFixed(0)} fps | ${info.calls} calls | ${(info.triangles / 1000).toFixed(0)}k tris<br>` +
+    const f = this.game.perf;
+    this.stats.innerHTML = `${fps.toFixed(0)} fps (${f.frame.toFixed(1)} ms) | sim ${f.sim.toFixed(1)} ms | render ${f.render.toFixed(1)} ms<br>${info.calls} calls | ${(info.triangles / 1000).toFixed(0)}k tris<br>` +
       `pos ${p.pos.x.toFixed(1)} ${p.pos.y.toFixed(1)} ${p.pos.z.toFixed(1)} | ${p.mode}/${p.posture} | grip ${p.endurance.toFixed(0)}`;
   }
 }
