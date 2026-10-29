@@ -5,7 +5,8 @@ import type { World } from '../world/world';
 import type { Player, Posture } from './player';
 import { movement as M } from '../data/movement';
 import { free, moveHorizontal, moveVertical, groundGap, surface, boxAt } from './physics';
-import { groundAt, type SolidIndex } from '../world/geom';
+import { groundAt, query, xzHit, type SolidIndex } from '../world/geom';
+import { MAT } from '../world/mats';
 import { groundParkour, airParkour, airWall, stepAction, stepWallRun, stepWallClimb, stepCling } from './parkour';
 import { stepHands, stepGrip } from './grip';
 import { startCling } from './parkour';
@@ -203,7 +204,7 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
   const hit = moveVertical(idx, p.pos, h, vy);
   if (hit === 1) {
     if (!slideOffSteep(p, idx, h, yBefore)) {
-      if (!wasGround) land(state);
+      if (!wasGround) land(state, idx);
       p.onGround = true;
       p.vel.y = 0;
     }
@@ -254,9 +255,12 @@ function slideOffSteep(p: Player, idx: SolidIndex, h: number, yBefore: number): 
   return true;
 }
 
-function land(state: SimState) {
+function land(state: SimState, idx: SolidIndex) {
   const p = state.player;
-  const h = p.fallFrom - p.pos.y;
+  // Bags, bins, cardboard or an awning under him take some of it (U-024).
+  const under = query(idx, p.pos.x - 0.3, p.pos.z - 0.3, p.pos.x + 0.3, p.pos.z + 0.3).map(i => idx.solids[i]);
+  const soft = under.some(s => (s.mat === MAT.soft || s.mat === MAT.cloth) && Math.abs(s.y1 - p.pos.y) < 0.1 && xzHit(s, p.pos.x - 0.3, p.pos.z - 0.3, p.pos.x + 0.3, p.pos.z + 0.3));
+  const h = (p.fallFrom - p.pos.y) * (soft ? M.falls.soft : 1);
   const roll = p.crouchAge <= M.falls.rollWindow;
   const outcome = fallOutcome(h, roll, () => rand(state.rng));
   state.events.push({ t: 'land', h, roll, outcome });

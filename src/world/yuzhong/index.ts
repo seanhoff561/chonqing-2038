@@ -1,7 +1,8 @@
 // Yuzhong at 1:1 (M3-41b, D-016): the real ground, streets, stairs, bridges and buildings of the eastern
 // peninsula from the geo data. Each lot is built by the city's lot code in its own unturned frame, then turned
 // into place.
-import { solid, rampSolid, turn, buildIndex, type Solid } from '../geom';
+import { solid, rampSolid, turn, buildIndex, raycast, type Solid } from '../geom';
+import { HUNG, PROP_BOX } from '../../data/props';
 import { makeWorld, type World, type Teleport, type Prop, type Inter, type Climbable, type HideSpot, type Site, type Plot } from '../world';
 import { MAT } from '../mats';
 import { makeRng, hashString, rand, randInt, type Rng } from '../../sim/rng';
@@ -10,8 +11,9 @@ import { stepsFor } from '../steps';
 import { findMarks } from './marks';
 import { greenery } from './green';
 import { ruins } from './ruins';
+import { fill } from './fill';
 import { GEO } from '../geo';
-import type { Heightfield } from '../heightfield';
+import { heightAt, type Heightfield } from '../heightfield';
 import { buildGround, streets, onGround, WATER_Y, type Street } from './ground';
 import { planLots, levelLots, markEnterable, type Plan } from './lots';
 import { corners, rasterPoly, type Obb } from './shapes';
@@ -40,7 +42,7 @@ export function buildYuzhong(): World {
   markEnterable(g, plans);
   const out = empty(), plots: Plot[] = [];
   plans.forEach((p, n) => plots.push(buildPlan(p, n, out, g)));
-  rowAlleys(plans, out);
+  rowAlleys(plans, out, g);
   const decor: Solid[] = [];
   // Streets are drawn along their lines (render/streets.ts); stairs get their steps here, bridges their decks.
   for (const s of sts) if (onGround(s) && s.steps) surface(s, g, decor); else if (s.bridge && s.layer > 0) bridge(s, g, out.solids);
@@ -60,20 +62,32 @@ export function buildYuzhong(): World {
   // The tunnel gate's door switches its own collision solid, the tunnels' last.
   tun.inter.find(i => i.id === 'shibati-gate')!.data!.solid = solids.length - 1;
   // Street dressing goes last, round everything else (its solids append, so the gate's index holds).
-  const clear = [tun.at.entrance, tun.at.exit, tun.at.grate, ...metro.at].map(q => ({ x: q.x, z: q.z, r: 9 })).concat(site ? [{ x: site.frame.x, z: site.frame.z, r: 90 }] : [],
+  const clear = [tun.at.entrance, tun.at.exit, tun.at.grate, ...metro.at].map(q => ({ x: q.x, z: q.z, r: 9 })).concat(site ? [{ x: site.frame.x, z: site.frame.z, r: 50 }] : [],
     plots.filter(p => p.route).map(p => ({ x: p.route![0].x, z: p.route![0].z, r: 2.5 })));
   const dress = dressStreets(buildIndex(solids, g), g, sts, land, inter, clear);
   solids.push(...dress.solids);
   // Then the green and the ruins on the marked open ground, round all that.
   const marks = findMarks(g, land, plots, block), idx = buildIndex(solids, g), green = greenery(idx, g, marks), rubble = ruins(idx, g, marks);
   solids.push(...green.solids, ...rubble.solids);
-  return makeWorld({
-    name: 'yuzhong', solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? []),
-    props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], dress.props, green.props, rubble.props), inter, climbables: out.climbables.concat(line.climbables, site?.climbables ?? []),
+  // And the rest of the open ground filled, round all of it.
+  const filled = fill(buildIndex(solids, g), g, marks, plots);
+  solids.push(...filled.solids);
+  const world = makeWorld({
+    name: 'yuzhong', solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? [], filled.decor),
+    props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(line.climbables, site?.climbables ?? []),
     hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones,
     far: out.far, ground: g, plots, features: out.features, marks, streets: sts.filter(onGround).map(s => ({ kind: s.kind, w: s.w, steps: s.steps, pts: s.pts })), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
     teleports, spawn: hide,
   });
+  // Nothing floats or sinks (M3-56): whatever stands on something above ground settles onto what's under it, or
+  // comes up out of the ground onto it (the set pieces' props below ground are where they are on purpose).
+  // (Props with collision were placed on their support with it.)
+  for (const p of out.props.concat(dress.props, green.props, rubble.props, filled.props)) {
+    if (HUNG.has(p.kind) || PROP_BOX[p.kind]) continue;
+    const from = Math.max(p.y, heightAt(g, p.x, p.z) ?? p.y) + 0.5, hit = raycast(world.index, p.x, from, p.z, 0, -1, 0, 30);
+    if (hit && hit.t > 0.01) p.y = from - hit.t;
+  }
+  return world;
 }
 
 /** How far lots keep from the set pieces: past their aprons, which level the ground round them. */
@@ -154,7 +168,7 @@ function place(f: Fabric, o: Obb, prefix: string, out: Fabric): (x: number, z: n
 
 /** The alleys between neighbours in each row of infill (U-005): hide spots, scaffold bars, fences and litter,
  *  laid out in the first one's frame. */
-function rowAlleys(plans: Plan[], out: Fabric) {
+function rowAlleys(plans: Plan[], out: Fabric, g: Heightfield) {
   for (let n = 0; n + 1 < plans.length; n++) {
     const a = plans[n], b = plans[n + 1];
     // Neighbours square to each other (to a few degrees, round a bend): b laid out in a's frame.
@@ -163,7 +177,9 @@ function rowAlleys(plans: Plan[], out: Fabric) {
     const bx = o.cx + c * dx + s * dz, bz = o.cz - s * dx + c * dz;
     const lot = (cx: number, cz: number, hw: number, hd: number, base: number): Lot => ({ id: -1, x0: cx - hw, z0: cz - hd, x1: cx + hw, z1: cz + hd, base, wall: base, top: base, kind: 'res', mat: 0, street: [false, true, false, false], across: [0, 0, 0, 0] });
     const f = empty();
-    alleys([lot(o.cx, o.cz, o.hw, o.hd, a.base), lot(bx, bz, b.obb.hw, b.obb.hd, b.base)], makeRng(hashString(`alley${a.seed}`)), f);
+    // Its floor: the ground between them (a lane may keep it higher than either, a slope lower).
+    const y = heightAt(g, (o.cx + b.obb.cx) / 2, (o.cz + b.obb.cz) / 2) ?? Math.min(a.base, b.base);
+    alleys([lot(o.cx, o.cz, o.hw, o.hd, y), lot(bx, bz, b.obb.hw, b.obb.hd, y)], makeRng(hashString(`alley${a.seed}`)), f);
     place(f, o, `${a.seed}a`, out);
   }
 }

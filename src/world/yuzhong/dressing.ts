@@ -14,6 +14,9 @@ import type { Prop, Inter } from '../world';
 import { onGround, ROAD, KERB_W, PAVE, type Street } from './ground';
 import { districtAt } from './lots';
 
+/** Props that break a fall (U-024). */
+const SOFT = new Set(['bags', 'bin']);
+
 /** Collision boxes for a prop: long footprints turned at an angle are split into short AABB segments. */
 export function propBoxes(p: Prop): Solid[] {
   const b = PROP_BOX[p.kind];
@@ -26,7 +29,7 @@ export function propBoxes(p: Prop): Solid[] {
     const z0 = -d / 2 + (i * d) / n, z1 = z0 + d / n;
     const pts = [[-w / 2, z0], [w / 2, z0], [-w / 2, z1], [w / 2, z1]].map(([x, z]) => [p.x + x * c + z * s, p.z - x * s + z * c]);
     const xs = pts.map(q => q[0]), zs = pts.map(q => q[1]);
-    out.push(solid(Math.min(...xs), p.y, Math.min(...zs), Math.max(...xs), p.y + h, Math.max(...zs), MAT.hidden));
+    out.push(solid(Math.min(...xs), p.y, Math.min(...zs), Math.max(...xs), p.y + h, Math.max(...zs), SOFT.has(p.kind) ? MAT.soft : MAT.hidden));
   }
   return out;
 }
@@ -50,7 +53,8 @@ export function dressStreets(index: SolidIndex, g: Heightfield, sts: Street[], l
       for (const o of placed.get(key(i, j)) ?? []) if (o.x0 < b.x1 && b.x0 < o.x1 && o.z0 < b.z1 && b.z0 < o.z1) return true;
     return false;
   };
-  const onRoad = carriageways(sts);
+  const onRoad = carriageways(sts), placedAt = new Map<number, Prop[]>();
+  const anyNear = (x: number, z: number, r: number) => { for (let i = Math.floor((x - r) / 8); i <= Math.floor((x + r) / 8); i++) for (let j = Math.floor((z - r) / 8); j <= Math.floor((z + r) / 8); j++) if ((placedAt.get(key(i, j)) ?? []).some(p => Math.hypot(p.x - x, p.z - z) < r)) return true; return false; };
   const put: Put = (kind, x, z, yaw, extra = {}) => {
     const gy = heightAt(g, x, z), k = Math.round(z / g.cell) * g.w + Math.round(x / g.cell);
     if (gy === null || land[k] !== 1 || busy(x, z) || onRoad(x, z)) return false;
@@ -60,6 +64,8 @@ export function dressStreets(index: SolidIndex, g: Heightfield, sts: Street[], l
     const boxes = propBoxes(p);
     for (const b of boxes) if (overlaps(index, { ...b, y0: b.y0 + 0.05 }) || hitsPlaced(b) || onRoad(b.x0, b.z0) || onRoad(b.x1, b.z0) || onRoad(b.x0, b.z1) || onRoad(b.x1, b.z1)) return false;
     props.push(p);
+    const pk = key(Math.floor(x / 8), Math.floor(z / 8)), pa = placedAt.get(pk);
+    if (pa) pa.push(p); else placedAt.set(pk, [p]);
     solids.push(...boxes);
     for (const b of boxes) for (let i = Math.floor(b.x0 / 8); i <= Math.floor(b.x1 / 8); i++) for (let j = Math.floor(b.z0 / 8); j <= Math.floor(b.z1 / 8); j++) {
       const a = placed.get(key(i, j)); if (a) a.push(b); else placed.set(key(i, j), [b]);
@@ -74,14 +80,21 @@ export function dressStreets(index: SolidIndex, g: Heightfield, sts: Street[], l
       if (len < 2) continue;
       const ux = (bx - ax) / len, uz = (bz - az) / len, th = Math.atan2(uz, ux);
       const at = (t: number, off: number): [number, number] => [ax + ux * t - uz * off, az + uz * t + ux * off];
-      if (ROAD.has(s.kind)) road(s, len, at, th, r, put);
+      if (ROAD.has(s.kind)) road(s, len, at, th, r, put, g);
       else if (s.steps) stairs(s, len, at, th, r, put);
       else walkway(s, len, at, th, r, put);
       // Litter, weeds and debris along the edges, more where nobody sweeps.
       const edge = ROAD.has(s.kind) ? s.w / 2 + KERB_W + 0.2 : s.steps ? s.w / 2 + 0.3 : Math.max(0.3, s.w / 2 - 0.9);
-      for (let t = rand(r) * 8; t < len; t += 6 + rand(r) * 10) {
-        const [x, z] = at(t, (rand(r) < 0.5 ? -1 : 1) * (edge + rand(r) * 0.7)), cyber = districtAt(x, z).cyber, q = rand(r);
-        put(q < 0.35 ? 'weeds' : q < 0.6 ? 'trash' : q < 0.75 ? 'debris' : q < 0.85 ? 'boxes' : q < 0.92 ? 'sign' : cyber ? 'trash' : 'rubblepile', x, z, rand(r) * 6.28, q >= 0.92 && !cyber ? { w: 1.5 + rand(r) * 2 } : {});
+      for (let t = rand(r) * 6; t < len; t += 5 + rand(r) * 8) {
+        const side = rand(r) < 0.5 ? -1 : 1, o = edge + rand(r) * 0.7, [x, z] = at(t, side * o), cyber = districtAt(x, z).cyber, q = rand(r), yaw = rand(r) * 6.28;
+        const kind = q < 0.35 ? 'weeds' : q < 0.6 ? 'trash' : q < 0.75 ? 'debris' : q < 0.85 ? 'boxes' : q < 0.92 ? 'sign' : cyber ? 'trash' : 'rubblepile', extra = q >= 0.92 && !cyber ? { w: 1.5 + rand(r) * 2 } : {};
+        put(kind, x, z, yaw, extra) || put(kind, ...at(t, -side * o), yaw, extra);
+      }
+      // Wherever that left 10 m of street with nothing beside it, weeds or a bag at its edge.
+      for (let t = 5; t < len; t += 10) {
+        const [cx, cz] = at(t, 0);
+        if (anyNear(cx, cz, s.w / 2 + 5)) continue;
+        for (const o of [edge, edge + 0.8, edge + 1.6, -edge, -edge - 0.8, -edge - 1.6]) if (put(rand(r) < 0.6 ? 'weeds' : 'trash', ...at(t + (rand(r) - 0.5) * 4, o), rand(r) * 6.28)) break;
       }
     }
   });
@@ -91,7 +104,7 @@ export function dressStreets(index: SolidIndex, g: Heightfield, sts: Street[], l
 /** Roads: the carriageway kept clear (U-030), its abandoned cars shoved onto the pavement in twos and threes;
  *  lampposts and trees at the kerb, scooters, bins and drone docks against the buildings; now and then a camera
  *  pole and a notice. */
-function road(s: Street, len: number, at: (t: number, off: number) => [number, number], th: number, r: Rng, put: Put) {
+function road(s: Street, len: number, at: (t: number, off: number) => [number, number], th: number, r: Rng, put: Put, g: Heightfield) {
   const kerb = s.w / 2 + KERB_W, wall = kerb + PAVE, along = Math.PI / 2 - th;
   for (let t = 4 + rand(r) * 10; t < len - 2; t += 14 + rand(r) * 26) {
     const side = rand(r) < 0.5 ? -1 : 1, cyber = districtAt(...at(t, 0)).cyber;
@@ -101,13 +114,20 @@ function road(s: Street, len: number, at: (t: number, off: number) => [number, n
       for (const o of [1.05, 2.6, 4.2, -1.05, -2.6, -4.2]) { const [x, z] = at(t + i * 4.8, side * Math.sign(o) * (kerb + Math.abs(o))); if (put(kind, x, z, yaw)) break; }
     }
   }
-  for (let t = 6 + rand(r) * 10, side = rand(r) < 0.5 ? -1 : 1; t < len; t += 24 + rand(r) * 8, side = -side) { const [x, z] = at(t, side * (kerb + 0.35)); put('lamppost', x, z, along + (side > 0 ? 0 : Math.PI)); }
+  // Lampposts down alternate sides, closer on the arterials; railings along a pavement whose edge drops away.
+  // Each on its side if there's pavement there, else across the road (a carriageway may lie against this one).
+  const either = (t: number, o: number, first: number, f: (x: number, z: number, side: number) => boolean) => f(...at(t, first * o), first) || f(...at(t, -first * o), -first);
+  for (let t = 6 + rand(r) * 10, side = rand(r) < 0.5 ? -1 : 1; t < len; t += (s.w >= 9 ? 16 : 24) + rand(r) * 8, side = -side) either(t, kerb + 0.35, side, (x, z, sd) => put('lamppost', x, z, along + (sd > 0 ? 0 : Math.PI)));
+  for (const side of [-1, 1]) for (let t = 1.6; t < len - 1.6; t += 3.2) {
+    const [x, z] = at(t, side * (wall - 0.15)), [ox, oz] = at(t, side * (wall + 1.5)), [ix, iz] = at(t, side * kerb), y = heightAt(g, ix, iz), below = heightAt(g, ox, oz);
+    if (y !== null && below !== null && y - below > 1) put('railing', x, z, -th);
+  }
   for (let t = rand(r) * 30; t < len; t += 25 + rand(r) * 30) {
     const side = rand(r) < 0.5 ? -1 : 1, q = rand(r);
-    if (q < 0.35) for (let i = 0, n = 2 + randInt(r, 3); i < n; i++) { const [x, z] = at(t + i * 1.2, side * (wall - 0.5)); put('scooter', x, z, along + Math.PI / 2 + (rand(r) - 0.5) * 0.6); }
-    else if (q < 0.6) { const [x, z] = at(t, side * (kerb + 0.6)); put('tree', x, z, rand(r) * 6); }
-    else if (q < 0.7) { const [x, z] = at(t, side * (wall - 0.5)); put('bin', x, z, along + (side > 0 ? Math.PI : 0)); }
-    else if (q < 0.76) { const [x, z] = at(t, side * (wall - 0.6)); put('dronedock', x, z, along + (side > 0 ? Math.PI : 0)); }
+    if (q < 0.35) for (let i = 0, n = 2 + randInt(r, 3); i < n; i++) { const yaw = along + Math.PI / 2 + (rand(r) - 0.5) * 0.6; either(t + i * 1.2, wall - 0.5, side, (x, z) => put('scooter', x, z, yaw)); }
+    else if (q < 0.6) { const yaw = rand(r) * 6; either(t, kerb + 0.6, side, (x, z) => put('tree', x, z, yaw)); }
+    else if (q < 0.7) either(t, wall - 0.5, side, (x, z, sd) => put('bin', x, z, along + (sd > 0 ? Math.PI : 0)));
+    else if (q < 0.76) either(t, wall - 0.6, side, (x, z, sd) => put('dronedock', x, z, along + (sd > 0 ? Math.PI : 0)));
   }
   if (len > 30 && rand(r) < 0.05) {
     const [x, z] = at(len / 2, kerb + 0.4), [ex, ez] = at(len / 2 + 4, -(wall - 0.4));

@@ -131,7 +131,7 @@ export function buildSolidMeshes(solids: Solid[], lod: Lod = 'all', chunk = CHUN
   };
   // Count first (24 side and 12 top/bottom vertices per solid), then fill typed arrays.
   for (const s of solids) {
-    if (s.mat === 99) continue;
+    if (s.mat >= MAT.soft) continue;
     const f = isFacade(s.mat);
     group(s, s.mat).count += f ? 24 : 36;
     if (f) group(s, MAT.concrete).count += 12;
@@ -139,7 +139,7 @@ export function buildSolidMeshes(solids: Solid[], lod: Lod = 'all', chunk = CHUN
   for (const g of groups.values()) {
     g.pos = new Float32Array(g.count * 3); g.nor = new Float32Array(g.count * 3); g.uv = new Float32Array(g.count * 2); g.col = new Float32Array(g.count * 3);
   }
-  for (const s of solids) if (s.mat !== 99) pushSolid(s, group(s, s.mat), isFacade(s.mat) ? group(s, MAT.concrete) : undefined, idx ? occlusion(s, idx) : OPEN);
+  for (const s of solids) if (s.mat < MAT.soft) pushSolid(s, group(s, s.mat), isFacade(s.mat) ? group(s, MAT.concrete) : undefined, idx ? occlusion(s, idx) : OPEN);
   const root = new THREE.Group();
   for (const g of groups.values()) {
     const geo = new THREE.BufferGeometry();

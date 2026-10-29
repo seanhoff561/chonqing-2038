@@ -8,4 +8,9 @@ export const PROP_BOX: Record<string, { w: number; d: number; h: number }> = {
   figtree: { w: 0.6, d: 0.6, h: 4 }, lamppost: { w: 0.2, d: 0.2, h: 7.5 }, campole: { w: 0.2, d: 0.2, h: 4.5 },
   dronedock: { w: 0.6, d: 0.6, h: 2.2 }, rubblepile: { w: 1.6, d: 1.6, h: 0.6 }, bollard: { w: 0.25, d: 0.25, h: 0.9 },
   edict: { w: 3.2, d: 0.3, h: 4.4 }, slab: { w: 2.4, d: 2.6, h: 0.5 }, halfwall: { w: 0.3, d: 3, h: 2 },
+  bags: { w: 1.4, d: 1.4, h: 0.65 }, garden: { w: 2, d: 3, h: 0.3 }, tarp: { w: 0.3, d: 3, h: 1.8 },
 };
+
+/** Props hung on walls, strung overhead, set on roofs or built round a place: everything else stands on the
+ *  ground or on whatever is under it (M3-56). */
+export const HUNG = new Set(['neonblade', 'neonsign', 'ledscreen', 'laundry', 'vine', 'figroots', 'cablebundle', 'arches', 'train', 'grate', 'graffiti']);

@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-56 Nothing empty: a filled, ordered city (U-022, U-028).
-Features done: 105 / 264 | Last done: M3-56c
+**Status:** building M3. Next: M3-47 Hiding, seen from inside; more places to hide (U-021).
+Features done: 106 / 264 | Last done: M3-56
 <!-- /status -->
 
 ## Log
@@ -123,3 +123,4 @@ Features done: 105 / 264 | Last done: M3-56c
 - M3-56a Clear, smooth streets; ruins and green marked (U-029): streets level and smooth with nothing poking through, carriageways clear, rough ground and green marked (docs/maps/marks.png)
 - M3-56b Green city: grass, parks and woods (U-028, U-029): grass blended into the ground, dense woods on the wild land, park trees and shrubs, weeds in the grass
 - M3-56c Ruins of the fighting on the rough ground (U-028, U-030): the fighting's debris on the rough ground: rubble, tipped slabs, rebar, broken walls, collapsed buildings, rubble ground
+- M3-56 Nothing empty: a filled, ordered city (U-022, U-028): the open ground filled: lean-tos, yards, back buildings, markets, tarps, gardens, stairs down banks; soft landings on bags, bins and awnings; nothing floats

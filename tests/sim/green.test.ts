@@ -3,6 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { getWorld } from '../../src/world/build';
 import { heightAt } from '../../src/world/heightfield';
+import { raycast } from '../../src/world/geom';
 import { MARK, markAt, grassAt } from '../../src/world/yuzhong/marks';
 
 const w = getWorld('yuzhong'), mk = w.marks!, g = w.ground!;
@@ -26,8 +27,12 @@ describe('the green city (M3-56b)', () => {
     expect(grassAt(mk, -10, -10)).toBe(false);
     expect(on(['weeds'], MARK.open)).toBeGreaterThan(300);
   });
-  it('stands every tree and shrub on the ground', () => {
-    const off = w.props.filter(p => ['tree', 'figtree', 'shrub'].includes(p.kind) && markAt(mk, p.x, p.z) && Math.abs(p.y - (heightAt(g, p.x, p.z) ?? -99)) > 0.05);
-    expect(off.length).toBe(0);
+  it('stands every tree and shrub on the ground (or, a shrub, on whatever is under it)', () => {
+    const off = w.props.filter(p => {
+      if (!['tree', 'figtree', 'shrub'].includes(p.kind) || !markAt(mk, p.x, p.z) || Math.abs(p.y - (heightAt(g, p.x, p.z) ?? -99)) < 0.05) return false;
+      const hit = p.kind === 'shrub' ? raycast(w.index, p.x, p.y + 0.3, p.z, 0, -1, 0, 5) : null;
+      return !hit || Math.abs(hit.t - 0.3) > 0.05;
+    });
+    expect(off.map(p => `${p.kind} ${(p.y - heightAt(g, p.x, p.z)!).toFixed(2)}`).slice(0, 8)).toEqual([]);
   });
 });

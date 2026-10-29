@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 42 of 64 done
+## M3: 43 of 64 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -435,7 +435,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
 - [x] **M3-56c** Ruins of the fighting on the rough ground (U-028, U-030)
   - Rough ground becomes ruins (U-028): where the terrain is steep or broken it reads as collapsed buildings and debris (rubble heaps, broken slabs, rebar, half walls, retaining walls), with new props for it; smooth ground fills with things that belong there
   - A unit test: every ruin-marked patch over 30 m2 holds debris; screenshots of three ruin spots
-- [ ] **M3-56** Nothing empty: a filled, ordered city (U-022, U-028)
+- [x] **M3-56** Nothing empty: a filled, ordered city (U-022, U-028)
   - The open paved spaces between buildings fill from the reference photos: back buildings and lean-tos, courtyards with walls and gates, sheds, stalls, gardens and trees, parked and wrecked vehicles, retaining walls with greenery, stairs between levels; soft landings (bins, bags, awnings) under long drops (U-024)
   - A unit test finds no open paved patch wider than 12 m off the streets and squares on the peninsula, and props beside every 20 m of street (on the pavement, not the carriageway)
   - Screenshots of three spots that were empty in PT-008

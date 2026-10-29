@@ -171,6 +171,30 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
   sign: p => { const k = new Kit(seedOf(p)).use('sign'), r = k.r; k.box(3, 0.08, 0.9, [0xa82a22, 0x2a4a8a, 0xd8d2c0, 0x2a6a4a][Math.floor(r() * 4)], 0, 0, 0, 0, 0.12, 0.05); k.box(2.6, 0.02, 0.5, 0xd8d0b0, 0, 0.09, 0, 0, 0.12, 0.05); return group([{ geo: k.geometry(), mat: PROP_MAT }]); },
   boxes: p => { const k = new Kit(seedOf(p)).use('cardboard'), r = k.r; for (let i = 0; i < 4; i++) { const s = 0.35 + r() * 0.3; k.box(s, s * 0.8, s, 0xa88a5a, (r() - 0.5) * 1.2, i > 2 ? 0.35 : 0, (r() - 0.5) * 1.2, r() * 3); } return group([{ geo: k.geometry(), mat: PROP_MAT }]); },
   trash: p => { const k = new Kit(seedOf(p)).use('bag'), r = k.r; for (let i = 0; i < 5; i++) k.blob(0.28 + r() * 0.12, r() < 0.6 ? 0x1e2420 : 0x2a3a2a, (r() - 0.5) * 1.4, 0.2, (r() - 0.5) * 1.4, 0.75, 0); return group([{ geo: k.geometry(), mat: PROP_MAT }]); },
+  // A heap of rubbish bags against a wall: soft enough to break a fall (M3-56, U-024).
+  bags: p => { const k = new Kit(seedOf(p)).use('bag'), r = k.r; for (let i = 0; i < 12; i++) k.blob(0.32 + r() * 0.16, [0x1e2420, 0x2a3a2a, 0x3a3a46, 0x4a3a2a][i % 4], (r() - 0.5) * 1.3, i < 7 ? 0.2 : 0.5, (r() - 0.5) * 1.3, 0.7, 0); return group([{ geo: k.geometry(), mat: PROP_MAT }]); },
+  // A vegetable bed in a brick border, rows of greens, a watering can (its long side along z).
+  garden: p => {
+    const k = new Kit(seedOf(p)).use('stone'), r = k.r;
+    for (const x of [-0.95, 0.95]) k.box(0.12, 0.3, 3, 0x9a5a44, x, 0, 0);
+    for (const z of [-1.45, 1.45]) k.box(2, 0.3, 0.12, 0x9a5a44, 0, 0, z);
+    k.use('plain').box(1.8, 0.24, 2.8, 0x4a3a2a, 0, 0, 0);
+    const cards = [];
+    for (let row = -0.6; row <= 0.61; row += 0.4) for (let z = -1.2; z <= 1.2; z += 0.35) cards.push({ x: row + (r() - 0.5) * 0.1, y: 0.28, z, s: 0.22 + r() * 0.12, ry: r() * 3 });
+    k.use('metal').cyl(0.1, 0.1, 0.25, 0x3a6a4a, 1.2, 0, 0.9);
+    return group([{ geo: k.geometry(), mat: PROP_MAT }, { geo: leafCards(cards, 0x7a9a50), mat: leaves() }]);
+  },
+  // Someone's shelter: a tarp slung over a ridge pole on two posts, bedding and a pot under it (its ridge along z).
+  tarp: p => {
+    const k = new Kit(seedOf(p)).use('wood'), r = k.r, col = [0x2a5a9a, 0x3a6a3a, 0x8a6a3a, 0x9a3a2a][Math.floor(r() * 4)];
+    for (const z of [-1.4, 1.4]) k.cyl(0.04, 0.04, 1.8, 0x6a5a48, 0, 0, z, 5);
+    k.cyl(0.03, 0.03, 3, 0x6a5a48, 0, 1.8, -1.5, 5, 'z');
+    k.use('fabric');
+    for (const sx of [-1, 1]) k.box(1.5, 0.02, 3.1, col, sx * 0.62, 1.78 - 0.55, 0, 0, 0, sx * 0.72);
+    k.box(1.0, 0.12, 1.9, 0x8a8478, -0.3, 0, 0.2, 0.1).box(0.5, 0.2, 0.5, 0x4a4a4a, 0.6, 0, -0.8);
+    k.use('bag').blob(0.25, 0x2a3a2a, 0.55, 0.2, 0.6, 0.8, 0);
+    return group([{ geo: k.geometry(), mat: PROP_MAT }]);
+  },
   lamppost: p => {
     const k = new Kit(seedOf(p)).use('paint'), r = k.r;
     k.cyl(0.1, 0.07, 7.5, 0x4a4e52, 0, 0, 0, 8).box(0.08, 0.08, 1.6, 0x4a4e52, 0, 7.2, 0.7).box(0.3, 0.12, 0.6, 0x3a3e42, 0, 7.05, 1.4);

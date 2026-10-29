@@ -61,8 +61,9 @@ export function fronts(l: Lot, look: number, open: boolean, stepped: boolean, ou
       const c = front.a + (k + 0.5) * (len / nb), down = b0 + 0.15 + rand(r) * 2.4;
       out.decor.push(onFace(front, c - 1.2, c + 1.2, 0.06, 0.1, down, b0 + 2.9, MAT.metal));
     }
-    out.decor.push(onFace(front, front.a + 0.3, front.b - 0.3, 0, 1.3, b0 + 3.0, b0 + 3.1, MAT.cloth),
-      onFace(front, front.a + 0.6, front.b - 0.6, 0, 0.14, b0 + 3.2, b0 + 4.0, rand(r) < 0.5 ? MAT.plaster : MAT.tealMetal));
+    // The awning is solid, and soft: a lip to pull up on, something to drop onto (U-024).
+    out.solids.push(onFace(front, front.a + 0.3, front.b - 0.3, 0, 1.3, b0 + 3.0, b0 + 3.1, MAT.cloth));
+    out.decor.push(onFace(front, front.a + 0.6, front.b - 0.6, 0, 0.14, b0 + 3.2, b0 + 4.0, rand(r) < 0.5 ? MAT.plaster : MAT.tealMetal));
   } else {
     const c = mid + (rand(r) - 0.5) * Math.max(0, len - 4);
     out.decor.push(onFace(front, c - 0.6, c + 0.6, 0, 0.06, b0, b0 + 2.2, MAT.tealMetal),
