@@ -9,6 +9,7 @@ export interface Scenario {
 
 export const scenarios: Scenario[] = [
   { name: 'gym', world: 'gym', desc: 'movement gym with labelled obstacles' },
+  { name: 'hideout', world: 'hideout', desc: 'the hideout chamber' },
 ];
 
 export const scenarioByName = (n: string) => scenarios.find(s => s.name === n);

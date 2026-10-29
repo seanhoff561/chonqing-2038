@@ -32,6 +32,7 @@ export function pushSolid(s: Solid, pos: number[], nor: number[], uv: number[]) 
 export function buildSolidMeshes(solids: Solid[]): THREE.Group {
   const groups = new Map<number, { pos: number[]; nor: number[]; uv: number[] }>();
   for (const s of solids) {
+    if (s.mat === 99) continue;
     let g = groups.get(s.mat);
     if (!g) groups.set(s.mat, (g = { pos: [], nor: [], uv: [] }));
     pushSolid(s, g.pos, g.nor, g.uv);

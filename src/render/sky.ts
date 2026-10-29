@@ -14,7 +14,8 @@ export class Sky {
 
   constructor(private view: View) { view.scene.add(this.moon); }
 
-  update(time: number, camPos: THREE.Vector3, farBase: number) {
+  /** under: 0 in the open, 1 deep underground (sky light shut out) */
+  update(time: number, camPos: THREE.Vector3, farBase: number, under = 0) {
     const v = this.view, d = daylight(time), h = hourOf(time);
     const duskness = Math.max(0, 1 - Math.abs(d - 0.5) * 2) * (d < 1 && d > 0 ? 1 : 0);
     c.copy(NIGHT_SKY).lerp(DAY_SKY, d).lerp(DUSK_SKY, duskness * 0.6);
@@ -27,9 +28,9 @@ export class Sky {
     const a = ((h - 6) / 12) * Math.PI;
     v.sun.position.set(camPos.x + Math.cos(a) * 80, camPos.y + Math.sin(a) * 90, camPos.z + 30);
     v.sun.target.position.copy(camPos);
-    v.sun.intensity = 1.7 * d;
+    v.sun.intensity = 1.7 * d * (1 - under);
     v.sun.color.setHSL(0.09, 0.5 - 0.3 * d, 0.85 + 0.1 * d);
-    v.hemi.intensity = 0.5 + 0.75 * d;
+    v.hemi.intensity = (0.5 + 0.75 * d) * (1 - under * 0.92);
     v.hemi.color.copy(NIGHT_SKY).lerp(new THREE.Color(0xc8d4e0), d).lerp(new THREE.Color(0x46557a), (1 - d) * 0.8);
     v.hemi.groundColor.copy(NIGHT_GROUND).lerp(DAY_GROUND, d);
     const ma = ((h - 18) / 12) * Math.PI;

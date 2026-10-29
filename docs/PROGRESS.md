@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M2. Next: M2-15 Hideout set piece.
-Features done: 38 / 204 | Last done: M2-14
+**Status:** building M2. Next: M2-16 Vent grate view.
+Features done: 39 / 204 | Last done: M2-15
 <!-- /status -->
 
 ## Log
@@ -45,3 +45,4 @@ Features done: 38 / 204 | Last done: M2-14
 - M2-12 Hotbar and held item: hotbar and held item
 - M2-13 Encumbrance: encumbrance
 - M2-14 Eating, drinking and spoilage: eating, drinking and spoilage
+- M2-15 Hideout set piece: hideout set piece

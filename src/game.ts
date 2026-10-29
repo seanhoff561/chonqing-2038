@@ -83,9 +83,18 @@ export class Game {
     this.bodyFx.update(this.state, this.view.fp, dt);
     this.inv.update();
     this.updateHeld();
-    this.sky.update(this.state.time, this.view.fp.cam.position, this.drawDistance);
+    this.sky.update(this.state.time, this.view.fp.cam.position, this.drawDistance, this.underAmount(dt));
     this.view.render();
     this.frames++;
+  }
+
+  private under = 0;
+  /** Eases toward 1 while the camera is inside an underground zone. */
+  private underAmount(dt: number): number {
+    const c = this.view.fp.cam.position;
+    const inside = this.world.zones.some(z => z.kind === 'under' && c.x > z.box.x0 && c.x < z.box.x1 && c.y > z.box.y0 && c.y < z.box.y1 && c.z > z.box.z0 && c.z < z.box.z1);
+    this.under += ((inside ? 1 : 0) - this.under) * (1 - Math.exp(-3 * dt));
+    return this.under;
   }
 
   private updateHeld() {

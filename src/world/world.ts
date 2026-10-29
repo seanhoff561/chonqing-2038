@@ -9,11 +9,19 @@ export interface HideSpot { id: number; inner: Box; kind: string }
 
 export interface Label { text: string; x: number; y: number; z: number; face: 'n' | 's' | 'e' | 'w' | 'up' }
 
+/** Render-side set dressing, built by kind in src/render/props.ts. */
+export interface Prop { kind: string; x: number; y: number; z: number; yaw: number; w?: number; h?: number; d?: number; text?: string }
+
+/** Areas with special rules: 'under' = underground (no sky light). */
+export interface Zone { kind: string; box: Box }
+
 export interface Teleport { name: string; x: number; y: number; z: number; yaw: number }
 
 export interface World {
   name: string;
   teleports: Teleport[];
+  props: Prop[];
+  zones: Zone[];
   solids: Solid[];
   index: SolidIndex;
   water: Box[];
@@ -31,6 +39,8 @@ export interface WorldParts {
   hides?: HideSpot[];
   labels?: Label[];
   teleports?: Teleport[];
+  props?: Prop[];
+  zones?: Zone[];
   spawn: World['spawn'];
 }
 
@@ -44,6 +54,8 @@ export function makeWorld(p: WorldParts): World {
     hides: p.hides ?? [],
     labels: p.labels ?? [],
     teleports: p.teleports ?? [],
+    props: p.props ?? [],
+    zones: p.zones ?? [],
     spawn: p.spawn,
   };
 }

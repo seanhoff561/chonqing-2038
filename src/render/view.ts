@@ -7,6 +7,7 @@ import { material } from './materials';
 import { MAT } from '../world/mats';
 import { FPCamera } from './fpcamera';
 import { Arms } from './arms';
+import { buildProps } from './props';
 
 export class View {
   readonly renderer: THREE.WebGLRenderer;
@@ -40,6 +41,7 @@ export class View {
     this.world.clear();
     this.world.add(buildSolidMeshes(w.solids));
     this.world.add(buildLabels(w.labels));
+    this.world.add(buildProps(w.props));
     for (const b of w.water) {
       const m = new THREE.Mesh(new THREE.PlaneGeometry(b.x1 - b.x0, b.z1 - b.z0), material(MAT.water));
       m.rotation.x = -Math.PI / 2;

@@ -1,8 +1,9 @@
 // World builders by name, cached: the static world is identical every run.
 import type { World } from './world';
 import { buildGym } from './sets/gym';
+import { buildHideoutScene } from './sets/hideout-scene';
 
-const builders: Record<string, () => World> = { gym: buildGym };
+const builders: Record<string, () => World> = { gym: buildGym, hideout: buildHideoutScene };
 const cache = new Map<string, World>();
 
 export function getWorld(name: string): World {
