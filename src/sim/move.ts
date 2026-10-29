@@ -1,5 +1,6 @@
 // Player movement. Each tick: look, posture, then the current mode's update.
-import { B, DT, type InputFrame, type SimState } from './types';
+import { B, DT, type InputFrame, type SimState, type FallOutcome } from './types';
+import { rand } from './rng';
 import type { World } from '../world/world';
 import type { Player, Posture } from './player';
 import { movement as M } from '../data/movement';
@@ -18,6 +19,8 @@ export function stepPlayer(state: SimState, world: World, input: InputFrame): vo
   p.pitch = Math.max(-1.5, Math.min(1.5, input.pitch));
   if (state.flags.noclip) { noclip(p, input); return; }
   if (p.mode === 'noclip') p.mode = 'air';
+  p.crouchAge += DT;
+  if ((input.pressed & B.CROUCH) && !p.onGround) p.crouchAge = 0;
   switch (p.mode) {
     case 'action': stepAction(state, world); return;
     case 'hang': stepHang(state, world, input); return;
@@ -146,5 +149,28 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
 }
 
 function land(state: SimState) {
-  state.player.fallFrom = state.player.pos.y;
+  const p = state.player;
+  const h = p.fallFrom - p.pos.y;
+  const roll = p.crouchAge <= M.falls.rollWindow;
+  const outcome = fallOutcome(h, roll, () => rand(state.rng));
+  state.events.push({ t: 'land', h, roll, outcome });
+  if (roll && h > 1) { p.posture = 'crouch'; p.vel.x *= 0.6; p.vel.z *= 0.6; }
+  p.fallFrom = p.pos.y;
+}
+
+/** DESIGN section 3: what a fall of h metres does, with or without a roll. */
+export function fallOutcome(h: number, roll: boolean, rnd: () => number): FallOutcome {
+  const F = M.falls;
+  const o: FallOutcome = { damage: 0, sprain: false, fracture: false, arm: false, lethal: false };
+  if (h > F.lethal) { o.lethal = true; o.damage = 999; return o; }
+  if (roll && h <= F.rollMax) {
+    if (h > F.rollSafe) { o.damage = (h - F.rollSafe) * F.dmgPerM; o.sprain = rnd() < F.sprainChance; }
+    return o;
+  }
+  if (h <= F.safe) return o;
+  if (h <= F.fractureFrom) { o.damage = (h - F.safe) * F.dmgPerM; o.sprain = rnd() < F.sprainChance; return o; }
+  o.damage = (h - F.safe) * F.dmgPerMHigh;
+  o.fracture = true;
+  o.arm = rnd() < F.armChance;
+  return o;
 }
