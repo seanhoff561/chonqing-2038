@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M2. Next: M2-03 Health, damage and death.
-Features done: 26 / 204 | Last done: M2-02
+**Status:** building M2. Next: M2-04 Bleeding.
+Features done: 27 / 204 | Last done: M2-03
 <!-- /status -->
 
 ## Log
@@ -33,3 +33,4 @@ Features done: 26 / 204 | Last done: M2-02
 - M1-24 Dev panel and scenario loader: dev panel and scenario loader
 - M2-01 Game clock and day phases: game clock and day phases
 - M2-02 Sky, sun, moon and ambient light by time: sky, sun, moon and ambient light by time
+- M2-03 Health, damage and death: health, damage and death

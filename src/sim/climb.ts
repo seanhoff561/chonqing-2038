@@ -5,7 +5,7 @@ import type { Player } from './player';
 import { movement as M } from '../data/movement';
 import { free, groundGap } from './physics';
 import { startAction, letGo } from './parkour';
-import { forward, spend } from './move';
+import { forward, spend, lim } from './move';
 
 const HW = M.width / 2;
 const OFF = HW + 0.15;
@@ -27,6 +27,7 @@ export function climbableNear(world: World, p: Player, reach: number): number {
 }
 
 export function attach(world: World, p: Player, i: number): boolean {
+  if (!lim().climb) return false;
   const c = world.climbables[i], s = spot(c);
   const y = Math.max(c.y0, p.pos.y);
   if (!free(world.index, s.x, y, s.z, M.height.stand)) return false;
@@ -49,8 +50,8 @@ export function stepClimb(state: SimState, world: World, input: InputFrame) {
     p.vel.y = M.climb.leapUp;
     return;
   }
-  const up = c.kind === 'ladder' ? M.climb.ladder : M.climb.pipeUp;
-  const down = c.kind === 'ladder' ? M.climb.ladder : M.climb.pipeDown;
+  const up = (c.kind === 'ladder' ? M.climb.ladder : M.climb.pipeUp) * lim().climbScale;
+  const down = (c.kind === 'ladder' ? M.climb.ladder : M.climb.pipeDown) * lim().climbScale;
   const v = input.my > 0 ? up * input.my : input.my < 0 ? down * input.my : 0;
   let y = p.pos.y + v * DT;
   // At the top: step off onto the ledge behind the climbable if there's room.

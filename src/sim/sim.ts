@@ -5,6 +5,7 @@ import type { InputFrame, SimState } from './types';
 import type { World } from '../world/world';
 import { stepPlayer } from './move';
 import { GAME_PER_TICK } from './clock';
+import { createBody, stepBody } from './body';
 import { survival } from '../data/survival';
 
 export const STATE_VERSION = 1;
@@ -18,6 +19,8 @@ export function createState(seed: number, world: World): SimState {
     tick: 0,
     time: survival.startHour * 3600,
     player: createPlayer(s.x, s.y, s.z, s.yaw),
+    body: createBody(),
+    dead: null,
     events: [],
     flags: { god: false, noclip: false, rain: 0 },
   };
@@ -26,6 +29,7 @@ export function createState(seed: number, world: World): SimState {
 export function step(state: SimState, world: World, input: InputFrame): void {
   state.events.length = 0;
   stepPlayer(state, world, input);
+  stepBody(state);
   state.tick++;
   state.time += GAME_PER_TICK;
 }

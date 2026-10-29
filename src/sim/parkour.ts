@@ -5,7 +5,7 @@ import type { Player, Posture, Mode } from './player';
 import { movement as M } from '../data/movement';
 import { raycast } from '../world/geom';
 import { free, moveHorizontal, moveVertical } from './physics';
-import { forward, setPosture, spend, noise } from './move';
+import { forward, setPosture, spend, noise, lim } from './move';
 
 const HW = M.width / 2;
 
@@ -89,7 +89,7 @@ export function groundParkour(state: SimState, world: World, input: InputFrame, 
     if (l.h <= M.vault.maxH && speed >= M.vault.minSpeed && tryVault(world, p, l)) { noise(state, M.noise.vault, 'vault'); return true; }
     if (l.h <= maxMantle + 1e-3 && tryMantle(world, p, l, l.h < M.mantle.lowLimit ? M.mantle.lowTime : M.mantle.highTime)) { noise(state, M.noise.mantle, 'mantle'); return true; }
   }
-  if (speed < M.wallRun.minSpeed || !(input.buttons & B.SPRINT) || p.exhausted) return false;
+  if (speed < M.wallRun.minSpeed || !(input.buttons & B.SPRINT) || p.exhausted || !lim().wallRun) return false;
   const f = forward(p.yaw);
   const wc = wallAhead(world, p, f.x, f.z, M.wallClimb.dist, [0.5, 1.2]);
   if (wc && (!l || l.h > maxMantle)) {
@@ -134,7 +134,7 @@ export function airParkour(state: SimState, world: World, input: InputFrame): bo
   const l = findLedge(world, p, M.hang.wallGap, M.hang.reachHigh + 0.1);
   if (!l || !isFinite(l.h)) return false;
   if (l.h >= 0.3 && l.h < M.hang.reachLow && (input.buttons & B.JUMP)) return tryMantle(world, p, l, M.mantle.lowTime);
-  if (l.h >= M.hang.reachLow && l.h <= M.hang.reachHigh) return grab(world, p, l);
+  if (l.h >= M.hang.reachLow && l.h <= M.hang.reachHigh && lim().climb) return grab(world, p, l);
   return false;
 }
 

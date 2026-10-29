@@ -43,6 +43,9 @@ export interface SimState {
   /** game seconds since day 1, 00:00 */
   time: number;
   player: import('./player').Player;
+  body: import('./body').Body;
+  /** cause of death, or null while alive */
+  dead: string | null;
   /** events emitted during the latest tick */
   events: SimEvent[];
   flags: { god: boolean; noclip: boolean; rain: number };

@@ -9,6 +9,11 @@ import { groundParkour, airParkour, stepAction, stepHang, stepWallRun, stepWallC
 import { climbableNear, attach, stepClimb } from './climb';
 import { hideNear, enterHide, stepHidden } from './hide';
 import { checkWater, stepSwim } from './swim';
+import { limits, type Limits } from './body';
+
+let L: Limits;
+/** This tick's body limits (injuries, needs, load). */
+export const lim = () => L;
 
 export const heightOf = (p: Posture) => M.height[p];
 
@@ -22,7 +27,7 @@ export function spend(p: Player, amt: number) {
 function regen(p: Player) {
   const S = M.stamina;
   p.staminaIdle += DT;
-  if (p.staminaIdle >= S.regenDelay) p.stamina = Math.min(S.max, p.stamina + S.regen * DT);
+  if (p.staminaIdle >= S.regenDelay) p.stamina = Math.min(S.max, p.stamina + S.regen * L.regenScale * DT);
   if (p.exhausted && p.stamina >= S.recover) p.exhausted = false;
 }
 
@@ -47,6 +52,7 @@ export function forward(yaw: number) { return { x: -Math.sin(yaw), z: -Math.cos(
 export function stepPlayer(state: SimState, world: World, input: InputFrame): void {
   const p = state.player;
   if (p.mode === 'dead') return;
+  L = limits(state);
   p.yaw = input.yaw;
   p.pitch = Math.max(-1.5, Math.min(1.5, input.pitch));
   if (state.flags.noclip) { noclip(p, input); return; }
@@ -108,10 +114,11 @@ function updatePosture(p: Player, world: World, input: InputFrame) {
 }
 
 function targetSpeed(p: Player, input: InputFrame): number {
-  if (p.posture === 'crawl') return M.speed.crawl;
-  if (p.posture === 'crouch') return M.speed.crouch;
-  if ((input.buttons & B.SPRINT) && input.my > 0 && !p.exhausted) return M.speed.sprint;
-  return M.speed.jog;
+  let sp = M.speed.jog;
+  if (p.posture === 'crawl') sp = M.speed.crawl;
+  else if (p.posture === 'crouch') sp = M.speed.crouch;
+  else if ((input.buttons & B.SPRINT) && input.my > 0 && !p.exhausted && L.sprint) sp = M.speed.sprint * L.sprintScale;
+  return Math.min(sp, L.speedCap);
 }
 
 function groundAir(state: SimState, world: World, input: InputFrame) {
@@ -135,7 +142,7 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
       if (!setPosture(p, world, 'crouch')) p.posture = 'crawl';
     }
   }
-  if (sp === M.speed.sprint && p.onGround && Math.hypot(p.vel.x, p.vel.z) > 4) spend(p, M.stamina.sprint * DT);
+  if (sp > M.speed.jog && p.onGround && Math.hypot(p.vel.x, p.vel.z) > 4) spend(p, M.stamina.sprint * DT);
   const accel = (p.onGround ? (p.slide >= 0 ? 1000 : M.groundAccel) : M.airAccel) * DT;
   const dvx = wx * sp - p.vel.x, dvz = wz * sp - p.vel.z;
   const dl = Math.hypot(dvx, dvz);
@@ -145,9 +152,9 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
   }
   // Jump.
   let jumped = false;
-  if (p.onGround && (input.pressed & B.JUMP) && groundParkour(state, world, input, M.mantle.max)) return;
-  if ((p.onGround || p.coyote > 0) && (input.pressed & B.JUMP) && p.posture === 'stand') {
-    p.vel.y = M.jumpSpeed;
+  if (p.onGround && (input.pressed & B.JUMP) && groundParkour(state, world, input, L.maxMantle)) return;
+  if ((p.onGround || p.coyote > 0) && (input.pressed & B.JUMP) && p.posture === 'stand' && L.jumpScale > 0) {
+    p.vel.y = M.jumpSpeed * Math.sqrt(L.jumpScale);
     spend(p, M.stamina.jump);
     p.onGround = false;
     p.coyote = 0;
