@@ -60,5 +60,6 @@ try {
 await browser.close();
 server.close();
 for (const f of fails) console.log(`SMOKE FAIL ${f}`);
+if (fails.length) fs.appendFileSync('logs/smoke-fails.log', fails.map(f => `${new Date().toISOString()} ${f}\n`).join(''));
 console.log(`smoke: ${passes} passed, ${fails.length} failed`);
 process.exit(fails.length ? 1 : 0);

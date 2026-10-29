@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M2. Next: M2-19 Loot placement by seed.
-Features done: 53 / 216 | Last done: M2-18
+**Status:** building M2. Next: M2-20 Doors.
+Features done: 54 / 216 | Last done: M2-19
 <!-- /status -->
 
 ## Log
@@ -68,3 +68,4 @@ Features done: 53 / 216 | Last done: M2-18
 - M1-34 Bar swing and lache: bar swing and lache (U-005)
 - M1-28 Gym climbing routes: gym climbing routes
 - M2-18 Containers, stash and transfer: containers, stash and transfer UI
+- M2-19 Loot placement by seed: seeded loot placement

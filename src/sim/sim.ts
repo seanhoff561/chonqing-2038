@@ -12,6 +12,7 @@ import { applyCmds } from './commands';
 import { stepHeld } from './use';
 import { stepInteract } from './interact';
 import { stepContainers } from './containers';
+import './loot';
 import './food';
 import { survival } from '../data/survival';
 
