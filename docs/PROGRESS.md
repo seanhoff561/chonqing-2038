@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-35 Shibati and Jiaochangkou from the references (U-014).
-Features done: 89 / 237 | Last done: M3-15
+**Status:** building M8. Next: M8-25 Intro screenplay for AI video (U-018).
+Features done: 90 / 243 | Last done: M3-39
 <!-- /status -->
 
 ## Log
@@ -107,3 +107,4 @@ Features done: 89 / 237 | Last done: M3-15
 - M3-24 Place references (U-011): 42 freely licensed place and interior reference photos, credited, with per-place notes
 - M3-34 Props, vehicles, debris and foliage (U-014): prop library on one textured atlas, dense street/alley/roof dressing, the stalled Line 2 train
 - M3-15 Street props: street props delivered by the M3-34 library
+- M3-39 Geo data for Yuzhong (U-017): real elevation and OpenStreetMap data for eastern Yuzhong in local metres

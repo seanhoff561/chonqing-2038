@@ -5,6 +5,10 @@ Chongqing 2038 is made almost entirely in code: geometry, canvas textures and We
 ## Models
 - Hand models: `generic-hand` left.glb and right.glb from WebXR Input Profiles (`@webxr-input-profiles/assets`), Copyright (c) 2019 Amazon, MIT License. Posed and recoloured in code.
 
+## Map data (shipped)
+- Streets, building footprints and levels, parks, rail, bridges, the cableway and river banks: © OpenStreetMap contributors, https://www.openstreetmap.org/copyright. The extract in `src/data/geo/osm.json` is a derivative database and is available under the Open Database License (ODbL) 1.0, https://opendatacommons.org/licenses/odbl/1-0/. The game shows this attribution in the pause menu.
+- Elevation (`src/data/geo/ground.ts`): Terrain Tiles on AWS Open Data (Mapzen / Tilezen, Terrarium format), from SRTM (NASA/USGS, public domain), GMTED2010 and ETOPO1; smoothed to bare ground by tools/geo-fetch.mjs.
+
 ## Libraries
 - three.js (MIT) - rendering
 - Vite (MIT), TypeScript (Apache-2.0), Vitest (MIT), Puppeteer (Apache-2.0) - build and test tools, not shipped

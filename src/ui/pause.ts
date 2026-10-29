@@ -78,7 +78,7 @@ export class PauseMenu {
       : `<button data-a="gym">运动训练场 Movement gym</button>` +
         (g.scenario.name === 'reference' ? '' : `<button data-a="reference">参考山坡 Reference hillside</button>`) +
         (g.scenario.run ? `<div class="pz-note">Leaves this run; your last sleep is saved.</div>` : '');
-    this.el.innerHTML = `<div class="pz-col"><div class="pz-title">暂停 PAUSED</div><button data-a="resume">继续 Resume</button>${left}</div>
+    this.el.innerHTML = `<div class="pz-col"><div class="pz-title">暂停 PAUSED</div><button data-a="resume">继续 Resume</button>${left}<div class="pz-note pz-credit">Map data © OpenStreetMap contributors (ODbL). Elevation: SRTM via Terrain Tiles.</div></div>
       <div class="pz-col pz-keys"><div class="pz-h">操作 Controls</div>${CONTROLS.map(([k, a]) => `<div><b>${k}</b><span>${a}</span></div>`).join('')}</div>`;
     this.el.querySelectorAll<HTMLButtonElement>('button').forEach(b => { b.onclick = () => this.act(b.dataset); });
   }
