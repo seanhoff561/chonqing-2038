@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-01 Map data and parser.
-Features done: 59 / 216 | Last done: M2-24
+**Status:** building M3. Next: M3-02 Terrain and terraces.
+Features done: 60 / 216 | Last done: M3-01
 <!-- /status -->
 
 ## Log
@@ -74,3 +74,4 @@ Features done: 59 / 216 | Last done: M2-24
 - M2-22 Starting supplies: starting supplies
 - M2-23 Ironman save: ironman save on waking with Continue at boot
 - M2-24 Permadeath and new run: permadeath and new run
+- M3-01 Map data and parser: map data and parser
