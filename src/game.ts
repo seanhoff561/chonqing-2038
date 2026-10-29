@@ -10,6 +10,9 @@ import { Hud } from './ui/hud';
 import { Sky } from './render/sky';
 import { BodyFx } from './render/body-fx';
 import { InventoryUI } from './ui/inventory-ui';
+import { heldStack } from './sim/use';
+import { heldMesh } from './render/held';
+import { item } from './data/items';
 
 export interface GameOpts { scenario: string; seed: number; dev: boolean }
 
@@ -24,6 +27,7 @@ export class Game {
   readonly inv: InventoryUI;
   drawDistance = 160;
   scenario!: Scenario;
+  private heldId = '';
   private prev: Vec3 = { x: 0, y: 0, z: 0 };
   private acc = 0;
   private last = 0;
@@ -78,9 +82,19 @@ export class Game {
     this.view.arms.update(p, dt, this.input.pitch);
     this.bodyFx.update(this.state, this.view.fp, dt);
     this.inv.update();
+    this.updateHeld();
     this.sky.update(this.state.time, this.view.fp.cam.position, this.drawDistance);
     this.view.render();
     this.frames++;
+  }
+
+  private updateHeld() {
+    const st = heldStack(this.state), id = st?.id ?? '';
+    if (id === this.heldId) return;
+    this.heldId = id;
+    this.view.arms.held.clear();
+    if (id) this.view.arms.held.add(heldMesh(id));
+    this.hud.setHeld(id ? `${item(id).zh} ${item(id).en}` : '');
   }
 
   start() {

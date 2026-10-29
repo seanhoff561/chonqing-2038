@@ -9,6 +9,7 @@ import { createBody, stepBody } from './body';
 import { checkCollapse } from './sleep';
 import { grid } from './inventory';
 import { applyCmds } from './commands';
+import { stepHeld } from './use';
 import { survival } from '../data/survival';
 
 export const STATE_VERSION = 1;
@@ -37,6 +38,7 @@ export function step(state: SimState, world: World, input: InputFrame): void {
   state.events.length = 0;
   applyCmds(state, input.cmds);
   stepPlayer(state, world, input);
+  stepHeld(state, world, input);
   stepBody(state);
   checkCollapse(state);
   state.tick++;

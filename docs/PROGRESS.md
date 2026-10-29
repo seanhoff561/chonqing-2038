@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M2. Next: M2-12 Hotbar and held item.
-Features done: 35 / 204 | Last done: M2-11
+**Status:** building M2. Next: M2-13 Encumbrance.
+Features done: 36 / 204 | Last done: M2-12
 <!-- /status -->
 
 ## Log
@@ -42,3 +42,4 @@ Features done: 35 / 204 | Last done: M2-11
 - M2-09 Item database: item database
 - M2-10 Grid inventory: grid inventory
 - M2-11 Backpack UI: backpack UI with drag, rotate and hotbar binding
+- M2-12 Hotbar and held item: hotbar and held item
