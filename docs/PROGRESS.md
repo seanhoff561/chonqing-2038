@@ -2,7 +2,7 @@
 
 <!-- status -->
 **Status:** building M3. Next: M3-24 Place references (U-011).
-Features done: 85 / 237 | Last done: M3-32
+Features done: 86 / 237 | Last done: M3-33
 <!-- /status -->
 
 ## Log
@@ -103,3 +103,4 @@ Features done: 85 / 237 | Last done: M3-32
 - M3-30 Body status indicator (U-014): body status indicator on the HUD
 - M3-31 Esc unbound (U-014): Esc unbound; sleep menu closes with E, right-click or its button; status hides when fine
 - M3-32 Easier parapets and windows (U-014): 0.6 m parapets, vault over them in flight, windows big enough to hop through
+- M3-33 Closed facades read closed (U-014): painted windows read shut: bars, glass, shutters, boards, bricks

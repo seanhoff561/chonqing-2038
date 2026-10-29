@@ -37,7 +37,7 @@ function layout(st: Style, px: number): Window[] {
   for (let f = 0; f < 4; f++) for (let b = 0; b < 4; b++) {
     const w = st.win[0] * px * (0.75 + r() * 0.5), h = st.win[1] * px * (0.9 + r() * 0.2);
     const x = (b * FACADE_BAY + FACADE_BAY / 2) * px - w / 2, y = S - (f * FACADE_BAY + st.sill) * px - h;
-    const kind = r(), lit = r() < 0.16 && kind > 0.4;
+    const kind = r(), lit = r() < 0.2 && kind < 0.45;
     if (r() >= (st.blank ?? 0)) out.push({ x, y, w, h, kind, lit });
   }
   return out;
@@ -89,33 +89,58 @@ export function drawFacade(id: number, g: CanvasRenderingContext2D, S: number) {
     const { x, y, w: ww, h } = w;
     // Recess: deep shadow at the head, a little light on the jamb.
     const grd = g.createLinearGradient(0, y, 0, y + h);
-    grd.addColorStop(0, '#080808'); grd.addColorStop(1, '#1e1c1a');
+    grd.addColorStop(0, '#1a1917'); grd.addColorStop(1, '#3a3632');
     g.fillStyle = grd; g.fillRect(x, y, ww, h);
     g.fillStyle = 'rgba(255,255,255,0.08)'; g.fillRect(x, y, px * 0.06, h);
-    if (st.open && w.kind < 0.75) {
-      // Glassless: the bare back wall of the room, lit by the opening, the floor in shadow.
-      const back = g.createLinearGradient(0, y, 0, y + h);
-      back.addColorStop(0, '#2a2826'); back.addColorStop(0.25, w.kind < 0.4 ? '#c9c5bb' : '#8d8980'); back.addColorStop(1, '#4a4743');
-      g.fillStyle = back; g.fillRect(x + ww * 0.12, y + h * 0.1, ww * 0.76, h * 0.9);
-      g.fillStyle = 'rgba(0,0,0,0.45)'; g.fillRect(x + ww * 0.12, y + h * 0.1, ww * 0.1, h * 0.9);
-    } else if (w.kind > 0.45 && w.kind <= 0.65) {
-      // Glazed: dull glass, a frame and mullions, a smear of reflected sky.
-      g.fillStyle = w.lit ? '#4a4036' : '#2b3236'; g.fillRect(x + 3, y + 3, ww - 6, h - 6);
-      g.fillStyle = 'rgba(190,200,205,0.12)'; g.beginPath(); g.moveTo(x, y + h * 0.7); g.lineTo(x + ww * 0.6, y); g.lineTo(x + ww * 0.8, y); g.lineTo(x, y + h); g.fill();
+    // Every painted window is visibly shut (U-014): barred, glazed, rolled down, shuttered, boarded, caged or
+    // bricked up. Real openings are geometry.
+    const k = w.kind;
+    if (k < 0.25) {
+      // Behind a security grille: the room (pale bare walls in an abandoned block), bars in front.
+      if (st.open) {
+        const back = g.createLinearGradient(0, y, 0, y + h);
+        back.addColorStop(0, '#2a2826'); back.addColorStop(0.25, k < 0.12 ? '#c9c5bb' : '#8d8980'); back.addColorStop(1, '#4a4743');
+        g.fillStyle = back; g.fillRect(x + ww * 0.12, y + h * 0.1, ww * 0.76, h * 0.9);
+      }
+      g.fillStyle = '#56585a';
+      for (let bx = x + px * 0.05; bx < x + ww; bx += px * 0.1) g.fillRect(bx, y, Math.max(3, px * 0.045), h);
+      for (const f of [0.06, 0.5, 0.94]) g.fillRect(x, y + h * f, ww, Math.max(3, px * 0.05));
+      g.fillStyle = 'rgba(120,70,35,0.35)'; g.fillRect(x, y + h * 0.92, ww, px * 0.05);
+    } else if (k < 0.45) {
+      // Glazed: grimy glass, a frame and mullions, a smear of reflected sky, sometimes a crack.
+      g.fillStyle = w.lit ? '#5a4e40' : '#5d6970'; g.fillRect(x + 3, y + 3, ww - 6, h - 6);
+      g.fillStyle = 'rgba(205,215,220,0.28)'; g.beginPath(); g.moveTo(x, y + h * 0.7); g.lineTo(x + ww * 0.6, y); g.lineTo(x + ww * 0.8, y); g.lineTo(x, y + h); g.fill();
       g.strokeStyle = '#c9c4b8'; g.lineWidth = 3; g.strokeRect(x + 2, y + 2, ww - 4, h - 4);
       g.beginPath(); g.moveTo(x + ww / 2, y); g.lineTo(x + ww / 2, y + h); g.moveTo(x, y + h * 0.35); g.lineTo(x + ww, y + h * 0.35); g.stroke();
-    } else if (w.kind > 0.65 && w.kind <= 0.8) {
-      g.fillStyle = '#3d3e3f';
-      for (let bx = x + 6; bx < x + ww; bx += px * 0.12) g.fillRect(bx, y, 3, h);
-      g.fillRect(x, y + h * 0.5, ww, 3);
-    } else if (w.kind > 0.8 && w.kind <= 0.9) {
+      if (r() < 0.4) { g.strokeStyle = 'rgba(230,235,235,0.5)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x + ww * 0.3, y + h * 0.4); g.lineTo(x + ww * 0.45, y + h * 0.6); g.lineTo(x + ww * 0.4, y + h * 0.85); g.moveTo(x + ww * 0.45, y + h * 0.6); g.lineTo(x + ww * 0.7, y + h * 0.65); g.stroke(); }
+    } else if (k < 0.6) {
+      // A rolled-down steel shutter, slats and rust.
+      g.fillStyle = '#6d6e6a'; g.fillRect(x, y, ww, h);
+      for (let sy = y; sy < y + h; sy += px * 0.09) { g.fillStyle = 'rgba(0,0,0,0.28)'; g.fillRect(x, sy, ww, Math.max(1, px * 0.02)); g.fillStyle = 'rgba(255,255,255,0.08)'; g.fillRect(x, sy + px * 0.03, ww, 1); }
+      g.fillStyle = '#4f504d'; g.fillRect(x - px * 0.05, y - px * 0.12, ww + px * 0.1, px * 0.14);
+      blotches(g, x, y, Math.floor(x + y * 3), 1, '120,70,35', 0.35, px * 0.2, px * 0.6);
+    } else if (k < 0.72) {
+      // Wooden shutters closed over the window.
+      g.fillStyle = '#5e4a36'; g.fillRect(x, y, ww, h);
+      g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillRect(x + ww / 2 - 1, y, 2, h);
+      for (let sy = y + px * 0.08; sy < y + h; sy += px * 0.12) { g.fillStyle = 'rgba(0,0,0,0.22)'; g.fillRect(x + 3, sy, ww - 6, 2); }
+    } else if (k < 0.82) {
+      // Boarded up: dark gap, planks nailed across at odd angles.
+      for (let i = 0; i < 4; i++) {
+        g.save(); g.translate(x + ww / 2, y + h * (0.15 + i * 0.23)); g.rotate((r() - 0.5) * 0.25);
+        g.fillStyle = ['#7a5f42', '#6b533b', '#8a6f50'][i % 3]; g.fillRect(-ww * 0.58, -px * 0.1, ww * 1.16, px * 0.2);
+        g.fillStyle = '#2a2a2a'; g.fillRect(-ww * 0.5, -1, 2, 2); g.fillRect(ww * 0.48, -1, 2, 2);
+        g.restore();
+      }
+    } else if (k < 0.9) {
       // A balcony cage bolted over the opening, laundry inside now and then.
       g.strokeStyle = 'rgba(70,72,74,0.9)'; g.lineWidth = 2;
       const cy = y - px * 0.15, ch = h + px * 0.9;
       for (let bx = x - px * 0.2; bx <= x + ww + px * 0.2; bx += px * 0.1) { g.beginPath(); g.moveTo(bx, cy); g.lineTo(bx, cy + ch); g.stroke(); }
       for (let by = cy; by <= cy + ch; by += px * 0.3) { g.beginPath(); g.moveTo(x - px * 0.2, by); g.lineTo(x + ww + px * 0.2, by); g.stroke(); }
       if (r() < 0.6) { g.fillStyle = ['#8a2a22', '#3c5a7a', '#c9b98a', '#6a6f4a'][Math.floor(r() * 4)]; g.fillRect(x + ww * 0.2, y + h * 0.2, ww * 0.25, h * 0.4); }
-    } else if (w.kind > 0.9) {
+    } else {
+      // Bricked up, the infill a different tone.
       g.fillStyle = st.wall; g.fillRect(x, y, ww, h);
       g.fillStyle = 'rgba(0,0,0,0.18)'; g.fillRect(x, y, ww, h);
       g.strokeStyle = 'rgba(0,0,0,0.25)'; g.lineWidth = 1;
