@@ -38,7 +38,7 @@ Player collision is an axis-aligned box 0.5 m wide. All values live in `src/data
 | Heights (stand / crouch / crawl and slide / curled in a box) | 1.75 / 1.10 / 0.50 / 0.75 m (eye 1.62 / 0.98 / 0.38 / 0.55) |
 | Speeds (jog / sprint / crouch / crawl / ladder / pipe up) | 3.2 / 7.0 / 1.6 / 0.8 / 1.5 / 1.0 m/s |
 | Ground accel / air accel | 30 / 4 m/s^2 |
-| Gravity / jump take-off speed | 9.81 m/s^2 / 3.0 m/s (apex 0.46 m) |
+| Gravity / jump take-off speed | 9.81 m/s^2 / 3.1 m/s (apex 0.49 m); a jump still counts 0.1 s after stepping off an edge |
 | Running jump | clears a 4.5 m gap at sprint, fails 5.2 m |
 | Auto step-up | 0.45 m (stairs are invisible ramps under the visible steps) |
 | Mantle | ledge top 0.5 to 2.4 m above feet, wall within 0.7 m, moving forward + Space; 0.35 s (below 1.0 m) or 0.8 s |

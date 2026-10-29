@@ -76,9 +76,10 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
   }
   // Jump.
   let jumped = false;
-  if (p.onGround && (input.pressed & B.JUMP) && p.posture === 'stand') {
+  if ((p.onGround || p.coyote > 0) && (input.pressed & B.JUMP) && p.posture === 'stand') {
     p.vel.y = M.jumpSpeed;
     p.onGround = false;
+    p.coyote = 0;
     jumped = true;
   }
   if (!p.onGround) p.vel.y = Math.max(-M.maxFall, p.vel.y - M.gravity * DT);
@@ -101,8 +102,11 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
       if (gap !== Infinity) { p.pos.y -= gap; p.onGround = true; p.vel.y = 0; }
     }
   }
-  if (p.onGround) p.fallFrom = p.pos.y;
-  else if (p.pos.y > p.fallFrom) p.fallFrom = p.pos.y;
+  if (p.onGround) { p.fallFrom = p.pos.y; p.coyote = jumped ? 0 : M.coyote; }
+  else {
+    p.coyote = Math.max(0, p.coyote - DT);
+    if (p.pos.y > p.fallFrom) p.fallFrom = p.pos.y;
+  }
   p.mode = p.onGround ? 'ground' : 'air';
 }
 

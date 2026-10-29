@@ -10,7 +10,7 @@ Newest first. D-### are my design calls where BRIEF.md is silent; U-### are dire
 - D-007 Patrol drones fly 6 real minutes per battery and recharge 2 minutes; movement and combat run in real seconds, schedules on the game clock. Why: learnable coverage gaps at a scale the player notices.
 - D-006 Unaware units' poses are pure functions of game time, so sleep is a cheap time skip and timings are exactly learnable.
 - D-005 Collision is axis-aligned boxes and ramps in a uniform grid with per-axis sweeps; buildings and tunnels are carved out of solid boxes. Why: deterministic, headless, simple, fast; the city is stylized to axis-aligned blocks (decor can rotate).
-- D-004 Gravity 9.81 m/s^2 and jump take-off 3.0 m/s: with sprint 7 m/s this clears about 4.8 m including the body's width, matching the brief's 4.5 m.
+- D-004 Gravity 9.81 m/s^2 and jump take-off 3.1 m/s plus 0.1 s of coyote time: at sprint a jump from the edge clears 4.5 m with a little margin and never 5.2 m.
 - D-003 Puppeteer's own Chrome download works here; smoke tests use it with SwiftShader. fonts-noto-cjk was installed with apt for Chinese text in screenshots (session-only; the director's browser uses system fonts).
 - D-002 Fixed tick 60 Hz; units think at 10 Hz staggered. Sim state is one plain JSON object so saves are a straight serialization.
 - D-001 Pinned toolchain: TypeScript 5.9, Vite 6, Vitest 3, three.js 0.186, Puppeteer 24+. Known-stable majors over the newest.
