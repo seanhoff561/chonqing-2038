@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M1. Next: M1-16 Grip endurance (no running stamina).
-Features done: 39 / 211 | Last done: M1-13
+**Status:** building M1. Next: M1-25 Hold-to-crouch on Ctrl and slide cancel.
+Features done: 40 / 211 | Last done: M1-16
 <!-- /status -->
 
 ## Log
@@ -54,3 +54,4 @@ Features done: 39 / 211 | Last done: M1-13
 - M1-11 Wall-run on a second Space: wall-run on a second Space (U-004)
 - M1-12 Run-up kick and dyno: run-up kick and dyno
 - M1-13 Pipes and ladders by hand: pipes and ladders by hand
+- M1-16 Grip endurance (no running stamina): grip endurance, no running stamina (U-003)
