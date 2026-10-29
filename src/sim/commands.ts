@@ -1,5 +1,6 @@
 // UI commands (backpack moves, hotbar binds, item use) travel in input frames so the sim stays authoritative.
 import type { SimState } from './types';
+import type { World } from '../world/world';
 import type { Grid } from './inventory';
 import { moveStack } from './inventory';
 
@@ -15,12 +16,12 @@ export function gridRef(s: SimState, ref: string): Grid | null {
   return ref === 'pack' ? s.inv.pack : s.containers[ref] ?? null;
 }
 
-type Handler = (s: SimState, cmd: Cmd) => void;
+type Handler = (s: SimState, cmd: Cmd, w: World) => void;
 const handlers: Handler[] = [];
 /** Other systems (use, drop, crafting) register here. */
 export const onCmd = (h: Handler) => { handlers.push(h); };
 
-export function applyCmds(s: SimState, cmds: Cmd[] | undefined) {
+export function applyCmds(s: SimState, w: World, cmds: Cmd[] | undefined) {
   if (!cmds) return;
   for (const cmd of cmds) {
     if (cmd.c === 'move') {
@@ -32,6 +33,6 @@ export function applyCmds(s: SimState, cmds: Cmd[] | undefined) {
         s.inv.hotbar[cmd.slot] = cmd.uid;
       }
     }
-    for (const h of handlers) h(s, cmd);
+    for (const h of handlers) h(s, cmd, w);
   }
 }

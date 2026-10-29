@@ -10,6 +10,7 @@ import { checkCollapse } from './sleep';
 import { grid } from './inventory';
 import { applyCmds } from './commands';
 import { stepHeld } from './use';
+import './food';
 import { survival } from '../data/survival';
 
 export const STATE_VERSION = 1;
@@ -36,7 +37,7 @@ export function createState(seed: number, world: World): SimState {
 
 export function step(state: SimState, world: World, input: InputFrame): void {
   state.events.length = 0;
-  applyCmds(state, input.cmds);
+  applyCmds(state, world, input.cmds);
   stepPlayer(state, world, input);
   stepHeld(state, world, input);
   stepBody(state);

@@ -24,15 +24,13 @@ export function useStack(s: SimState, w: World, st: Stack, input: InputFrame) {
   f?.(s, w, st, input);
 }
 
-let world: World;
-onCmd((s, c) => {
+onCmd((s, c, w) => {
   if (c.c !== 'use') return;
   const st = s.inv.pack.items.find(x => x.uid === c.uid);
-  if (st && world) useStack(s, world, st, { mx: 0, my: 0, yaw: 0, pitch: 0, buttons: 0, pressed: 0, slot: -1 });
+  if (st) useStack(s, w, st, { mx: 0, my: 0, yaw: 0, pitch: 0, buttons: 0, pressed: 0, slot: -1 });
 });
 
 export function stepHeld(s: SimState, w: World, input: InputFrame) {
-  world = w;
   if (input.slot >= 0) s.inv.held = s.inv.held === input.slot && input.slot > 0 ? 0 : input.slot;
   const st = heldStack(s);
   if (!st) return;

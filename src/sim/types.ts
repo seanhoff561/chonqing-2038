@@ -35,6 +35,7 @@ export type SimEvent =
   | { t: 'hurt'; dmg: number; cause: string }
   | { t: 'slept'; from: number; to: number; where: 'bed' | 'collapse' }
   | { t: 'use'; id: string }
+  | { t: 'ate'; id: string; sick: boolean }
   | { t: 'msg'; text: string };
 
 export interface FallOutcome { damage: number; sprain: boolean; fracture: boolean; arm: boolean; lethal: boolean }
