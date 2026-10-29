@@ -3,9 +3,11 @@
 // on every floor.
 import { solid, rampSolid, carve } from '../geom';
 import { stepsFor } from './terrain';
+import { sides } from './climb';
 import { MAT } from '../mats';
 import { rand, randInt, type Rng } from '../../sim/rng';
 import type { Lot, Fabric } from './buildings';
+import type { Site } from '../world';
 
 const FLOOR = 3, WALL = 0.25, SLAB = 0.2, HUT = 2.6;
 /** Core space: u runs along the flights, v across. Near landing, two half flights side by side, far landing. */
@@ -50,6 +52,8 @@ export function hollow(l: Lot, r: Rng, out: Fabric) {
   const doorV = CORE_W + (V - CORE_W) / 2;
   const [dx, dz] = at(U, doorV);
   const doorC = alongZ ? dx : dz;
+  const streetSides = sides(l).filter(sd => sd.street).length;
+  let windows = 0;
   const facade = (alongX: boolean, a: number, b: number, t0: number, t1: number, door: boolean) => {
     const len = b - a, k = Math.floor(len / WIN.every);
     let cols = Array.from({ length: k }, (_, i) => a + (len / k) * (i + 0.5));
@@ -57,6 +61,7 @@ export function hollow(l: Lot, r: Rng, out: Fabric) {
     const box = (c0: number, y0: number, c1: number, y1: number) => {
       if (c1 - c0 > 0.01 && y1 - y0 > 0.01) out.solids.push(alongX ? solid(c0, y0, t0, c1, y1, t1, l.mat) : solid(t0, y0, c0, t1, y1, c1, l.mat));
     };
+    windows += cols.length - (door ? 1 : 0);
     let prev = a;
     for (const c of cols) {
       box(prev, base, c - WIN.w / 2, wall);
@@ -109,12 +114,19 @@ export function hollow(l: Lot, r: Rng, out: Fabric) {
     B(-WALL, wall + HUT, -WALL, CORE_L + 0.2, wall + HUT + 0.2, CORE_W + 0.2, MAT.concrete),
   ];
   out.solids.push(...carve(hut, B(0.1, wall, CORE_W - 0.1, 1.1, wall + 2.1, CORE_W + 0.3, 0)));
+  const [hx, hz] = at(CORE.near / 2, CORE_W / 2);
+  out.sites.push({ id: `b${l.id}.hut`, kind: 'roof hut', x: hx, y: wall, z: hz, bed: null, table: null, containers: [], exits: 2, windows: 0, streetSides: 0 });
 
   // Furniture along the walls of the room beside the core, a container in each.
   for (let k = 0; k < n; k++) {
     const y = base + k * FLOOR, shop = k === 0 && rand(r) < 0.4;
     const m = 1 + randInt(r, 3);
     const placed: [number, number, number, number][] = [];
+    const [sx, sz] = at((CORE_L + U) / 2, (CORE_W + V) / 2);
+    const site: Site = { id: `b${l.id}.${k}`, kind: 'flat', x: sx, y, z: sz, bed: null, table: null, containers: [], windows, streetSides,
+      // Ground floors have the street door; every floor has the stairs; the first floor's windows are a drop.
+      exits: k === 0 ? 2 : k === 1 ? 2 : 1 };
+    out.sites.push(site);
     for (let i = 0; i < m; i++) {
       const kind: Piece = shop && i === 0 ? 'crate' : (['cabinet', 'drawer', 'fridge', 'locker', 'bed', 'table'] as const)[randInt(r, 6)];
       const f = FURNITURE[kind];
@@ -131,9 +143,11 @@ export function hollow(l: Lot, r: Rng, out: Fabric) {
       out.solids.push(B(box[0], y, box[1], box[2], y + f.h, box[3], f.mat));
       // The front face, where he reaches in.
       const [fx, fz] = far ? at(box[0] - 0.05, (box[1] + box[3]) / 2) : at((box[0] + box[2]) / 2, box[1] - 0.05);
+      const id = `b${l.id}.${k}.${i}`;
+      if ('use' in f) { if (f.use === 'mattress') site.bed = id; else site.table = id; } else site.containers.push(id);
       out.inter.push('use' in f
-        ? { id: `b${l.id}.${k}.${i}`, kind: f.use, x: fx, y: y + f.h, z: fz, r: 0.8, zh: f.zh, en: f.en }
-        : { id: `b${l.id}.${k}.${i}`, kind: 'container', x: fx, y: y + Math.min(1.0, f.h / 2), z: fz, r: 0.6, zh: f.zh, en: f.en, data: { type: kind, loot: f.loot } });
+        ? { id, kind: f.use, x: fx, y: y + f.h, z: fz, r: 0.8, zh: f.zh, en: f.en }
+        : { id, kind: 'container', x: fx, y: y + Math.min(1.0, f.h / 2), z: fz, r: 0.6, zh: f.zh, en: f.en, data: { type: kind, loot: f.loot } });
     }
   }
 

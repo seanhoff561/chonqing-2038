@@ -15,6 +15,14 @@ export interface Prop { kind: string; x: number; y: number; z: number; yaw: numb
 /** Something he can use with E. `r` is how close the look ray must pass. */
 export interface Inter { id: string; kind: string; x: number; y: number; z: number; r: number; zh: string; en: string; data?: Record<string, unknown> }
 
+/** A place he could make a shelter (U-013): what there is to claim, and how exposed it is. exits counts ways
+ *  out; windows (per floor) is how much light leaks out at night; streetSides is how many of its walls face a
+ *  street where patrols walk. */
+export interface Site {
+  id: string; kind: 'flat' | 'roof hut'; x: number; y: number; z: number;
+  bed: string | null; table: string | null; containers: string[]; exits: number; windows: number; streetSides: number;
+}
+
 /** Areas with special rules: 'under' = underground (no sky light). */
 export interface Zone { kind: string; box: Box }
 
@@ -28,6 +36,7 @@ export interface World {
   props: Prop[];
   zones: Zone[];
   inter: Inter[];
+  sites: Site[];
   solids: Solid[];
   index: SolidIndex;
   water: Box[];
@@ -49,6 +58,7 @@ export interface WorldParts {
   props?: Prop[];
   zones?: Zone[];
   inter?: Inter[];
+  sites?: Site[];
   spawn: World['spawn'];
 }
 
@@ -66,6 +76,7 @@ export function makeWorld(p: WorldParts): World {
     props: p.props ?? [],
     zones: p.zones ?? [],
     inter: p.inter ?? [],
+    sites: p.sites ?? [],
     spawn: p.spawn,
   };
 }

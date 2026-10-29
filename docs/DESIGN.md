@@ -249,6 +249,7 @@ There is no ready-made hideout. The intro ends at 06:00 on day 1 with Li Wei in 
 - **Workbench.** Any table or bench becomes a workbench once a toolbox is placed on it.
 - **Storage.** A container within 15 m of his bed becomes his stash (or he places a crate). Everything in it stays put between trips.
 - The shelter is wherever his claimed bed is; the bench, stash, power (car battery and inverter) and a lamp count when within 15 m. Sleeping in his bed saves the run (ironman).
+- Every furnished floor of an enterable block and every roof hut is a recorded site (world `sites`): its bed, table and containers, exits, windows (light leak at night) and street-facing walls (ground patrols); M4 adds patrol and drone routes, Anna's rating reads them.
 - The fixed air-raid shelter of earlier builds (`?scenario=hideout`) stays as a furnished test scene.
 
 **Raid.** If compromised, a raid starts at a seeded time between 01:00 and 04:00. He wakes to breaching noises with 10 s before units reach the chamber. Survival options: a second exit he opened beforehand (clear the collapsed side passage with a crowbar, or cut the vent grate with bolt cutters and leave the telescoping ladder in the shaft), an EMP trap rigged on the gate, or fighting with what he slept beside. Surviving loses the shelter and everything in its stash (the machines burn it); he must make a new one elsewhere (a Hongyadong cliff cellar, a hotpot restaurant's 防空洞 cool room in Jiefangbei, a metro service room at Xiaoshizi). Each has a mattress, a small stash and a bench. Unprepared, he dies.

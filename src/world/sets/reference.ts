@@ -69,7 +69,7 @@ const FLOOR = 3;
 export interface RefBlock { id: string; x0: number; x1: number; z0: number; z1: number; base: number; roof: number; lot?: Lot }
 
 export function referenceParts() {
-  const out: Fabric = { solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [] };
+  const out: Fabric = { solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [], sites: [] };
   const blocks: RefBlock[] = [];
   const r = makeRng(2038);
   const tile = (h: number): Tile => ({ c: -999, r: -999, type: '#', h } as Tile);
@@ -139,7 +139,7 @@ function balconies(s: Spec, l: Lot, out: Fabric) {
 function vantageBlock(r: ReturnType<typeof makeRng>, out: Fabric): RefBlock {
   // 11 floors: standing on the roof puts the eye where the photo was taken.
   const x0 = -6, x1 = 6, z0 = -5.6, z1 = 4.4, base = 0, wall = 33;
-  const tmp: Fabric = { solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [] };
+  const tmp: Fabric = { solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [], sites: [] };
   const lot: Lot = { id: 999, x0, z0, x1, z1, base, wall, top: wall + 0.9, kind: 'res', tile: { c: -999, r: -999, type: '#', h: 0 } as Tile, mat: MAT.concrete };
   hollow(lot, r, tmp);
   // Mirror north-south so the stair core and its roof hut sit at the back.
@@ -220,7 +220,7 @@ export function buildReference(): World {
   const p = referenceParts();
   const v = p.blocks.find(b => b.id === 'V')!;
   return makeWorld({
-    name: 'reference', solids: p.solids, decor: p.decor, climbables: p.climbables, hides: p.hides, inter: p.inter,
+    name: 'reference', solids: p.solids, decor: p.decor, climbables: p.climbables, hides: p.hides, inter: p.inter, sites: p.sites,
     spawn: { x: 0, y: v.roof + 0.05, z: REF_CAMERA.z, yaw: 0 },
     teleports: [
       { name: 'vantage roof', x: 0, y: v.roof + 0.05, z: REF_CAMERA.z, yaw: 0 },

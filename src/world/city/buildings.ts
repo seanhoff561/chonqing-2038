@@ -4,7 +4,7 @@ import { solid, rampSolid, type Solid } from '../geom';
 import { MAT } from '../mats';
 import { tiles, tileAt, TILE, type Tile } from '../map';
 import { makeRng, rand, randInt, hashString, type Rng } from '../../sim/rng';
-import type { Prop, Inter, Climbable, HideSpot } from '../world';
+import type { Prop, Inter, Climbable, HideSpot, Site } from '../world';
 import { canEnter, hollow } from './interiors';
 import { facades, alleys } from './climb';
 
@@ -16,7 +16,7 @@ export interface Lot {
 }
 /** Holds, hide spots and alley pieces, for tests and tools: one group per hand-route column. */
 export interface Feature { kind: string; x: number; y: number; z: number; group: number }
-export interface Fabric { solids: Solid[]; decor: Solid[]; props: Prop[]; lots: Lot[]; inter: Inter[]; climbables: Climbable[]; hides: HideSpot[]; features: Feature[] }
+export interface Fabric { solids: Solid[]; decor: Solid[]; props: Prop[]; lots: Lot[]; inter: Inter[]; climbables: Climbable[]; hides: HideSpot[]; features: Feature[]; sites: Site[] }
 
 const FLOOR = 3;
 const STREETS = '.=sb';
@@ -54,7 +54,7 @@ function upperStreet(t: Tile): number {
 }
 
 export function buildFabric(): Fabric {
-  const out: Fabric = { solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [] };
+  const out: Fabric = { solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [], sites: [] };
   for (const t of tiles()) {
     if (!BUILT.includes(t.type)) continue;
     const r = tileRng(t);

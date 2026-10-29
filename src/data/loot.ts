@@ -15,7 +15,7 @@ export const loot: Record<string, LootTable> = {
     { id: 'chocolate', w: 2 }, { id: 'energy', w: 2 }, { id: 'headlamp', w: 1 }, { id: 'mylar', w: 1 },
   ] },
   shop: { rolls: [1, 3], empty: 0.15, items: [
-    { id: 'foldcrate', w: 1 }, { id: 'bedroll', w: 1 },
+    { id: 'foldcrate', w: 1 }, { id: 'bedroll', w: 1 }, { id: 'mattress', w: 1 },
     { id: 'noodles', w: 5, n: [1, 4] }, { id: 'water', w: 5, n: [1, 2] }, { id: 'energy', w: 3 }, { id: 'chocolate', w: 3 },
     { id: 'crackers', w: 3 }, { id: 'zhacai', w: 3 }, { id: 'firecrackers', w: 1 }, { id: 'tape', w: 2 }, { id: 'tablets', w: 1, n: [2, 5] },
   ] },

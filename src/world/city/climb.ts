@@ -14,7 +14,7 @@ const FLOOR = 3;
 interface Side { a: number; b: number; f: number; nx: number; nz: number; street: boolean }
 
 /** The four facades: along a..b, face at f, outward normal, and whether a street tile lies beyond. */
-function sides(l: Lot): Side[] {
+export function sides(l: Lot): Side[] {
   const t = l.tile, tx = t.c * TILE, tz = t.r * TILE;
   const st = (dc: number, dr: number, edge: boolean) => edge && STREETS.includes(tileAt(t.c + dc, t.r + dr)?.type ?? '~');
   return [
