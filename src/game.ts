@@ -18,10 +18,11 @@ import { teleport } from './sim/player';
 import { writeSave, type SaveFile } from './sim/save';
 import { syncWorld } from './sim/doors';
 import { playMove } from './audio/moves';
-import { Hands } from './ui/hands';
+import { Hands3D, poseFor, gripPose } from './render/hands3d';
 import { SleepUI } from './ui/sleep-ui';
 import { DeathScreen } from './ui/death';
 import { findGrab } from './sim/grip';
+import { raycast } from './world/geom';
 
 export interface GameOpts { scenario: string; seed: number; dev: boolean }
 
@@ -35,7 +36,7 @@ export class Game {
   readonly bodyFx: BodyFx;
   readonly inv: InventoryUI;
   readonly audio = new Audio();
-  readonly hands = new Hands();
+  readonly hands: Hands3D;
   readonly sleep: SleepUI;
   readonly death = new DeathScreen(this);
   drawDistance = 160;
@@ -51,6 +52,7 @@ export class Game {
     this.view = new View(document.body);
     this.input = new Input(this.view.renderer.domElement);
     this.sky = new Sky(this.view);
+    this.hands = new Hands3D(this.view.fp.cam);
     this.bodyFx = new BodyFx(this.view.renderer.domElement);
     this.inv = new InventoryUI(this);
     this.sleep = new SleepUI(this);
@@ -115,7 +117,7 @@ export class Game {
     const pos = { x: this.prev.x + (p.pos.x - this.prev.x) * alpha, y: this.prev.y + (p.pos.y - this.prev.y) * alpha, z: this.prev.z + (p.pos.z - this.prev.z) * alpha };
     this.view.fp.update(p, pos, this.input.yaw, this.input.pitch, dt);
     this.bodyFx.update(this.state, this.view.fp, dt);
-    this.hands.update(p, this.view.fp.cam, !this.input.uiOpen && p.mode !== 'dead' && findGrab(this.world, p) !== null, dt, this.input.uiOpen);
+    this.updateHands(dt);
     this.inv.update();
     this.updatePrompt();
     this.updateHeld();
@@ -138,6 +140,25 @@ export class Game {
     if (s.task) { const n = Math.round((s.task.t / s.task.dur) * 10); this.hud.setPrompt(`${'■'.repeat(n)}${'□'.repeat(10 - n)}`); return; }
     const it = s.target ? this.world.inter.find(i => i.id === s.target) : null;
     this.hud.setPrompt(it && !this.input.uiOpen ? `E  ${it.zh}  ${it.en}` : '');
+  }
+
+  private updateHands(dt: number) {
+    const p = this.state.player, cam = this.view.fp.cam;
+    this.hands.group.visible = p.mode !== 'dead' && p.mode !== 'hidden' && !this.input.uiOpen;
+    if (!this.hands.ready || !this.hands.group.visible) return;
+    const readied = findGrab(this.world, p) !== null;
+    const holding = heldStack(this.state) !== null;
+    const k = 1 - Math.exp(-14 * dt);
+    // Keep free hands out of a wall right in front of him.
+    const d = { x: -Math.sin(p.yaw) * Math.cos(p.pitch), y: Math.sin(p.pitch), z: -Math.cos(p.yaw) * Math.cos(p.pitch) };
+    const hit = raycast(this.world.index, cam.position.x, cam.position.y, cam.position.z, d.x, d.y, d.z, 0.6);
+    const room = hit ? hit.t : 0.6;
+    p.hands.forEach((h, i) => {
+      const g = h.grip ? gripPose(cam, h.grip.x, h.grip.y, h.grip.z, h.grip.nx, h.grip.nz, i === 0 ? -1 : 1) : null;
+      const pose = poseFor(p, i, readied, holding, g);
+      if (!g && -pose.pos.z > room - 0.12) pose.pos.z = -Math.max(0.12, room - 0.12);
+      this.hands.setPose(i, pose, k);
+    });
   }
 
   private updateHeld() {

@@ -6,6 +6,7 @@ import { addItem } from './sim/inventory';
 import { readSave } from './sim/save';
 import { bootMenu } from './ui/boot-menu';
 import { die } from './sim/body';
+import { CALIB } from './render/hands3d';
 import { playMove, MOVE_SOUNDS } from './audio/moves';
 
 const q = new URLSearchParams(location.search);
@@ -23,6 +24,7 @@ game.start();
   scenarios: scenarios.map(s => s.name),
   runFrames: (n: number) => game.runFrames(n),
   player: () => game.state.player,
+  calib: CALIB,
   kill: (cause = 'test') => die(game.state, cause),
   cues: () => Object.keys(MOVE_SOUNDS),
   playCue: (id: string) => playMove(game.audio, id),

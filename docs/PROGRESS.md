@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M1. Next: M1-37 3D hands.
-Features done: 60 / 218 | Last done: M1-35
+**Status:** building M1. Next: M1-38 Held items in the hands.
+Features done: 61 / 218 | Last done: M1-37
 <!-- /status -->
 
 ## Log
@@ -77,3 +77,4 @@ Features done: 60 / 218 | Last done: M1-35
 - M3-01 Map data and parser: map data and parser
 - M3-02 Terrain and terraces: terrain, terraces and stair streets
 - M1-35 Wall cling window: wall cling keeps speed along the wall and slides faster (U-006)
+- M1-37 3D hands: 3D hands (U-006)
