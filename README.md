@@ -1,6 +1,6 @@
 # Chongqing 2038
 
-A first-person stealth-survival game in the browser. 2038: a misaligned machine intelligence has sealed Chongqing. Li Wei, 17, hides in an old air-raid tunnel under Shibati and has to find his own way out of the city.
+A first-person stealth-survival game in the browser. 2038: a misaligned machine intelligence has sealed Chongqing. Li Wei, 17, has to find his own way out of the city.
 
 **Play:** https://seanhoff561.github.io/chonqing-2038/ (desktop Chrome, Edge or Firefox, keyboard and mouse)
 
