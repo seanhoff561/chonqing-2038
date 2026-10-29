@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M2. Next: M2-05 Limb injuries.
-Features done: 28 / 204 | Last done: M2-04
+**Status:** building M2. Next: M2-06 Hunger, thirst and fatigue.
+Features done: 29 / 204 | Last done: M2-05
 <!-- /status -->
 
 ## Log
@@ -35,3 +35,4 @@ Features done: 28 / 204 | Last done: M2-04
 - M2-02 Sky, sun, moon and ambient light by time: sky, sun, moon and ambient light by time
 - M2-03 Health, damage and death: health, damage and death
 - M2-04 Bleeding: bleeding
+- M2-05 Limb injuries: limb injuries
