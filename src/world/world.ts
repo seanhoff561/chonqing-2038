@@ -10,7 +10,7 @@ export interface HideSpot { id: number; inner: Box; kind: string }
 export interface Label { text: string; x: number; y: number; z: number; face: 'n' | 's' | 'e' | 'w' | 'up' }
 
 /** Render-side set dressing, built by kind in src/render/props.ts. */
-export interface Prop { kind: string; x: number; y: number; z: number; yaw: number; w?: number; h?: number; d?: number; text?: string }
+export interface Prop { kind: string; x: number; y: number; z: number; yaw: number; w?: number; h?: number; d?: number; text?: string; gap?: [number, number] }
 
 /** Areas with special rules: 'under' = underground (no sky light). */
 export interface Zone { kind: string; box: Box }

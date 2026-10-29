@@ -7,7 +7,7 @@ import { material } from './materials';
 import { MAT } from '../world/mats';
 import { FPCamera } from './fpcamera';
 import { Arms } from './arms';
-import { buildProps } from './props';
+import { buildProps, tickProps } from './props';
 
 export class View {
   readonly renderer: THREE.WebGLRenderer;
@@ -58,7 +58,7 @@ export class View {
     }
   }
 
-  render() { this.renderer.render(this.scene, this.fp.cam); }
+  render(t = 0) { tickProps(t); this.renderer.render(this.scene, this.fp.cam); }
 }
 
 function ladderGeometry(h: number): THREE.BufferGeometry {

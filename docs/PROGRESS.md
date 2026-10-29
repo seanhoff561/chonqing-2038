@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M2. Next: M2-16 Vent grate view.
-Features done: 39 / 204 | Last done: M2-15
+**Status:** building M2. Next: M2-17 Interaction system.
+Features done: 40 / 204 | Last done: M2-16
 <!-- /status -->
 
 ## Log
@@ -46,3 +46,4 @@ Features done: 39 / 204 | Last done: M2-15
 - M2-13 Encumbrance: encumbrance
 - M2-14 Eating, drinking and spoilage: eating, drinking and spoilage
 - M2-15 Hideout set piece: hideout set piece
+- M2-16 Vent grate view: vent grate view

@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { daylight, hourOf } from '../sim/clock';
 import type { View } from './view';
 
-const DAY_SKY = new THREE.Color(0x9fabb2), DUSK_SKY = new THREE.Color(0x6b5a58), NIGHT_SKY = new THREE.Color(0x0b0e14);
+const DAY_SKY = new THREE.Color(0x9fabb2), DUSK_SKY = new THREE.Color(0x6b5a58), NIGHT_SKY = new THREE.Color(0x151a27);
 const NIGHT_GROUND = new THREE.Color(0x3a2a18), DAY_GROUND = new THREE.Color(0x4a4438);
 const c = new THREE.Color();
 

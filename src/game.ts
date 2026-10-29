@@ -84,7 +84,7 @@ export class Game {
     this.inv.update();
     this.updateHeld();
     this.sky.update(this.state.time, this.view.fp.cam.position, this.drawDistance, this.underAmount(dt));
-    this.view.render();
+    this.view.render(this.state.tick / 60);
     this.frames++;
   }
 

@@ -21,9 +21,13 @@ function arches(p: Prop): THREE.Object3D {
     const a0 = (Math.PI * i) / seg, a1 = (Math.PI * (i + 1)) / seg;
     const z0 = Math.cos(a0) * W / 2, y0 = spring + Math.sin(a0) * rise, z1 = Math.cos(a1) * W / 2, y1 = spring + Math.sin(a1) * rise;
     const nz = -(Math.cos(a0) + Math.cos(a1)) / 2, ny = -(Math.sin(a0) + Math.sin(a1)) / 2;
-    const quad = [[0, y0, z0], [L, y1, z1], [L, y0, z0], [0, y0, z0], [0, y1, z1], [L, y1, z1]];
-    const u = [[0, i], [L, i + 1], [L, i], [0, i], [0, i + 1], [L, i + 1]];
-    quad.forEach((q, k) => { pos.push(q[0], q[1], q[2]); nor.push(0, ny, nz); uv.push(u[k][0] / 2, u[k][1] * 0.35); });
+    // The vault opens where the vent shaft rises.
+    const spans: [number, number][] = p.gap && Math.abs(z0) < 1.3 && Math.abs(z1) < 1.3 ? [[0, p.gap[0]], [p.gap[1], L]] : [[0, L]];
+    for (const [a, b] of spans) {
+      const quad = [[a, y0, z0], [b, y1, z1], [b, y0, z0], [a, y0, z0], [a, y1, z1], [b, y1, z1]];
+      const u = [[a, i], [b, i + 1], [b, i], [a, i], [a, i + 1], [b, i + 1]];
+      quad.forEach((q, k) => { pos.push(q[0], q[1], q[2]); nor.push(0, ny, nz); uv.push(u[k][0] / 2, u[k][1] * 0.35); });
+    }
   }
   // Brick wall facings from floor to the springing line.
   for (const side of [-1, 1]) {
@@ -59,9 +63,88 @@ function lamp(): THREE.Object3D {
   return g;
 }
 
+/** Neon sign: emissive canvas text, optionally vertical. */
+function neon(p: Prop): THREE.Object3D {
+  const vertical = (p.h ?? 0) > (p.w ?? 1);
+  const text = vertical ? p.text!.split('').join('\n') : p.text!;
+  const colors = ['#ff3b6b', '#3bd6ff', '#ffcf3b', '#7dff6a', '#ff7a2f'];
+  const fg = colors[(p.text!.charCodeAt(0) + p.text!.length) % colors.length];
+  const g = new THREE.Group();
+  if (vertical) {
+    const chars = p.text!.split('');
+    chars.forEach((ch, i) => {
+      const { tex } = textTexture(ch, { fg, size: 64, pad: 6 });
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(p.w!, p.w!), new THREE.MeshBasicMaterial({ map: tex, transparent: true, fog: true }));
+      m.position.y = -i * p.w! * 1.05;
+      g.add(m);
+    });
+  } else {
+    const { tex, aspect } = textTexture(text, { fg, size: 64, pad: 8 });
+    g.add(new THREE.Mesh(new THREE.PlaneGeometry(p.h! * aspect, p.h!), new THREE.MeshBasicMaterial({ map: tex, transparent: true })));
+  }
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0x0a0a0c }));
+  back.position.z = -0.03;
+  g.add(back);
+  g.userData.fit = () => {
+    const bb = new THREE.Box3().setFromObject(g.children[0]);
+    if (vertical) { back.scale.set(p.w! * 1.2, p.text!.length * p.w! * 1.05 + 0.1, 1); back.position.y = -(p.text!.length - 1) * p.w! * 0.525; }
+    else back.scale.set(bb.max.x - bb.min.x + 0.2, p.h! * 1.2, 1);
+  };
+  g.userData.fit();
+  return g;
+}
+
+/** A sweeping searchlight beam: a long additive cone that pans. */
+function searchlight(p: Prop): THREE.Object3D {
+  const g = new THREE.Group();
+  const len = p.d ?? 60;
+  const cone = new THREE.Mesh(new THREE.ConeGeometry(len * 0.12, len, 20, 1, true).translate(0, -len / 2, 0).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: 0xdfe8ff, transparent: true, opacity: 0.09, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+  cone.rotation.x = 0.2;
+  const pivot = new THREE.Group();
+  pivot.add(cone);
+  g.add(pivot);
+  g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 0.5, 10), lam(0x333333, 0x666666)));
+  const phase = p.x * 0.13;
+  g.userData.tick = (t: number) => { pivot.rotation.y = Math.sin(t * 0.25 + phase) * 1.2; pivot.rotation.x = 0.7 + Math.sin(t * 0.17 + phase) * 0.25; };
+  return g;
+}
+
+/** Scripted machines crossing over the hideout grate: decor only, they cannot perceive anything. */
+function patrolDecor(): THREE.Object3D {
+  const g = new THREE.Group();
+  const drone = new THREE.Group();
+  drone.add(new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.15, 0.6), lam(0x222428)));
+  for (const [x, z] of [[-0.45, -0.45], [0.45, -0.45], [-0.45, 0.45], [0.45, 0.45]]) drone.add(new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.02, 12).translate(x, 0.1, z), lam(0x555555)));
+  const led = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), new THREE.MeshBasicMaterial({ color: 0xe8f0ff }));
+  led.position.y = -0.1;
+  drone.add(led);
+  const beam = new THREE.Mesh(new THREE.ConeGeometry(2.5, 14, 16, 1, true).translate(0, -7, 0), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.07, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  drone.add(beam);
+  const bot = new THREE.Group();
+  bot.add(new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, 1.1).translate(0, 0.65, 0), lam(0x2e3034)));
+  for (const [x, z] of [[-0.25, -0.4], [0.25, -0.4], [-0.25, 0.4], [0.25, 0.4]]) bot.add(new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.55, 0.08).translate(x, 0.27, z), lam(0x3a3c40)));
+  const eye = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 0.05).translate(0, 0.75, -0.58), new THREE.MeshBasicMaterial({ color: 0xe8f0ff }));
+  bot.add(eye);
+  g.add(drone, bot);
+  g.userData.tick = (t: number) => {
+    const a = t * 0.15;
+    drone.position.set(Math.sin(a) * 18, 9 + Math.sin(t * 0.6) * 0.5, Math.sin(a * 2) * 5);
+    const k = ((t * 0.06) % 1) * 2 - 1;
+    bot.position.set(k * 22, 0, 1.6);
+    bot.rotation.y = -Math.PI / 2;
+    for (let i = 1; i <= 4; i++) bot.children[i].rotation.x = Math.sin(t * 6 + i * Math.PI / 2) * 0.4;
+  };
+  return g;
+}
+
 const builders: Record<string, Builder> = {
   arches,
   lamp,
+  neon,
+  searchlight,
+  patrolDecor,
+  neonGlow: () => { const l = new THREE.PointLight(0xff3b8b, 5, 16, 1.5); return l; },
   mattress: () => {
     const g = new THREE.Group();
     g.add(new THREE.Mesh(box(2.0, 0.16, 1.1, 0, -0.16, 0), lam(0x5d5546)));
@@ -102,8 +185,9 @@ const builders: Record<string, Builder> = {
   },
   grate: p => {
     const parts: THREE.BufferGeometry[] = [];
-    for (let i = -5; i <= 5; i++) parts.push(new THREE.BoxGeometry(0.03, 0.06, p.w!).translate((i / 5) * (p.w! / 2 - 0.03), 0, 0));
-    parts.push(new THREE.BoxGeometry(p.w!, 0.06, 0.04).translate(0, 0, 0));
+    const n = Math.round(p.w! / 0.12);
+    for (let i = 0; i <= n; i++) parts.push(new THREE.BoxGeometry(0.03, 0.06, p.w!).translate(-p.w! / 2 + (i / n) * p.w!, 0, 0));
+    for (const z of [-p.w! / 2, 0, p.w! / 2]) parts.push(new THREE.BoxGeometry(p.w!, 0.07, 0.05).translate(0, 0, z));
     return new THREE.Mesh(mergeGeometries(parts), lam(0x2c2e30));
   },
   graffiti: p => {
@@ -113,7 +197,12 @@ const builders: Record<string, Builder> = {
   },
 };
 
+const ticking: ((t: number) => void)[] = [];
+/** Animate props that move (searchlights, scripted patrols). */
+export function tickProps(t: number) { for (const f of ticking) f(t); }
+
 export function buildProps(props: Prop[]): THREE.Group {
+  ticking.length = 0;
   const g = new THREE.Group();
   for (const p of props) {
     const b = builders[p.kind];
@@ -121,6 +210,7 @@ export function buildProps(props: Prop[]): THREE.Group {
     const o = b(p);
     o.position.set(p.x, p.y, p.z);
     o.rotation.y = p.yaw;
+    if (o.userData.tick) ticking.push(o.userData.tick);
     g.add(o);
   }
   return g;
