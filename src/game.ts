@@ -121,7 +121,6 @@ export class Game {
   private uiKeys() {
     for (const k of this.input.uiKeys.splice(0)) {
       if (k === 'Tab') this.inv.toggle();
-      if (k === 'Escape' && this.inv.open) this.inv.toggle(false);
     }
   }
 

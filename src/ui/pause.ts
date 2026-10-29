@@ -1,6 +1,6 @@
-// Pause menu (U-007, U-009): = (Esc too, though the browser may spend it on leaving fullscreen), or the browser
-// dropping the mouse or fullscreen, pauses the sim and shows the controls, with buttons for the movement gym
-// (and its areas) and the game. Settings join it in M8-13.
+// Pause menu (U-007, U-009, U-014): = or the browser dropping the mouse or fullscreen pauses the sim and shows
+// the controls, with buttons for the movement gym (and its areas) and the game. Esc is left to the browser.
+// Settings join it in M8-13.
 import type { Game } from '../game';
 import { teleport } from '../sim/player';
 
@@ -18,7 +18,7 @@ const CONTROLS: [string, string][] = [
   ['E (hold)', 'interact; with nothing in view: sleep rough'],
   ['1-5 / 0 or `', 'hotbar / empty hands'],
   ['Tab / L / H', 'backpack / laptop / headlamp'],
-  ['= (or Esc)', 'pause and settings'],
+  ['=', 'pause and settings'],
 ];
 
 export class PauseMenu {
@@ -38,9 +38,9 @@ export class PauseMenu {
   }
 
   private key(e: KeyboardEvent) {
-    if (e.repeat || (e.code !== 'Escape' && e.code !== 'Equal')) return;
+    if (e.repeat || e.code !== 'Equal') return;
     if ((e.target as HTMLElement | null)?.closest?.('input, select, textarea')) return;
-    // The browser may report the same Esc as a key and as a lost pointer lock: don't reopen-and-close.
+    // A lost pointer lock can open the menu just before the key arrives: don't reopen-and-close.
     if (this.open) { if (performance.now() - this.openedAt > 400) this.resume(); }
     else if (!this.game.input.uiOpen && !this.game.state.dead) this.show();
     else return;

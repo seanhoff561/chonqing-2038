@@ -1,6 +1,5 @@
 // The body status indicator (M3-30, U-014): a small figure bottom left showing where he's hurt, with icons for
-// what he's running low on. It lights up when something changes, then settles dim (or half-lit while anything
-// is wrong).
+// what he's running low on. It shows only while something is wrong (U-015), brightest just after a change.
 import type { SimState } from '../sim/types';
 import { survival as S } from '../data/survival';
 
@@ -45,7 +44,7 @@ export class StatusIndicator {
     if (sig !== this.sig) { this.sig = sig; this.glow = 4; this.draw(v); }
     this.glow = Math.max(0, this.glow - dt);
     const hurt = v.legs !== 'ok' || v.arm !== 'ok' || v.bleed !== 'none' || v.needs.length > 0;
-    this.el.style.opacity = String(this.glow > 0 ? 1 : hurt ? 0.65 : 0.2);
+    this.el.style.opacity = String(!hurt ? 0 : this.glow > 0 ? 1 : 0.7);
   }
 
   private draw(v: StatusView) {

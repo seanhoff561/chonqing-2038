@@ -27,7 +27,7 @@ The director's brief (BRIEF.md) is the vision. This is the build design. Numbers
 | Reload / rotate an item while dragging | R |
 | Hotbar slots | 1-5 (0 or ` = empty hands, U-009) |
 | Backpack / laptop (Anna) / headlamp | Tab / L / H |
-| Pause and settings: controls, movement gym and its areas, back to the game (also opens when the browser drops fullscreen or the mouse) | = (U-009; Esc works too) |
+| Pause and settings: controls, movement gym and its areas, back to the game (also opens when the browser drops fullscreen or the mouse) | = (U-009); Esc is left to the browser (U-014) |
 
 **Hands (U-006, U-007).** Both 3D hands are always on screen. On his feet they sit low at his sides and swing with his stride, pumping loose fists when he sprints; in the air, on walls and crawling they reach forward, open up when something grabbable is in reach and close on what they grip. Items sit in the right hand; anything bigger than a 1x1 item under 0.4 kg (and the knife) also takes the left hand, so climbing means putting it away with 0 first.
 
@@ -89,7 +89,7 @@ Parkour with the legs, climbing with the hands (U-002 to U-005). Player collisio
 | Broken arm | fall onto arm (20% of fractures) | no pipes, ropes or hanging; aim sway x3 | splint allows slow climbing; heals in 7 days |
 | Food sickness | spoiled food (or raw pork, 70%) | 12 game hours: vomiting (-15 hydration and satiety each time), no healing | time and water |
 
-Health, hunger, thirst and fatigue show through breathing, heartbeat, blur, vignette, limp sway and stomach sounds, on Anna's status page, and (U-014) on a small body figure bottom left: injured limbs coloured (amber sprain, red break, blue outline when splinted), the torso pulsing while he bleeds, and a tag for each need running low. It lights up on a change and then dims.
+Health, hunger, thirst and fatigue show through breathing, heartbeat, blur, vignette, limp sway and stomach sounds, on Anna's status page, and (U-014) on a small body figure bottom left: injured limbs coloured (amber sprain, red break, blue outline when splinted), the torso pulsing while he bleeds, and a tag for each need running low. It shows only while something is wrong (U-015), brightest just after a change.
 
 **Sleep.** At a mattress, choose a wake time (default 06:00). Sleep is a time skip: needs drain at sleep rates, healing applies, machines return to their schedules, and if the shelter is compromised the raid happens (section 9). The ironman save is written on waking.
 

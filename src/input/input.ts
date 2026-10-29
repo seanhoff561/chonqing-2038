@@ -60,7 +60,7 @@ export class Input {
   private key(e: KeyboardEvent, down: boolean) {
     if (e.ctrlKey && document.pointerLockElement) e.preventDefault();
     if (e.repeat) { if (['Tab', 'Space'].includes(e.code)) e.preventDefault(); return; }
-    if (down && ['Tab', 'KeyL', 'Escape', 'KeyI'].includes(e.code)) { this.uiKeys.push(e.code); e.preventDefault(); return; }
+    if (down && ['Tab', 'KeyL', 'KeyI'].includes(e.code)) { this.uiKeys.push(e.code); e.preventDefault(); return; }
     // ` always puts whatever he holds away (U-009).
     if (down && e.code === 'Backquote') { this.slot = 0; e.preventDefault(); return; }
     if (down && /^Digit[0-5]$/.test(e.code)) { this.slot = Number(e.code[5]); return; }
