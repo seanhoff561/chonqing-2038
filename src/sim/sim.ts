@@ -32,6 +32,7 @@ export function createState(seed: number, world: World): SimState {
     inv: { pack: grid(8, 6), hotbar: [null, null, null, null, null], held: 0 },
     containers: {},
     nextUid: 0,
+    shelter: { id: '', battery: 0, compromised: false },
     openContainer: null,
     target: null,
     task: null,

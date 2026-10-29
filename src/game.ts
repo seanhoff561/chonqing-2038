@@ -13,6 +13,7 @@ import { InventoryUI } from './ui/inventory-ui';
 import { heldStack } from './sim/use';
 import { item } from './data/items';
 import { Audio } from './audio/audio';
+import { startRun } from './sim/run';
 import { playMove } from './audio/moves';
 import { Hands } from './ui/hands';
 import { SleepUI } from './ui/sleep-ui';
@@ -57,6 +58,7 @@ export class Game {
     this.scenario = sc;
     this.world = getWorld(sc.world);
     this.state = createState(seed, this.world);
+    if (sc.run) startRun(this.state, this.world);
     if (sc.spawn) Object.assign(this.state.player.pos, { x: sc.spawn.x, y: sc.spawn.y, z: sc.spawn.z });
     this.state.player.yaw = this.input.yaw = sc.spawn?.yaw ?? this.world.spawn.yaw;
     this.input.pitch = 0;

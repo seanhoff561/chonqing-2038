@@ -57,6 +57,8 @@ export interface SimState {
   /** container grids by id, created when first opened */
   containers: Record<string, import('./inventory').Grid>;
   nextUid: number;
+  /** his current shelter: car battery charge (%) and whether the machines know where it is */
+  shelter: { id: string; battery: number; compromised: boolean };
   /** container currently open beside the backpack, or null */
   openContainer: string | null;
   /** interactable id he's looking at, and a running hold-E task */

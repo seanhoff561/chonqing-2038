@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M2. Next: M2-22 Starting supplies.
-Features done: 56 / 216 | Last done: M2-21
+**Status:** building M2. Next: M2-23 Ironman save.
+Features done: 57 / 216 | Last done: M2-22
 <!-- /status -->
 
 ## Log
@@ -71,3 +71,4 @@ Features done: 56 / 216 | Last done: M2-21
 - M2-19 Loot placement by seed: seeded loot placement
 - M2-20 Doors: doors
 - M2-21 Sleep: sleep at the mattress
+- M2-22 Starting supplies: starting supplies
