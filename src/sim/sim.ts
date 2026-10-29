@@ -11,6 +11,7 @@ import { grid } from './inventory';
 import { applyCmds } from './commands';
 import { stepHeld } from './use';
 import { stepInteract, allInters } from './interact';
+import { stepWeather } from './weather';
 import { stepContainers } from './containers';
 import './loot';
 import { syncWorld } from './doors';
@@ -18,7 +19,7 @@ import './food';
 import './shelter';
 import { survival } from '../data/survival';
 
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;
 
 export function createState(seed: number, world: World): SimState {
   const s = world.spawn;
@@ -42,6 +43,7 @@ export function createState(seed: number, world: World): SimState {
     dead: null,
     events: [],
     flags: { god: false, noclip: false, rain: 0 },
+    weather: { fog: 0, rain: 0 },
   };
   syncWorld(state, world);
   return state;
@@ -54,6 +56,7 @@ export function step(state: SimState, world: World, input: InputFrame): void {
   stepPlayer(state, world, input);
   stepHeld(state, world, input);
   stepContainers(state, { inter: allInters(state, world) });
+  stepWeather(state);
   stepBody(state);
   checkCollapse(state);
   state.tick++;

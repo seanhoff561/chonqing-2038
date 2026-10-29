@@ -77,4 +77,6 @@ export interface SimState {
   /** events emitted during the latest tick */
   events: SimEvent[];
   flags: { god: boolean; noclip: boolean; rain: number };
+  /** fog and rain now, 0 to 1 (M3-12): from the seeded schedule, rain forced up by the dev flag */
+  weather: { fog: number; rain: number };
 }

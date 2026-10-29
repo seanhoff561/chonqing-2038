@@ -2,7 +2,7 @@
 
 <!-- status -->
 **Status:** building M3. Next: M3-24 Place references (U-011).
-Features done: 80 / 228 | Last done: M3-09
+Features done: 81 / 228 | Last done: M3-12
 <!-- /status -->
 
 ## Log
@@ -98,3 +98,4 @@ Features done: 80 / 228 | Last done: M3-09
 - M3-07 Jiaochangkou and the Line 2 beam: Jiaochangkou junction, Line 2 terminus, the walkable beam west
 - M3-08 Grand Tunnel network: Grand Tunnel network: side tunnel to the Shibati gate, plaza exit, hotpot cool room
 - M3-09 Air-raid tunnel shelter site (U-013): air-raid chamber in the tunnel network as a shelter site, vent grate on the plaza
+- M3-12 Weather schedule: seeded weather schedule: morning fog, rain spells, in sim state
