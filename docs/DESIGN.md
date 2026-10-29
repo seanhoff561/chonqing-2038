@@ -18,15 +18,18 @@ The director's brief (BRIEF.md) is the vision. This is the build design. Numbers
 | Sprint | Shift (hold) |
 | Jump (tap for a short hop, hold for full height); vault or hop onto waist-high things | Space |
 | Wall move in the air (kick off, wall-run, up-kick), push off from a hang, pump a swing | Space again |
-| Left hand / right hand: hold to grip what's under the reticle | Left / right mouse |
+| Left hand / right hand: hold to grip what's under the reticle (empty hands only, U-007) | Left / right mouse |
 | Crouch (hold) / slide (while sprinting) / roll (just before landing) | Ctrl (or C) |
 | Crawl (toggle) | Z |
 | Interact / pick up / enter box (hold E for timed actions) | E |
 | Let go of everything | Q |
-| Use held item (when nothing grabbable is in reach) | Left mouse |
+| Use held item | Left mouse |
 | Reload / rotate an item while dragging | R |
 | Hotbar slots | 1-5 (0 = empty hands) |
-| Backpack / laptop (Anna) / headlamp / pause | Tab / L / H / Esc |
+| Backpack / laptop (Anna) / headlamp | Tab / L / H |
+| Pause: controls, movement gym and its areas, back to the game (also opens when the browser drops fullscreen or the mouse) | Esc or P |
+
+**Hands (U-006, U-007).** Both 3D hands are always on screen. On his feet they sit low at his sides and swing with his stride, pumping loose fists when he sprints; in the air, on walls and crawling they reach forward, open up when something grabbable is in reach and close on what they grip. Items sit in the right hand; anything bigger than a 1x1 item under 0.4 kg (and the knife) also takes the left hand, so climbing means putting it away with 0 first.
 
 Every control will be rebindable in settings (U-001). The game asks for fullscreen with a keyboard lock when it captures the mouse so Ctrl+W can't close the tab (D-014).
 
@@ -46,7 +49,7 @@ Parkour with the legs, climbing with the hands (U-002 to U-005). Player collisio
 | Vault | obstacle 0.5 to 1.2 m high and at most 1.2 m deep, clear landing, moving at 2.5 m/s or more; 0.45 s, keeps 85% speed |
 | Slide | Ctrl at 6 m/s+: 1.0 s, 7.5 to 3 m/s, 0.5 m tall (passes under 0.6 m); releasing Ctrl stands him up keeping 80% speed |
 | Crawl | Z; passes 0.6 m gaps |
-| Wall cling | moving into a wall in the air holds him for 0.35 s, sliding 0.4 m/s, once per airtime; palm-on-wall hands and a pat sound |
+| Wall cling | moving into a wall in the air holds him for 0.35 s, sliding 1.4 m/s, once per wall per airtime, keeping all his speed along it (U-006); palm-on-wall hands and a pat sound |
 | Wall moves (Space in the air within 0.8 m of a wall, 2 per airtime) | looking up at the wall: up-kick +4.6 m/s; looking along it at 5.5 m/s or more: wall-run up to 3 steps (0.9 s) at 6.5 m/s, 60% gravity; otherwise: kick off at 5.5 m/s toward the camera (never into the wall), +3.4 m/s up plus a little for looking up |
 | Grab | hold a mouse button looking at a lip, sill, pipe or rung within 1.6 m of the eye and 0.2 to 2.2 m above the feet (2.8 m with a jump, about 3.8 m with an up-kick); two hands on one lip sit a shoulder apart |
 | Hanging | gravity off; the hands are a force-limited spring (one hand 35 m/s^2, two 80) toward a spot 0.4 m off the wall and 1.15 to 2.1 m below the higher hand; momentum carries, so one hand at speed slips after redirecting him and two hands can stop a sprint |

@@ -3,7 +3,7 @@ import { createState, step } from './sim/sim';
 import { DT, type SimState, type Vec3 } from './sim/types';
 import type { World } from './world/world';
 import { getWorld } from './world/build';
-import { scenarioByName, type Scenario } from './data/scenarios';
+import { scenarioByName, scenarios, type Scenario } from './data/scenarios';
 import { Input } from './input/input';
 import { View } from './render/view';
 import { Hud } from './ui/hud';
@@ -15,13 +15,14 @@ import { item } from './data/items';
 import { Audio } from './audio/audio';
 import { startRun } from './sim/run';
 import { teleport } from './sim/player';
-import { writeSave, type SaveFile } from './sim/save';
+import { writeSave, readSave, type SaveFile } from './sim/save';
 import { syncWorld } from './sim/doors';
 import { playMove } from './audio/moves';
 import { Hands3D, poseFor, gripPose, HELD_AT } from './render/hands3d';
 import { itemModel, supportPoint } from './render/items3d';
 import { SleepUI } from './ui/sleep-ui';
 import { DeathScreen } from './ui/death';
+import { PauseMenu } from './ui/pause';
 import { findGrab } from './sim/grip';
 import { raycast } from './world/geom';
 
@@ -40,6 +41,7 @@ export class Game {
   readonly hands: Hands3D;
   readonly sleep: SleepUI;
   readonly death = new DeathScreen(this);
+  readonly pause: PauseMenu;
   drawDistance = 160;
   scenario!: Scenario;
   private heldId = '';
@@ -57,6 +59,7 @@ export class Game {
     this.bodyFx = new BodyFx(this.view.renderer.domElement);
     this.inv = new InventoryUI(this);
     this.sleep = new SleepUI(this);
+    this.pause = new PauseMenu(this);
     this.load(opts.scenario, opts.seed);
   }
 
@@ -72,6 +75,18 @@ export class Game {
     this.input.pitch = 0;
     this.prev = { ...this.state.player.pos };
     this.view.setWorld(this.world);
+  }
+
+  /** Switch scenario in place, keeping fullscreen: '' is the game, resumed from its ironman save if there is one. */
+  switchTo(name: string) {
+    const sc = scenarioByName(name) ?? scenarios.find(x => x.run)!;
+    const save = sc.run ? readSave(localStorage) : null;
+    if (save) this.loadSave(save);
+    else this.load(sc.name, Math.floor(Math.random() * 1e9));
+    const q = new URLSearchParams(location.search);
+    q.delete('seed');
+    if (sc.run) q.delete('scenario'); else q.set('scenario', sc.name);
+    history.replaceState(null, '', `${location.pathname}${q.size ? `?${q}` : ''}`);
   }
 
   /** Display name of a container grid id. */
@@ -177,6 +192,7 @@ export class Game {
       const dt = this.last ? Math.min(0.25, (now - this.last) / 1000) : DT;
       this.last = now;
       this.acc += dt;
+      if (this.pause.open) this.acc = 0;
       while (this.acc >= DT) { this.tick(); this.acc -= DT; }
       this.render(this.acc / DT, dt);
       requestAnimationFrame(loop);

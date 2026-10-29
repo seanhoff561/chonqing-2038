@@ -28,7 +28,7 @@ Then open the printed URL. Other commands:
 | Jump (tap short, hold high), vault, hop | Space |
 | In the air by a wall: kick off / wall-run / up-kick (aim with the camera) | Space again |
 | From a hang: push off (feet on a wall) or pump a swing (bars) | Space |
-| Grip with left / right hand (hold) | Left / right mouse |
+| Grip with left / right hand (hold; empty hands only) | Left / right mouse |
 | Pull up / let arms out while hanging | W / S, or drag the mouse |
 | Crouch (hold), slide, roll | Ctrl (or C) |
 | Crawl | Z |
@@ -36,7 +36,11 @@ Then open the printed URL. Other commands:
 | Let go | Q |
 | Reload, rotate item while dragging | R |
 | Hotbar | 1-5, 0 for empty hands |
-| Backpack / laptop / headlamp / pause | Tab / L / H / Esc |
+| Backpack / laptop / headlamp | Tab / L / H |
+| Pause (controls, movement gym, back to the game) | Esc or P |
+
+## Movement gym
+Press Esc (or P) in the game and click **Movement gym**. The pause menu then lists the gym's areas (mantle row, gap lanes, wall-run lane, sill route, bars over the pit and more): click one to go there, and **Back to the game** returns to your run. You can also open it directly: https://seanhoff561.github.io/chonqing-2038/?scenario=gym
 
 ## Dev flags
 | Flag | Effect |

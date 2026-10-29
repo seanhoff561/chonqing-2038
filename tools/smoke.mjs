@@ -48,7 +48,7 @@ try {
   }
   // Feature checks.
   const dir = path.resolve('tests/e2e');
-  for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.e2e.mjs')).sort()) {
+  for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.e2e.mjs') && f.includes(process.env.SMOKE_ONLY ?? '')).sort()) {
     const mod = await import(path.join(dir, f));
     const before = fails.length;
     try { await mod.default(ctx); } catch (e) { fails.push(`${f}: ${String(e.message ?? e).split('\n')[0]}`); }

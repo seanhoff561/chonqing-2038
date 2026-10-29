@@ -35,6 +35,7 @@ export class View {
   }
 
   setWorld(w: World) {
+    this.world.traverse(o => (o as THREE.Mesh).geometry?.dispose());
     this.world.clear();
     this.world.add(buildSolidMeshes(w.solids.concat(w.decor)));
     this.world.add(buildLabels(w.labels));

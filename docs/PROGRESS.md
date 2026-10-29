@@ -2,7 +2,7 @@
 
 <!-- status -->
 **Status:** building M1. Next: M1-38 Held items in the hands.
-Features done: 61 / 218 | Last done: M1-37
+Features done: 61 / 220 | Last done: M1-26
 <!-- /status -->
 
 ## Log
@@ -78,3 +78,4 @@ Features done: 61 / 218 | Last done: M1-37
 - M3-02 Terrain and terraces: terrain, terraces and stair streets
 - M1-35 Wall cling window: wall cling keeps speed along the wall and slides faster (U-006)
 - M1-37 3D hands: 3D hands (U-006)
+- M1-26 Hand grab core (White Knuckle style): no grabbing while an item is out (U-007)
