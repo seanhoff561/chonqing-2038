@@ -2,7 +2,7 @@
 import type { Vec3 } from './types';
 
 export type Posture = 'stand' | 'crouch' | 'crawl' | 'hidden';
-export type Mode = 'ground' | 'air' | 'action' | 'hang' | 'wallrun' | 'climb' | 'swim' | 'hidden' | 'dead' | 'noclip';
+export type Mode = 'ground' | 'air' | 'action' | 'hang' | 'wallrun' | 'wallclimb' | 'climb' | 'swim' | 'hidden' | 'dead' | 'noclip';
 
 /** A timed scripted move (mantle, vault, climb-up, entering a box): lerps the feet from a to b. */
 export interface Action { kind: string; t: number; dur: number; a: Vec3; b: Vec3; then: Mode; posture: Posture; speed: number }

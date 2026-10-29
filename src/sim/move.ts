@@ -4,6 +4,7 @@ import type { World } from '../world/world';
 import type { Player, Posture } from './player';
 import { movement as M } from '../data/movement';
 import { free, moveHorizontal, moveVertical, groundGap } from './physics';
+import { groundParkour, airParkour, stepAction, stepHang, stepWallRun, stepWallClimb } from './parkour';
 
 export const heightOf = (p: Posture) => M.height[p];
 
@@ -16,6 +17,12 @@ export function stepPlayer(state: SimState, world: World, input: InputFrame): vo
   p.pitch = Math.max(-1.5, Math.min(1.5, input.pitch));
   if (state.flags.noclip) { noclip(p, input); return; }
   if (p.mode === 'noclip') p.mode = 'air';
+  switch (p.mode) {
+    case 'action': stepAction(state, world); return;
+    case 'hang': stepHang(state, world, input); return;
+    case 'wallrun': stepWallRun(state, world, input); return;
+    case 'wallclimb': stepWallClimb(state, world, input); return;
+  }
   updatePosture(p, world, input);
   groundAir(state, world, input);
 }
@@ -76,6 +83,7 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
   }
   // Jump.
   let jumped = false;
+  if (p.onGround && (input.pressed & B.JUMP) && groundParkour(state, world, input, M.mantle.max)) return;
   if ((p.onGround || p.coyote > 0) && (input.pressed & B.JUMP) && p.posture === 'stand') {
     p.vel.y = M.jumpSpeed;
     p.onGround = false;
@@ -108,6 +116,10 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
     if (p.pos.y > p.fallFrom) p.fallFrom = p.pos.y;
   }
   p.mode = p.onGround ? 'ground' : 'air';
+  if (!p.onGround) {
+    if (p.wall.t < 0) p.wall.t = Math.min(0, p.wall.t + DT);
+    else airParkour(state, world, input);
+  }
 }
 
 function land(state: SimState) {

@@ -2,6 +2,7 @@
 
 Newest first. D-### are my design calls where BRIEF.md is silent; U-### are director's notes.
 
+- D-013 Ledge grabs use a reach band (ledge top 1.0-1.9 m above the feet) instead of hands at 2.1 m +/- 0.35: with the 0.49 m jump apex the old band let a standing jump reach 2.9 m and broke the brief's 2.4 m mantle limit. M1-10's wording updated to match; nothing weakened.
 - D-012 Map authored as two 70x35 ASCII layers of 20 m tiles (type, ground level) plus hand-built set pieces and tunnel polylines; main streets are tile-wide, alleys come from splitting building tiles. Why: a real, learnable, hand-designed layout that stays cheap to edit.
 - D-011 Landmark moves for play: Li Wei's construction site placed west of Jiaochangkou beside the Line 2 beam; the hospital between Jiaochangkou and Jiefangbei; Dongshuimen Bridge compressed to a 300 m span; the cableway to about 320 m; Qiansimen Bridge given a collapsed span (vantage point, not a route).
 - D-010 The underground escape runs west along metro Line 1 under the Eling border wall (Yuzhong is joined to the mainland on the west), not under a river. Why: realistic geography and a land border that makes the wall meaningful.

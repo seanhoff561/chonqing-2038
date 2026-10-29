@@ -2,6 +2,7 @@ import { createState, step } from '../../src/sim/sim';
 import { emptyInput, type InputFrame, type SimState } from '../../src/sim/types';
 import { makeWorld, type WorldParts, type World } from '../../src/world/world';
 import { solid, type Solid } from '../../src/world/geom';
+import { B } from '../../src/sim/types';
 
 export const floor = (y = 0, size = 200): Solid => solid(-size, y - 1, -size, size, y, size);
 
@@ -23,3 +24,31 @@ export function run(state: SimState, world: World, n: number, inp: Partial<Input
 
 export const hspeed = (s: SimState) => Math.hypot(s.player.vel.x, s.player.vel.z);
 export const secs = (t: number) => Math.round(t * 60);
+
+/** Walk (or sprint) north and press jump once the body is within `at` m of the face at z = face. */
+export function approachAndJump(state: SimState, world: World, buttons = 0, at = 0.4, face = -3) {
+  for (let i = 0; i < secs(5); i++) {
+    const near = state.player.pos.z - 0.25 - face <= at;
+    run(state, world, 1, { my: 1, buttons: buttons | (near ? B.JUMP : 0), pressed: near ? B.JUMP : 0 });
+    if (near) return;
+  }
+}
+
+/** Sprint north and jump once the feet pass z. */
+export function sprintJumpAt(state: SimState, world: World, z: number) {
+  for (let i = 0; i < secs(10); i++) {
+    const at = state.player.pos.z <= z;
+    run(state, world, 1, { my: 1, buttons: B.SPRINT | (at ? B.JUMP : 0), pressed: at ? B.JUMP : 0 });
+    if (at) return;
+  }
+}
+
+/** Near platform z in [0, 40], gap toward -z, far platform beyond, pit 10 m down. Sprint and jump at the edge. */
+export function gapJump(gap: number, after = 1.5) {
+  const { world, state } = setup([
+    solid(-5, -1, 0, 5, 0, 40), solid(-5, -1, -40, 5, 0, -gap), solid(-20, -12, -60, 20, -10, 60),
+  ], { x: 0, y: 0, z: 30, yaw: 0 });
+  sprintJumpAt(state, world, 0.05);
+  run(state, world, secs(after), { my: 1, buttons: B.SPRINT });
+  return { world, state };
+}
