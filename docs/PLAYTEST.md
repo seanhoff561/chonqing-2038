@@ -16,3 +16,8 @@ Report: is each move clear to trigger and easy to tell apart (and by sound)? Doe
 Start: no flags (the game now boots into the hideout on day 1), or `?scenario=hideout&dev=1` for the time slider.
 Try: look up the vent shaft at night (dev time slider to 23:00); open the stash (E) and drag food into the backpack (Tab); bind items to 1-5 by hovering and pressing a number; eat and drink from the hotbar (left mouse); sleep on the mattress until 06:00, then reload the page and Continue; in dev, drop a few hours of time and watch the screen blur as thirst and fatigue rise; kill yourself with a fall in the gym (`?scenario=gym`, drop tower 9 m twice) to see injuries limit you.
 Report: does the hideout feel like an air-raid tunnel? Is the backpack easy to use? Are the body effects (blur, vignette, limp) readable without meters? Anything confusing on the death screen?
+
+## PT-004 M1 hands, held items and pause menu after U-006 to U-008 (build df68cbe)
+Start: no flags, then Esc (or P) → "Movement gym" → pick an area. Fullscreen should stay on throughout.
+Try: walk and sprint on open floor and watch the hands at the bottom corners; jump and climb (hands reach and grip); press 1-5 with a crowbar, a water bottle and the pistol bound (Tab, hover, number) and look at the two-handed holds; try to grab a ledge while holding one (it shouldn't), then 0 and grab; wall-run lane: wall-run is back as it was; jump to the bars and swing.
+Report: do the walking and running hands look natural, and is there too much or too little sleeve? Do the two-handed holds look right for each item? Is the pause menu clear, and does Resume put you back in fullscreen?
