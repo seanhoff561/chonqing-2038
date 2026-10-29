@@ -12,6 +12,9 @@ export interface Label { text: string; x: number; y: number; z: number; face: 'n
 /** Render-side set dressing, built by kind in src/render/props.ts. */
 export interface Prop { kind: string; x: number; y: number; z: number; yaw: number; w?: number; h?: number; d?: number; text?: string; gap?: [number, number] }
 
+/** Something he can use with E. `r` is how close the look ray must pass. */
+export interface Inter { id: string; kind: string; x: number; y: number; z: number; r: number; zh: string; en: string; data?: Record<string, unknown> }
+
 /** Areas with special rules: 'under' = underground (no sky light). */
 export interface Zone { kind: string; box: Box }
 
@@ -22,6 +25,7 @@ export interface World {
   teleports: Teleport[];
   props: Prop[];
   zones: Zone[];
+  inter: Inter[];
   solids: Solid[];
   index: SolidIndex;
   water: Box[];
@@ -41,6 +45,7 @@ export interface WorldParts {
   teleports?: Teleport[];
   props?: Prop[];
   zones?: Zone[];
+  inter?: Inter[];
   spawn: World['spawn'];
 }
 
@@ -56,6 +61,7 @@ export function makeWorld(p: WorldParts): World {
     teleports: p.teleports ?? [],
     props: p.props ?? [],
     zones: p.zones ?? [],
+    inter: p.inter ?? [],
     spawn: p.spawn,
   };
 }

@@ -35,6 +35,7 @@ export type SimEvent =
   | { t: 'hurt'; dmg: number; cause: string }
   | { t: 'slept'; from: number; to: number; where: 'bed' | 'collapse' }
   | { t: 'use'; id: string }
+  | { t: 'open'; id: string }
   | { t: 'ate'; id: string; sick: boolean }
   | { t: 'msg'; text: string };
 
@@ -55,6 +56,11 @@ export interface SimState {
   nextUid: number;
   /** container currently open beside the backpack, or null */
   openContainer: string | null;
+  /** interactable id he's looking at, and a running hold-E task */
+  target: string | null;
+  task: { id: string; t: number; dur: number } | null;
+  /** dynamic world state: searched containers, opened doors, removed things */
+  wstate: { searched: Record<string, true>; open: Record<string, boolean>; gone: Record<string, true> };
   /** cause of death, or null while alive */
   dead: string | null;
   /** events emitted during the latest tick */

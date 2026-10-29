@@ -57,7 +57,10 @@ export class Game {
   }
 
   /** Display name of a container grid id. */
-  containerName(id: string): string { return id === 'stash' ? '藏匿箱 STASH' : id; }
+  containerName(id: string): string {
+    const it = this.world.inter.find(i => i.id === id);
+    return it ? `${it.zh} ${it.en.toUpperCase()}` : id;
+  }
 
   private uiKeys() {
     for (const k of this.input.uiKeys.splice(0)) {
@@ -82,6 +85,7 @@ export class Game {
     this.view.arms.update(p, dt, this.input.pitch);
     this.bodyFx.update(this.state, this.view.fp, dt);
     this.inv.update();
+    this.updatePrompt();
     this.updateHeld();
     this.sky.update(this.state.time, this.view.fp.cam.position, this.drawDistance, this.underAmount(dt));
     this.view.render(this.state.tick / 60);
@@ -95,6 +99,13 @@ export class Game {
     const inside = this.world.zones.some(z => z.kind === 'under' && c.x > z.box.x0 && c.x < z.box.x1 && c.y > z.box.y0 && c.y < z.box.y1 && c.z > z.box.z0 && c.z < z.box.z1);
     this.under += ((inside ? 1 : 0) - this.under) * (1 - Math.exp(-3 * dt));
     return this.under;
+  }
+
+  private updatePrompt() {
+    const s = this.state;
+    if (s.task) { const n = Math.round((s.task.t / s.task.dur) * 10); this.hud.setPrompt(`${'■'.repeat(n)}${'□'.repeat(10 - n)}`); return; }
+    const it = s.target ? this.world.inter.find(i => i.id === s.target) : null;
+    this.hud.setPrompt(it ? `E  ${it.zh}  ${it.en}` : '');
   }
 
   private updateHeld() {

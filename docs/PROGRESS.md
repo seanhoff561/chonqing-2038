@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M2. Next: M2-17 Interaction system.
-Features done: 40 / 204 | Last done: M2-16
+**Status:** building M1. Next: M1-06 Space hops and the hand mantle.
+Features done: 36 / 208 | Last done: M2-17
 <!-- /status -->
 
 ## Log
@@ -47,3 +47,4 @@ Features done: 40 / 204 | Last done: M2-16
 - M2-14 Eating, drinking and spoilage: eating, drinking and spoilage
 - M2-15 Hideout set piece: hideout set piece
 - M2-16 Vent grate view: vent grate view
+- M2-17 Interaction system: interaction system with hold-E actions and containers

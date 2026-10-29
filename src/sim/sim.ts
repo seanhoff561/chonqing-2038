@@ -10,6 +10,8 @@ import { checkCollapse } from './sleep';
 import { grid } from './inventory';
 import { applyCmds } from './commands';
 import { stepHeld } from './use';
+import { stepInteract } from './interact';
+import { stepContainers } from './containers';
 import './food';
 import { survival } from '../data/survival';
 
@@ -29,6 +31,9 @@ export function createState(seed: number, world: World): SimState {
     containers: {},
     nextUid: 0,
     openContainer: null,
+    target: null,
+    task: null,
+    wstate: { searched: {}, open: {}, gone: {} },
     dead: null,
     events: [],
     flags: { god: false, noclip: false, rain: 0 },
@@ -38,8 +43,10 @@ export function createState(seed: number, world: World): SimState {
 export function step(state: SimState, world: World, input: InputFrame): void {
   state.events.length = 0;
   applyCmds(state, world, input.cmds);
+  stepInteract(state, world, input);
   stepPlayer(state, world, input);
   stepHeld(state, world, input);
+  stepContainers(state, world);
   stepBody(state);
   checkCollapse(state);
   state.tick++;
