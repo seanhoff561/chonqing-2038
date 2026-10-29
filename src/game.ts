@@ -19,6 +19,7 @@ import { syncWorld } from './sim/doors';
 import { playMove } from './audio/moves';
 import { Hands } from './ui/hands';
 import { SleepUI } from './ui/sleep-ui';
+import { DeathScreen } from './ui/death';
 import { findGrab } from './sim/grip';
 
 export interface GameOpts { scenario: string; seed: number; dev: boolean }
@@ -35,6 +36,7 @@ export class Game {
   readonly audio = new Audio();
   readonly hands = new Hands();
   readonly sleep: SleepUI;
+  readonly death = new DeathScreen(this);
   drawDistance = 160;
   scenario!: Scenario;
   private heldId = '';
@@ -102,8 +104,9 @@ export class Game {
       else if (e.t === 'sfx') playMove(this.audio, e.id);
       else if (e.t === 'open') this.inv.toggle(true);
       else if (e.t === 'sleep-menu') this.sleep.toggle(true);
-      else if (e.t === 'slept' && this.scenario.run) writeSave(localStorage, this.scenario.name, this.state);
+      else if (e.t === 'slept' && this.scenario.run && !this.state.dead) writeSave(localStorage, this.scenario.name, this.state);
     }
+    if (this.state.dead) this.death.show();
   }
 
   render(alpha: number, dt: number) {

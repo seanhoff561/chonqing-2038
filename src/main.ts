@@ -5,6 +5,7 @@ import { DevPanel } from './dev/panel';
 import { addItem } from './sim/inventory';
 import { readSave } from './sim/save';
 import { bootMenu } from './ui/boot-menu';
+import { die } from './sim/body';
 import { playMove, MOVE_SOUNDS } from './audio/moves';
 
 const q = new URLSearchParams(location.search);
@@ -22,6 +23,7 @@ game.start();
   scenarios: scenarios.map(s => s.name),
   runFrames: (n: number) => game.runFrames(n),
   player: () => game.state.player,
+  kill: (cause = 'test') => die(game.state, cause),
   cues: () => Object.keys(MOVE_SOUNDS),
   playCue: (id: string) => playMove(game.audio, id),
   give: (id: string, n = 1) => addItem(game.state, game.state.inv.pack, id, n),

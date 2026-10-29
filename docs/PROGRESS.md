@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M2. Next: M2-24 Permadeath and new run.
-Features done: 58 / 216 | Last done: M2-23
+**Status:** building M3. Next: M3-01 Map data and parser.
+Features done: 59 / 216 | Last done: M2-24
 <!-- /status -->
 
 ## Log
@@ -73,3 +73,4 @@ Features done: 58 / 216 | Last done: M2-23
 - M2-21 Sleep: sleep at the mattress
 - M2-22 Starting supplies: starting supplies
 - M2-23 Ironman save: ironman save on waking with Continue at boot
+- M2-24 Permadeath and new run: permadeath and new run
