@@ -27,7 +27,7 @@ function splitTile(t: Tile, r: Rng): [number, number, number, number][] {
     return [[L, N, xm - 1, zm - 1], [xm + 1, N, R, zm - 1], [L, zm + 1, xm - 1, S], [xm + 1, zm + 1, R, S]];
   }
   const pattern = kind === 'T' ? (rand(r) < 0.6 ? 1 : 2) : [1, 2, 2, 4][randInt(r, 4)];
-  const gap = kind === 'T' ? 4 + rand(r) * 2 : 1.6 + rand(r) * 1.6;
+  const gap = kind === 'T' ? 3 + rand(r) : 1.6 + rand(r) * 1.6;
   const f = 0.4 + rand(r) * 0.2;
   if (pattern === 1) return [[L, N, R, S]];
   const xm = L + (R - L) * f, zm = N + (S - N) * f;
@@ -74,9 +74,10 @@ function mass(l: Lot, r: Rng, out: Fabric) {
   const { x0, z0, x1, z1, base, wall } = l;
   out.solids.push(solid(x0, base, z0, x1, wall, z1, l.mat));
   if (l.kind === 'trad') {
-    // Pitched tiled roof: ridge along the long side, eaves overhanging as decor.
+    // Pitched tiled roof: ridges run along the row (the hill's contour), so a row of houses lines up into a
+    // rooftop route; eaves overhang as decor.
     const rise = 2;
-    if (x1 - x0 >= z1 - z0) {
+    if (x1 - x0 >= (z1 - z0) * 0.7) {
       const zm = (z0 + z1) / 2;
       out.solids.push(rampSolid(x0, wall, z0, x1, zm, wall, wall + rise, 3, MAT.roofTile), rampSolid(x0, wall, zm, x1, z1, wall, wall + rise, 4, MAT.roofTile));
     } else {
