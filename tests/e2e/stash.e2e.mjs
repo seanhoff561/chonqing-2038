@@ -18,7 +18,7 @@ export default async function ({ open, fail, screenshot }) {
   const a = await item.boundingBox(), b = await gridB[1].boundingBox();
   await page.mouse.move(a.x + 8, a.y + 8);
   await page.mouse.down();
-  await page.mouse.move(b.x + 30, b.y + 30, { steps: 5 });
+  await page.mouse.move(b.x + b.width - 30, b.y + b.height - 150, { steps: 5 });
   await page.mouse.up();
   await page.evaluate('window.__cq.runFrames(2)');
   const ids = await page.evaluate('window.__cq.game.state.containers.stash.items.map(i => i.id)');

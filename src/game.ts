@@ -14,6 +14,8 @@ import { heldStack } from './sim/use';
 import { item } from './data/items';
 import { Audio } from './audio/audio';
 import { startRun } from './sim/run';
+import { writeSave, type SaveFile } from './sim/save';
+import { syncWorld } from './sim/doors';
 import { playMove } from './audio/moves';
 import { Hands } from './ui/hands';
 import { SleepUI } from './ui/sleep-ui';
@@ -79,6 +81,16 @@ export class Game {
     }
   }
 
+  /** Resume an ironman save. */
+  loadSave(f: SaveFile) {
+    this.load(f.scenario, f.state.seed);
+    this.state = f.state;
+    syncWorld(this.state, this.world);
+    this.input.yaw = this.state.player.yaw;
+    this.input.pitch = this.state.player.pitch;
+    this.prev = { ...this.state.player.pos };
+  }
+
   tick() {
     this.uiKeys();
     this.prev = { ...this.state.player.pos };
@@ -90,6 +102,7 @@ export class Game {
       else if (e.t === 'sfx') playMove(this.audio, e.id);
       else if (e.t === 'open') this.inv.toggle(true);
       else if (e.t === 'sleep-menu') this.sleep.toggle(true);
+      else if (e.t === 'slept' && this.scenario.run) writeSave(localStorage, this.scenario.name, this.state);
     }
   }
 

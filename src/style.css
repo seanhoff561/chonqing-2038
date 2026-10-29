@@ -32,3 +32,7 @@ canvas { display: block; }
 #sleep button { display: block; width: 100%; text-align: left; font: inherit; font-size: 12px; background: #121416; color: #c2baa2; border: 1px solid #262925; margin: 2px 0; padding: 3px 6px; cursor: pointer; }
 #sleep button:hover { border-color: #6d6447; }
 #sleep .sl-note { font-size: 10px; color: #6c6a60; margin-top: 6px; }
+#boot { position: fixed; inset: 0; background: rgba(5,6,7,0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; z-index: 20; }
+#boot .bt-title { font-size: 28px; color: #c9c0a4; letter-spacing: 6px; margin-bottom: 14px; }
+#boot button { font: inherit; font-size: 13px; width: 260px; text-align: left; background: #111314; color: #c2baa2; border: 1px solid #2e312b; padding: 6px 10px; cursor: pointer; }
+#boot button:hover { border-color: #75694a; }

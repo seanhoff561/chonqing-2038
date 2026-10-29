@@ -3,13 +3,17 @@ import { Game } from './game';
 import { scenarios } from './data/scenarios';
 import { DevPanel } from './dev/panel';
 import { addItem } from './sim/inventory';
+import { readSave } from './sim/save';
+import { bootMenu } from './ui/boot-menu';
 import { playMove, MOVE_SOUNDS } from './audio/moves';
 
 const q = new URLSearchParams(location.search);
 const dev = q.get('dev') === '1';
 const seed = Number(q.get('seed')) || Math.floor(Math.random() * 1e9);
-const game = new Game({ scenario: q.get('scenario') ?? 'gym', seed, dev });
+const game = new Game({ scenario: q.get('scenario') ?? 'hideout', seed, dev });
 if (dev) new DevPanel(game);
+const save = q.get('scenario') ? null : readSave(localStorage);
+if (save) bootMenu(game, save);
 game.start();
 
 (window as unknown as { __cq: unknown }).__cq = {
