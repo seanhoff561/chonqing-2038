@@ -93,6 +93,13 @@ const draws: Record<number, [Draw, number]> = {
     for (let y = 0; y < h; y += 32) { g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(0, y, w, 3); }
     blotches(g, w, h, 141, 30, '45,55,35', 0.35, 8, 40);
   }, 1.5],
+  [MAT.blossom]: [(g, w, h) => { noise(g, w, h, '#e6d3d6', 0.25, 201); blotches(g, w, h, 202, 60, '200,140,160', 0.35, 6, 26); blotches(g, w, h, 203, 30, '90,70,60', 0.35, 4, 14); }, 2],
+  [MAT.leaves]: [(g, w, h) => { noise(g, w, h, '#7a7a3a', 0.3, 211); blotches(g, w, h, 212, 60, '205,175,40', 0.45, 6, 24); blotches(g, w, h, 213, 40, '40,50,25', 0.4, 5, 20); }, 2],
+  [MAT.tealMetal]: [(g, w, h) => {
+    noise(g, w, h, '#3f7f86', 0.12, 221);
+    for (let x = 0; x < w; x += 16) { g.fillStyle = 'rgba(255,255,255,0.08)'; g.fillRect(x, 0, 6, h); g.fillStyle = 'rgba(0,0,0,0.15)'; g.fillRect(x + 10, 0, 4, h); }
+    blotches(g, w, h, 222, 14, '120,90,60', 0.25, 10, 40);
+  }, 2],
   [MAT.mark]: [(g, w, h) => { g.fillStyle = '#d4b020'; g.fillRect(0, 0, w, h); g.fillStyle = '#151515'; for (let x = -h; x < w; x += 48) { g.beginPath(); g.moveTo(x, h); g.lineTo(x + h, 0); g.lineTo(x + h + 24, 0); g.lineTo(x + 24, h); g.fill(); } }, 1],
 };
 

@@ -8,12 +8,20 @@ import { noise, blotches, streaks } from './textures';
 
 export const FACADE_M = 12, FACADE_BAY = 3;
 
-interface Style { seed: number; wall: string; band: string; win: [number, number]; sill: number; tile?: boolean; brick?: boolean; lattice?: boolean }
+interface Style {
+  seed: number; wall: string; band: string; win: [number, number]; sill: number; tile?: boolean; brick?: boolean; lattice?: boolean;
+  /** abandoned: openings show bare, pale back walls */
+  open?: boolean;
+  /** each floor a white balcony parapet over a dark recessed strip */
+  bands?: boolean;
+}
 
 const STYLES: Record<number, Style> = {
   [MAT.facade]: { seed: 21, wall: '#a7a196', band: '#b9b3a7', win: [1.5, 1.6], sill: 0.9 },
   [MAT.facadeTile]: { seed: 22, wall: '#c49a86', band: '#ddd6ca', win: [1.6, 1.5], sill: 0.95, tile: true },
   [MAT.facadeBrick]: { seed: 23, wall: '#9c8a73', band: '#8f7e68', win: [1.0, 1.25], sill: 1.0, brick: true, lattice: true },
+  [MAT.facadeOpen]: { seed: 24, wall: '#8c8274', band: '#978d7d', win: [2.2, 1.9], sill: 0.75, open: true },
+  [MAT.facadeBand]: { seed: 25, wall: '#c9c7c0', band: '#e2e0d9', win: [2.4, 1.6], sill: 1.05, bands: true },
 };
 
 export const isFacade = (id: number) => id in STYLES;
@@ -64,14 +72,31 @@ export function drawFacade(id: number, g: CanvasRenderingContext2D, S: number) {
     for (let i = 0; i < 60; i++) g.fillRect(r() * S, y - px * 0.28 - r() * 3, 2 + r() * 10, 2 + r() * 3);
     streaks(g, 0, S, y + px * 0.04, st.seed + 10 + f, 70, [px * 0.2, px * 1.6], '45,42,38', 0.22);
   }
-  for (const w of layout(st, px)) {
+  if (st.bands) {
+    // Balcony floors: a dark recessed strip of windows behind a white parapet, the slab edge above.
+    for (let f = 0; f < 4; f++) {
+      const top = S - (f + 1) * FACADE_BAY * px, bot = S - f * FACADE_BAY * px;
+      g.fillStyle = '#1b1c1d'; g.fillRect(0, top + px * 0.3, S, bot - top - px * 1.3);
+      for (let x = 0; x < S; x += px * 1.5) { g.fillStyle = r() < 0.4 ? '#3a4044' : '#101112'; g.fillRect(x + px * 0.1, top + px * 0.5, px * 1.3, px * 1.2); }
+      g.fillStyle = '#d9d6ce'; g.fillRect(0, bot - px * 1.05, S, px * 1.05);
+      g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(0, bot - px * 1.05, S, px * 0.05);
+      streaks(g, 0, S, bot - px * 1.0, st.seed + 40 + f, 60, [px * 0.1, px * 0.9], '70,68,62', 0.25);
+    }
+  }
+  for (const w of st.bands ? [] : layout(st, px)) {
     const { x, y, w: ww, h } = w;
     // Recess: deep shadow at the head, a little light on the jamb.
     const grd = g.createLinearGradient(0, y, 0, y + h);
     grd.addColorStop(0, '#080808'); grd.addColorStop(1, '#1e1c1a');
     g.fillStyle = grd; g.fillRect(x, y, ww, h);
     g.fillStyle = 'rgba(255,255,255,0.08)'; g.fillRect(x, y, px * 0.06, h);
-    if (w.kind > 0.45 && w.kind <= 0.65) {
+    if (st.open && w.kind < 0.75) {
+      // Glassless: the bare back wall of the room, lit by the opening, the floor in shadow.
+      const back = g.createLinearGradient(0, y, 0, y + h);
+      back.addColorStop(0, '#2a2826'); back.addColorStop(0.25, w.kind < 0.4 ? '#c9c5bb' : '#8d8980'); back.addColorStop(1, '#4a4743');
+      g.fillStyle = back; g.fillRect(x + ww * 0.12, y + h * 0.1, ww * 0.76, h * 0.9);
+      g.fillStyle = 'rgba(0,0,0,0.45)'; g.fillRect(x + ww * 0.12, y + h * 0.1, ww * 0.1, h * 0.9);
+    } else if (w.kind > 0.45 && w.kind <= 0.65) {
       // Glazed: dull glass, a frame and mullions, a smear of reflected sky.
       g.fillStyle = w.lit ? '#4a4036' : '#2b3236'; g.fillRect(x + 3, y + 3, ww - 6, h - 6);
       g.fillStyle = 'rgba(190,200,205,0.12)'; g.beginPath(); g.moveTo(x, y + h * 0.7); g.lineTo(x + ww * 0.6, y); g.lineTo(x + ww * 0.8, y); g.lineTo(x, y + h); g.fill();

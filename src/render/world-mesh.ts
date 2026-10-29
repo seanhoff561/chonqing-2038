@@ -58,16 +58,19 @@ export function pushSolid(s: Solid, b: Buf, roof: Buf = b) {
   quad([[x0, h01, z1], [x1, h11, z1], [x1, h10, z0], [x0, h00, z0]], n, [[x0, z1], [x1, z1], [x1, z0], [x0, z0]], false);
   quad([[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1]], [0, -1, 0], [[x0, z0], [x1, z0], [x1, z1], [x0, z1]], false, 0.7);
   // Sides: u runs left to right as seen from outside; facades count from the building's corner.
-  const U = (w: number, from: number, back: boolean) => (facade ? (back ? from - w : w - from) + ou : back ? -w : w);
+  // Whole bays across each wall, so no window is cut at a corner.
+  const fit = (len: number) => (Math.max(1, Math.round(len / bay)) * bay) / len;
+  const kx = fit(s.x1 - s.x0), kz = fit(s.z1 - s.z0);
+  const U = (w: number, from: number, back: boolean, k: number) => (facade ? (back ? from - w : w - from) * k + ou : back ? -w : w);
   const V = (y: number) => (facade ? y - y0 + ov : y);
   quad([[x0, y0, z1], [x1, y0, z1], [x1, h11, z1], [x0, h01, z1]], [0, 0, 1],
-    [[U(x0, x0, false), V(y0)], [U(x1, x0, false), V(y0)], [U(x1, x0, false), V(h11)], [U(x0, x0, false), V(h01)]], true);
+    [[U(x0, x0, false, kx), V(y0)], [U(x1, x0, false, kx), V(y0)], [U(x1, x0, false, kx), V(h11)], [U(x0, x0, false, kx), V(h01)]], true);
   quad([[x1, y0, z0], [x0, y0, z0], [x0, h00, z0], [x1, h10, z0]], [0, 0, -1],
-    [[U(x1, x1, true), V(y0)], [U(x0, x1, true), V(y0)], [U(x0, x1, true), V(h00)], [U(x1, x1, true), V(h10)]], true);
+    [[U(x1, x1, true, kx), V(y0)], [U(x0, x1, true, kx), V(y0)], [U(x0, x1, true, kx), V(h00)], [U(x1, x1, true, kx), V(h10)]], true);
   quad([[x1, y0, z1], [x1, y0, z0], [x1, h10, z0], [x1, h11, z1]], [1, 0, 0],
-    [[U(z1, z1, true), V(y0)], [U(z0, z1, true), V(y0)], [U(z0, z1, true), V(h10)], [U(z1, z1, true), V(h11)]], true);
+    [[U(z1, z1, true, kz), V(y0)], [U(z0, z1, true, kz), V(y0)], [U(z0, z1, true, kz), V(h10)], [U(z1, z1, true, kz), V(h11)]], true);
   quad([[x0, y0, z0], [x0, y0, z1], [x0, h01, z1], [x0, h00, z0]], [-1, 0, 0],
-    [[U(z0, z0, false), V(y0)], [U(z1, z0, false), V(y0)], [U(z1, z0, false), V(h01)], [U(z0, z0, false), V(h00)]], true);
+    [[U(z0, z0, false, kz), V(y0)], [U(z1, z0, false, kz), V(y0)], [U(z1, z0, false, kz), V(h01)], [U(z0, z0, false, kz), V(h00)]], true);
 }
 
 /** Chunk meshes, each tagged with its chunk centre for distance culling. */
