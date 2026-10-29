@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M1. Next: M1-38 Held items in the hands.
-Features done: 61 / 220 | Last done: M1-26
+**Status:** building M1. Next: M1-39 Walking and running hands.
+Features done: 62 / 220 | Last done: M1-38
 <!-- /status -->
 
 ## Log
@@ -79,3 +79,4 @@ Features done: 61 / 220 | Last done: M1-26
 - M1-35 Wall cling window: wall cling keeps speed along the wall and slides faster (U-006)
 - M1-37 3D hands: 3D hands (U-006)
 - M1-26 Hand grab core (White Knuckle style): no grabbing while an item is out (U-007)
+- M1-38 Held items in the hands: held items in both hands unless small (U-007)
