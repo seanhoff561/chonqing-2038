@@ -57,6 +57,25 @@ export function buildGym(): World {
     label(`落差 DROP ${h} m`, x + 1.5, 2.2, 11);
   });
 
+  // Hand routes (U-002..U-005), west side of the yard.
+  // Sill wall: 9 m, sills 1.6 m apart need push-off dynos; the top lip is in reach from the last sill.
+  add(solid(-62, 0, -30, -54, 9, -24, MAT.brick));
+  for (const y of [2.0, 3.6, 5.2, 6.8, 8.4]) add(solid(-59, y - 0.1, -24, -57, y, -23.85, MAT.concrete));
+  label('窗台 SILL ROUTE 9 m', -58, 1.0, -24);
+  // Smooth wall: glass with nothing to hold.
+  add(solid(-52, 0, -30, -48, 9, -24, MAT.glass));
+  label('光面 SMOOTH: NO HOLDS', -50, 1.0, -24);
+  // Bars over a pit: swing with Space, let go to lache.
+  solids = carve(solids, { x0: -46, y0: -4, z0: -22, x1: -36, y1: 0.1, z1: -10 });
+  for (const z of [-11.2, -15.2, -19.2]) add(solid(-45, 2.1, z - 0.03, -37, 2.15, z + 0.03, MAT.metal));
+  add(solid(-45.2, 0, -22, -45, 2.6, -10, MAT.metal)); add(solid(-37, 0, -22, -36.8, 2.6, -10, MAT.metal));
+  label('单杠 BARS: SWING + LACHE', -41, 0.6, -9.98);
+  // Ledge traverse: a lip at 2.5 m with a 1.5 m break; the wall carries on above, so no mantle.
+  add(solid(-62, 0, 30, -40, 6, 34, MAT.brick));
+  add(solid(-62, 2.4, 29.85, -51.5, 2.5, 30, MAT.concrete));
+  add(solid(-50, 2.4, 29.85, -40, 2.5, 30, MAT.concrete));
+  label('横移 TRAVERSE + PUSH-OFF', -46, 1.2, 29.85, 'n');
+
   // Pool: 3 m deep, surface 0.3 m below the yard.
   solids = carve(solids, { x0: -30, y0: -3.3, z0: 24, x1: -16, y1: 0.1, z1: 36 });
   label('水池 POOL', -23, 0.6, 24, 'n');
@@ -81,6 +100,9 @@ export function buildGym(): World {
       { name: 'vault / crawl / slide', x: -20, y: 0, z: 18, yaw: 0 },
       { name: 'pipes, ladders, drops', x: 20, y: 0, z: 16, yaw: 0 },
       { name: 'pool and boxes', x: -12, y: 0, z: 22, yaw: Math.PI },
+      { name: 'sill route / smooth wall', x: -55, y: 0, z: -21, yaw: 0 },
+      { name: 'bars over the pit', x: -41, y: 0, z: -9.6, yaw: 0 },
+      { name: 'ledge traverse', x: -58, y: 0, z: 27, yaw: Math.PI },
     ],
   });
 }

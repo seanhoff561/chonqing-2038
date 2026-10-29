@@ -122,7 +122,8 @@ export function stepGrip(s: SimState, world: World, input: InputFrame) {
   p.endurance -= (grips.length > 1 ? G.drainTwo : G.drainOne) * scale * DT;
   if (p.endurance <= 0) { p.endurance = 0; p.exhausted = true; releaseAll(p, 0.5); sfx(s, 'slip'); return; }
   if (input.pressed & B.DROP) { releaseAll(p, 0.4); sfx(s, 'release'); return; }
-  const ax = grips.reduce((a, g) => a + g.x, 0) / grips.length, ay = grips.reduce((a, g) => a + g.y, 0) / grips.length, az = grips.reduce((a, g) => a + g.z, 0) / grips.length;
+  // He hangs and pulls from the higher hand; sideways he sits between them.
+  const ax = grips.reduce((a, g) => a + g.x, 0) / grips.length, ay = Math.max(...grips.map(g => g.y)), az = grips.reduce((a, g) => a + g.z, 0) / grips.length;
   let nx = grips.reduce((a, g) => a + g.nx, 0), nz = grips.reduce((a, g) => a + g.nz, 0);
   const nl = Math.hypot(nx, nz) || 1;
   nx /= nl; nz /= nl;
