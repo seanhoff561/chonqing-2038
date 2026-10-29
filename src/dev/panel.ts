@@ -2,6 +2,7 @@
 import type { Game } from '../game';
 import { scenarios } from '../data/scenarios';
 import { clockText } from '../sim/clock';
+import { teleport } from '../sim/player';
 
 export class DevPanel {
   readonly el: HTMLDivElement;
@@ -48,10 +49,7 @@ export class DevPanel {
     tp.onchange = () => {
       const t = this.game.world.teleports[Number(tp.value)];
       if (!t) return;
-      const p = this.game.state.player;
-      Object.assign(p.pos, { x: t.x, y: t.y + 0.05, z: t.z });
-      p.vel.x = p.vel.y = p.vel.z = 0;
-      p.mode = 'air'; p.act = null;
+      teleport(this.game.state.player, t.x, t.y + 0.05, t.z);
       this.game.input.yaw = t.yaw;
       tp.blur();
     };

@@ -14,6 +14,7 @@ import { heldStack } from './sim/use';
 import { item } from './data/items';
 import { Audio } from './audio/audio';
 import { startRun } from './sim/run';
+import { teleport } from './sim/player';
 import { writeSave, type SaveFile } from './sim/save';
 import { syncWorld } from './sim/doors';
 import { playMove } from './audio/moves';
@@ -63,7 +64,7 @@ export class Game {
     this.world = getWorld(sc.world);
     this.state = createState(seed, this.world);
     if (sc.run) startRun(this.state, this.world);
-    if (sc.spawn) Object.assign(this.state.player.pos, { x: sc.spawn.x, y: sc.spawn.y, z: sc.spawn.z });
+    if (sc.spawn) teleport(this.state.player, sc.spawn.x, sc.spawn.y, sc.spawn.z);
     this.state.player.yaw = this.input.yaw = sc.spawn?.yaw ?? this.world.spawn.yaw;
     this.input.pitch = 0;
     this.prev = { ...this.state.player.pos };

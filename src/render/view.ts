@@ -36,7 +36,7 @@ export class View {
 
   setWorld(w: World) {
     this.world.clear();
-    this.world.add(buildSolidMeshes(w.solids));
+    this.world.add(buildSolidMeshes(w.solids.concat(w.decor)));
     this.world.add(buildLabels(w.labels));
     this.world.add(buildProps(w.props));
     for (const b of w.water) {

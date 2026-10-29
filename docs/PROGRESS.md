@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-02 Terrain and terraces.
-Features done: 60 / 216 | Last done: M3-01
+**Status:** building M3. Next: M3-03 Building generator.
+Features done: 61 / 216 | Last done: M3-02
 <!-- /status -->
 
 ## Log
@@ -75,3 +75,4 @@ Features done: 60 / 216 | Last done: M3-01
 - M2-23 Ironman save: ironman save on waking with Continue at boot
 - M2-24 Permadeath and new run: permadeath and new run
 - M3-01 Map data and parser: map data and parser
+- M3-02 Terrain and terraces: terrain, terraces and stair streets

@@ -11,6 +11,7 @@ export interface Scenario {
 
 export const scenarios: Scenario[] = [
   { name: 'gym', world: 'gym', desc: 'movement gym with labelled obstacles' },
+  { name: 'shibati', world: 'city', desc: 'Shibati and Jiaochangkou' },
   { name: 'hideout', world: 'hideout', desc: 'the hideout chamber on day 1', run: true },
 ];
 

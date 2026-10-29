@@ -22,6 +22,8 @@ export interface Teleport { name: string; x: number; y: number; z: number; yaw: 
 
 export interface World {
   name: string;
+  /** render-only boxes (visible stair steps over invisible ramps, trims) */
+  decor: Solid[];
   teleports: Teleport[];
   props: Prop[];
   zones: Zone[];
@@ -38,6 +40,7 @@ export interface World {
 export interface WorldParts {
   name: string;
   solids: Solid[];
+  decor?: Solid[];
   water?: Box[];
   climbables?: Climbable[];
   hides?: HideSpot[];
@@ -52,6 +55,7 @@ export interface WorldParts {
 export function makeWorld(p: WorldParts): World {
   return {
     name: p.name,
+    decor: p.decor ?? [],
     solids: p.solids,
     index: buildIndex(p.solids),
     water: p.water ?? [],

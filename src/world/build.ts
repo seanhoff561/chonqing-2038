@@ -2,8 +2,9 @@
 import type { World } from './world';
 import { buildGym } from './sets/gym';
 import { buildHideoutScene } from './sets/hideout-scene';
+import { buildCity } from './city';
 
-const builders: Record<string, () => World> = { gym: buildGym, hideout: buildHideoutScene };
+const builders: Record<string, () => World> = { gym: buildGym, hideout: buildHideoutScene, city: buildCity };
 const cache = new Map<string, World>();
 
 export function getWorld(name: string): World {

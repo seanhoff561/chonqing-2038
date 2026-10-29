@@ -65,3 +65,14 @@ export function createPlayer(x: number, y: number, z: number, yaw: number): Play
     wall: { nx: 0, nz: 0, t: 0, y: 0, id: -1 }, breath: 40, wetUntil: 0, stepAcc: 0, crawlToggle: false, hideId: -1, coyote: 0, slide: -1, hideExit: null,
   };
 }
+
+/** Put him somewhere (dev teleports, scenarios, tests) without a fall or a leftover action. */
+export function teleport(p: Player, x: number, y: number, z: number) {
+  p.pos.x = x; p.pos.y = y; p.pos.z = z;
+  p.vel.x = p.vel.y = p.vel.z = 0;
+  p.fallFrom = y;
+  p.act = null;
+  p.hands[0].grip = p.hands[1].grip = null;
+  if (p.mode !== 'dead') p.mode = 'air';
+  p.onGround = false;
+}
