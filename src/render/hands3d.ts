@@ -31,6 +31,10 @@ interface Hand {
 export const CALIB = { thumbMix: 0.6, flip: 1 };
 
 const tmpQ = new THREE.Quaternion(), tmpV = new THREE.Vector3();
+const CHAINS: Record<string, string[]> = Object.fromEntries(FINGERS.map(f => [f, CHAIN(f)]));
+const SCRATCH_P = Array.from({ length: 5 }, () => new THREE.Vector3()), SCRATCH_Q = Array.from({ length: 5 }, () => new THREE.Quaternion());
+/** Each joint's share of a full curl, from the knuckle out. */
+const THUMB_ANGLES = [0.35, 0.5, 0.5], FINGER_ANGLES = [0.15, 1.2, 1.4, 0.9];
 
 export class Hands3D {
   readonly group = new THREE.Group();
@@ -93,16 +97,16 @@ export class Hands3D {
   /** Bend each finger chain: every joint after a bend turns about it by the curl angle. */
   private applyCurl(h: Hand) {
     for (const f of FINGERS) {
-      const names = CHAIN(f);
-      const pts = names.map(n => h.rest.get(n)!.p.clone());
-      const qs = names.map(n => h.rest.get(n)!.q.clone());
+      // Worked in place on scratch vectors (no garbage each frame, M3-53).
+      const names = CHAINS[f], pts = SCRATCH_P, qs = SCRATCH_Q;
+      names.forEach((n, j) => { const r = h.rest.get(n)!; pts[j].copy(r.p); qs[j].copy(r.q); });
       const thumb = f === 'thumb';
       const amount = thumb ? h.thumb : h.curl;
-      const angles = thumb ? [0.35, 0.5, 0.5] : [0.15, 1.2, 1.4, 0.9];
+      const angles = thumb ? THUMB_ANGLES : FINGER_ANGLES;
       const axis = thumb ? h.thumbAxis : h.curlAxis;
       for (let k = 0; k < angles.length; k++) {
         tmpQ.setFromAxisAngle(axis, angles[k] * amount);
-        for (let j = k + 1; j < pts.length; j++) {
+        for (let j = k + 1; j < names.length; j++) {
           tmpV.copy(pts[j]).sub(pts[k]).applyQuaternion(tmpQ);
           pts[j].copy(pts[k]).add(tmpV);
           qs[j].premultiply(tmpQ);

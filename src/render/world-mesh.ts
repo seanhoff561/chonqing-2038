@@ -6,7 +6,7 @@ import { topAt, raycast, type Solid, type SolidIndex } from '../world/geom';
 import { material, texScale, isFacade, FACADE_BAY, type Lod } from './materials';
 import { MAT } from '../world/mats';
 
-export const CHUNK = 64;
+export const CHUNK = 128;
 /** Per-chunk shadow casters live on a layer of their own that only the shadow pass's eye sees (View.render). */
 export const CASTER_LAYER = 1;
 const CASTER = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, colorWrite: false, depthWrite: false });

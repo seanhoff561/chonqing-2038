@@ -24,8 +24,11 @@ export class View {
   readonly hemi = new THREE.HemisphereLight(0xc8d4e0, 0x4a4438, 1.2);
   readonly world = new THREE.Group();
   private chunks: THREE.Mesh[] = [];
+  private cells: THREE.Group[] = [];
   private hasFar = false;
   private shadowKey = '';
+  private visAt = new THREE.Vector3();
+  private visFar = -1;
   private shadowAge = 0;
 
   constructor(container: HTMLElement) {
@@ -54,6 +57,10 @@ export class View {
     container.appendChild(this.renderer.domElement);
     this.fp = new FPCamera(innerWidth / innerHeight);
     this.scene.add(this.fp.cam, this.world, this.sun, this.sun.target, this.hemi);
+    // The renderer doesn't walk the scene's transforms each frame (some 15 000 static meshes): render() updates
+    // what moves and passes over the frozen city (M3-53).
+    this.scene.matrixAutoUpdate = false;
+    this.scene.matrixWorldAutoUpdate = false;
     this.lamp.position.set(0, 0.08, 0);
     this.lamp.target.position.set(0, -0.12, -1);
     this.fp.cam.add(this.lamp, this.lamp.target);
@@ -108,6 +115,23 @@ export class View {
       const b = m.geometry.boundingBox!.clone().applyMatrix4(m.matrixWorld);
       m.userData.rect = [b.min.x, b.min.z, b.max.x, b.max.z];
     }
+    // Chunks gather into 256 m cells (their meshes carry world positions, so they move groups as they are), so a
+    // cell out of range is passed over whole, its meshes never visited (M3-53).
+    const cells = new Map<number, THREE.Group>();
+    for (const m of this.chunks) {
+      const r = m.userData.rect, k = Math.floor((r[0] + r[2]) / 512) * 65536 + Math.floor((r[1] + r[3]) / 512);
+      let cell = cells.get(k);
+      if (!cell) { cells.set(k, (cell = new THREE.Group())); cell.userData.rect = [Infinity, Infinity, -Infinity, -Infinity]; this.world.add(cell); }
+      cell.add(m);
+      const cr = cell.userData.rect;
+      cr[0] = Math.min(cr[0], r[0]); cr[1] = Math.min(cr[1], r[1]); cr[2] = Math.max(cr[2], r[2]); cr[3] = Math.max(cr[3], r[3]);
+    }
+    this.cells = [...cells.values()];
+    // The city stands still but for the props that tick: its transforms are computed once, not every frame
+    // (M3-53: some 15 000 objects).
+    this.world.updateMatrixWorld(true);
+    freeze(this.world);
+    this.visFar = -1;
   }
 
   /** Pixels drawn per screen pixel (M3-53): high is the display's own up to 1.5x, balanced one per CSS pixel,
@@ -128,24 +152,50 @@ export class View {
   }
 
   render(t = 0, open: Record<string, boolean> = {}) {
-    // Detailed chunks wholly past the detail radius (or the fog) are not drawn.
+    // Detailed chunks wholly past the detail radius (or the fog) are not drawn; looked at again once he has
+    // moved 4 m or the radius has changed.
     const c = this.fp.cam.position, far = this.hasFar ? lodRadius.value : (this.scene.fog as THREE.Fog).far;
-    for (const m of this.chunks) {
-      const [x0, z0, x1, z1] = m.userData.rect;
-      m.visible = Math.hypot(Math.max(x0 - c.x, 0, c.x - x1), Math.max(z0 - c.z, 0, c.z - z1)) < far;
+    if (far !== this.visFar || Math.hypot(c.x - this.visAt.x, c.z - this.visAt.z) > 4) {
+      this.visFar = far; this.visAt.copy(c);
+      const within = (o: THREE.Object3D) => { const [x0, z0, x1, z1] = o.userData.rect; return Math.hypot(Math.max(x0 - c.x, 0, c.x - x1), Math.max(z0 - c.z, 0, c.z - z1)) < far; };
+      for (const cell of this.cells) if ((cell.visible = within(cell))) for (const m of cell.children) m.visible = within(m);
     }
     tickProps(t, open);
+    for (const o of this.scene.children) if (o === this.world) liveWalk(o, false); else o.updateMatrixWorld();
     const r = this.renderer;
     r.info.reset();
-    // The sun's shadow map is redrawn when its area or the sun has moved (Sky snaps both), and every sixth frame
-    // for what moves in it; the frames between reuse it (M3-53).
+    // The sun's shadow map is redrawn when its area or the sun has moved (Sky snaps both), and every 30th frame
+    // for the few things that move in it (doors); the frames between reuse it (M3-53).
     const sp = this.sun.position, key = `${sp.x.toFixed(1)},${sp.y.toFixed(1)},${sp.z.toFixed(1)}`;
-    if (this.sun.castShadow && (key !== this.shadowKey || ++this.shadowAge >= 6)) {
+    if (this.sun.castShadow && (key !== this.shadowKey || ++this.shadowAge >= 30)) {
       r.shadowMap.needsUpdate = true; r.render(this.scene, this.shadowEye);
       this.shadowKey = key; this.shadowAge = 0;
     }
     r.render(this.scene, this.fp.cam);
   }
+}
+
+/** Mark what under o never moves: a subtree with nothing that animates (a prop with a tick) is frozen whole.
+ *  Returns whether something under o animates. */
+function freeze(o: THREE.Object3D): boolean {
+  if (o.userData.tick) return true;
+  let live = false;
+  for (const c of o.children) live = freeze(c) || live;
+  o.matrixAutoUpdate = false;
+  if (!live) o.userData.frozen = true;
+  return live;
+}
+
+/** three.js's transform update, passing over frozen subtrees (their matrices were set when the world was built). */
+function liveWalk(o: THREE.Object3D, force: boolean) {
+  if (o.userData.frozen) return;
+  if (o.matrixAutoUpdate) o.updateMatrix();
+  if (o.matrixWorldNeedsUpdate || force) {
+    if (o.parent) o.matrixWorld.multiplyMatrices(o.parent.matrixWorld, o.matrix); else o.matrixWorld.copy(o.matrix);
+    o.matrixWorldNeedsUpdate = false;
+    force = true;
+  }
+  for (const c of o.children) liveWalk(c, force);
 }
 
 export type Resolution = 'high' | 'balanced' | 'fast';

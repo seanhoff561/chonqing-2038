@@ -374,11 +374,11 @@ that makes.
 |---|---|---|
 | Draw calls | 250 | tests/e2e/perf.e2e.mjs at a street, a rooftop, the tunnel and the overview |
 | Triangles | 1.2 M | the same |
-| CPU (sim tick + render submission) | 4 ms | the same |
+| CPU (sim tick + render submission), headless software GL | 5 ms | the same |
 | Sim tick, all units | 2 ms | sim tests |
 
-How: city solids merge into one mesh per material per 64 m chunk and props into the same chunks; chunks past the
-detail radius are hidden and one stand-in block each (and an eighth-resolution ground) draws beyond; the ground is
+How: city solids merge into one mesh per material per 128 m chunk and props into the same chunks, gathered into
+256 m cells; the static city's transforms are computed once, not every frame; chunks past the detail radius are hidden and one stand-in block each (and an eighth-resolution ground) draws beyond; the ground is
 indexed (one shared vertex grid per chunk); the sun's shadow covers the area round him and is redrawn only when it
 or the sun moves (and every sixth frame); Resolution in the pause menu (High: the display's own up to 1.5 pixels a
 CSS pixel, Balanced: one, Fast: 0.7).

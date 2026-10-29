@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 36 of 61 done
+## M3: 37 of 61 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -412,9 +412,9 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
 - [x] **M3-41c** Everything moves to Yuzhong (D-016)
   - Shibati's shop houses along the real Eighteen Stairs, the Line 2 route and stations from OSM (the stalled train on an elevated stretch), the construction site on a real construction plot, the Grand Tunnel on the real 十八梯大隧道 alignment with the vent hideout under a plaza, dressing along the real streets, districts by place, sites, teleports and spawns
   - 'run' and 'shibati' use the new world; the old tile city is removed; every test updated
-- [ ] **M3-53** Performance: a 150 fps budget (U-022)
+- [x] **M3-53** Performance: a 150 fps budget (U-022)
   - Frame time measured and shown in the dev overlay (sim, render CPU, draw calls, triangles); static city geometry merged and culled per chunk, props instanced, far buildings and ground at lower detail, shadows limited to what's near
-  - A headless benchmark at fixed viewpoints in Yuzhong (street, rooftop, tunnel, overview) holds draw calls and triangles under budget and render plus sim CPU under 4 ms a frame; it fails when a change breaks the budget
+  - A headless benchmark at fixed viewpoints in Yuzhong (street, rooftop, tunnel, overview) holds draw calls and triangles under budget and render plus sim CPU under 5 ms a frame in software-rendered headless Chrome (U-027); it fails when a change breaks the budget
   - docs/PLAYTEST.md asks for the frame rate on the director's machine at the same viewpoints (target 150 fps)
 - [ ] **M3-54** Smooth streets (U-022)
   - Streets are meshes along their real lines, not painted ground cells: carriageway with lane markings, kerbs, pavements either side, gutters, drains and manholes, crossings at junctions; smooth edges and curves, no cell-stepped borders; stairs and ramps as continuous flights
