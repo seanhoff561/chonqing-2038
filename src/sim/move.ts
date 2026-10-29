@@ -5,6 +5,7 @@ import type { Player, Posture } from './player';
 import { movement as M } from '../data/movement';
 import { free, moveHorizontal, moveVertical, groundGap } from './physics';
 import { groundParkour, airParkour, stepAction, stepHang, stepWallRun, stepWallClimb } from './parkour';
+import { climbableNear, attach, stepClimb } from './climb';
 
 export const heightOf = (p: Posture) => M.height[p];
 
@@ -22,6 +23,11 @@ export function stepPlayer(state: SimState, world: World, input: InputFrame): vo
     case 'hang': stepHang(state, world, input); return;
     case 'wallrun': stepWallRun(state, world, input); return;
     case 'wallclimb': stepWallClimb(state, world, input); return;
+    case 'climb': stepClimb(state, world, input); return;
+  }
+  if ((input.pressed & B.INTERACT) && p.posture !== 'crawl') {
+    const c = climbableNear(world, p, M.climb.attachDist);
+    if (c >= 0 && attach(world, p, c)) return;
   }
   updatePosture(p, world, input);
   groundAir(state, world, input);
@@ -131,7 +137,11 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
   p.mode = p.onGround ? 'ground' : 'air';
   if (!p.onGround) {
     if (p.wall.t < 0) p.wall.t = Math.min(0, p.wall.t + DT);
-    else airParkour(state, world, input);
+    else if (!airParkour(state, world, input) && input.my > 0) {
+      // Jumping into a pipe or ladder grabs it.
+      const c = climbableNear(world, p, 0.45);
+      if (c >= 0) attach(world, p, c);
+    }
   }
 }
 
