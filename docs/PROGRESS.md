@@ -2,7 +2,7 @@
 
 <!-- status -->
 **Status:** building M3. Next: M3-35 Shibati and Jiaochangkou from the references (U-014).
-Features done: 88 / 237 | Last done: M3-34
+Features done: 89 / 237 | Last done: M3-15
 <!-- /status -->
 
 ## Log
@@ -106,3 +106,4 @@ Features done: 88 / 237 | Last done: M3-34
 - M3-33 Closed facades read closed (U-014): painted windows read shut: bars, glass, shutters, boards, bricks
 - M3-24 Place references (U-011): 42 freely licensed place and interior reference photos, credited, with per-place notes
 - M3-34 Props, vehicles, debris and foliage (U-014): prop library on one textured atlas, dense street/alley/roof dressing, the stalled Line 2 train
+- M3-15 Street props: street props delivered by the M3-34 library
