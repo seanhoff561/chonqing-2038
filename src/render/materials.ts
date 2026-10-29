@@ -1,7 +1,13 @@
-// World materials: canvas textures and the metres each texture repeat covers.
+// World materials: canvas textures and the metres each texture repeat covers. Surfaces are weathered in the
+// look of the reference photo (U-009): stains, rain streaks, moss, patching. Facades with window grids live
+// in facades.ts and glow at night.
 import * as THREE from 'three';
-import { canvasTexture, noise } from './textures';
+import { canvasTexture, noise, blotches, streaks } from './textures';
+import { mulberry } from './rand';
 import { MAT } from '../world/mats';
+import { drawFacade, drawFacadeLights, isFacade, FACADE_M, FACADE_BAY } from './facades';
+
+export { isFacade, FACADE_BAY };
 
 type Draw = (g: CanvasRenderingContext2D, w: number, h: number) => void;
 
@@ -12,35 +18,108 @@ function grid(g: CanvasRenderingContext2D, w: number, h: number, cw: number, ch:
     for (let x = offsetRows && row % 2 ? cw / 2 : 0; x <= w; x += cw) { g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + ch); g.stroke(); }
 }
 
+/** Units laid in courses (bricks, pavers, roof tiles), each a little different in tone. */
+function courses(g: CanvasRenderingContext2D, w: number, h: number, cw: number, ch: number, joint: string, seed: number, vary: number, half = true) {
+  const r = mulberry(seed);
+  for (let y = 0, row = 0; y < h; y += ch, row++)
+    for (let x = half && row % 2 ? -cw / 2 : 0; x < w; x += cw) {
+      const v = (r() - 0.5) * vary;
+      g.fillStyle = v > 0 ? `rgba(255,245,230,${v})` : `rgba(20,15,10,${-v})`;
+      g.fillRect(x, y, cw, ch);
+    }
+  grid(g, w, h, cw, ch, joint, 2, half);
+}
+
+function cracks(g: CanvasRenderingContext2D, w: number, h: number, seed: number, n: number) {
+  const r = mulberry(seed);
+  g.strokeStyle = 'rgba(25,22,18,0.45)'; g.lineWidth = 1;
+  for (let i = 0; i < n; i++) {
+    let x = r() * w, y = r() * h;
+    g.beginPath(); g.moveTo(x, y);
+    for (let k = 0; k < 6; k++) { x += (r() - 0.5) * 30; y += r() * 25; g.lineTo(x, y); }
+    g.stroke();
+  }
+}
+
 const draws: Record<number, [Draw, number]> = {
-  [MAT.concrete]: [(g, w, h) => { noise(g, w, h, '#77746e', 0.18, 1); grid(g, w, h, 128, 128, 'rgba(0,0,0,0.25)', 2); }, 4],
-  [MAT.block]: [(g, w, h) => { noise(g, w, h, '#8a8478', 0.12, 2); g.fillStyle = '#c9a227'; g.fillRect(0, h - 22, w, 22); for (let x = -20; x < w; x += 40) { g.fillStyle = '#222'; g.beginPath(); g.moveTo(x, h); g.lineTo(x + 20, h - 22); g.lineTo(x + 32, h - 22); g.lineTo(x + 12, h); g.fill(); } }, 2],
-  [MAT.brick]: [(g, w, h) => { noise(g, w, h, '#6b625a', 0.2, 3); grid(g, w, h, 64, 21, '#3d3833', 3, true); }, 2],
-  [MAT.metal]: [(g, w, h) => { noise(g, w, h, '#4c5054', 0.15, 4); for (let y = 0; y < h; y += 16) { g.fillStyle = 'rgba(255,255,255,0.04)'; g.fillRect(0, y, w, 2); } }, 1],
-  [MAT.wood]: [(g, w, h) => { noise(g, w, h, '#5a4330', 0.18, 5); grid(g, w, h, w, 32, 'rgba(0,0,0,0.45)', 3); }, 1.5],
-  [MAT.tile]: [(g, w, h) => { noise(g, w, h, '#b9b4a8', 0.1, 6); grid(g, w, h, 32, 16, 'rgba(60,55,50,0.45)', 2); }, 1],
-  [MAT.stone]: [(g, w, h) => { noise(g, w, h, '#6f6d68', 0.22, 7); grid(g, w, h, 96, 64, 'rgba(20,20,20,0.5)', 3, true); }, 2],
-  [MAT.plaster]: [(g, w, h) => { noise(g, w, h, '#a39d90', 0.16, 8); const grd = g.createLinearGradient(0, 0, 0, h); grd.addColorStop(0, 'rgba(0,0,0,0)'); grd.addColorStop(1, 'rgba(40,50,30,0.35)'); g.fillStyle = grd; g.fillRect(0, 0, w, h); }, 4],
-  [MAT.asphalt]: [(g, w, h) => noise(g, w, h, '#2e2f31', 0.2, 9), 4],
-  [MAT.glass]: [(g, w, h) => { g.fillStyle = '#26323a'; g.fillRect(0, 0, w, h); grid(g, w, h, 64, 96, '#11161a', 4); }, 3],
-  [MAT.moss]: [(g, w, h) => noise(g, w, h, '#4a5640', 0.3, 11), 2],
+  [MAT.concrete]: [(g, w, h) => {
+    noise(g, w, h, '#8a867d', 0.16, 1);
+    blotches(g, w, h, 101, 30, '50,46,40', 0.18, 20, 90); blotches(g, w, h, 102, 15, '225,220,205', 0.12, 20, 70);
+    g.fillStyle = 'rgba(0,0,0,0.12)'; for (let y = 0; y < h; y += h / 4) g.fillRect(0, y, w, 2);
+    streaks(g, 0, w, 0, 103, 40, [h * 0.1, h * 0.6], '45,42,36', 0.2); cracks(g, w, h, 104, 4);
+  }, 4],
+  [MAT.block]: [(g, w, h) => { noise(g, w, h, '#8a8478', 0.12, 2); g.fillStyle = '#c9a227'; g.fillRect(0, h - 22, w, 22); for (let x = -20; x < w; x += 40) { g.fillStyle = '#222'; g.beginPath(); g.moveTo(x, h); g.lineTo(x + 20, h - 22); g.lineTo(x + 40, h - 22); g.lineTo(x + 20, h); g.fill(); } }, 2],
+  [MAT.brick]: [(g, w, h) => {
+    noise(g, w, h, '#6e655c', 0.14, 3); courses(g, w, h, 64, 18, 'rgba(50,46,42,0.85)', 31, 0.35);
+    blotches(g, w, h, 32, 20, '40,48,34', 0.2, 15, 60); streaks(g, 0, w, 0, 33, 25, [h * 0.1, h * 0.5], '35,32,28', 0.18);
+  }, 2],
+  [MAT.metal]: [(g, w, h) => {
+    noise(g, w, h, '#555a5e', 0.12, 4);
+    for (let x = 0; x < w; x += 16) { g.fillStyle = 'rgba(255,255,255,0.06)'; g.fillRect(x, 0, 5, h); g.fillStyle = 'rgba(0,0,0,0.12)'; g.fillRect(x + 9, 0, 4, h); }
+    blotches(g, w, h, 41, 18, '120,70,35', 0.3, 10, 50); streaks(g, 0, w, 0, 42, 20, [h * 0.2, h * 0.8], '110,65,30', 0.25);
+  }, 1.5],
+  [MAT.wood]: [(g, w, h) => {
+    noise(g, w, h, '#5c4532', 0.14, 5);
+    const r = mulberry(51);
+    for (let y = 0; y < h; y += 2 + r() * 4) { g.fillStyle = `rgba(${r() < 0.5 ? '30,20,10' : '120,95,70'},${0.05 + r() * 0.1})`; g.fillRect(0, y, w, 1 + r() * 2); }
+    grid(g, w, h, w, 42, 'rgba(0,0,0,0.5)', 3); blotches(g, w, h, 52, 10, '20,18,15', 0.25, 10, 40);
+  }, 1.5],
+  [MAT.tile]: [(g, w, h) => {
+    noise(g, w, h, '#bdb7aa', 0.08, 6); courses(g, w, h, 32, 16, 'rgba(70,64,56,0.5)', 61, 0.12, false);
+    blotches(g, w, h, 62, 25, '60,55,45', 0.2, 15, 70); streaks(g, 0, w, 0, 63, 40, [h * 0.1, h * 0.7], '50,46,40', 0.22);
+  }, 1.5],
+  [MAT.stone]: [(g, w, h) => {
+    noise(g, w, h, '#716f69', 0.18, 7); courses(g, w, h, 96, 64, 'rgba(25,24,22,0.6)', 71, 0.25);
+    blotches(g, w, h, 72, 25, '35,40,30', 0.2, 10, 50); cracks(g, w, h, 73, 6);
+  }, 2],
+  [MAT.plaster]: [(g, w, h) => {
+    noise(g, w, h, '#a8a194', 0.14, 8);
+    blotches(g, w, h, 81, 30, '70,65,55', 0.16, 20, 100); blotches(g, w, h, 82, 15, '230,225,210', 0.15, 20, 80);
+    streaks(g, 0, w, 0, 83, 50, [h * 0.1, h * 0.8], '55,52,45', 0.22); cracks(g, w, h, 84, 5);
+    const grd = g.createLinearGradient(0, 0, 0, h); grd.addColorStop(0, 'rgba(0,0,0,0)'); grd.addColorStop(1, 'rgba(40,50,30,0.25)'); g.fillStyle = grd; g.fillRect(0, 0, w, h);
+  }, 4],
+  [MAT.asphalt]: [(g, w, h) => { noise(g, w, h, '#2f3032', 0.18, 9); blotches(g, w, h, 91, 20, '0,0,0', 0.2, 20, 80); cracks(g, w, h, 92, 6); }, 4],
+  [MAT.glass]: [(g, w, h) => {
+    g.fillStyle = '#2a353d'; g.fillRect(0, 0, w, h);
+    const grd = g.createLinearGradient(0, 0, w, h); grd.addColorStop(0, 'rgba(190,205,215,0.18)'); grd.addColorStop(0.5, 'rgba(190,205,215,0)'); grd.addColorStop(1, 'rgba(190,205,215,0.1)');
+    g.fillStyle = grd; g.fillRect(0, 0, w, h); grid(g, w, h, 64, 96, '#11161a', 4); streaks(g, 0, w, 0, 93, 20, [h * 0.2, h], '20,25,28', 0.3);
+  }, 3],
+  [MAT.moss]: [(g, w, h) => { noise(g, w, h, '#45503a', 0.3, 11); blotches(g, w, h, 111, 40, '25,32,20', 0.4, 8, 40); blotches(g, w, h, 112, 20, '110,125,70', 0.25, 6, 25); }, 2],
   [MAT.crate]: [(g, w, h) => { noise(g, w, h, '#8a6a42', 0.15, 12); g.strokeStyle = 'rgba(0,0,0,0.4)'; g.lineWidth = 4; g.strokeRect(4, 4, w - 8, h - 8); }, 0.8],
   [MAT.water]: [(g, w, h) => noise(g, w, h, '#1d2c2a', 0.1, 13), 4],
-  [MAT.roofTile]: [(g, w, h) => { noise(g, w, h, '#3b3d40', 0.15, 14); grid(g, w, h, 24, 32, 'rgba(0,0,0,0.5)', 3, true); }, 1.5],
+  [MAT.roofTile]: [(g, w, h) => {
+    noise(g, w, h, '#3d3f41', 0.12, 14);
+    for (let x = 0; x < w; x += 24) { g.fillStyle = 'rgba(255,255,255,0.07)'; g.fillRect(x, 0, 9, h); g.fillStyle = 'rgba(0,0,0,0.22)'; g.fillRect(x + 17, 0, 6, h); }
+    for (let y = 0; y < h; y += 32) { g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(0, y, w, 3); }
+    blotches(g, w, h, 141, 30, '45,55,35', 0.35, 8, 40);
+  }, 1.5],
   [MAT.mark]: [(g, w, h) => { g.fillStyle = '#d4b020'; g.fillRect(0, 0, w, h); g.fillStyle = '#151515'; for (let x = -h; x < w; x += 48) { g.beginPath(); g.moveTo(x, h); g.lineTo(x + h, 0); g.lineTo(x + h + 24, 0); g.lineTo(x + 24, h); g.fill(); } }, 1],
 };
 
-const mats = new Map<number, THREE.MeshLambertMaterial>();
+const mats = new Map<string, THREE.MeshLambertMaterial>();
+const glowing: THREE.MeshLambertMaterial[] = [];
 
-export function material(id: number): THREE.MeshLambertMaterial {
-  let m = mats.get(id);
+/** A world material; vc for meshes that carry vertex colours (the merged world). */
+export function material(id: number, vc = false): THREE.MeshLambertMaterial {
+  const key = `${id}:${vc}`;
+  let m = mats.get(key);
   if (m) return m;
-  const [draw] = draws[id] ?? draws[MAT.concrete];
-  const tex = canvasTexture(`mat${id}`, 256, 256, draw);
-  m = new THREE.MeshLambertMaterial({ map: tex, transparent: id === MAT.water, opacity: id === MAT.water ? 0.82 : 1 });
-  mats.set(id, m);
+  if (isFacade(id)) {
+    const map = canvasTexture(`facade${id}`, 1024, 1024, (g, w) => drawFacade(id, g, w));
+    const lights = canvasTexture(`facadeLit${id}`, 512, 512, (g, w) => drawFacadeLights(id, g, w));
+    m = new THREE.MeshLambertMaterial({ map, vertexColors: vc, emissive: 0xffffff, emissiveMap: lights, emissiveIntensity: 0 });
+    glowing.push(m);
+  } else {
+    const [draw] = draws[id] ?? draws[MAT.concrete];
+    const tex = canvasTexture(`mat${id}`, 512, 512, draw);
+    m = new THREE.MeshLambertMaterial({ map: tex, vertexColors: vc, transparent: id === MAT.water, opacity: id === MAT.water ? 0.82 : 1 });
+  }
+  mats.set(key, m);
   return m;
 }
 
+/** 0 by day to 1 at night: lit windows glow. */
+export function setNight(k: number) { for (const m of glowing) m.emissiveIntensity = k * 0.9; }
+
 /** Metres covered by one texture repeat. */
-export const texScale = (id: number) => (draws[id] ?? draws[MAT.concrete])[1];
+export const texScale = (id: number) => (isFacade(id) ? FACADE_M : (draws[id] ?? draws[MAT.concrete])[1]);

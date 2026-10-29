@@ -32,6 +32,32 @@ export function noise(g: CanvasRenderingContext2D, w: number, h: number, base: s
   }
 }
 
+/** Soft round stains: weathering blotches, damp patches, sun-bleached spots. */
+export function blotches(g: CanvasRenderingContext2D, w: number, h: number, seed: number, n: number, rgb: string, alpha: number, r0: number, r1: number) {
+  const r = mulberry(seed);
+  for (let i = 0; i < n; i++) {
+    const x = r() * w, y = r() * h, rad = r0 + r() * (r1 - r0), a = alpha * (0.3 + r() * 0.7);
+    const grd = g.createRadialGradient(x, y, 0, x, y, rad);
+    grd.addColorStop(0, `rgba(${rgb},${a})`);
+    grd.addColorStop(1, `rgba(${rgb},0)`);
+    g.fillStyle = grd;
+    g.fillRect(x - rad, y - rad, rad * 2, rad * 2);
+  }
+}
+
+/** Rain streaks running down from a ledge at y between x0 and x1, fading as they go. */
+export function streaks(g: CanvasRenderingContext2D, x0: number, x1: number, y: number, seed: number, n: number, len: [number, number], rgb: string, alpha: number) {
+  const r = mulberry(seed);
+  for (let i = 0; i < n; i++) {
+    const x = x0 + r() * (x1 - x0), l = len[0] + r() * (len[1] - len[0]), wd = 1 + r() * 5;
+    const grd = g.createLinearGradient(0, y, 0, y + l);
+    grd.addColorStop(0, `rgba(${rgb},${alpha * (0.4 + r() * 0.6)})`);
+    grd.addColorStop(1, `rgba(${rgb},0)`);
+    g.fillStyle = grd;
+    g.fillRect(x, y, wd, l);
+  }
+}
+
 /** Text on a transparent or coloured card, for labels and signs. */
 export function textTexture(text: string, opts: { fg?: string; bg?: string; size?: number; pad?: number; font?: string } = {}): { tex: THREE.Texture; aspect: number } {
   const size = opts.size ?? 48, pad = opts.pad ?? 12;

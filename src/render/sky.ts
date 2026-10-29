@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { daylight, hourOf } from '../sim/clock';
 import type { View } from './view';
+import { setNight } from './materials';
 
 const DAY_SKY = new THREE.Color(0x9fabb2), DUSK_SKY = new THREE.Color(0x6b5a58), NIGHT_SKY = new THREE.Color(0x151a27);
 const NIGHT_GROUND = new THREE.Color(0x3a2a18), DAY_GROUND = new THREE.Color(0x4a4438);
@@ -33,6 +34,7 @@ export class Sky {
     v.hemi.intensity = (0.5 + 0.75 * d) * (1 - under * 0.92);
     v.hemi.color.copy(NIGHT_SKY).lerp(new THREE.Color(0xc8d4e0), d).lerp(new THREE.Color(0x46557a), (1 - d) * 0.8);
     v.hemi.groundColor.copy(NIGHT_GROUND).lerp(DAY_GROUND, d);
+    setNight(Math.max(0, 1 - d * 1.6));
     const ma = ((h - 18) / 12) * Math.PI;
     this.moon.visible = d < 0.6;
     this.moon.position.set(camPos.x - Math.cos(ma) * 300, camPos.y + Math.max(40, Math.sin(ma) * 260), camPos.z - 200);

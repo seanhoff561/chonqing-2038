@@ -82,12 +82,19 @@ export function buildFabric(): Fabric {
   return out;
 }
 
+/** Solid blocks wear painted facades with window grids; hollow ones show their real openings. */
+function paint(l: Lot, r: Rng): number {
+  if (l.kind !== 'res') return l.mat;
+  if (l.wall - l.base <= 12 && rand(r) < 0.5) return MAT.facadeBrick;
+  return l.mat === MAT.tile ? MAT.facadeTile : MAT.facade;
+}
+
 function mass(l: Lot, r: Rng, out: Fabric) {
   const { x0, z0, x1, z1, base, wall } = l;
   // About a quarter of the blocks that fit a stair core can be entered.
   const open = canEnter(l) && rand(r) < 0.28;
   if (open) hollow(l, r, out);
-  else out.solids.push(solid(x0, base, z0, x1, wall, z1, l.mat));
+  else out.solids.push(solid(x0, base, z0, x1, wall, z1, paint(l, r)));
   if (l.kind === 'trad') {
     // Pitched tiled roof: ridges run along the row (the hill's contour), so a row of houses lines up into a
     // rooftop route; eaves overhang as decor.

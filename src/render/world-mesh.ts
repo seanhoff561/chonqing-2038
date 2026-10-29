@@ -1,15 +1,49 @@
-// Merges world solids into one mesh per material (world-scale UVs). Chunking arrives with the city.
+// Merges world solids into one mesh per material per 64 m chunk (M3-10). UVs are world-scale; facade materials
+// anchor theirs to each building's corner (shifted by whole bays and floors) so windows sit on its floors.
+// Vertex colours tint each building a little differently and darken walls toward the ground.
 import * as THREE from 'three';
 import { topAt, type Solid } from '../world/geom';
-import { material, texScale } from './materials';
+import { material, texScale, isFacade, FACADE_BAY } from './materials';
+import { MAT } from '../world/mats';
 
-/** Push the faces of a solid into per-material arrays. Ramps get sloped tops and sides. */
-export function pushSolid(s: Solid, pos: number[], nor: number[], uv: number[]) {
-  const sc = 1 / texScale(s.mat);
+export const CHUNK = 64;
+
+/** Preallocated vertex arrays filled from n on. */
+interface Buf { pos: Float32Array; nor: Float32Array; uv: Float32Array; col: Float32Array; n: number }
+
+/** 0..1 from a solid's corner, stable across builds. */
+function hash(a: number, b: number, c: number): number {
+  let h = Math.imul(Math.round(a * 10) ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(Math.round(b * 10) + 0x632be5ab, 0xc2b2ae35) ^ Math.imul(c + 7, 0x27d4eb2f);
+  h ^= h >>> 15; h = Math.imul(h, 0x2c1b3c6d); h ^= h >>> 12;
+  return (h >>> 0) / 4294967296;
+}
+
+/** Faces go to b; a facade's roof and underside go to roof (plain concrete) instead. */
+export function pushSolid(s: Solid, b: Buf, roof: Buf = b) {
+  const sc = 1 / texScale(s.mat), facade = isFacade(s.mat), rsc = facade ? 1 / texScale(MAT.concrete) : sc;
+  const h = hash(s.x0, s.z0, s.mat), h2 = hash(s.z1, s.x1, s.mat + 31);
+  const bay = FACADE_BAY;
+  const ou = facade ? Math.floor(h * 4) * bay : 0, ov = facade ? Math.floor(h2 * 4) * bay : 0;
+  // Per-building tint: brightness and a slight warm or cool cast.
+  const tone = 0.86 + h * 0.2, warm = (h2 - 0.5) * 0.08;
+  const tall = s.y1 - s.y0 > 2.5;
   const yt = (x: number, z: number) => (s.ramp ? topAt(s, x, z) : s.y1);
-  const quad = (a: number[], b: number[], c: number[], d: number[], n: number[], uvs: number[][]) => {
-    for (const [p, t] of [[a, uvs[0]], [b, uvs[1]], [c, uvs[2]], [a, uvs[0]], [c, uvs[2]], [d, uvs[3]]] as const) {
-      pos.push(p[0], p[1], p[2]); nor.push(n[0], n[1], n[2]); uv.push(t[0] * sc, t[1] * sc);
+  const colour = (o: Buf, y: number, side: boolean, shade: number) => {
+    // Grime: walls darken over their bottom 4 m.
+    const g = side && tall ? 0.72 + 0.28 * Math.min(1, (y - s.y0) / 4) : 1;
+    const k = tone * g * shade;
+    o.col[o.n * 3] = k * (1 + warm); o.col[o.n * 3 + 1] = k; o.col[o.n * 3 + 2] = k * (1 - warm);
+  };
+  const quad = (pts: number[][], n: number[], uvs: number[][], side: boolean, shade = 1) => {
+    const o = side ? b : roof, k = side ? sc : rsc;
+    for (const i of [0, 1, 2, 0, 2, 3]) {
+      const p = pts[i];
+      const v = o.n;
+      o.pos[v * 3] = p[0]; o.pos[v * 3 + 1] = p[1]; o.pos[v * 3 + 2] = p[2];
+      o.nor[v * 3] = n[0]; o.nor[v * 3 + 1] = n[1]; o.nor[v * 3 + 2] = n[2];
+      o.uv[v * 2] = uvs[i][0] * k; o.uv[v * 2 + 1] = uvs[i][1] * k;
+      colour(o, p[1], side, shade);
+      o.n++;
     }
   };
   const { x0, y0, z0, x1, z1 } = s;
@@ -21,31 +55,80 @@ export function pushSolid(s: Solid, pos: number[], nor: number[], uv: number[]) 
     n = [ez[1] * ex[2] - ez[2] * ex[1], ez[2] * ex[0] - ez[0] * ex[2], ez[0] * ex[1] - ez[1] * ex[0]];
     const l = Math.hypot(n[0], n[1], n[2]); n = n.map(v => v / l);
   }
-  quad([x0, h01, z1], [x1, h11, z1], [x1, h10, z0], [x0, h00, z0], n, [[x0, z1], [x1, z1], [x1, z0], [x0, z0]]);
-  quad([x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1], [0, -1, 0], [[x0, z0], [x1, z0], [x1, z1], [x0, z1]]);
-  quad([x0, y0, z1], [x1, y0, z1], [x1, h11, z1], [x0, h01, z1], [0, 0, 1], [[x0, y0], [x1, y0], [x1, h11], [x0, h01]]);
-  quad([x1, y0, z0], [x0, y0, z0], [x0, h00, z0], [x1, h10, z0], [0, 0, -1], [[-x1, y0], [-x0, y0], [-x0, h00], [-x1, h10]]);
-  quad([x1, y0, z1], [x1, y0, z0], [x1, h10, z0], [x1, h11, z1], [1, 0, 0], [[-z1, y0], [-z0, y0], [-z0, h10], [-z1, h11]]);
-  quad([x0, y0, z0], [x0, y0, z1], [x0, h01, z1], [x0, h00, z0], [-1, 0, 0], [[z0, y0], [z1, y0], [z1, h01], [z0, h00]]);
+  quad([[x0, h01, z1], [x1, h11, z1], [x1, h10, z0], [x0, h00, z0]], n, [[x0, z1], [x1, z1], [x1, z0], [x0, z0]], false);
+  quad([[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1]], [0, -1, 0], [[x0, z0], [x1, z0], [x1, z1], [x0, z1]], false, 0.7);
+  // Sides: u runs left to right as seen from outside; facades count from the building's corner.
+  const U = (w: number, from: number, back: boolean) => (facade ? (back ? from - w : w - from) + ou : back ? -w : w);
+  const V = (y: number) => (facade ? y - y0 + ov : y);
+  quad([[x0, y0, z1], [x1, y0, z1], [x1, h11, z1], [x0, h01, z1]], [0, 0, 1],
+    [[U(x0, x0, false), V(y0)], [U(x1, x0, false), V(y0)], [U(x1, x0, false), V(h11)], [U(x0, x0, false), V(h01)]], true);
+  quad([[x1, y0, z0], [x0, y0, z0], [x0, h00, z0], [x1, h10, z0]], [0, 0, -1],
+    [[U(x1, x1, true), V(y0)], [U(x0, x1, true), V(y0)], [U(x0, x1, true), V(h00)], [U(x1, x1, true), V(h10)]], true);
+  quad([[x1, y0, z1], [x1, y0, z0], [x1, h10, z0], [x1, h11, z1]], [1, 0, 0],
+    [[U(z1, z1, true), V(y0)], [U(z0, z1, true), V(y0)], [U(z0, z1, true), V(h10)], [U(z1, z1, true), V(h11)]], true);
+  quad([[x0, y0, z0], [x0, y0, z1], [x0, h01, z1], [x0, h00, z0]], [-1, 0, 0],
+    [[U(z0, z0, false), V(y0)], [U(z1, z0, false), V(y0)], [U(z1, z0, false), V(h01)], [U(z0, z0, false), V(h00)]], true);
 }
 
+/** Chunk meshes, each tagged with its chunk centre for distance culling. */
 export function buildSolidMeshes(solids: Solid[]): THREE.Group {
-  const groups = new Map<number, { pos: number[]; nor: number[]; uv: number[] }>();
+  type G = Buf & { mat: number; cx: number; cz: number; count: number };
+  const groups = new Map<string, G>();
+  const keyOf = (s: Solid, mat: number) => `${Math.floor((s.x0 + s.x1) / 2 / CHUNK)},${Math.floor((s.z0 + s.z1) / 2 / CHUNK)},${mat}`;
+  const group = (s: Solid, mat: number) => {
+    const key = keyOf(s, mat);
+    let g = groups.get(key);
+    if (!g) {
+      const e = new Float32Array(0);
+      groups.set(key, (g = { pos: e, nor: e, uv: e, col: e, n: 0, count: 0, mat, cx: Math.floor((s.x0 + s.x1) / 2 / CHUNK), cz: Math.floor((s.z0 + s.z1) / 2 / CHUNK) }));
+    }
+    return g;
+  };
+  // Count first (24 side and 12 top/bottom vertices per solid), then fill typed arrays.
   for (const s of solids) {
     if (s.mat === 99) continue;
-    let g = groups.get(s.mat);
-    if (!g) groups.set(s.mat, (g = { pos: [], nor: [], uv: [] }));
-    pushSolid(s, g.pos, g.nor, g.uv);
+    const f = isFacade(s.mat);
+    group(s, s.mat).count += f ? 24 : 36;
+    if (f) group(s, MAT.concrete).count += 12;
   }
+  for (const g of groups.values()) {
+    g.pos = new Float32Array(g.count * 3); g.nor = new Float32Array(g.count * 3); g.uv = new Float32Array(g.count * 2); g.col = new Float32Array(g.count * 3);
+  }
+  for (const s of solids) if (s.mat !== 99) pushSolid(s, group(s, s.mat), isFacade(s.mat) ? group(s, MAT.concrete) : undefined);
   const root = new THREE.Group();
-  for (const [mat, g] of groups) {
+  for (const g of groups.values()) {
     const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(g.pos, 3));
-    geo.setAttribute('normal', new THREE.Float32BufferAttribute(g.nor, 3));
-    geo.setAttribute('uv', new THREE.Float32BufferAttribute(g.uv, 2));
-    const mesh = new THREE.Mesh(geo, material(mat));
+    geo.setAttribute('position', new THREE.BufferAttribute(g.pos, 3));
+    geo.setAttribute('normal', new THREE.BufferAttribute(g.nor, 3));
+    geo.setAttribute('uv', new THREE.BufferAttribute(g.uv, 2));
+    geo.setAttribute('color', new THREE.BufferAttribute(g.col, 3));
+    geo.computeBoundingSphere();
+    const mesh = new THREE.Mesh(geo, material(g.mat, true));
     mesh.receiveShadow = mesh.castShadow = true;
+    mesh.userData.chunk = { x: (g.cx + 0.5) * CHUNK, z: (g.cz + 0.5) * CHUNK };
     root.add(mesh);
   }
   return root;
+}
+
+/** Merges small static meshes (pipes, ladders, prop parts) into one mesh per chunk per material. */
+export class ChunkMerger {
+  private parts = new Map<string, { mat: THREE.Material; geos: THREE.BufferGeometry[]; cx: number; cz: number }>();
+  add(o: THREE.Mesh) {
+    o.updateMatrixWorld(true);
+    const p = new THREE.Vector3().setFromMatrixPosition(o.matrixWorld);
+    const cx = Math.floor(p.x / CHUNK), cz = Math.floor(p.z / CHUNK), mat = o.material as THREE.Material;
+    const key = `${cx},${cz},${mat.uuid}`;
+    let e = this.parts.get(key);
+    if (!e) this.parts.set(key, (e = { mat, geos: [], cx, cz }));
+    e.geos.push(o.geometry.clone().applyMatrix4(o.matrixWorld));
+  }
+  build(merge: (g: THREE.BufferGeometry[]) => THREE.BufferGeometry): THREE.Mesh[] {
+    return [...this.parts.values()].map(e => {
+      const m = new THREE.Mesh(merge(e.geos), e.mat);
+      m.geometry.computeBoundingSphere();
+      m.userData.chunk = { x: (e.cx + 0.5) * CHUNK, z: (e.cz + 0.5) * CHUNK };
+      return m;
+    });
+  }
 }

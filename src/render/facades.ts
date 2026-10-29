@@ -1,0 +1,127 @@
+// Painted facades (M3-10, U-009): a 12 m square of wall, 4 bays by 4 floors of 3 m, in the look of the
+// reference photo: floor bands, dark recessed openings (most glassless, some glazed, barred, caged or bricked
+// up), sills, AC units, lattice screens, rain streaks under every ledge, moss and patches. The same seed draws
+// a matching mask of lit windows for night.
+import { MAT } from '../world/mats';
+import { mulberry } from './rand';
+import { noise, blotches, streaks } from './textures';
+
+export const FACADE_M = 12, FACADE_BAY = 3;
+
+interface Style { seed: number; wall: string; band: string; win: [number, number]; sill: number; tile?: boolean; brick?: boolean; lattice?: boolean }
+
+const STYLES: Record<number, Style> = {
+  [MAT.facade]: { seed: 21, wall: '#a7a196', band: '#b9b3a7', win: [1.5, 1.6], sill: 0.9 },
+  [MAT.facadeTile]: { seed: 22, wall: '#c49a86', band: '#ddd6ca', win: [1.6, 1.5], sill: 0.95, tile: true },
+  [MAT.facadeBrick]: { seed: 23, wall: '#9c8a73', band: '#8f7e68', win: [1.0, 1.25], sill: 1.0, brick: true, lattice: true },
+};
+
+export const isFacade = (id: number) => id in STYLES;
+
+type Window = { x: number; y: number; w: number; h: number; kind: number; lit: boolean };
+
+/** Window layout for a style, shared by the colour and the night mask. */
+function layout(st: Style, px: number): Window[] {
+  const r = mulberry(st.seed), out: Window[] = [];
+  const S = FACADE_M * px;
+  for (let f = 0; f < 4; f++) for (let b = 0; b < 4; b++) {
+    const w = st.win[0] * px * (0.9 + r() * 0.2), h = st.win[1] * px;
+    const x = (b * FACADE_BAY + FACADE_BAY / 2) * px - w / 2, y = S - (f * FACADE_BAY + st.sill) * px - h;
+    const kind = r(), lit = r() < 0.16 && kind > 0.4;
+    out.push({ x, y, w, h, kind, lit });
+  }
+  return out;
+}
+
+export function drawFacade(id: number, g: CanvasRenderingContext2D, S: number) {
+  const st = STYLES[id], px = S / FACADE_M, r = mulberry(st.seed + 100);
+  // Wall: base, large damp and bleached patches, fine speckle.
+  noise(g, S, S, st.wall, 0.14, st.seed);
+  blotches(g, S, S, st.seed + 1, 40, '60,55,45', 0.16, px * 0.5, px * 2.5);
+  blotches(g, S, S, st.seed + 2, 25, '235,230,215', 0.1, px * 0.5, px * 2);
+  if (st.brick) {
+    for (let y = 0, row = 0; y < S; y += px * 0.075, row++) for (let x = (row % 2) * px * 0.13; x < S; x += px * 0.26) {
+      g.fillStyle = `rgba(${r() < 0.5 ? '70,55,40' : '200,185,160'},${0.05 + r() * 0.1})`;
+      g.fillRect(x, y, px * 0.25, px * 0.065);
+    }
+  }
+  if (st.tile) {
+    g.fillStyle = 'rgba(90,60,50,0.18)';
+    for (let y = 0; y < S; y += px * 0.12) g.fillRect(0, y, S, 1);
+    for (let x = 0; x < S; x += px * 0.24) g.fillRect(x, 0, 1, S);
+  }
+  // Patched render.
+  for (let i = 0; i < 10; i++) {
+    g.fillStyle = `rgba(${r() < 0.5 ? '80,75,65' : '215,210,195'},${0.06 + r() * 0.08})`;
+    g.fillRect(r() * S, r() * S, px * (0.5 + r() * 1.8), px * (0.4 + r() * 1.2));
+  }
+  // Floor bands: the slab edge, its shadow, moss on top, streaks below.
+  for (let f = 0; f <= 4; f++) {
+    const y = S - f * FACADE_BAY * px;
+    g.fillStyle = st.band; g.fillRect(0, y - px * 0.28, S, px * 0.28);
+    g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(0, y, S, px * 0.06);
+    g.fillStyle = 'rgba(52,62,40,0.5)';
+    for (let i = 0; i < 60; i++) g.fillRect(r() * S, y - px * 0.28 - r() * 3, 2 + r() * 10, 2 + r() * 3);
+    streaks(g, 0, S, y + px * 0.04, st.seed + 10 + f, 70, [px * 0.2, px * 1.6], '45,42,38', 0.22);
+  }
+  for (const w of layout(st, px)) {
+    const { x, y, w: ww, h } = w;
+    // Recess: deep shadow at the head, a little light on the jamb.
+    const grd = g.createLinearGradient(0, y, 0, y + h);
+    grd.addColorStop(0, '#080808'); grd.addColorStop(1, '#1e1c1a');
+    g.fillStyle = grd; g.fillRect(x, y, ww, h);
+    g.fillStyle = 'rgba(255,255,255,0.08)'; g.fillRect(x, y, px * 0.06, h);
+    if (w.kind > 0.45 && w.kind <= 0.65) {
+      // Glazed: dull glass, a frame and mullions, a smear of reflected sky.
+      g.fillStyle = w.lit ? '#4a4036' : '#2b3236'; g.fillRect(x + 3, y + 3, ww - 6, h - 6);
+      g.fillStyle = 'rgba(190,200,205,0.12)'; g.beginPath(); g.moveTo(x, y + h * 0.7); g.lineTo(x + ww * 0.6, y); g.lineTo(x + ww * 0.8, y); g.lineTo(x, y + h); g.fill();
+      g.strokeStyle = '#c9c4b8'; g.lineWidth = 3; g.strokeRect(x + 2, y + 2, ww - 4, h - 4);
+      g.beginPath(); g.moveTo(x + ww / 2, y); g.lineTo(x + ww / 2, y + h); g.moveTo(x, y + h * 0.35); g.lineTo(x + ww, y + h * 0.35); g.stroke();
+    } else if (w.kind > 0.65 && w.kind <= 0.8) {
+      g.fillStyle = '#3d3e3f';
+      for (let bx = x + 6; bx < x + ww; bx += px * 0.12) g.fillRect(bx, y, 3, h);
+      g.fillRect(x, y + h * 0.5, ww, 3);
+    } else if (w.kind > 0.8 && w.kind <= 0.9) {
+      // A balcony cage bolted over the opening, laundry inside now and then.
+      g.strokeStyle = 'rgba(70,72,74,0.9)'; g.lineWidth = 2;
+      const cy = y - px * 0.15, ch = h + px * 0.9;
+      for (let bx = x - px * 0.2; bx <= x + ww + px * 0.2; bx += px * 0.1) { g.beginPath(); g.moveTo(bx, cy); g.lineTo(bx, cy + ch); g.stroke(); }
+      for (let by = cy; by <= cy + ch; by += px * 0.3) { g.beginPath(); g.moveTo(x - px * 0.2, by); g.lineTo(x + ww + px * 0.2, by); g.stroke(); }
+      if (r() < 0.6) { g.fillStyle = ['#8a2a22', '#3c5a7a', '#c9b98a', '#6a6f4a'][Math.floor(r() * 4)]; g.fillRect(x + ww * 0.2, y + h * 0.2, ww * 0.25, h * 0.4); }
+    } else if (w.kind > 0.9) {
+      g.fillStyle = st.wall; g.fillRect(x, y, ww, h);
+      g.fillStyle = 'rgba(0,0,0,0.18)'; g.fillRect(x, y, ww, h);
+      g.strokeStyle = 'rgba(0,0,0,0.25)'; g.lineWidth = 1;
+      for (let by = y; by < y + h; by += px * 0.075) { g.beginPath(); g.moveTo(x, by); g.lineTo(x + ww, by); g.stroke(); }
+    }
+    // Sill and the streaks it sheds.
+    g.fillStyle = st.band; g.fillRect(x - px * 0.08, y + h, ww + px * 0.16, px * 0.08);
+    streaks(g, x, x + ww, y + h + px * 0.08, Math.floor(x * 7 + y), 14, [px * 0.3, px * 2.2], '40,38,34', 0.3);
+    // AC unit beside or under the window, rust running from it.
+    if (r() < 0.3) {
+      const ax = r() < 0.5 ? x + ww + px * 0.2 : x - px * 0.95, ay = y + h * 0.35;
+      g.fillStyle = '#c4c2bb'; g.fillRect(ax, ay, px * 0.75, px * 0.5);
+      g.fillStyle = 'rgba(0,0,0,0.35)'; g.beginPath(); g.arc(ax + px * 0.5, ay + px * 0.25, px * 0.18, 0, Math.PI * 2); g.fill();
+      g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(ax, ay + px * 0.5, px * 0.75, px * 0.06);
+      streaks(g, ax, ax + px * 0.75, ay + px * 0.56, Math.floor(ax + ay), 5, [px * 0.3, px * 1.5], '110,70,40', 0.3);
+    }
+    if (st.lattice && r() < 0.35) {
+      // Brick lattice screen: a block of small dark openings.
+      const lx = x + ww + px * 0.35, ly = y;
+      for (let i = 0; i < 4; i++) for (let j = 0; j < 7; j++) { g.fillStyle = '#141210'; g.fillRect(lx + i * px * 0.16, ly + j * px * 0.18, px * 0.08, px * 0.1); }
+    }
+  }
+  blotches(g, S, S, st.seed + 3, 30, '40,50,32', 0.12, px * 0.2, px * 0.8);
+}
+
+/** The lit windows only, warm on black: the emissive map for night. */
+export function drawFacadeLights(id: number, g: CanvasRenderingContext2D, S: number) {
+  const st = STYLES[id], px = S / FACADE_M;
+  g.fillStyle = '#000'; g.fillRect(0, 0, S, S);
+  for (const w of layout(st, px)) {
+    if (!w.lit) continue;
+    const grd = g.createLinearGradient(0, w.y, 0, w.y + w.h);
+    grd.addColorStop(0, '#ffcf8a'); grd.addColorStop(1, '#c98a48');
+    g.fillStyle = grd; g.fillRect(w.x + 3, w.y + 3, w.w - 6, w.h - 6);
+  }
+}

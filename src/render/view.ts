@@ -1,7 +1,7 @@
 // The three.js scene: renderer, lights, fog, the static world meshes and the first-person rig.
 import * as THREE from 'three';
 import type { World } from '../world/world';
-import { buildSolidMeshes } from './world-mesh';
+import { buildSolidMeshes, ChunkMerger } from './world-mesh';
 import { buildLabels } from './labels';
 import { material } from './materials';
 import { MAT } from '../world/mats';
@@ -15,6 +15,7 @@ export class View {
   readonly sun = new THREE.DirectionalLight(0xfff1dd, 1.6);
   readonly hemi = new THREE.HemisphereLight(0xc8d4e0, 0x4a4438, 1.2);
   readonly world = new THREE.Group();
+  private chunks: THREE.Mesh[] = [];
 
   constructor(container: HTMLElement) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -37,26 +38,37 @@ export class View {
   setWorld(w: World) {
     this.world.traverse(o => (o as THREE.Mesh).geometry?.dispose());
     this.world.clear();
-    this.world.add(buildSolidMeshes(w.solids.concat(w.decor)));
-    this.world.add(buildLabels(w.labels));
-    this.world.add(buildProps(w.props));
+    const meshes = buildSolidMeshes(w.solids.concat(w.decor));
+    const props = buildProps(w.props);
+    this.world.add(meshes, buildLabels(w.labels), props);
     for (const b of w.water) {
       const m = new THREE.Mesh(new THREE.PlaneGeometry(b.x1 - b.x0, b.z1 - b.z0), material(MAT.water));
       m.rotation.x = -Math.PI / 2;
       m.position.set((b.x0 + b.x1) / 2, b.y1, (b.z0 + b.z1) / 2);
       this.world.add(m);
     }
+    // Pipes and ladders merge into chunk meshes.
+    const merger = new ChunkMerger();
     for (const c of w.climbables) {
       const isPipe = c.kind === 'pipe';
       const geo = isPipe ? new THREE.CylinderGeometry(0.06, 0.06, c.y1 - c.y0, 8) : ladderGeometry(c.y1 - c.y0);
       const m = new THREE.Mesh(geo, material(MAT.metal));
       m.position.set(c.x + c.nx * 0.08, (c.y0 + c.y1) / 2, c.z + c.nz * 0.08);
       m.rotation.y = Math.atan2(c.nx, c.nz);
-      this.world.add(m);
+      merger.add(m);
     }
+    const climb = merger.build(mergeGeometries);
+    if (climb.length) this.world.add(...climb);
+    this.chunks = [...(meshes.children as THREE.Mesh[]), ...climb, ...(props.children.filter(o => o.userData.chunk) as THREE.Mesh[])];
   }
 
-  render(t = 0, open: Record<string, boolean> = {}) { tickProps(t, open); this.renderer.render(this.scene, this.fp.cam); }
+  render(t = 0, open: Record<string, boolean> = {}) {
+    // Chunks past the fog are not drawn (a chunk's half-diagonal is about 46 m).
+    const c = this.fp.cam.position, far = (this.scene.fog as THREE.Fog).far + 46;
+    for (const m of this.chunks) { const k = m.userData.chunk; m.visible = Math.hypot(k.x - c.x, k.z - c.z) < far; }
+    tickProps(t, open);
+    this.renderer.render(this.scene, this.fp.cam);
+  }
 }
 
 function ladderGeometry(h: number): THREE.BufferGeometry {
