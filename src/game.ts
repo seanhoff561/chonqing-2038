@@ -24,6 +24,7 @@ import { SleepUI } from './ui/sleep-ui';
 import { DeathScreen } from './ui/death';
 import { Furniture } from './render/furniture';
 import { Rain } from './render/rain';
+import { StatusIndicator } from './ui/status';
 import { lodRadius } from './render/materials';
 import { PauseMenu } from './ui/pause';
 import { findGrab } from './sim/grip';
@@ -51,6 +52,7 @@ export class Game {
   readonly pause: PauseMenu;
   readonly furniture = new Furniture();
   readonly rain: Rain;
+  readonly status = new StatusIndicator();
   drawDistance = 160;
   scenario!: Scenario;
   private heldId = '';
@@ -159,6 +161,7 @@ export class Game {
     this.updatePrompt();
     this.updateHeld();
     this.furniture.sync(this.state, this.world);
+    this.status.update(this.state, dt);
     const cam = this.view.fp.cam.position;
     this.sky.update(this.state.time, cam, this.hazeDistance(), this.underAmount(dt), this.state.weather);
     // Rain stops at a roof or underground.

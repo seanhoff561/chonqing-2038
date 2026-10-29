@@ -52,3 +52,10 @@ canvas { display: block; }
 #pause .pz-keys { width: 420px; font-size: 12px; color: #b5ad96; }
 #pause .pz-keys div { display: flex; gap: 10px; padding: 1px 0; }
 #pause .pz-keys b { font-weight: normal; color: #d8cfb2; width: 170px; flex: none; }
+#status { position: fixed; left: 14px; bottom: 14px; display: flex; align-items: flex-end; gap: 8px; pointer-events: none; transition: opacity 0.6s; z-index: 3; }
+#status .needs { display: flex; flex-direction: column; gap: 3px; }
+#status .needs span { font-size: 15px; color: #e8dcc0; background: rgba(20,18,16,0.6); border: 1px solid rgba(220,200,160,0.35); padding: 1px 5px; }
+#status .needs i { font-style: normal; font-size: 10px; color: #b8ac90; margin-left: 5px; }
+#status .pulse { animation: st-pulse 1.4s ease-in-out infinite; }
+#status .pulse.fast { animation-duration: 0.6s; }
+@keyframes st-pulse { 50% { opacity: 0.35; } }

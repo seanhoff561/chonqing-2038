@@ -7,7 +7,7 @@ The director's brief (BRIEF.md) is the vision. This is the build design. Numbers
 1. **Learn the machine.** The city and the machines' patrol logic are identical every run. Knowledge is the progression: timings, blind spots, battery gaps, routes.
 2. **The vertical city is the toolkit.** Every block offers a street route, a rooftop route and an underground route. Parkour and carried tools open new lines through it.
 3. **Seen is survivable, but it costs.** Kill-on-sight, live hivemind tracking, then a search that closes in. Escape is hard, thrilling and always possible; leading them home is the real mistake.
-4. **No help on screen.** No minimap, markers, meters or tutorials. The body, the world and Anna's laptop carry all information.
+4. **Little help on screen.** No minimap, markers, meters or tutorials. The body, the world and Anna's laptop carry most information; a small body figure shows where he is hurt and what he's short of (U-014).
 5. **Every tool, two uses; no tool, every answer.** Each item solves several problems and none solves everything. Several ways into every site, several ways out of the city.
 
 ## 2. Controls (keyboard and mouse)
@@ -89,7 +89,7 @@ Parkour with the legs, climbing with the hands (U-002 to U-005). Player collisio
 | Broken arm | fall onto arm (20% of fractures) | no pipes, ropes or hanging; aim sway x3 | splint allows slow climbing; heals in 7 days |
 | Food sickness | spoiled food (or raw pork, 70%) | 12 game hours: vomiting (-15 hydration and satiety each time), no healing | time and water |
 
-Health, hunger, thirst and fatigue never show on the HUD: they show through breathing, heartbeat, blur, vignette, limp sway, stomach sounds and on Anna's status page.
+Health, hunger, thirst and fatigue show through breathing, heartbeat, blur, vignette, limp sway and stomach sounds, on Anna's status page, and (U-014) on a small body figure bottom left: injured limbs coloured (amber sprain, red break, blue outline when splinted), the torso pulsing while he bleeds, and a tag for each need running low. It lights up on a change and then dims.
 
 **Sleep.** At a mattress, choose a wake time (default 06:00). Sleep is a time skip: needs drain at sleep rates, healing applies, machines return to their schedules, and if the shelter is compromised the raid happens (section 9). The ironman save is written on waking.
 
