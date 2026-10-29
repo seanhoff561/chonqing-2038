@@ -97,7 +97,7 @@ export class Game {
     this.updatePrompt();
     this.updateHeld();
     this.sky.update(this.state.time, this.view.fp.cam.position, this.drawDistance, this.underAmount(dt));
-    this.view.render(this.state.tick / 60);
+    this.view.render(this.state.tick / 60, this.state.wstate.open);
     this.frames++;
   }
 

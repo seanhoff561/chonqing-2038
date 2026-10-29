@@ -55,7 +55,7 @@ export class View {
     }
   }
 
-  render(t = 0) { tickProps(t); this.renderer.render(this.scene, this.fp.cam); }
+  render(t = 0, open: Record<string, boolean> = {}) { tickProps(t, open); this.renderer.render(this.scene, this.fp.cam); }
 }
 
 function ladderGeometry(h: number): THREE.BufferGeometry {

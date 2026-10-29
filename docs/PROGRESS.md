@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M2. Next: M2-20 Doors.
-Features done: 54 / 216 | Last done: M2-19
+**Status:** building M2. Next: M2-21 Sleep.
+Features done: 55 / 216 | Last done: M2-20
 <!-- /status -->
 
 ## Log
@@ -69,3 +69,4 @@ Features done: 54 / 216 | Last done: M2-19
 - M1-28 Gym climbing routes: gym climbing routes
 - M2-18 Containers, stash and transfer: containers, stash and transfer UI
 - M2-19 Loot placement by seed: seeded loot placement
+- M2-20 Doors: doors

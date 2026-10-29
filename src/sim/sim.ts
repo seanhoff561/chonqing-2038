@@ -13,6 +13,7 @@ import { stepHeld } from './use';
 import { stepInteract } from './interact';
 import { stepContainers } from './containers';
 import './loot';
+import { syncWorld } from './doors';
 import './food';
 import { survival } from '../data/survival';
 
@@ -20,7 +21,7 @@ export const STATE_VERSION = 1;
 
 export function createState(seed: number, world: World): SimState {
   const s = world.spawn;
-  return {
+  const state: SimState = {
     version: STATE_VERSION,
     seed,
     rng: makeRng(seed),
@@ -39,6 +40,8 @@ export function createState(seed: number, world: World): SimState {
     events: [],
     flags: { god: false, noclip: false, rain: 0 },
   };
+  syncWorld(state, world);
+  return state;
 }
 
 export function step(state: SimState, world: World, input: InputFrame): void {

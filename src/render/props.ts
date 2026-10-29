@@ -144,6 +144,15 @@ const builders: Record<string, Builder> = {
   neon,
   searchlight,
   patrolDecor,
+  // A hinged door slab: w wide, h tall, d thick; text is its interactable id. Swings open with the world state.
+  door: p => {
+    const g = new THREE.Group();
+    const slab = new THREE.Mesh(box(p.w!, p.h!, p.d ?? 0.06, p.w! / 2, 0, 0), material(MAT.metal));
+    g.add(slab);
+    let a = 0;
+    g.userData.tick = (_t: number, open: Record<string, boolean>) => { a += ((open[p.text!] ? 1.45 : 0) - a) * 0.15; slab.rotation.y = a; };
+    return g;
+  },
   neonGlow: () => { const l = new THREE.PointLight(0xff3b8b, 5, 16, 1.5); return l; },
   mattress: () => {
     const g = new THREE.Group();
@@ -197,9 +206,10 @@ const builders: Record<string, Builder> = {
   },
 };
 
-const ticking: ((t: number) => void)[] = [];
-/** Animate props that move (searchlights, scripted patrols). */
-export function tickProps(t: number) { for (const f of ticking) f(t); }
+type Tick = (t: number, open: Record<string, boolean>) => void;
+const ticking: Tick[] = [];
+/** Animate props that move (searchlights, scripted patrols, doors following the world state). */
+export function tickProps(t: number, open: Record<string, boolean> = {}) { for (const f of ticking) f(t, open); }
 
 export function buildProps(props: Prop[]): THREE.Group {
   ticking.length = 0;

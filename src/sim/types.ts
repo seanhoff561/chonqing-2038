@@ -62,7 +62,7 @@ export interface SimState {
   target: string | null;
   task: { id: string; t: number; dur: number } | null;
   /** dynamic world state: searched containers, opened doors, removed things */
-  wstate: { searched: Record<string, true>; open: Record<string, boolean>; gone: Record<string, true> };
+  wstate: { searched: Record<string, true>; open: Record<string, boolean>; gone: Record<string, true>; unlocked?: Record<string, true> };
   /** cause of death, or null while alive */
   dead: string | null;
   /** events emitted during the latest tick */
