@@ -18,13 +18,15 @@ import { districtAt } from './lots';
 export function propBoxes(p: Prop): Solid[] {
   const b = PROP_BOX[p.kind];
   if (!b) return [];
-  const w = p.kind === 'rubblepile' ? (p.w ?? 2) * 0.8 : b.w, d = p.kind === 'rubblepile' ? (p.w ?? 2) * 0.8 : b.d;
+  // A rubble pile is p.w across; a broken wall p.w long and, along its jagged top, about three quarters of p.h.
+  const w = p.kind === 'rubblepile' ? (p.w ?? 2) * 0.8 : b.w, d = p.kind === 'rubblepile' ? (p.w ?? 2) * 0.8 : p.kind === 'halfwall' ? p.w ?? b.d : b.d;
+  const h = p.kind === 'halfwall' ? (p.h ?? b.h) * 0.75 : b.h;
   const c = Math.cos(p.yaw), s = Math.sin(p.yaw), n = Math.max(1, Math.round(d / 1.4)), out: Solid[] = [];
   for (let i = 0; i < n; i++) {
     const z0 = -d / 2 + (i * d) / n, z1 = z0 + d / n;
     const pts = [[-w / 2, z0], [w / 2, z0], [-w / 2, z1], [w / 2, z1]].map(([x, z]) => [p.x + x * c + z * s, p.z - x * s + z * c]);
     const xs = pts.map(q => q[0]), zs = pts.map(q => q[1]);
-    out.push(solid(Math.min(...xs), p.y, Math.min(...zs), Math.max(...xs), p.y + b.h, Math.max(...zs), MAT.hidden));
+    out.push(solid(Math.min(...xs), p.y, Math.min(...zs), Math.max(...xs), p.y + h, Math.max(...zs), MAT.hidden));
   }
   return out;
 }

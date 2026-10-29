@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 41 of 64 done
+## M3: 42 of 64 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -432,7 +432,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
 - [x] **M3-56b** Green city: grass, parks and woods (U-028, U-029)
   - Green from the real map (U-028): OSM parks, woods, grass and scrub (refetched with natural=wood and the other green tags) render as grass and stands of trees; unbuilt verges and banks get grass and weeds, so the peninsula has green as the real one does
   - Screenshots of a park, a wooded bank and a grassed verge
-- [ ] **M3-56c** Ruins of the fighting on the rough ground (U-028, U-030)
+- [x] **M3-56c** Ruins of the fighting on the rough ground (U-028, U-030)
   - Rough ground becomes ruins (U-028): where the terrain is steep or broken it reads as collapsed buildings and debris (rubble heaps, broken slabs, rebar, half walls, retaining walls), with new props for it; smooth ground fills with things that belong there
   - A unit test: every ruin-marked patch over 30 m2 holds debris; screenshots of three ruin spots
 - [ ] **M3-56** Nothing empty: a filled, ordered city (U-022, U-028)

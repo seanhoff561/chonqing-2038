@@ -87,6 +87,7 @@ const draws: Record<number, [Draw, number]> = {
   }, 3],
   [MAT.moss]: [(g, w, h) => { noise(g, w, h, '#45503a', 0.3, 11); blotches(g, w, h, 111, 40, '25,32,20', 0.4, 8, 40); blotches(g, w, h, 112, 20, '110,125,70', 0.25, 6, 25); }, 2],
   [MAT.grass]: [(g, w, h) => { noise(g, w, h, '#5a6838', 0.32, 251); blotches(g, w, h, 252, 70, '32,42,20', 0.35, 6, 34); blotches(g, w, h, 253, 50, '150,150,80', 0.3, 5, 22); blotches(g, w, h, 254, 30, '95,85,60', 0.3, 4, 16); }, 3],
+  [MAT.rubble]: [(g, w, h) => { noise(g, w, h, '#77726a', 0.3, 261); blotches(g, w, h, 262, 120, '150,145,135', 0.5, 3, 12); blotches(g, w, h, 263, 70, '120,70,50', 0.45, 3, 10); blotches(g, w, h, 264, 90, '35,33,30', 0.45, 2, 8); blotches(g, w, h, 265, 25, '80,90,50', 0.3, 6, 20); }, 2.5],
   [MAT.crate]: [(g, w, h) => { noise(g, w, h, '#8a6a42', 0.15, 12); g.strokeStyle = 'rgba(0,0,0,0.4)'; g.lineWidth = 4; g.strokeRect(4, 4, w - 8, h - 8); }, 0.8],
   [MAT.water]: [(g, w, h) => noise(g, w, h, '#1d2c2a', 0.1, 13), 4],
   [MAT.roofTile]: [(g, w, h) => {
@@ -170,23 +171,26 @@ export function material(id: number, vc = false, lod: Lod = 'all'): THREE.MeshPh
   return m;
 }
 
-/** The open ground (M3-56b): paving giving way to grass by a per-vertex weight ('grass'), the edge broken up by
- *  the grass texture's own tone so it wanders instead of following the triangles. */
+/** The open ground (M3-56b, M3-56c): paving giving way to grass and to rubble by per-vertex weights ('grass',
+ *  'rubble'), each edge broken up by its texture's own tone so it wanders instead of following the triangles. */
 export function groundMaterial(lod: Lod): THREE.MeshPhongMaterial {
   const key = `ground:${lod}`;
   let m = mats.get(key);
   if (m) return m;
-  const grass = material(MAT.grass, true, lod).map, k = (texScale(MAT.concrete) / texScale(MAT.grass)).toFixed(4);
+  const grass = material(MAT.grass, true, lod).map, rubble = material(MAT.rubble, true, lod).map;
+  const k = (texScale(MAT.concrete) / texScale(MAT.grass)).toFixed(4), kr = (texScale(MAT.concrete) / texScale(MAT.rubble)).toFixed(4);
   m = new THREE.MeshPhongMaterial({ map: material(MAT.concrete, true, lod).map, vertexColors: true, ...DRY });
   lodCut(m, lod);
   const cut = m.onBeforeCompile;
   m.onBeforeCompile = (sh, r) => {
     cut.call(m, sh, r);
     sh.uniforms.grassMap = { value: grass };
-    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float grass;\nvarying float vGrass;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvGrass = grass;');
-    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D grassMap;\nvarying float vGrass;')
-      .replace('#include <map_fragment>', `vec4 sampledDiffuseColor = texture2D(map, vMapUv), gTex = texture2D(grassMap, vMapUv * ${k});
-diffuseColor *= mix(sampledDiffuseColor, gTex, smoothstep(0.35, 0.65, vGrass + (gTex.g - 0.36) * 1.2));`);
+    sh.uniforms.rubbleMap = { value: rubble };
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float grass;\nattribute float rubble;\nvarying vec2 vCover;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvCover = vec2(grass, rubble);');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D grassMap;\nuniform sampler2D rubbleMap;\nvarying vec2 vCover;')
+      .replace('#include <map_fragment>', `vec4 sampledDiffuseColor = texture2D(map, vMapUv), gTex = texture2D(grassMap, vMapUv * ${k}), rTex = texture2D(rubbleMap, vMapUv * ${kr});
+sampledDiffuseColor = mix(sampledDiffuseColor, gTex, smoothstep(0.35, 0.65, vCover.x + (gTex.g - 0.36) * 1.2));
+diffuseColor *= mix(sampledDiffuseColor, rTex, smoothstep(0.35, 0.65, vCover.y + (rTex.r - 0.42) * 1.2));`);
   };
   m.customProgramCacheKey = () => `ground${lod}`;
   mats.set(key, m);

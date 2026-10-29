@@ -86,7 +86,7 @@ function tree(p: Prop, big: boolean): THREE.Object3D {
 function wallGreen(p: Prop, roots: boolean): THREE.Object3D {
   const k = new Kit(seedOf(p)).use('bark'), r = k.r, w = p.w ?? 4, h = p.h ?? 4;
   const cards: { x: number; y: number; z: number; s: number; ry: number }[] = [];
-  if (roots) for (let i = 0; i < 14; i++) k.cyl(0.06 + r() * 0.05, 0.03, h * (0.4 + r() * 0.6), 0x6e6252, (r() - 0.5) * w, -h * (0.4 + r() * 0.6) + h, 0.08, 5);
+  if (roots) for (let i = 0; i < 12; i++) { const l = h * (0.3 + r() * 0.6); k.cyl(0.035 + r() * 0.03, 0.02, l, 0x9a8e76, (r() - 0.5) * w, h - l, 0.06, 5); }
   for (let i = 0; i < (roots ? 20 : 30); i++) cards.push({ x: (r() - 0.5) * w, y: roots ? h - r() * h * 0.5 : r() * h, z: 0.2 + r() * 0.3, s: 0.6 + r() * 0.6, ry: (r() - 0.5) * 0.8 });
   const parts: Part[] = [{ geo: leafCards(cards, 0x8a9468), mat: leaves() }];
   if (roots) parts.push({ geo: k.geometry(), mat: PROP_MAT });
@@ -129,6 +129,45 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
     return group([{ geo: k.geometry(), mat: PROP_MAT }]);
   },
   debris: p => { const k = new Kit(seedOf(p)).use('concrete'), r = k.r; for (let i = 0; i < 14; i++) k.box(0.1 + r() * 0.3, 0.04 + r() * 0.06, 0.1 + r() * 0.3, [0x8c877e, 0x7a4a36, 0xd8d2c0, 0x3a3a3a][i % 4], (r() - 0.5) * 3, 0, (r() - 0.5) * 3, r() * 3); return group([{ geo: k.geometry(), mat: PROP_MAT }]); },
+  // The fighting's debris (M3-56c, U-030). A floor slab torn loose and tipped over (its low edge buried), rebar
+  // out of the high edge, chunks at its foot.
+  slab: p => {
+    const k = new Kit(seedOf(p)).use('concrete'), r = k.r, w = 2.2 + r() * 1.4, d = 2.4 + r() * 1.2, tilt = 0.25 + r() * 0.35;
+    k.box(w, 0.22, d, 0x8c877e, 0, -0.1, 0, 0, tilt);
+    for (let i = 0; i < 5; i++) k.box(0.2 + r() * 0.4, 0.15 + r() * 0.25, 0.2 + r() * 0.4, [0x8c877e, 0x6e6a62][i % 2], (r() - 0.5) * w, 0, d * 0.45 + r() * 0.5, r() * 3, (r() - 0.5) * 0.5);
+    k.use('rust');
+    const ey = (Math.sin(tilt) * d) / 2 - 0.05, ez = (-Math.cos(tilt) * d) / 2;
+    for (let i = 0; i < 6; i++) k.cyl(0.012, 0.012, 0.4 + r() * 0.7, 0x6a3a22, (r() - 0.5) * w * 0.9, ey + (r() - 0.5) * 0.1, ez + 0.05, 4, 'z');
+    return group([{ geo: k.geometry(), mat: PROP_MAT }]);
+  },
+  // A lump of broken column with its rebar standing out, bent.
+  rebar: p => {
+    const k = new Kit(seedOf(p)).use('concrete'), r = k.r;
+    k.box(0.8, 0.4, 0.7, 0x8c877e, 0, -0.05, 0, r() * 3, (r() - 0.5) * 0.3, (r() - 0.5) * 0.3);
+    k.use('rust');
+    for (let i = 0; i < 7; i++) {
+      const x = (r() - 0.5) * 0.6, z = (r() - 0.5) * 0.5, h = 0.6 + r() * 1.1;
+      k.cyl(0.012, 0.012, h, 0x6a3a22, x, 0.3, z, 4);
+      if (r() < 0.5) k.cyl(0.012, 0.012, 0.3 + r() * 0.5, 0x6a3a22, x, 0.3 + h, z, 4, r() < 0.5 ? 'x' : 'z');
+    }
+    return group([{ geo: k.geometry(), mat: PROP_MAT }]);
+  },
+  // What's left of a wall (its length along z, p.w long, up to p.h high): a jagged top, a few bars out of it,
+  // bricks and chunks fallen at its foot.
+  halfwall: p => {
+    const k = new Kit(seedOf(p)), r = k.r, w = p.w ?? 3, h = p.h ?? 2, brick = r() < 0.5, n = Math.max(3, Math.round(w / 0.5));
+    k.use(brick ? 'stone' : 'concrete');
+    // Standing tallest at one end and broken away toward the other, ragged, the odd chunk knocked askew.
+    for (let i = 0, z = -w / 2; i < n && z < w / 2; i++) {
+      const cw = Math.min(w / 2 - z, (w / n) * (0.5 + r())), t = (z + cw / 2 + w / 2) / w, hh = Math.max(0.3, h * (1 - 0.75 * t) * (0.55 + r() * 0.45));
+      k.box(0.3, hh, cw + 0.01, brick ? 0x9a5a44 : 0x8c877e, (r() - 0.5) * 0.06, -0.2, z + cw / 2, 0, 0, r() < 0.2 ? (r() - 0.5) * 0.15 : 0);
+      if (r() < 0.4) k.box(0.32, 0.2 + r() * 0.3, cw * 0.5, brick ? 0x8a4a36 : 0x7a766e, 0, hh - 0.25, z + cw * (0.2 + r() * 0.5), r() * 0.3, (r() - 0.5) * 0.4);
+      z += cw;
+    }
+    for (let i = 0; i < 6; i++) k.box(0.2 + r() * 0.3, 0.1 + r() * 0.2, 0.2 + r() * 0.3, brick ? 0x8a4a36 : 0x7a766e, (r() < 0.5 ? -1 : 1) * (0.3 + r() * 0.6), 0, (r() - 0.5) * w, r() * 3);
+    if (!brick) { k.use('rust'); for (let i = 0; i < 4; i++) k.cyl(0.012, 0.012, 0.5 + r() * 0.6, 0x6a3a22, 0, h * 0.5, (r() - 0.5) * w * 0.6, 4); }
+    return group([{ geo: k.geometry(), mat: PROP_MAT }]);
+  },
   sign: p => { const k = new Kit(seedOf(p)).use('sign'), r = k.r; k.box(3, 0.08, 0.9, [0xa82a22, 0x2a4a8a, 0xd8d2c0, 0x2a6a4a][Math.floor(r() * 4)], 0, 0, 0, 0, 0.12, 0.05); k.box(2.6, 0.02, 0.5, 0xd8d0b0, 0, 0.09, 0, 0, 0.12, 0.05); return group([{ geo: k.geometry(), mat: PROP_MAT }]); },
   boxes: p => { const k = new Kit(seedOf(p)).use('cardboard'), r = k.r; for (let i = 0; i < 4; i++) { const s = 0.35 + r() * 0.3; k.box(s, s * 0.8, s, 0xa88a5a, (r() - 0.5) * 1.2, i > 2 ? 0.35 : 0, (r() - 0.5) * 1.2, r() * 3); } return group([{ geo: k.geometry(), mat: PROP_MAT }]); },
   trash: p => { const k = new Kit(seedOf(p)).use('bag'), r = k.r; for (let i = 0; i < 5; i++) k.blob(0.28 + r() * 0.12, r() < 0.6 ? 0x1e2420 : 0x2a3a2a, (r() - 0.5) * 1.4, 0.2, (r() - 0.5) * 1.4, 0.75, 0); return group([{ geo: k.geometry(), mat: PROP_MAT }]); },
