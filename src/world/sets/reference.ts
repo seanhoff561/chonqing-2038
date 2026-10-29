@@ -9,7 +9,7 @@ import { hollow } from '../city/interiors';
 import { facades } from '../city/climb';
 import { stair } from '../city/terrain';
 import { makeRng, rand, randInt } from '../../sim/rng';
-import type { Fabric, Lot } from '../city/buildings';
+import { PARAPET, type Fabric, type Lot } from '../city/buildings';
 import type { Tile } from '../map';
 
 /** The photo's camera: level, at the vantage eye, looking north (-z), 30 degrees of view across 1304 rows. */
@@ -76,7 +76,7 @@ export function referenceParts() {
   for (const s of SPECS) {
     const x0 = X(s.px[0], s.d), x1 = X(s.px[1], s.d), z1 = Z(s.d), z0 = z1 - s.depth;
     const base = groundAt(z1 - 0.5);
-    const lip = s.roof === 'parapet' ? 0.9 : s.roof === 'curb' || s.roof === 'garden' ? 0.3 : 0;
+    const lip = s.roof === 'parapet' ? PARAPET : s.roof === 'curb' || s.roof === 'garden' ? 0.3 : 0;
     // Enterable blocks need whole floors; the rest keep the photo's roof line exactly.
     let wall = Y(s.row, s.d) - lip;
     if (s.enter) wall = base + Math.max(2, Math.round((wall - base) / FLOOR)) * FLOOR;
@@ -103,7 +103,7 @@ function roof(s: Spec, l: Lot, out: Fabric) {
   const rim = (h: number, w: number, mat: number) => out.solids.push(
     solid(x0, wall, z0, x1, wall + h, z0 + w, mat), solid(x0, wall, z1 - w, x1, wall + h, z1, mat),
     solid(x0, wall, z0 + w, x0 + w, wall + h, z1 - w, mat), solid(x1 - w, wall, z0 + w, x1, wall + h, z1 - w, mat));
-  if (s.roof === 'parapet') rim(0.9, 0.2, MAT.concrete);
+  if (s.roof === 'parapet') rim(PARAPET, 0.2, MAT.concrete);
   if (s.roof === 'curb' || s.roof === 'garden' || s.roof === 'pavilion') rim(0.3, 0.2, s.mat === MAT.brick ? MAT.brick : MAT.concrete);
   if (s.roof === 'garden' || s.roof === 'pavilion') {
     // Roofs gone wild: a moss mat and clumps of shrubs.
@@ -140,7 +140,7 @@ function vantageBlock(r: ReturnType<typeof makeRng>, out: Fabric): RefBlock {
   // 11 floors: standing on the roof puts the eye where the photo was taken.
   const x0 = -6, x1 = 6, z0 = -5.6, z1 = 4.4, base = 0, wall = 33;
   const tmp: Fabric = { solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [], sites: [], far: [] };
-  const lot: Lot = { id: 999, x0, z0, x1, z1, base, wall, top: wall + 0.9, kind: 'res', tile: { c: -999, r: -999, type: '#', h: 0 } as Tile, mat: MAT.concrete };
+  const lot: Lot = { id: 999, x0, z0, x1, z1, base, wall, top: wall + PARAPET, kind: 'res', tile: { c: -999, r: -999, type: '#', h: 0 } as Tile, mat: MAT.concrete };
   hollow(lot, r, tmp);
   // Mirror north-south so the stair core and its roof hut sit at the back.
   const m = z0 + z1, flip = (s: Solid): Solid => ({ ...s, z0: m - s.z1, z1: m - s.z0, ramp: s.ramp === 3 ? 4 : s.ramp === 4 ? 3 : s.ramp });

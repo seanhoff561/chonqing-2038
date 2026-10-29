@@ -22,19 +22,26 @@ export function wallAhead(world: World, p: Player, dx: number, dz: number, reach
   return best;
 }
 
+/** How far past a wall's face the top is probed: inside even a thin wall like a window sill. */
+export const PROBE = 0.12;
+
 /** A ledge in front: wall within `reach`, its top found by a downward ray just past the face. */
 export function findLedge(world: World, p: Player, reach: number, maxH: number): Ledge | null {
   const f = forward(p.yaw);
   const hs = [0.15, 0.45, 0.9, 1.4, 1.9, 2.3, 2.8, 3.3].filter(h => h < maxH + 0.05);
   const w = wallAhead(world, p, f.x, f.z, reach, hs);
   if (!w) return null;
-  const fx = p.pos.x + f.x * w.d - w.nx * 0.3, fz = p.pos.z + f.z * w.d - w.nz * 0.3;
-  const y0 = p.pos.y + maxH + 0.3;
-  const down = raycast(world.index, fx, y0, fz, 0, -1, 0, maxH + 0.3);
-  if (!down) return null;
-  if (down.t < 1e-3 || down.ny < 0.7) return { top: Infinity, h: Infinity, nx: w.nx, nz: w.nz, dist: w.d, fx, fz };
-  const top = y0 - down.t;
-  return { top, h: top - p.pos.y, nx: w.nx, nz: w.nz, dist: w.d, fx, fz };
+  const fx = p.pos.x + f.x * w.d - w.nx * PROBE, fz = p.pos.z + f.z * w.d - w.nz * PROBE;
+  // Look down onto the top from above; under an overhang (a window's lintel) start lower, in the opening.
+  for (let y0 = p.pos.y + maxH + 0.3; y0 > p.pos.y + 0.4; y0 -= 0.25) {
+    const down = raycast(world.index, fx, y0, fz, 0, -1, 0, y0 - p.pos.y);
+    if (!down) return null;
+    if (down.t < 1e-3) continue;
+    if (down.ny < 0.7) break;
+    const top = y0 - down.t;
+    return { top, h: top - p.pos.y, nx: w.nx, nz: w.nz, dist: w.d, fx, fz };
+  }
+  return { top: Infinity, h: Infinity, nx: w.nx, nz: w.nz, dist: w.d, fx, fz };
 }
 
 export function startAction(p: Player, kind: string, dur: number, b: Vec3, then: Mode, posture: Posture, speed: number) {
@@ -45,7 +52,7 @@ export function startAction(p: Player, kind: string, dur: number, b: Vec3, then:
 
 /** Landing point on top of a ledge, set back from the face. */
 function onTop(l: Ledge, back: number): Vec3 {
-  return { x: l.fx - l.nx * (back - 0.3), y: l.top + 1e-3, z: l.fz - l.nz * (back - 0.3) };
+  return { x: l.fx - l.nx * (back - PROBE), y: l.top + 1e-3, z: l.fz - l.nz * (back - PROBE) };
 }
 
 function tryMantle(world: World, p: Player, l: Ledge, dur: number): boolean {
@@ -59,7 +66,7 @@ function tryMantle(world: World, p: Player, l: Ledge, dur: number): boolean {
 
 function tryVault(world: World, p: Player, l: Ledge): boolean {
   const f = forward(p.yaw);
-  const faceX = l.fx + l.nx * 0.3, faceZ = l.fz + l.nz * 0.3;
+  const faceX = l.fx + l.nx * PROBE, faceZ = l.fz + l.nz * PROBE;
   // Walk across the top until it drops away: that's the obstacle's depth.
   let depth = -1;
   for (let d = 0.05; d <= M.vault.maxDepth + 0.1; d += 0.05) {
@@ -68,11 +75,18 @@ function tryVault(world: World, p: Player, l: Ledge): boolean {
   if (depth < 0 || depth > M.vault.maxDepth + 0.05) return false;
   const lx = faceX + f.x * (depth + HW + 0.1), lz = faceZ + f.z * (depth + HW + 0.1);
   const g = raycast(world.index, lx, l.top + 0.1, lz, 0, -1, 0, l.h + 0.6);
-  if (!g || g.ny < 0.7) return false;
+  const sp = Math.hypot(p.vel.x, p.vel.z) * M.vault.keep;
+  if (!g || g.ny < 0.7) {
+    // A low, thin wall with a drop beyond (a roof parapet, a railing): vault over and fly on (U-014).
+    if (depth > 0.6 || l.h > M.vault.overH) return false;
+    const ax = faceX + f.x * (depth + HW + 0.05), az = faceZ + f.z * (depth + HW + 0.05), ay = l.top + 0.12;
+    if (!free(world.index, ax, ay, az, M.height.stand) || !free(world.index, faceX + f.x * depth / 2, l.top + 0.05, faceZ + f.z * depth / 2, M.height.crouch)) return false;
+    startAction(p, 'vault', M.vault.time * 0.7, { x: ax, y: ay, z: az }, 'air', 'stand', sp);
+    return true;
+  }
   const ly = l.top + 0.1 - g.t + 1e-3;
   const mx = faceX + f.x * depth / 2, mz = faceZ + f.z * depth / 2;
   if (!free(world.index, lx, ly, lz, M.height.stand) || !free(world.index, mx, l.top + 0.05, mz, M.height.crouch)) return false;
-  const sp = Math.hypot(p.vel.x, p.vel.z) * M.vault.keep;
   startAction(p, 'vault', M.vault.time, { x: lx, y: ly, z: lz }, 'ground', p.posture, sp);
   return true;
 }
@@ -227,6 +241,7 @@ export function stepAction(state: SimState, world: World) {
   p.onGround = a.then === 'ground';
   p.fallFrom = p.pos.y;
   if (a.speed > 0) { const f = forward(p.yaw); p.vel.x = f.x * a.speed; p.vel.z = f.z * a.speed; }
+  if (a.kind === 'vault' && a.then === 'air') p.vel.y = M.vault.lift;
   if (p.posture === 'crouch' && a.kind !== 'unhide') setPosture(p, world, 'stand');
 }
 

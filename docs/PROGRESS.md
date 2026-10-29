@@ -2,7 +2,7 @@
 
 <!-- status -->
 **Status:** building M3. Next: M3-24 Place references (U-011).
-Features done: 84 / 237 | Last done: M3-31
+Features done: 85 / 237 | Last done: M3-32
 <!-- /status -->
 
 ## Log
@@ -102,3 +102,4 @@ Features done: 84 / 237 | Last done: M3-31
 - M3-13 Fog and rain rendering: fog and rain rendering: weather haze, rain streaks, wet sheen
 - M3-30 Body status indicator (U-014): body status indicator on the HUD
 - M3-31 Esc unbound (U-014): Esc unbound; sleep menu closes with E, right-click or its button; status hides when fine
+- M3-32 Easier parapets and windows (U-014): 0.6 m parapets, vault over them in flight, windows big enough to hop through

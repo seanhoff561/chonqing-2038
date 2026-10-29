@@ -13,7 +13,8 @@ const FLOOR = 3, WALL = 0.25, SLAB = 0.2, HUT = 2.6;
 /** Core space: u runs along the flights, v across. Near landing, two half flights side by side, far landing. */
 const CORE = { near: 1.2, run: 4.0, far: 0.9, lane: 1.3 };
 const CORE_L = CORE.near + CORE.run + CORE.far, CORE_W = CORE.lane * 2;
-const WIN = { w: 1.2, sill: 1.0, h: 1.3, every: 4.5 };
+/** Window openings: wide and tall enough to hop onto the sill and drop through, or vault at a run (U-014). */
+const WIN = { w: 1.4, sill: 0.8, h: 1.9, every: 4.5 };
 
 const FURNITURE = {
   cabinet: { w: 1.0, d: 0.5, h: 1.8, mat: MAT.wood, zh: '柜子', en: 'Cabinet', loot: 'kitchen' },

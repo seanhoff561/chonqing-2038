@@ -20,6 +20,8 @@ export interface Feature { kind: string; x: number; y: number; z: number; group:
 export interface Fabric { solids: Solid[]; decor: Solid[]; props: Prop[]; lots: Lot[]; inter: Inter[]; climbables: Climbable[]; hides: HideSpot[]; features: Feature[]; sites: Site[]; far: Solid[] }
 
 const FLOOR = 3;
+/** Roof parapets: a lip to grab, cover when crouched, low enough to jump over (U-014). */
+export const PARAPET = 0.6;
 const STREETS = '.=sb';
 const BUILT = '#Th';
 
@@ -103,7 +105,7 @@ function mass(l: Lot, r: Rng, out: Fabric) {
   else if (step) out.solids.push(solid(x0, base, z0, x1, wall - 2 * FLOOR, z1, look), solid(x0 + step, wall - 2 * FLOOR, z0 + step, x1 - step, wall, z1 - step, look));
   else out.solids.push(solid(x0, base, z0, x1, wall, z1, look));
   // The far view's stand-in: the whole block in its painted facade, parapet included.
-  if (l.kind !== 'trad') out.far.push(solid(x0, base, z0, x1, wall + 0.9, z1, look));
+  if (l.kind !== 'trad') out.far.push(solid(x0, base, z0, x1, wall + PARAPET, z1, look));
   if (l.kind === 'trad') {
     // Pitched tiled roof: ridges run along the row (the hill's contour), so a row of houses lines up into a
     // rooftop route; eaves overhang as decor.
@@ -122,7 +124,7 @@ function mass(l: Lot, r: Rng, out: Fabric) {
     return;
   }
   // Parapet: a lip to grab from the facade and a low wall on the roof (round the top part of a stepped block).
-  const p = 0.9, w = 0.2;
+  const p = PARAPET, w = 0.2;
   if (step) {
     out.solids.push(solid(x0, wall - 2 * FLOOR, z0, x1, wall - 2 * FLOOR + 0.3, z0 + w, MAT.concrete), solid(x0, wall - 2 * FLOOR, z1 - w, x1, wall - 2 * FLOOR + 0.3, z1, MAT.concrete));
   }

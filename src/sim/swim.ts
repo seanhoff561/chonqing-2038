@@ -4,7 +4,7 @@ import type { World } from '../world/world';
 import type { Player } from './player';
 import { movement as M } from '../data/movement';
 import { moveHorizontal, moveVertical } from './physics';
-import { findLedge, startAction } from './parkour';
+import { findLedge, startAction, PROBE } from './parkour';
 import { forward } from './move';
 
 /** Water surface height at the player's position, or -Infinity. */
@@ -39,7 +39,7 @@ export function stepSwim(state: SimState, world: World, input: InputFrame) {
   if ((input.pressed & B.JUMP) && input.my > 0) {
     const l = findLedge(world, p, M.mantle.reach, s - p.pos.y + M.swim.climbOut);
     if (l && isFinite(l.h) && l.top - s <= M.swim.climbOut + 1e-3) {
-      startAction(p, 'mantle', M.mantle.highTime, { x: l.fx - l.nx * (M.width / 2 + 0.05 - 0.3), y: l.top + 1e-3, z: l.fz - l.nz * (M.width / 2 + 0.05 - 0.3) }, 'ground', 'crouch', 0);
+      startAction(p, 'mantle', M.mantle.highTime, { x: l.fx - l.nx * (M.width / 2 + 0.05 - PROBE), y: l.top + 1e-3, z: l.fz - l.nz * (M.width / 2 + 0.05 - PROBE) }, 'ground', 'crouch', 0);
       return;
     }
   }
