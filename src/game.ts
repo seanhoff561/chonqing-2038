@@ -15,6 +15,7 @@ import { item } from './data/items';
 import { Audio } from './audio/audio';
 import { playMove } from './audio/moves';
 import { Hands } from './ui/hands';
+import { SleepUI } from './ui/sleep-ui';
 import { findGrab } from './sim/grip';
 
 export interface GameOpts { scenario: string; seed: number; dev: boolean }
@@ -30,6 +31,7 @@ export class Game {
   readonly inv: InventoryUI;
   readonly audio = new Audio();
   readonly hands = new Hands();
+  readonly sleep: SleepUI;
   drawDistance = 160;
   scenario!: Scenario;
   private heldId = '';
@@ -45,6 +47,7 @@ export class Game {
     this.sky = new Sky(this.view);
     this.bodyFx = new BodyFx(this.view.renderer.domElement);
     this.inv = new InventoryUI(this);
+    this.sleep = new SleepUI(this);
     this.load(opts.scenario, opts.seed);
   }
 
@@ -84,6 +87,7 @@ export class Game {
       if (e.t === 'land') this.view.fp.landed(e.h);
       else if (e.t === 'sfx') playMove(this.audio, e.id);
       else if (e.t === 'open') this.inv.toggle(true);
+      else if (e.t === 'sleep-menu') this.sleep.toggle(true);
     }
   }
 

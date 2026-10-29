@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M2. Next: M2-21 Sleep.
-Features done: 55 / 216 | Last done: M2-20
+**Status:** building M2. Next: M2-22 Starting supplies.
+Features done: 56 / 216 | Last done: M2-21
 <!-- /status -->
 
 ## Log
@@ -70,3 +70,4 @@ Features done: 55 / 216 | Last done: M2-20
 - M2-18 Containers, stash and transfer: containers, stash and transfer UI
 - M2-19 Loot placement by seed: seeded loot placement
 - M2-20 Doors: doors
+- M2-21 Sleep: sleep at the mattress

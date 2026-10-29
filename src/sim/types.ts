@@ -36,6 +36,7 @@ export type SimEvent =
   | { t: 'slept'; from: number; to: number; where: 'bed' | 'collapse' }
   | { t: 'use'; id: string }
   | { t: 'open'; id: string }
+  | { t: 'sleep-menu'; id: string }
   | { t: 'grab'; hand: number; kind: string }
   | { t: 'sfx'; id: string }
   | { t: 'ate'; id: string; sick: boolean }

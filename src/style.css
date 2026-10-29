@@ -27,3 +27,8 @@ canvas { display: block; }
 .inv-hotbar { display: flex; gap: 4px; margin-top: 6px; font-size: 11px; color: #8d8874; }
 .inv-hotbar span { flex: 1; border: 1px solid #2a2d2a; padding: 2px 4px; white-space: nowrap; overflow: hidden; }
 .inv-tip { position: fixed; display: none; max-width: 260px; background: #0b0c0d; border: 1px solid #3a3d36; color: #b9b29c; font-size: 11px; padding: 5px 7px; z-index: 30; pointer-events: none; }
+#sleep { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #0d0f10; border: 1px solid #2f322c; padding: 10px 12px; z-index: 6; min-width: 240px; }
+#sleep .sl-title { font-size: 12px; color: #a99f84; margin-bottom: 8px; }
+#sleep button { display: block; width: 100%; text-align: left; font: inherit; font-size: 12px; background: #121416; color: #c2baa2; border: 1px solid #262925; margin: 2px 0; padding: 3px 6px; cursor: pointer; }
+#sleep button:hover { border-color: #6d6447; }
+#sleep .sl-note { font-size: 10px; color: #6c6a60; margin-top: 6px; }
