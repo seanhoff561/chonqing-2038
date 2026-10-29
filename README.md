@@ -39,8 +39,8 @@ Then open the printed URL. Other commands:
 | Backpack / laptop / headlamp | Tab / L / H |
 | Pause and settings (controls, movement gym, back to the game) | = (Esc only leaves fullscreen) |
 
-## Making a shelter
-A run starts at the top of Shibati with a day of food in your backpack and nowhere to sleep. Find somewhere quiet and make it yours: press E at a bed to claim it (or hold a sleeping bag or foam mattress and click to lay it down), click a table while holding a toolbox to make a workbench, and use the containers near your bed (or a folding crate) as storage. Sleeping in your bed saves the run. You can sleep rough anywhere by holding E with nothing in view, but you rest less.
+## Hideouts
+A run starts in your friends' old hideout under the vent grate at Jiaochangkou, with a day of food in your backpack and their crate beside the mattress. Make more wherever it's quiet: press E at a bed to claim it (or hold a sleeping bag or foam mattress and click to lay it down), click a table while holding a toolbox to make a workbench, and use the containers near each bed (or a folding crate) as that hideout's storage. Sleeping in any of your beds saves the run; Tab lists your hideouts. You can sleep rough anywhere by holding E with nothing in view, but you rest less.
 
 ## Movement gym
 Press = in the game and click **Movement gym**. The pause menu then lists the gym's areas (mantle row, gap lanes, wall-run lane, sill route, bars over the pit and more): click one to go there, and **Back to the game** returns to your run. You can also open it directly: https://seanhoff561.github.io/chonqing-2038/?scenario=gym
