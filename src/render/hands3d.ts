@@ -17,6 +17,8 @@ interface Hand {
   pivot: THREE.Group;
   /** curl axes in model space: fingers fold toward the palm, the thumb swings across it */
   curlAxis: THREE.Vector3;
+  /** the back of the hand's normal, model space: fingers close toward each other about it */
+  backAxis: THREE.Vector3;
   thumbAxis: THREE.Vector3;
   bones: Map<string, THREE.Object3D>;
   rest: Map<string, { p: THREE.Vector3; q: THREE.Quaternion }>;
@@ -27,6 +29,10 @@ interface Hand {
 }
 
 export const CALIB = { thumbMix: 0.6, flip: 1 };
+/** How much thicker than the model's the fingers are drawn. */
+const FAT = 1.4;
+/** How far each finger (thumb to pinky) swings toward the middle one in a fist, radians. */
+const SQUEEZE = [0, -0.1, 0, 0.08, 0.18];
 
 const tmpQ = new THREE.Quaternion(), tmpV = new THREE.Vector3();
 
@@ -48,6 +54,18 @@ export class Hands3D {
         if ((o as THREE.SkinnedMesh).isSkinnedMesh) { const m = o as THREE.SkinnedMesh; m.material = skin; m.frustumCulled = false; }
         if (o.name.includes('-') || o.name === 'wrist') { bones.set(o.name, o); rest.set(o.name, { p: o.position.clone(), q: o.quaternion.clone() }); }
       });
+      // The model's fingers are slender: each finger bone is fattened across its length (scaled on its two local
+      // axes that don't run along the finger), so side-on and curled they don't read as skinny (U-023).
+      for (const f of FINGERS) {
+        const names = CHAIN(f);
+        names.forEach((n, j) => {
+          if (j === 0 && f !== 'thumb') return;
+          const a = rest.get(n)!, b = rest.get(names[Math.min(j + 1, names.length - 1)])!, c = rest.get(names[Math.max(j - 1, 0)])!;
+          const d = (j + 1 < names.length ? b.p.clone().sub(a.p) : a.p.clone().sub(c.p)).applyQuaternion(a.q.clone().invert());
+          const ax = Math.abs(d.x), ay = Math.abs(d.y), az = Math.abs(d.z), k = j === 0 || j === names.length - 1 ? 1.15 : FAT;
+          bones.get(n)!.scale.set(ax >= ay && ax >= az ? 1 : k, ay > ax && ay >= az ? 1 : k, az > ax && az > ay ? 1 : k);
+        });
+      }
       const side = i === 0 ? -1 : 1;
       const wrist = rest.get('wrist')!.p;
       root.position.copy(wrist).multiplyScalar(-1);
@@ -72,7 +90,7 @@ export class Hands3D {
       this.group.add(pivot);
       const curlAxis = L.clone().multiplyScalar(side * CALIB.flip);
       const thumbAxis = F.clone().multiplyScalar(side * CALIB.flip * CALIB.thumbMix).add(L.clone().multiplyScalar(side * CALIB.flip * (1 - CALIB.thumbMix))).normalize();
-      this.hands[i] = { pivot, curlAxis, thumbAxis, bones, rest, side, curl: 0.3, thumb: 0.3, held };
+      this.hands[i] = { pivot, curlAxis, thumbAxis, backAxis: Bk.clone(), bones, rest, side, curl: 0.3, thumb: 0.3, held };
       if (++loaded === 2) this.ready = true;
     }, undefined, () => { /* missing model: no hands */ }));
   }
@@ -85,8 +103,15 @@ export class Hands3D {
       const qs = names.map(n => h.rest.get(n)!.q.clone());
       const thumb = f === 'thumb';
       const amount = thumb ? h.thumb : h.curl;
-      const angles = thumb ? [0.35, 0.5, 0.5] : [0.15, 1.2, 1.4, 0.9];
+      // Spread over the joints: past about 60 degrees a joint's skin pinches thin (U-023).
+      const angles = thumb ? [0.35, 0.45, 0.45] : [0.1, 0.95, 1.0, 0.6];
       const axis = thumb ? h.thumbAxis : h.curlAxis;
+      // Fingers close up toward the middle one as they curl into a fist.
+      const squeeze = SQUEEZE[FINGERS.indexOf(f)] * amount * h.side;
+      if (squeeze) {
+        tmpQ.setFromAxisAngle(h.backAxis, squeeze);
+        for (let j = 1; j < pts.length; j++) { tmpV.copy(pts[j]).sub(pts[0]).applyQuaternion(tmpQ); pts[j].copy(pts[0]).add(tmpV); qs[j].premultiply(tmpQ); }
+      }
       for (let k = 0; k < angles.length; k++) {
         tmpQ.setFromAxisAngle(axis, angles[k] * amount);
         for (let j = k + 1; j < pts.length; j++) {
