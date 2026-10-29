@@ -29,14 +29,15 @@ export class Sky {
     (v.scene.background as THREE.Color).copy(c);
     fog.color.copy(c);
     fog.far = farBase / this.fogMul;
-    fog.near = Math.min(fog.far * 0.15, 25) * (1 - 0.6 * this.overcast);
+    // Overcast haze builds slowly with distance; otherwise the fog closes in near the draw distance.
+    fog.near = this.overcast ? fog.far * 0.14 : Math.min(fog.far * 0.15, 25);
     // Sun arcs east to west through the day; below the horizon at night.
     const a = ((h - 6) / 12) * Math.PI;
     v.sun.position.set(camPos.x + Math.cos(a) * 80, camPos.y + Math.sin(a) * 90, camPos.z + 30);
     v.sun.target.position.copy(camPos);
-    v.sun.intensity = 1.7 * d * (1 - under) * (1 - 0.8 * this.overcast);
+    v.sun.intensity = 1.7 * d * (1 - under) * (1 - 0.7 * this.overcast);
     v.sun.color.setHSL(0.09, 0.5 - 0.3 * d, 0.85 + 0.1 * d);
-    v.hemi.intensity = (0.5 + 0.75 * d) * (1 - under * 0.92) * (1 + 0.45 * this.overcast);
+    v.hemi.intensity = (0.5 + 0.75 * d) * (1 - under * 0.92) * (1 + 0.1 * this.overcast);
     v.hemi.color.copy(NIGHT_SKY).lerp(new THREE.Color(0xc8d4e0), d).lerp(new THREE.Color(0x46557a), (1 - d) * 0.8);
     v.hemi.groundColor.copy(NIGHT_GROUND).lerp(DAY_GROUND, d);
     setNight(Math.max(0, 1 - d * 1.6));

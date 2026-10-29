@@ -75,6 +75,8 @@ export class Game {
     this.input.pitch = 0;
     this.prev = { ...this.state.player.pos };
     this.drawDistance = sc.draw ?? 160;
+    this.view.fp.cam.far = Math.max(400, this.drawDistance + 100);
+    this.view.fp.cam.updateProjectionMatrix();
     this.sky.overcast = sc.overcast ? 1 : 0;
     this.view.setWorld(this.world);
   }

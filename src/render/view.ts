@@ -22,6 +22,9 @@ export class View {
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
     this.renderer.setSize(innerWidth, innerHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    // Filmic response: highlights roll off, shadows keep detail (U-012).
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.4;
     container.appendChild(this.renderer.domElement);
     this.fp = new FPCamera(innerWidth / innerHeight);
     this.scene.add(this.fp.cam, this.world, this.sun, this.sun.target, this.hemi);

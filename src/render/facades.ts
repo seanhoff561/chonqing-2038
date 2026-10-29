@@ -14,14 +14,16 @@ interface Style {
   open?: boolean;
   /** each floor a white balcony parapet over a dark recessed strip */
   bands?: boolean;
+  /** share of bays with no window; floors between floor bands */
+  blank?: number; bandEvery?: number;
 }
 
 const STYLES: Record<number, Style> = {
-  [MAT.facade]: { seed: 21, wall: '#a7a196', band: '#b9b3a7', win: [1.5, 1.6], sill: 0.9 },
-  [MAT.facadeTile]: { seed: 22, wall: '#c49a86', band: '#ddd6ca', win: [1.6, 1.5], sill: 0.95, tile: true },
-  [MAT.facadeBrick]: { seed: 23, wall: '#9c8a73', band: '#8f7e68', win: [1.0, 1.25], sill: 1.0, brick: true, lattice: true },
-  [MAT.facadeOpen]: { seed: 24, wall: '#8c8274', band: '#978d7d', win: [2.2, 1.9], sill: 0.75, open: true },
-  [MAT.facadeBand]: { seed: 25, wall: '#c9c7c0', band: '#e2e0d9', win: [2.4, 1.6], sill: 1.05, bands: true },
+  [MAT.facade]: { seed: 21, wall: '#bdb6a8', band: '#cbc5b8', win: [1.4, 1.6], sill: 0.9, blank: 0.12 },
+  [MAT.facadeTile]: { seed: 22, wall: '#d6a48e', band: '#e8e2d6', win: [1.0, 1.1], sill: 1.1, tile: true, blank: 0.45, bandEvery: 2 },
+  [MAT.facadeBrick]: { seed: 23, wall: '#b09b7f', band: '#a08d72', win: [0.9, 1.15], sill: 1.0, brick: true, lattice: true, blank: 0.4 },
+  [MAT.facadeOpen]: { seed: 24, wall: '#87796a', band: '#958775', win: [2.2, 1.9], sill: 0.75, open: true },
+  [MAT.facadeBand]: { seed: 25, wall: '#d6d4cd', band: '#ebe9e2', win: [2.4, 1.6], sill: 1.05, bands: true },
 };
 
 export const isFacade = (id: number) => id in STYLES;
@@ -33,10 +35,10 @@ function layout(st: Style, px: number): Window[] {
   const r = mulberry(st.seed), out: Window[] = [];
   const S = FACADE_M * px;
   for (let f = 0; f < 4; f++) for (let b = 0; b < 4; b++) {
-    const w = st.win[0] * px * (0.9 + r() * 0.2), h = st.win[1] * px;
+    const w = st.win[0] * px * (0.75 + r() * 0.5), h = st.win[1] * px * (0.9 + r() * 0.2);
     const x = (b * FACADE_BAY + FACADE_BAY / 2) * px - w / 2, y = S - (f * FACADE_BAY + st.sill) * px - h;
     const kind = r(), lit = r() < 0.16 && kind > 0.4;
-    out.push({ x, y, w, h, kind, lit });
+    if (r() >= (st.blank ?? 0)) out.push({ x, y, w, h, kind, lit });
   }
   return out;
 }
@@ -64,7 +66,7 @@ export function drawFacade(id: number, g: CanvasRenderingContext2D, S: number) {
     g.fillRect(r() * S, r() * S, px * (0.5 + r() * 1.8), px * (0.4 + r() * 1.2));
   }
   // Floor bands: the slab edge, its shadow, moss on top, streaks below.
-  for (let f = 0; f <= 4; f++) {
+  for (let f = 0; f <= 4; f += st.bandEvery ?? 1) {
     const y = S - f * FACADE_BAY * px;
     g.fillStyle = st.band; g.fillRect(0, y - px * 0.28, S, px * 0.28);
     g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(0, y, S, px * 0.06);
@@ -76,8 +78,8 @@ export function drawFacade(id: number, g: CanvasRenderingContext2D, S: number) {
     // Balcony floors: a dark recessed strip of windows behind a white parapet, the slab edge above.
     for (let f = 0; f < 4; f++) {
       const top = S - (f + 1) * FACADE_BAY * px, bot = S - f * FACADE_BAY * px;
-      g.fillStyle = '#1b1c1d'; g.fillRect(0, top + px * 0.3, S, bot - top - px * 1.3);
-      for (let x = 0; x < S; x += px * 1.5) { g.fillStyle = r() < 0.4 ? '#3a4044' : '#101112'; g.fillRect(x + px * 0.1, top + px * 0.5, px * 1.3, px * 1.2); }
+      g.fillStyle = '#2a2b2c'; g.fillRect(0, top + px * 0.45, S, bot - top - px * 1.5);
+      for (let x = 0; x < S; x += px * 1.5) { g.fillStyle = r() < 0.4 ? '#3a4044' : '#101112'; g.fillRect(x + px * 0.15, top + px * 0.6, px * 1.0, px * 1.0); g.fillStyle = st.wall; g.fillRect(x + px * 1.2, top + px * 0.45, px * 0.3, bot - top - px * 1.5); }
       g.fillStyle = '#d9d6ce'; g.fillRect(0, bot - px * 1.05, S, px * 1.05);
       g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(0, bot - px * 1.05, S, px * 0.05);
       streaks(g, 0, S, bot - px * 1.0, st.seed + 40 + f, 60, [px * 0.1, px * 0.9], '70,68,62', 0.25);

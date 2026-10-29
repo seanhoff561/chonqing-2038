@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-23 Reference hillside (U-010).
-Features done: 70 / 222 | Last done: M3-11
+**Status:** building M3. Next: M3-27 Run start without a shelter (U-013).
+Features done: 71 / 228 | Last done: M3-23
 <!-- /status -->
 
 ## Log
@@ -88,3 +88,4 @@ Features done: 70 / 222 | Last done: M3-11
 - M3-06 Shibati set piece: Shibati stair street: shop houses, timber fronts, landings
 - M3-10 Chunk meshes and textures: chunk meshes, weathered textures, painted facades with lit windows
 - M3-11 Chunk streaming and fog cover: chunks past the fog hidden; pipes, ladders and props merged per chunk
+- M3-23 Reference hillside (U-010): reference hillside rebuilt from look-01 with a vantage roof, first pass

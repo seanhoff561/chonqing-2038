@@ -241,13 +241,17 @@ Food (shelf life from manufacture; loot spawns with a seeded age): instant noodl
 
 Salvage: a downed drone yields rotors, a radio module, a camera module and a battery pack; a disabled quadruped yields servos, a sensor head and a power cell; a humanoid yields armour plate, a power cell and a rifle that will not fire for him (biometric lock).
 
-## 9. The hideout
+## 9. Shelters (U-013)
 
-A brick-arched air-raid side tunnel off the Grand Tunnel under Jiaochangkou: 4 m wide, 20 m long, damp walls, a mattress, a workbench, a stash crate (10 x 8 grid), a car battery (60%) with inverter, a camping lamp. Its only easy entrance is a rusted gate in a Shibati retaining wall, 60 m of tunnel away. Overhead a 9 m ventilation shaft rises to a grate at the Jiaochangkou junction: neon, sweeping searchlights and patrols directly above. That view is scripted decor: nothing up there can see down.
+There is no ready-made hideout. The intro ends at 06:00 on day 1 with Li Wei in the street with his backpack (2 instant noodles, 1 luncheon meat, 1 bread a day old, 3 water bottles, 1 bandage) and nowhere to sleep. He makes his own shelter, and where he makes it changes every run:
+- **Scouting.** Any enclosed space can be a shelter: a flat in an enterable block, a roof hut, a shop's back room, a basement, a tunnel chamber such as the brick-arched air-raid side tunnel under Jiaochangkou (gate in a Shibati retaining wall, a vent shaft to the grate under the junction's searchlights). Good sites are off patrol routes and drone corridors, show no light outside, and have two ways out. He learns that by watching, and Anna can rate a site once the laptop is up.
+- **Bed.** Claim a bed where one is (a mattress in a flat, a bunk in a site office), or carry a bedroll or mattress there and place it. Sleeping rough anywhere else works but restores 40% less energy, and he is exposed while asleep.
+- **Workbench.** Any table or bench becomes a workbench once a toolbox is placed on it.
+- **Storage.** A container within 15 m of his bed becomes his stash (or he places a crate). Everything in it stays put between trips.
+- The shelter is wherever his claimed bed is; the bench, stash, power (car battery and inverter) and a lamp count when within 15 m. Sleeping in his bed saves the run (ironman).
+- The fixed air-raid shelter of earlier builds (`?scenario=hideout`) stays as a furnished test scene.
 
-Starting supplies: 2 instant noodles, 1 luncheon meat, 1 bread (1 day old), 3 water bottles, 1 bandage.
-
-**Raid.** If compromised, a raid starts at a seeded time between 01:00 and 04:00. He wakes to breaching noises with 10 s before units reach the chamber. Survival options: a second exit he opened beforehand (clear the collapsed side passage with a crowbar, or cut the vent grate with bolt cutters and leave the telescoping ladder in the shaft), an EMP trap rigged on the gate, or fighting with what he slept beside. Surviving loses the shelter and everything in its stash (the machines burn it); he must claim one of the alternative shelters (a Hongyadong cliff cellar, a hotpot restaurant's 防空洞 cool room in Jiefangbei, a metro service room at Xiaoshizi). Each has a mattress, a small stash and a bench. Unprepared, he dies.
+**Raid.** If compromised, a raid starts at a seeded time between 01:00 and 04:00. He wakes to breaching noises with 10 s before units reach the chamber. Survival options: a second exit he opened beforehand (clear the collapsed side passage with a crowbar, or cut the vent grate with bolt cutters and leave the telescoping ladder in the shaft), an EMP trap rigged on the gate, or fighting with what he slept beside. Surviving loses the shelter and everything in its stash (the machines burn it); he must make a new one elsewhere (a Hongyadong cliff cellar, a hotpot restaurant's 防空洞 cool room in Jiefangbei, a metro service room at Xiaoshizi). Each has a mattress, a small stash and a bench. Unprepared, he dies.
 
 ## 10. Map plan
 

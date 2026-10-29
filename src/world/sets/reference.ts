@@ -94,6 +94,7 @@ export function referenceParts() {
   trees(out);
   terrain(out);
   filler(r, out);
+  nearFiller(r, out);
   return { ...out, blocks };
 }
 
@@ -155,15 +156,15 @@ function vantageBlock(r: ReturnType<typeof makeRng>, out: Fabric): RefBlock {
 function trees(out: Fabric) {
   const canopy = (cx: number, cy: number, cz: number, rx: number, ry: number, mat: number, seed: number) => {
     const r = makeRng(seed);
-    for (let i = 0; i < 9; i++) {
-      const x = cx + (rand(r) - 0.5) * rx * 1.4, y = cy + (rand(r) - 0.5) * ry, z = cz + (rand(r) - 0.5) * 2, w = 0.6 + rand(r) * rx * 0.4;
+    for (let i = 0; i < 22; i++) {
+      const x = cx + (rand(r) - 0.5) * rx * 1.6, y = cy + (rand(r) - 0.5) * ry, z = cz + (rand(r) - 0.5) * 2.4, w = 0.25 + rand(r) * 0.45;
       out.decor.push(solid(x - w, y - w * 0.6, z - w, x + w, y + w * 0.6, z + w, mat));
     }
   };
   // The blossoming tree in the bottom-left corner, in the street in front of the low-rises.
   const bx = X(200, 97);
   out.solids.push(solid(bx - 0.2, 0, Z(97) - 0.2, bx + 0.2, 8, Z(97) + 0.2, MAT.wood));
-  canopy(bx, Y(1240, 97), Z(97), 4, 3, MAT.blossom, 1);
+  canopy(bx, Y(1250, 97), Z(97), 2.6, 2, MAT.blossom, 1);
   // The yellow shrub on the front roof and the tree in blossom on the stained block's roof.
   canopy(X(470, 99), Y(1230, 99), Z(99) - 3, 3, 1.2, MAT.leaves, 2);
   canopy(X(1055, 156), Y(525, 156), Z(156) - 3, 1.6, 2.4, MAT.leaves, 3);
@@ -193,6 +194,24 @@ function filler(r: ReturnType<typeof makeRng>, out: Fabric) {
       const x0 = side < 0 ? x - w : x, z1 = z - (zone === 1 && z + 0 > TERRACE.mid.z - 2 ? 2 : 0);
       if (groundAt(z1 - 0.5) !== base || groundAt(z1 - d) !== base) continue;
       out.solids.push(solid(x0, base, z1 - d, x0 + w, base + floors * FLOOR, z1, mat));
+    }
+  }
+}
+
+/** Low blocks between the vantage and the low-rises, kept under the photo's bottom edge; a street runs north
+ *  from the vantage door (x 8-14) and another along the front of the low-rises. */
+function nearFiller(r: ReturnType<typeof makeRng>, out: Fabric) {
+  for (let z1 = -10; z1 > -88; z1 -= 18) {
+    const z0 = z1 - 14, d = REF_CAMERA.z - z1;
+    const limit = REF_CAMERA.y - d * T - 1.5;
+    for (const [a, b] of [[-70, 6], [16, 70]]) {
+      for (let x = a; x < b - 6; ) {
+        const w = Math.min(b - x, 8 + rand(r) * 7);
+        const h = Math.min(limit, 6 + rand(r) * 18);
+        const mat = [MAT.facadeBrick, MAT.facadeOpen, MAT.facade][randInt(r, 3)];
+        out.solids.push(solid(x, 0, z0, x + w, Math.max(3, h), z1, mat));
+        x += w + 2 + rand(r) * 2;
+      }
     }
   }
 }

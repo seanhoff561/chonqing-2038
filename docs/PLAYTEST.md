@@ -21,3 +21,8 @@ Report: does the hideout feel like an air-raid tunnel? Is the backpack easy to u
 Start: no flags, then = → "Movement gym" → pick an area. Fullscreen should stay on throughout.
 Try: walk and sprint on open floor and watch the hands at the bottom corners; jump and climb (hands reach and grip); press 1-5 with a crowbar, a water bottle and the pistol bound (Tab, hover, number) and look at the two-handed holds; try to grab a ledge while holding one (it shouldn't), then 0 and grab; wall-run lane: wall-run is back as it was; jump to the bars and swing.
 Report: do the walking and running hands look natural, and is there too much or too little sleeve? Do the two-handed holds look right for each item? Is the pause menu clear, and does Resume put you back in fullscreen?
+
+## PT-005 Reference hillside, first pass (U-009, U-010)
+Start: `?scenario=reference`, or = → "Reference hillside". You stand on the vantage roof where the photo was taken; look north. `logs/reference-compare.png` (after `npm run verify`) shows the photo beside the game at the photo's framing.
+Try: compare the view with docs/reference/look-01.jpg; walk down the stairwell (the hut at the back of the roof) to the street; climb onto the brick low-rises (pipes and sill columns), run across their roofs, look inside the enterable ones; go up the terrace stairs on the east side to the walk-ups.
+Report: which buildings read right and which don't (colour, window sizes, weathering, roofs, greenery)? What would bring it closest to the photo? Is it fun to move through?

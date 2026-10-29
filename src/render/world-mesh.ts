@@ -29,8 +29,8 @@ export function pushSolid(s: Solid, b: Buf, roof: Buf = b) {
   const tall = s.y1 - s.y0 > 2.5;
   const yt = (x: number, z: number) => (s.ramp ? topAt(s, x, z) : s.y1);
   const colour = (o: Buf, y: number, side: boolean, shade: number) => {
-    // Grime: walls darken over their bottom 4 m.
-    const g = side && tall ? 0.72 + 0.28 * Math.min(1, (y - s.y0) / 4) : 1;
+    // Grime: walls darken over their bottom 4 m, and rain runs dirt down from the roof edge.
+    const g = side && tall ? (0.72 + 0.28 * Math.min(1, (y - s.y0) / 4)) * (1 - 0.18 * Math.max(0, 1 - (s.y1 - y) / 1.5)) : 1;
     const k = tone * g * shade;
     o.col[o.n * 3] = k * (1 + warm); o.col[o.n * 3 + 1] = k; o.col[o.n * 3 + 2] = k * (1 - warm);
   };
@@ -55,7 +55,8 @@ export function pushSolid(s: Solid, b: Buf, roof: Buf = b) {
     n = [ez[1] * ex[2] - ez[2] * ex[1], ez[2] * ex[0] - ez[0] * ex[2], ez[0] * ex[1] - ez[1] * ex[0]];
     const l = Math.hypot(n[0], n[1], n[2]); n = n.map(v => v / l);
   }
-  quad([[x0, h01, z1], [x1, h11, z1], [x1, h10, z0], [x0, h00, z0]], n, [[x0, z1], [x1, z1], [x1, z0], [x0, z0]], false);
+  // Flat roofs of painted blocks are old, wet and dark.
+  quad([[x0, h01, z1], [x1, h11, z1], [x1, h10, z0], [x0, h00, z0]], n, [[x0, z1], [x1, z1], [x1, z0], [x0, z0]], false, facade ? 0.72 : 1);
   quad([[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1]], [0, -1, 0], [[x0, z0], [x1, z0], [x1, z1], [x0, z1]], false, 0.7);
   // Sides: u runs left to right as seen from outside; facades count from the building's corner.
   // Whole bays across each wall, so no window is cut at a corner.
