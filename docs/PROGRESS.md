@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M2. Next: M2-04 Bleeding.
-Features done: 27 / 204 | Last done: M2-03
+**Status:** building M2. Next: M2-05 Limb injuries.
+Features done: 28 / 204 | Last done: M2-04
 <!-- /status -->
 
 ## Log
@@ -34,3 +34,4 @@ Features done: 27 / 204 | Last done: M2-03
 - M2-01 Game clock and day phases: game clock and day phases
 - M2-02 Sky, sun, moon and ambient light by time: sky, sun, moon and ambient light by time
 - M2-03 Health, damage and death: health, damage and death
+- M2-04 Bleeding: bleeding
