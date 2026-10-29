@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M2. Next: M2-10 Grid inventory.
-Features done: 33 / 204 | Last done: M2-09
+**Status:** building M2. Next: M2-11 Backpack UI.
+Features done: 34 / 204 | Last done: M2-10
 <!-- /status -->
 
 ## Log
@@ -40,3 +40,4 @@ Features done: 33 / 204 | Last done: M2-09
 - M2-07 Natural healing: natural healing
 - M2-08 Body feedback without meters: body feedback without meters
 - M2-09 Item database: item database
+- M2-10 Grid inventory: grid inventory

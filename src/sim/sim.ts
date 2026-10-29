@@ -7,6 +7,7 @@ import { stepPlayer } from './move';
 import { GAME_PER_TICK } from './clock';
 import { createBody, stepBody } from './body';
 import { checkCollapse } from './sleep';
+import { grid } from './inventory';
 import { survival } from '../data/survival';
 
 export const STATE_VERSION = 1;
@@ -21,6 +22,9 @@ export function createState(seed: number, world: World): SimState {
     time: survival.startHour * 3600,
     player: createPlayer(s.x, s.y, s.z, s.yaw),
     body: createBody(),
+    inv: { pack: grid(8, 6), hotbar: [null, null, null, null, null], held: 0 },
+    containers: {},
+    nextUid: 0,
     dead: null,
     events: [],
     flags: { god: false, noclip: false, rain: 0 },

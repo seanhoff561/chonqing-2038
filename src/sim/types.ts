@@ -45,6 +45,10 @@ export interface SimState {
   time: number;
   player: import('./player').Player;
   body: import('./body').Body;
+  inv: { pack: import('./inventory').Grid; hotbar: (number | null)[]; held: number };
+  /** container grids by id, created when first opened */
+  containers: Record<string, import('./inventory').Grid>;
+  nextUid: number;
   /** cause of death, or null while alive */
   dead: string | null;
   /** events emitted during the latest tick */
