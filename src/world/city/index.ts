@@ -1,12 +1,14 @@
 // The city: terrain from the tile map, then fabric and set pieces.
 import { makeWorld, type World } from '../world';
 import { buildTerrain } from './terrain';
+import { buildFabric } from './buildings';
 import { TILE } from '../map';
 
 export function buildCity(): World {
   const t = buildTerrain();
+  const f = buildFabric();
   return makeWorld({
-    name: 'city', solids: t.solids, decor: t.decor, water: t.water,
+    name: 'city', solids: t.solids.concat(f.solids), decor: t.decor.concat(f.decor), water: t.water, props: f.props,
     spawn: { x: 23 * TILE + 10, y: 44, z: 17 * TILE + 10, yaw: Math.PI },
     teleports: [
       { name: 'Jiaochangkou plaza', x: 24 * TILE, y: 44, z: 17 * TILE, yaw: Math.PI },

@@ -153,6 +153,12 @@ const builders: Record<string, Builder> = {
     g.userData.tick = (_t: number, open: Record<string, boolean>) => { a += ((open[p.text!] ? 1.45 : 0) - a) * 0.15; slab.rotation.y = a; };
     return g;
   },
+  stilts: p => {
+    const parts: THREE.BufferGeometry[] = [];
+    const o = p.w! / 2 - 0.1;
+    for (const [x, z] of [[-o, -o], [o, -o], [-o, o], [o, o]]) parts.push(new THREE.BoxGeometry(0.1, p.h!, 0.1).translate(x, p.h! / 2, z));
+    return new THREE.Mesh(mergeGeometries(parts), material(MAT.metal));
+  },
   neonGlow: () => { const l = new THREE.PointLight(0xff3b8b, 5, 16, 1.5); return l; },
   mattress: () => {
     const g = new THREE.Group();
