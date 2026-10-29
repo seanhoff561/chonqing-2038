@@ -14,8 +14,8 @@ const supply = (s: SimState, g: Grid) => {
   for (const [id, n, ageDays] of STARTING_SUPPLIES) addItem(s, g, id, n, ageDays ? { made: s.time - ageDays * 86400 } : {});
 };
 
-/** What the friends left in their crate: a string of firecrackers, tape, a rag. */
-export const FRIENDS_CRATE: [string, number][] = [['firecrackers', 1], ['tape', 1], ['cloth', 1]];
+/** What the friends left in their crate: a string of firecrackers, tape, a rag, a headlamp at 60%. */
+export const FRIENDS_CRATE: [string, number, number?][] = [['firecrackers', 1], ['tape', 1], ['cloth', 1], ['headlamp', 1, 60]];
 export const START_BED = 'airraid-mattress', START_CRATE = 'airraid-stash';
 
 export function startRun(s: SimState, w: World) {
@@ -25,7 +25,7 @@ export function startRun(s: SimState, w: World) {
   if (bed) claimBed(s, bed);
   if (w.inter.some(i => i.id === START_CRATE)) {
     const g = (s.containers[START_CRATE] = grid(CONTAINER.crate.w, CONTAINER.crate.h));
-    for (const [id, n] of FRIENDS_CRATE) addItem(s, g, id, n);
+    for (const [id, n, charge] of FRIENDS_CRATE) addItem(s, g, id, n, charge ? { charge } : {});
     s.wstate.searched[START_CRATE] = true;
   }
   s.events.length = 0;

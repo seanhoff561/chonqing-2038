@@ -16,6 +16,9 @@ export class View {
   readonly scene = new THREE.Scene();
   readonly fp: FPCamera;
   readonly sun = new THREE.DirectionalLight(0xfff1dd, 1.6);
+  /** His headlamp (U-019): a spot on his forehead, always in the scene (intensity 0 when off) so switching it
+   *  never recompiles the shaders. */
+  readonly lamp = new THREE.SpotLight(0xfff4e6, 0, 40, 0.5, 0.75, 2);
   private readonly shadowEye = new THREE.OrthographicCamera(0, 0.001, 0.001, 0, 0, 0.001);
   readonly hemi = new THREE.HemisphereLight(0xc8d4e0, 0x4a4438, 1.2);
   readonly world = new THREE.Group();
@@ -48,6 +51,9 @@ export class View {
     container.appendChild(this.renderer.domElement);
     this.fp = new FPCamera(innerWidth / innerHeight);
     this.scene.add(this.fp.cam, this.world, this.sun, this.sun.target, this.hemi);
+    this.lamp.position.set(0, 0.08, 0);
+    this.lamp.target.position.set(0, -0.12, -1);
+    this.fp.cam.add(this.lamp, this.lamp.target);
     this.scene.background = new THREE.Color(0x9aa6ad);
     this.scene.fog = new THREE.Fog(0x9aa6ad, 20, 160);
     this.sun.position.set(40, 80, 30);
@@ -97,6 +103,13 @@ export class View {
       const b = m.geometry.boundingBox!.clone().applyMatrix4(m.matrixWorld);
       m.userData.rect = [b.min.x, b.min.z, b.max.x, b.max.z];
     }
+  }
+
+  /** 0 off, 1 white (bright, 40 m), 2 red (dim, 12 m: keeps night vision, shows less). */
+  setLamp(mode: number) {
+    this.lamp.intensity = mode === 1 ? 90 : mode === 2 ? 5 : 0;
+    this.lamp.color.setHex(mode === 2 ? 0xff2814 : 0xfff4e6);
+    this.lamp.distance = mode === 2 ? 12 : 40;
   }
 
   render(t = 0, open: Record<string, boolean> = {}) {

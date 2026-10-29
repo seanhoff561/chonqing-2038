@@ -166,6 +166,7 @@ export class Game {
     // Rain stops at a roof or underground.
     const covered = this.under > 0.5 || !!raycast(this.world.index, cam.x, cam.y, cam.z, 0, 1, 0, 40);
     this.rain.update(this.state.tick / 60, cam, this.state.weather.rain, covered);
+    this.view.setLamp(this.state.player.lamp);
     this.view.render(this.state.tick / 60, this.state.wstate.open);
     this.frames++;
   }

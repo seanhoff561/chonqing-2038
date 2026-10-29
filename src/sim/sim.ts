@@ -5,6 +5,7 @@ import type { InputFrame, SimState } from './types';
 import type { World } from '../world/world';
 import { stepPlayer } from './move';
 import { GAME_PER_TICK } from './clock';
+import { stepLamp } from './headlamp';
 import { createBody, stepBody } from './body';
 import { checkCollapse } from './sleep';
 import { grid } from './inventory';
@@ -19,7 +20,7 @@ import './food';
 import './shelter';
 import { survival } from '../data/survival';
 
-export const STATE_VERSION = 4;
+export const STATE_VERSION = 5;
 
 export function createState(seed: number, world: World): SimState {
   const s = world.spawn;
@@ -55,6 +56,7 @@ export function step(state: SimState, world: World, input: InputFrame): void {
   stepInteract(state, world, input);
   stepPlayer(state, world, input);
   stepHeld(state, world, input);
+  stepLamp(state, input);
   stepContainers(state, { inter: allInters(state, world) });
   stepWeather(state);
   stepBody(state);
