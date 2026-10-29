@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 35 of 55 done
+## M3: 36 of 61 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -409,9 +409,26 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Colours and materials by district and building type after the reference photos: no single colour dominates, the salmon tile is rare; towers vary in form (podiums, setbacks, crowns, curtain-wall colours, LED screens); old walk-ups, slabs, shop houses, offices and malls read as their type
   - Cyberpunk in the formerly crowded centres (Jiefangbei, Jiaochangkou, Hongyadong) and quiet dystopia elsewhere; just after the takeover, not ruined
   - Screenshots of Jiefangbei, a residential slope and Shibati beside reference photos
-- [ ] **M3-41c** Everything moves to Yuzhong (D-016)
+- [x] **M3-41c** Everything moves to Yuzhong (D-016)
   - Shibati's shop houses along the real Eighteen Stairs, the Line 2 route and stations from OSM (the stalled train on an elevated stretch), the construction site on a real construction plot, the Grand Tunnel on the real 十八梯大隧道 alignment with the vent hideout under a plaza, dressing along the real streets, districts by place, sites, teleports and spawns
   - 'run' and 'shibati' use the new world; the old tile city is removed; every test updated
+- [ ] **M3-53** Performance: a 150 fps budget (U-022)
+  - Frame time measured and shown in the dev overlay (sim, render CPU, draw calls, triangles); static city geometry merged and culled per chunk, props instanced, far buildings and ground at lower detail, shadows limited to what's near
+  - A headless benchmark at fixed viewpoints in Yuzhong (street, rooftop, tunnel, overview) holds draw calls and triangles under budget and render plus sim CPU under 4 ms a frame; it fails when a change breaks the budget
+  - docs/PLAYTEST.md asks for the frame rate on the director's machine at the same viewpoints (target 150 fps)
+- [ ] **M3-54** Smooth streets (U-022)
+  - Streets are meshes along their real lines, not painted ground cells: carriageway with lane markings, kerbs, pavements either side, gutters, drains and manholes, crossings at junctions; smooth edges and curves, no cell-stepped borders; stairs and ramps as continuous flights
+  - The ground meets them without seams or steps; junctions blend
+  - Screenshots of a main road, a lane, a junction and a stair street beside reference photos
+- [ ] **M3-55** Buildings that look like buildings, in 2038 (U-022, U-024)
+  - Every building shows an entrance (door, lobby, shopfront with glass or shutters) on its street side and real elements by type: framed windows with sills and bars, balconies with rails and clutter, AC units, awnings, signs, downpipes, roof kit; walk-ups, slabs, offices, malls, hotels and Shibati houses each read differently; 2038 architecture, not today's city: megastructure blocks, stacked and cantilevered floors, new skins on old concrete bones, screens and holographic signage, cyberpunk in the centres and dystopian elsewhere
+  - Climbing holds are those real elements (downpipes on brackets, AC units, window bars, balcony rails, signs), not abstract strips; the hold spacing tests still pass
+  - Enterable buildings read as enterable (open or broken doors, lit gaps); a share of every district can be entered
+  - Screenshots of five building types beside reference photos
+- [ ] **M3-56** Nothing empty (U-022)
+  - The open paved spaces between buildings fill from the reference photos: back buildings and lean-tos, courtyards with walls and gates, sheds, stalls, gardens and trees, parked and wrecked vehicles, retaining walls with greenery, stairs between levels; soft landings (bins, bags, awnings) under long drops (U-024)
+  - A unit test finds no open paved patch wider than 12 m off the streets and squares on the peninsula, and props on every 20 m of street
+  - Screenshots of three spots that were empty in PT-008
 - [ ] **M3-47** Hiding, seen from inside; more places to hide (U-021)
   - Hidden, he sees the inside of what he's in (crate slats with light between, a dumpster under a lifted lid, a wardrobe's door crack, a car boot), not through it
   - Many more places to hide across the city: dumpsters and big bins on streets and in alleys, wardrobes and cupboards in flats, stall cabinets, water tanks on roofs, car boots, barrels; each with a prompt
@@ -419,9 +436,19 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
 - [ ] **M3-48** Underwater (U-021)
   - Under the surface the view turns murky green-brown with short sight, dim wavering light and drifting particles; the surface seen from below; sound muffles
   - Back above it, it clears at once; e2e screenshots under and over
-- [ ] **M3-50** The movement envelope (U-021)
-  - src/data/envelope.ts: measured from the sim, the gaps and heights of standing and running jumps, mantles, hand reaches, wall kicks and wall-runs, slide distances (flat and downhill), safe drops, swing and lache distances, each with a comfortable and a maximum value
+- [ ] **M3-50** The movement envelope (U-021, U-023)
+  - src/data/envelope.ts: measured from the sim, the gaps and heights of standing and running jumps, mantles, hand reaches, wall kicks and wall-runs, slide distances (flat and downhill), safe drops, swing and lache distances, and the chained moves (a jump then two wall kicks, a jump up then a back-jump to a grab, a wall-run into a kick, the same with an item in hand), each with a comfortable and a maximum value
+  - Soft landings (U-024): bins, bags, cardboard, awnings and tarps cut fall damage; the envelope lists the safe drop onto each; a sim test lands a fall onto each kind
   - Unit tests regenerate each number from the sim and fail when movement changes it; DESIGN section 3 shows the table; generators and hand layouts read it
+- [ ] **M3-57** The vertical city (U-023)
+  - Many more and much taller buildings, packed side by side in clusters a running jump or a wall-run apart; buildings stacked and bridging over each other and over the lanes (skybridges, a block built across a street, Chongqing's street-on-the-roof levels with entrances on many floors); futuristic megastructures (U-024)
+  - Exteriors climbable all the way up by the envelope's hardest chains: beams, poles, ledges, cornices, scaffold and cables; open and broken floors to duck through mid-climb; vantage ledges high over the street to look down from
+  - Hard by design (U-023): huge gaps at the envelope's maximum, no easy line to the top of a tower; a bot climbs three towers over 80 m from the street using only generated features
+  - Screenshots looking down from three vantage points
+- [ ] **M3-58** The underground city (U-023, U-024)
+  - Several levels under the peninsula: air-raid tunnels, basements, storm culverts and the metro joined into a network, and in places a whole underground layer of streets, shops and buildings with shafts, stairs and drops between its levels, futuristic like the city above
+  - Many ways in (building basements, stairs, grates, culvert mouths, metro entrances), some only by a climb or a squeeze; patrols walk it (M4-01)
+  - A bot walks underground between three districts and between two levels; a unit test counts at least 30 ways in
 - [ ] **M3-51** Sandbox parkour areas (U-021)
   - Skatepark-style areas in the plain parts of the city: dense, varied geometry (roofs at mixed heights, walls, poles, bars, slopes, scaffolds, cables) built to the envelope, with many lines through and no single solution; riskier (more patrols, less cover)
   - A bot test finds at least three different routes across each area
@@ -438,16 +465,16 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Boot, draw-call and triangle budgets hold (DESIGN 16); screenshots of Jiefangbei, Shibati and Chaotianmen beside their reference photos
 - [ ] **M3-35** Shibati and Jiaochangkou from the references (U-014)
   - Terrain, street layout and building placement follow the real places in docs/reference (photos and notes): organic, not a grid; buildings sit on the slope with stepped bases and retaining walls
-  - The streets look like the real ones, made dystopian: dressing per M3-34, the ASI's marks
+  - The streets look like the real ones, made futuristic and dystopian (U-024): dressing per M3-34, the ASI's marks
   - Screenshots beside reference photos of the same spots
 - [ ] **M3-36** Building access by design (U-014)
   - Hand-made building templates in several variations each: most doors locked or jammed, stair doors chained, only a few rooms open, the rest collapsed or blocked; ways in like a window off a neighbour's roof, a hole in a floor, a balcony to crawl along, a fire door opened from inside
   - Generic pipes, ladders and hold columns are removed; climbables appear only where a template or route places them
   - Loot is scarce: a few containers per open building, most rooms empty or picked over
   - Sim tests take one way into each template and find the locked alternatives refuse him
-- [ ] **M3-37** The ant-hill route network (U-014, U-021)
+- [ ] **M3-37** The ant-hill route network (U-014, U-021, U-023)
   - Hand-designed main routes like highways across the district over roofs, through buildings, along beams and through tunnels, carrying the sites and key supplies needed to finish the game; branching neighbourhood routes off them; streets are the dangerous shortcut
-  - Every gap, height and reach on a route is within the movement envelope (M3-50), comfortable on the main routes, near the maximum on the risky branches
+  - Every gap, height and reach on a route is within the movement envelope (M3-50) and near its top (U-023): main routes demand the full movement set (chained wall kicks, a back-jump to a grab, wall-runs, swings and laches, item tricks), risky branches sit at the maximum; nothing on a route is a walk
   - A readable visual language: planks, open windows, broken railings and worn paths mark the way; dead ends read as dead ends
   - Route and patrol data: the routes as graphs, patrols laid against them; a patrol route and a drone corridor pass over the start hideout's vent grate at night (U-018)
   - A bot walks each main route end to end; screenshots of three junctions
@@ -489,6 +516,7 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
   - Units are plain data (type, route, schedule, state); while Unaware a unit's pose is a pure function of game time plus its run-seed phase offset (at most 8% of its loop)
   - Routes have dwell times and units have active hours
   - A unit test: the same pose for the same time however that time was reached
+  - Patrol routes run underground too: the tunnels and the underground layer (U-024)
 - [ ] **M4-02** Navigation graph and pathing
   - A nav graph built from streets, stairs and tunnels with levels; A* between any two reachable nodes
   - Unit types filter edges (delivery robots avoid stairs)

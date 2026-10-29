@@ -77,7 +77,11 @@ export function segNearObb(o: Obb, ax: number, az: number, bx: number, bz: numbe
 
 /** Rows of a grid (x0, z0, cell, w by h samples) covered by a polygon: calls fill(i0, i1, j) per span. */
 export function rasterPoly(poly: P2[], x0: number, z0: number, cell: number, w: number, h: number, fill: (i0: number, i1: number, j: number) => void) {
-  for (let j = 0; j < h; j++) {
+  // Only the rows the polygon spans.
+  let lo = Infinity, hi = -Infinity;
+  for (const [, z] of poly) { if (z < lo) lo = z; if (z > hi) hi = z; }
+  const j0 = Math.max(0, Math.ceil((lo - z0) / cell)), j1 = Math.min(h - 1, Math.floor((hi - z0) / cell));
+  for (let j = j0; j <= j1; j++) {
     const z = z0 + j * cell, xs: number[] = [];
     for (let k = 0; k < poly.length; k++) {
       const [ax, az] = poly[k], [bx, bz] = poly[(k + 1) % poly.length];

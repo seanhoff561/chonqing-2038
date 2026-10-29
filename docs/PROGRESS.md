@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-41c Everything moves to Yuzhong (D-016).
-Features done: 98 / 249 | Last done: M3-46
+**Status:** building M3. Next: M3-53 Performance: a 150 fps budget (U-022).
+Features done: 99 / 261 | Last done: M3-41c
 <!-- /status -->
 
 ## Log
@@ -116,3 +116,4 @@ Features done: 98 / 249 | Last done: M3-46
 - M3-41b The Yuzhong base world (D-016): Yuzhong at 1:1 from the real ground and map: OSM and infill buildings, streets, stairs, bridges
 - M1-41 Movement realism (U-020): slides gather speed downhill, steep ground is a wall, grabs tear loose at speed, facing-wall kicks go up
 - M3-46 Building variety (U-020): building colour and form variety, cyberpunk centres, streets painted on the ground
+- M3-41c Everything moves to Yuzhong (D-016): the set pieces on the real map: the Grand Tunnel and the hideout under a Shibati street, Line 2 and its stalled train, the construction site, Shibati's terraces, street dressing; the old tile city removed

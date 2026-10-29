@@ -23,13 +23,30 @@ const browser = await puppeteer.launch({
 const fails = [];
 let passes = 0;
 
+// The 1:1 city takes a while to boot in software-rendered Chrome, so its scenarios boot once and every check
+// shares that page: a check's close() is put off to the end, and the next check gets the flags, headlamp and
+// clock the page started with.
+const SHARED = new Set(['?scenario=shibati&seed=1', '?scenario=yuzhong&seed=1', '?scenario=run&seed=1']);
+const shared = new Map();
 async function open(query, where) {
-  const page = await browser.newPage();
+  const held = shared.get(query);
+  if (held) {
+    held.where.v = where;
+    await held.page.evaluate(`(() => { const g = window.__cq.game; Object.assign(g.state.flags, ${held.flags}); for (const k of Object.keys(g.state.flags)) if (!(k in ${held.flags})) delete g.state.flags[k]; g.state.player.lamp = 0; g.state.time = ${held.time}; window.__cq.runFrames(2); })()`);
+    return held.page;
+  }
+  const page = await browser.newPage(), label = { v: where };
   await page.setViewport({ width: 960, height: 540 });
-  page.on('console', m => { if (m.type() === 'error') fails.push(`${where}: console ${m.text().slice(0, 200)}`); });
-  page.on('pageerror', e => fails.push(`${where}: pageerror ${String(e.message).split('\n')[0].slice(0, 200)}`));
+  page.on('console', m => { if (m.type() === 'error') fails.push(`${label.v}: console ${m.text().slice(0, 200)}`); });
+  page.on('pageerror', e => fails.push(`${label.v}: pageerror ${String(e.message).split('\n')[0].slice(0, 200)}`));
   await page.goto(base + query, { waitUntil: 'load', timeout: 240000 });
   await page.waitForFunction('window.__cq && window.__cq.ready', { timeout: 240000 });
+  if (SHARED.has(query)) {
+    const [flags, time] = await page.evaluate('[JSON.stringify(window.__cq.game.state.flags), window.__cq.game.state.time]');
+    const close = page.close.bind(page);
+    page.close = async () => {};
+    shared.set(query, { page, where: label, flags, time, close });
+  }
   return page;
 }
 
@@ -41,7 +58,7 @@ try {
   await first.close();
   passes++;
   for (const s of process.env.SMOKE_ONLY ? [] : scenarios) {
-    const page = await open(`?scenario=${s}`, `scenario ${s}`);
+    const page = await open(`?scenario=${s}&seed=1`, `scenario ${s}`);
     await page.evaluate('window.__cq.runFrames(30)');
     await page.close();
     passes++;
@@ -57,6 +74,7 @@ try {
 } catch (e) {
   fails.push(`harness: ${String(e.message ?? e).split('\n')[0]}`);
 }
+for (const h of shared.values()) await h.close();
 await browser.close();
 server.close();
 for (const f of fails) console.log(`SMOKE FAIL ${f}`);

@@ -38,6 +38,13 @@ Try: the residential slabs over the walk-ups, balcony bands, roof gardens, laund
 Report: what still looks least like the photo (colours, window grids, regularity of the blocks, roofs)? Where should the city be denser or more broken?
 
 ## PT-008 Yuzhong at 1:1, first look (U-017, U-020)
+Result (U-022): passable; climbing strips look odd; buildings read as textured boxes with no doors or elements; streets blocky-edged; large empty paved areas; about 60 fps. Fixes queued as M3-53 to M3-56.
 Start: `?scenario=yuzhong&dev=1` (the old map is still the default until M3-41c); teleports in the dev panel go to Jiefangbei, Shibati, Jiaochangkou, Hongyadong, Xiaoshizi, Chaotianmen, the cableway and the Grand Tunnel.
 Try: noclip up over the peninsula and look along both rivers; walk Jiefangbei's streets (towers, LED screens, neon); walk a residential slope and the stairs; slide down a steep street (Ctrl at a sprint); try a steep bank (it should be a wall); fall from a tower roof past a ledge and grab (it should tear loose above about 12 m).
 Report: does it read as Chongqing (sizes, slopes, how buildings sit on the hill)? Which buildings or colours look wrong, and where is it too empty? After `npm run verify`, compare logs/variety-jiefangbei.png, variety-slope.png and variety-shibati.png with docs/reference/places/jiefangbei-3.jpg, old-housing-1.jpg and shibati-2.jpg. How is the frame rate and the load time on your machine?
+
+## PT-009 Everything on the real map (M3-41c)
+Start: the game (no scenario): a run starts in the friends' hideout under the vent grate, now under a street in the real Shibati. `?scenario=shibati&dev=1` starts at the top of the Eighteen Stairs; dev teleports include the Grand Tunnel entrance and exit, the Line 2 train, the construction site and its crane, and the metro entrances.
+Try: get out of the hideout along the side tunnel and the Grand Tunnel, open the rusted gate and climb the stairway to the Shibati street; walk the Eighteen Stairs and run the rooftops of the shop houses either side; walk into a few buildings (more now open) and up their stairs; climb the half-built tower's stair core and the crane ladder; walk the Line 2 beam through the stalled train.
+Report: is the hideout's way out readable underground? Do the Shibati terraces and their rooftops work as a route? Anywhere you got stuck, fell through or saw into the void (stairway mouths, the grate, building doors)?
+
