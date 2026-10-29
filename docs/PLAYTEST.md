@@ -26,3 +26,8 @@ Report: do the walking and running hands look natural, and is there too much or 
 Start: `?scenario=reference`, or = → "Reference hillside". You stand on the vantage roof where the photo was taken; look north. `logs/reference-compare.png` (after `npm run verify`) shows the photo beside the game at the photo's framing.
 Try: compare the view with docs/reference/look-01.jpg; walk down the stairwell (the hut at the back of the roof) to the street; climb onto the brick low-rises (pipes and sill columns), run across their roofs, look inside the enterable ones; go up the terrace stairs on the east side to the walk-ups.
 Report: which buildings read right and which don't (colour, window sizes, weathering, roofs, greenery)? What would bring it closest to the photo? Is it fun to move through?
+
+## PT-006 Whole city and lighting (U-012)
+Start: `?scenario=shibati&dev=1`; noclip (dev panel) up above the tallest towers, or climb one.
+Try: look across the whole peninsula to both rivers; walk the Shibati stair street at 15:00 (sun shadows), 18:30 and 23:00 (dev time slider); watch the fps readout.
+Report: does the city feel endless from up high, and does the haze look right? Any visible seam where detail turns into the far blocks (about 160 m out)? Are shadows and night light good, and is the frame rate smooth on your machine?

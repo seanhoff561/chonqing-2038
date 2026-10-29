@@ -8,6 +8,9 @@ import { MAT } from '../world/mats';
 import { FPCamera } from './fpcamera';
 import { buildProps, tickProps } from './props';
 
+/** Half-size of the sun's shadow area around the camera, metres. */
+export const SHADOW_R = 70;
+
 export class View {
   readonly renderer: THREE.WebGLRenderer;
   readonly scene = new THREE.Scene();
@@ -26,6 +29,14 @@ export class View {
     // Filmic response: highlights roll off, shadows keep detail (U-012).
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.4;
+    // A soft sun shadow over the area around the camera (U-012); Sky moves it with him.
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.sun.castShadow = true;
+    this.sun.shadow.mapSize.set(2048, 2048);
+    Object.assign(this.sun.shadow.camera, { left: -SHADOW_R, right: SHADOW_R, top: SHADOW_R, bottom: -SHADOW_R, near: 1, far: 400 });
+    this.sun.shadow.bias = -0.0004;
+    this.sun.shadow.normalBias = 0.04;
     container.appendChild(this.renderer.domElement);
     this.fp = new FPCamera(innerWidth / innerHeight);
     this.scene.add(this.fp.cam, this.world, this.sun, this.sun.target, this.hemi);
@@ -44,10 +55,14 @@ export class View {
     this.world.clear();
     // Big worlds draw detail near the camera and one cheap stand-in per block beyond (U-012).
     this.hasFar = w.far.length > 0;
-    const meshes = buildSolidMeshes(w.solids.concat(w.decor), this.hasFar ? 'near' : 'all');
+    const meshes = buildSolidMeshes(w.solids.concat(w.decor), this.hasFar ? 'near' : 'all', undefined, w.index);
     const props = buildProps(w.props);
     this.world.add(meshes, buildLabels(w.labels), props);
-    if (this.hasFar) this.world.add(buildSolidMeshes(w.far, 'far', 1e6));
+    if (this.hasFar) {
+      const far = buildSolidMeshes(w.far, 'far', 1e6);
+      far.traverse(o => { o.castShadow = false; });
+      this.world.add(far);
+    }
     for (const b of w.water) {
       const m = new THREE.Mesh(new THREE.PlaneGeometry(b.x1 - b.x0, b.z1 - b.z0), material(MAT.water));
       m.rotation.x = -Math.PI / 2;
