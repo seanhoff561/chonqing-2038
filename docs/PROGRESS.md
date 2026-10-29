@@ -2,7 +2,7 @@
 
 <!-- status -->
 **Status:** building M3. Next: M3-23 Reference hillside (U-010).
-Features done: 69 / 222 | Last done: M3-10
+Features done: 70 / 222 | Last done: M3-11
 <!-- /status -->
 
 ## Log
@@ -87,3 +87,4 @@ Features done: 69 / 222 | Last done: M3-10
 - M3-05 Fabric climbables and hiding spots: pipes, ladders, hold columns, balconies, signs, alley hides, bars and crawl fences
 - M3-06 Shibati set piece: Shibati stair street: shop houses, timber fronts, landings
 - M3-10 Chunk meshes and textures: chunk meshes, weathered textures, painted facades with lit windows
+- M3-11 Chunk streaming and fog cover: chunks past the fog hidden; pipes, ladders and props merged per chunk
