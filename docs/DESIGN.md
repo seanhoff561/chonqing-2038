@@ -47,7 +47,7 @@ Player collision is an axis-aligned box 0.5 m wide. All values live in `src/data
 | Crawl | passes 0.6 m gaps |
 | Ledge hang | in the air, grab a ledge whose top is 1.0 to 1.9 m above his feet (his hands' reach) with its wall in front within 0.6 m; hangs with feet 1.8 m below the top; shimmy 0.8 m/s; climb up 0.9 s; drop with Q. A standing jump plus reach tops out at 2.4 m, the mantle limit |
 | Wall-run | sprinting (5.5 m/s+), Space with a wall within 0.8 m at the side and travel within 35 degrees of the wall: up to 3 steps (0.9 s) at 6.5 m/s, starts +3.0 m/s up at 60% gravity; Space again leaps off at 5 m/s |
-| Wall climb (run-up) | sprinting at a wall (within 30 degrees of its normal), Space within 1.2 m: 2 steps, +5.6 m/s up (1.6 m); with the 1.9 m reach he catches a ledge up to 3.5 m above the feet, then hangs and climbs |
+| Wall climb (run-up) | sprinting at a wall (within 30 degrees of its normal), Space within 1.2 m: 2 steps, +5.75 m/s up (about 1.63 m); with the 1.9 m reach he catches a ledge up to 3.5 m above the feet, then hangs and climbs |
 | Pipes | vertical drain pipes: attach with E or by jumping into them; up 1.0, down 1.4 m/s |
 | Safe drops | 4 m; 7 m with a roll (C held within 0.3 s before landing) |
 | Hide in box | E at a box, crate, dumpster or cabinet with an interior of 0.8 m or more: 0.6 s in, 0.5 s out |

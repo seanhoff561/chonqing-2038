@@ -17,7 +17,7 @@ export const movement = {
   slide: { minSpeed: 6.0, time: 1.0, start: 7.5, end: 3.0 },
   hang: { reachLow: 1.0, reachHigh: 1.9, hangDrop: 1.8, shimmy: 0.8, climbTime: 0.9, wallGap: 0.6, regrab: 0.35 },
   wallRun: { maxTime: 0.9, speed: 6.5, upSpeed: 3.0, minSpeed: 5.5, stepEvery: 0.3, gravityScale: 0.6, wallDist: 0.8, maxAngle: 35, leapSpeed: 5.0, leapUp: 3.0 },
-  wallClimb: { maxAngle: 30, dist: 1.2, upSpeed: 5.6, time: 0.45 },
+  wallClimb: { maxAngle: 30, dist: 1.2, upSpeed: 5.75, time: 0.6 },
   climb: { pipeUp: 1.0, pipeDown: 1.4, ladder: 1.5, attachDist: 0.7 },
   falls: { safe: 4, rollSafe: 7, rollWindow: 0.3, lethal: 12, fractureFrom: 7, rollMax: 10, dmgPerM: 8, dmgPerMHigh: 10, sprainChance: 0.4, armChance: 0.2 },
   hide: { enterTime: 0.6, exitTime: 0.5, minInner: 0.8, reach: 1.6 },

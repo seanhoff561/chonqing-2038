@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M1. Next: M1-11 Wall-run.
-Features done: 10 / 204 | Last done: M1-10
+**Status:** building M1. Next: M1-12 Wall climb run-up.
+Features done: 11 / 204 | Last done: M1-11
 <!-- /status -->
 
 ## Log
@@ -17,3 +17,4 @@ Features done: 10 / 204 | Last done: M1-10
 - M1-08 Crouch and crawl: crouch and crawl through 0.6 m gaps
 - M1-09 Slide: slide from sprint under 0.6 m bars
 - M1-10 Ledge hang, shimmy, climb up and drop: ledge hang, shimmy, climb up and drop
+- M1-11 Wall-run: wall-run along walls with leap
