@@ -7,8 +7,8 @@ import { material, texScale, isFacade, FACADE_BAY, type Lod } from './materials'
 import { MAT } from '../world/mats';
 
 export const CHUNK = 64;
-/** Per-chunk shadow casters draw nothing in the main pass (three.js culls shadow casters by the main camera's
- *  layers, so they can't live on a layer of their own). */
+/** Per-chunk shadow casters live on a layer of their own that only the shadow pass's eye sees (View.render). */
+export const CASTER_LAYER = 1;
 const CASTER = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, colorWrite: false, depthWrite: false });
 const OPEN = [1, 1, 1, 1];
 /** Baked occlusion: a wall facing another within AO_R metres darkens, down to AO_MIN when touching. */
@@ -143,6 +143,7 @@ export function buildSolidMeshes(solids: Solid[], lod: Lod = 'all', chunk = CHUN
       geo.computeBoundingSphere();
       const caster = new THREE.Mesh(geo, CASTER);
       caster.castShadow = true;
+      caster.layers.set(CASTER_LAYER);
       caster.userData.chunk = { x: (gs[0].cx + 0.5) * chunk, z: (gs[0].cz + 0.5) * chunk };
       root.add(caster);
     }

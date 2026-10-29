@@ -3,7 +3,7 @@
 // Balconies are solid (their edges and parapets are holds); the rest is render-only decor.
 import { solid } from '../geom';
 import { MAT } from '../mats';
-import { rand, randInt, type Rng } from '../../sim/rng';
+import { rand, randInt, makeRng, hashString, type Rng } from '../../sim/rng';
 import { tileAt, TILE } from '../map';
 import { sides } from './climb';
 import type { Lot, Fabric } from './buildings';
@@ -58,6 +58,7 @@ export function details(l: Lot, r: Rng, out: Fabric, roof: number) {
       }
     }
   }
+  dress(l, all, roof, out);
   // Cables sag across the street to the block opposite.
   for (const s of all) {
     if (!s.street || rand(r) > 0.3) continue;
@@ -71,4 +72,21 @@ export function details(l: Lot, r: Rng, out: Fabric, roof: number) {
       out.decor.push(onFace(s, c - 0.015, c + 0.015, d0, d1, lo - 0.015, lo + 0.015, MAT.metal));
     }
   }
+}
+
+/** Render-only dressing, drawn from its own stream so the holds above never move: cable bundles and vines on
+ *  the walls; aerials, dishes, stools and pots near the roof edge. */
+function dress(l: Lot, all: Side[], roof: number, out: Fabric) {
+  const r = makeRng(hashString(`dress:${l.x0}:${l.z0}`));
+  const onWall = (s: Side, c: number) => ({ x: s.nz !== 0 ? c : s.f, z: s.nz !== 0 ? s.f : c, yaw: Math.atan2(s.nx, s.nz) });
+  for (const s of all) {
+    if (s.b - s.a < 4) continue;
+    if (rand(r) < 0.3) out.props.push({ kind: 'cablebundle', ...onWall(s, s.a + 1 + rand(r) * (s.b - s.a - 2)), y: l.base, h: Math.min(roof - l.base, 6 + rand(r) * 9) });
+    if (rand(r) < 0.18) out.props.push({ kind: 'vine', ...onWall(s, s.a + 2 + rand(r) * (s.b - s.a - 4)), y: l.base, w: 2 + rand(r) * 3, h: Math.min(roof - l.base, 3 + rand(r) * 8) });
+  }
+  const edge = () => {
+    const s = all[randInt(r, 4)], c = s.a + 1 + rand(r) * Math.max(0.1, s.b - s.a - 2), d = -(0.6 + rand(r) * 0.6);
+    return { x: s.nz !== 0 ? c : s.f + s.nx * d, z: s.nz !== 0 ? s.f + s.nz * d : c };
+  };
+  for (const kind of ['antenna', 'dish', 'stools', 'pot', 'pot']) if (rand(r) < (kind === 'pot' ? 0.4 : 0.3)) out.props.push({ kind, ...edge(), y: roof, yaw: rand(r) * Math.PI * 2 });
 }

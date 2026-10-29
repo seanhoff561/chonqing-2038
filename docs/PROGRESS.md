@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-34 Props, vehicles, debris and foliage (U-014).
-Features done: 87 / 237 | Last done: M3-24
+**Status:** building M3. Next: M3-35 Shibati and Jiaochangkou from the references (U-014).
+Features done: 88 / 237 | Last done: M3-34
 <!-- /status -->
 
 ## Log
@@ -105,3 +105,4 @@ Features done: 87 / 237 | Last done: M3-24
 - M3-32 Easier parapets and windows (U-014): 0.6 m parapets, vault over them in flight, windows big enough to hop through
 - M3-33 Closed facades read closed (U-014): painted windows read shut: bars, glass, shutters, boards, bricks
 - M3-24 Place references (U-011): 42 freely licensed place and interior reference photos, credited, with per-place notes
+- M3-34 Props, vehicles, debris and foliage (U-014): prop library on one textured atlas, dense street/alley/roof dressing, the stalled Line 2 train

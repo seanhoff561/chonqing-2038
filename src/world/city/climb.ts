@@ -4,7 +4,7 @@
 // scaffold bars to swing and lache along, or a fence with a crawl hole under it.
 import { solid, carve } from '../geom';
 import { MAT } from '../mats';
-import { rand, randInt, type Rng } from '../../sim/rng';
+import { rand, randInt, makeRng, hashString, type Rng } from '../../sim/rng';
 import { tileAt, TILE } from '../map';
 import type { Lot, Fabric } from './buildings';
 
@@ -134,5 +134,13 @@ export function alleys(lots: Lot[], r: Rng, out: Fabric) {
       out.solids.push(...carve([B(w0, q - 0.05, w1, q + 0.05, y, y + 2.4, MAT.metal)], B(wm - 0.4, q - 1, wm + 0.4, q + 1, y - 1, y + 0.65, 0)));
       out.features.push({ kind: 'fence', ...at(wm, q), y, group: out.features.length });
     }
+    // Render-only litter from its own stream: bags and boxes along the walls, weeds, a bike, laundry overhead.
+    const d = makeRng(hashString(`alley:${a.x0}:${a.z0}:${b.x0}:${b.z0}`)), along = alongZ ? 0 : Math.PI / 2;
+    const wall = (kind: string) => { const side = rand(d) < 0.5; out.props.push({ kind, ...at(side ? w0 + 0.45 : w1 - 0.45, l0 + 0.8 + rand(d) * (l1 - l0 - 1.6)), y, yaw: rand(d) * Math.PI * 2 }); };
+    for (let i = 0, n = 1 + randInt(d, 3); i < n; i++) wall('trash');
+    for (let i = 0, n = 1 + randInt(d, 3); i < n; i++) wall('weeds');
+    if (rand(d) < 0.4) wall('boxes');
+    if (rand(d) < 0.25) wall('bike');
+    if (rand(d) < 0.3) out.props.push({ kind: 'laundry', ...at((w0 + w1) / 2, l0 + 1 + rand(d) * (l1 - l0 - 2)), y: y + 2.4 + rand(d) * 3, yaw: along, w: w1 - w0 });
   }
 }

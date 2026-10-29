@@ -6,6 +6,7 @@ import { MAT } from '../world/mats';
 import { textTexture } from './textures';
 import { mergeGeometries } from './view';
 import { ChunkMerger } from './world-mesh';
+import { libProp, libKinds } from './props-lib';
 
 const lam = (color: number, emissive = 0) => new THREE.MeshLambertMaterial({ color, emissive });
 const box = (w: number, h: number, d: number, x: number, y: number, z: number) => new THREE.BoxGeometry(w, h, d).translate(x, y + h / 2, z);
@@ -218,22 +219,23 @@ const ticking: Tick[] = [];
 /** Animate props that move (searchlights, scripted patrols, doors following the world state). */
 export function tickProps(t: number, open: Record<string, boolean> = {}) { for (const f of ticking) f(t, open); }
 
-/** Props: animated ones stay separate, static single meshes merge into chunk meshes. */
+/** Props: animated ones stay separate; static meshes (and the parts of static library props) merge per chunk. */
 export function buildProps(props: Prop[]): THREE.Group {
   ticking.length = 0;
   const g = new THREE.Group(), merger = new ChunkMerger();
   for (const p of props) {
     const b = builders[p.kind];
-    if (!b) continue;
-    const o = b(p);
+    const o = b ? b(p) : libProp(p);
+    if (!o) continue;
     o.position.set(p.x, p.y, p.z);
     o.rotation.y = p.yaw;
     if (o.userData.tick) ticking.push(o.userData.tick);
     if ((o as THREE.Mesh).isMesh && !o.userData.tick && o.children.length === 0) merger.add(o as THREE.Mesh);
+    else if (!b && !o.userData.tick) { o.updateMatrixWorld(true); for (const c of [...o.children]) merger.add(c as THREE.Mesh); }
     else g.add(o);
   }
   for (const m of merger.build(mergeGeometries)) g.add(m);
   return g;
 }
 
-export const propKinds = () => Object.keys(builders);
+export const propKinds = () => Object.keys(builders).concat(libKinds());

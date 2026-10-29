@@ -1,7 +1,7 @@
 // The three.js scene: renderer, lights, fog, the static world meshes and the first-person rig.
 import * as THREE from 'three';
 import type { World } from '../world/world';
-import { buildSolidMeshes, ChunkMerger } from './world-mesh';
+import { buildSolidMeshes, ChunkMerger, CASTER_LAYER } from './world-mesh';
 import { buildLabels } from './labels';
 import { material, lodRadius } from './materials';
 import { MAT } from '../world/mats';
@@ -16,6 +16,7 @@ export class View {
   readonly scene = new THREE.Scene();
   readonly fp: FPCamera;
   readonly sun = new THREE.DirectionalLight(0xfff1dd, 1.6);
+  private readonly shadowEye = new THREE.OrthographicCamera(0, 0.001, 0.001, 0, 0, 0.001);
   readonly hemi = new THREE.HemisphereLight(0xc8d4e0, 0x4a4438, 1.2);
   readonly world = new THREE.Group();
   private chunks: THREE.Mesh[] = [];
@@ -37,6 +38,13 @@ export class View {
     Object.assign(this.sun.shadow.camera, { left: -SHADOW_R, right: SHADOW_R, top: SHADOW_R, bottom: -SHADOW_R, near: 1, far: 400 });
     this.sun.shadow.bias = -0.0004;
     this.sun.shadow.normalBias = 0.04;
+    // Shadows are drawn in a pass of their own, through an eye that sees only the caster layer and points
+    // nowhere, so the per-chunk casters never cost a call in the main pass. Info counts both passes.
+    this.renderer.shadowMap.autoUpdate = false;
+    this.renderer.info.autoReset = false;
+    this.sun.layers.enable(CASTER_LAYER);
+    this.shadowEye.layers.set(CASTER_LAYER);
+    this.shadowEye.position.set(0, -1e6, 0);
     container.appendChild(this.renderer.domElement);
     this.fp = new FPCamera(innerWidth / innerHeight);
     this.scene.add(this.fp.cam, this.world, this.sun, this.sun.target, this.hemi);
@@ -82,14 +90,27 @@ export class View {
     const climb = merger.build(mergeGeometries);
     if (climb.length) this.world.add(...climb);
     this.chunks = [...(meshes.children as THREE.Mesh[]), ...climb, ...(props.children.filter(o => o.userData.chunk) as THREE.Mesh[])];
+    // Cull each chunk mesh by its real footprint: a long road or beam is filed under the chunk of its centre.
+    for (const m of this.chunks) {
+      m.updateWorldMatrix(true, false);
+      if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
+      const b = m.geometry.boundingBox!.clone().applyMatrix4(m.matrixWorld);
+      m.userData.rect = [b.min.x, b.min.z, b.max.x, b.max.z];
+    }
   }
 
   render(t = 0, open: Record<string, boolean> = {}) {
-    // Detailed chunks past the detail radius (or the fog) are not drawn (a chunk's half-diagonal is about 46 m).
-    const c = this.fp.cam.position, far = (this.hasFar ? lodRadius.value : (this.scene.fog as THREE.Fog).far) + 46;
-    for (const m of this.chunks) { const k = m.userData.chunk; m.visible = Math.hypot(k.x - c.x, k.z - c.z) < far; }
+    // Detailed chunks wholly past the detail radius (or the fog) are not drawn.
+    const c = this.fp.cam.position, far = this.hasFar ? lodRadius.value : (this.scene.fog as THREE.Fog).far;
+    for (const m of this.chunks) {
+      const [x0, z0, x1, z1] = m.userData.rect;
+      m.visible = Math.hypot(Math.max(x0 - c.x, 0, c.x - x1), Math.max(z0 - c.z, 0, c.z - z1)) < far;
+    }
     tickProps(t, open);
-    this.renderer.render(this.scene, this.fp.cam);
+    const r = this.renderer;
+    r.info.reset();
+    if (this.sun.castShadow) { r.shadowMap.needsUpdate = true; r.render(this.scene, this.shadowEye); }
+    r.render(this.scene, this.fp.cam);
   }
 }
 
@@ -101,17 +122,30 @@ function ladderGeometry(h: number): THREE.BufferGeometry {
 }
 
 export function mergeGeometries(parts: THREE.BufferGeometry[]): THREE.BufferGeometry {
-  const pos: number[] = [], nor: number[] = [], uv: number[] = [];
-  for (const p of parts) {
-    const g = p.index ? p.toNonIndexed() : p;
-    pos.push(...(g.getAttribute('position').array as Float32Array));
-    nor.push(...(g.getAttribute('normal').array as Float32Array));
+  const gs = parts.map(p => (p.index ? p.toNonIndexed() : p));
+  const total = gs.reduce((a, g) => a + g.getAttribute('position').count, 0);
+  const coloured = gs.some(g => g.getAttribute('color'));
+  const pos = new Float32Array(total * 3), nor = new Float32Array(total * 3), uv = new Float32Array(total * 2);
+  const col = coloured ? new Float32Array(total * 3).fill(1) : null;
+  const tiled = gs.some(g => g.getAttribute('tile')), tile = tiled ? new Float32Array(total) : null;
+  let o = 0;
+  for (const g of gs) {
+    const n = g.getAttribute('position').count;
+    pos.set(g.getAttribute('position').array as Float32Array, o * 3);
+    nor.set(g.getAttribute('normal').array as Float32Array, o * 3);
     const u = g.getAttribute('uv');
-    if (u) uv.push(...(u.array as Float32Array)); else for (let i = 0; i < g.getAttribute('position').count; i++) uv.push(0, 0);
+    if (u) uv.set(u.array as Float32Array, o * 2);
+    const c = g.getAttribute('color');
+    if (col && c) col.set(c.array as Float32Array, o * 3);
+    const t = g.getAttribute('tile');
+    if (tile && t) tile.set(t.array as Float32Array, o);
+    o += n;
   }
   const out = new THREE.BufferGeometry();
-  out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  out.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
-  out.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  out.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  out.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  out.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  if (col) out.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  if (tile) out.setAttribute('tile', new THREE.BufferAttribute(tile, 1));
   return out;
 }

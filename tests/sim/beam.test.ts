@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { getWorld } from '../../src/world/build';
 import { createState } from '../../src/sim/sim';
-import { BEAM, STATIONS } from '../../src/world/sets/jiaochangkou';
+import { BEAM, STATIONS, TRAIN } from '../../src/world/sets/jiaochangkou';
 import { teleport } from '../../src/sim/player';
 import { run } from './helpers';
 
@@ -12,11 +12,14 @@ describe('Jiaochangkou and the Line 2 beam (M3-07)', () => {
     const s = createState(1, w);
     teleport(s.player, STATIONS[0].x0 - 2, BEAM.top + 0.05, BEAM.z);
     run(s, w, 10, { yaw: Math.PI / 2 });
-    let lowest = Infinity;
+    let lowest = Infinity, aboard = 0;
     for (let i = 0; i < 60 * 70 && s.player.pos.x > STATIONS[1].x1 - 2; i++) {
       run(s, w, 1, { my: 1, yaw: Math.PI / 2 });
       lowest = Math.min(lowest, s.player.pos.y);
+      if (s.player.pos.x > TRAIN.x0 + 1 && s.player.pos.x < TRAIN.x0 + 2 * TRAIN.len && s.player.pos.y > BEAM.top + 0.3) aboard++;
     }
+    // Through the stalled train on the way (M3-34): in at one end door, out of the other.
+    expect(aboard).toBeGreaterThan(60);
     expect(s.player.pos.x).toBeLessThan(STATIONS[1].x1 - 2);
     expect(lowest).toBeGreaterThan(BEAM.top - 0.1);
     expect(s.dead).toBeFalsy();

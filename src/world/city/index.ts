@@ -5,6 +5,9 @@ import { buildFabric } from './buildings';
 import { buildShibati } from '../sets/shibati';
 import { buildJiaochangkou, BEAM, STATIONS } from '../sets/jiaochangkou';
 import { carveTunnels, AIRRAID } from './tunnels';
+import { dressCity } from './dressing';
+import { GATE } from '../../data/tunnels';
+import { buildIndex } from '../geom';
 import { TILE } from '../map';
 
 export function buildCity(): World {
@@ -16,9 +19,15 @@ export function buildCity(): World {
   const solids = tn.ground.concat(f.solids, sb.solids, jk.solids, tn.solids);
   // The gate's door switches its own collision solid.
   tn.inter.find(i => i.id === 'shibati-gate')!.data!.solid = solids.indexOf(tn.gate);
+  const inter = f.inter.concat(jk.inter, tn.inter);
+  // Street dressing goes last, around everything else (its solids append, so the gate's index holds).
+  const dress = dressCity(buildIndex(solids), inter, [
+    { x: 483, z: 370, r: 5 }, { x: GATE.x, z: GATE.z + 2, r: 3.5 }, { x: STATIONS[0].x1 - 4.5, z: BEAM.z + 42, r: 4 },
+  ]);
+  solids.push(...dress.solids);
   return makeWorld({
-    name: 'city', solids, decor: t.decor.concat(f.decor, sb.decor, jk.decor, tn.decor), water: t.water, props: f.props.concat(tn.props),
-    inter: f.inter.concat(jk.inter, tn.inter), climbables: f.climbables.concat(jk.climbables), hides: f.hides, sites: f.sites.concat(tn.sites), zones: tn.zones,
+    name: 'city', solids, decor: t.decor.concat(f.decor, sb.decor, jk.decor, tn.decor), water: t.water, props: f.props.concat(tn.props, dress.props, jk.props),
+    inter, climbables: f.climbables.concat(jk.climbables), hides: f.hides, sites: f.sites.concat(tn.sites), zones: tn.zones,
     // The far view: ground, every block's stand-in, and the set pieces as they are.
     far: tn.ground.concat(t.decor, f.far, sb.solids, jk.solids),
     spawn: { x: 23 * TILE + 10, y: 44, z: 17 * TILE + 10, yaw: Math.PI },

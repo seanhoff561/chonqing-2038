@@ -5,7 +5,7 @@ import { solid, type Solid } from '../geom';
 import { MAT } from '../mats';
 import { stair } from '../city/terrain';
 import { tileAt, TILE } from '../map';
-import type { Climbable, Inter } from '../world';
+import type { Climbable, Inter, Prop } from '../world';
 
 /** The beam: its centre line, top, width and ends; stations along it. */
 export const BEAM = { z: 15 * TILE + 10, top: 53, w: 0.85, depth: 1.6, west: 130, east: 524 };
@@ -13,10 +13,12 @@ export const STATIONS = [
   { name: 'Jiaochangkou terminus', x0: 466, x1: 524 },
   { name: 'Site stop', x0: 288, x1: 318 },
 ];
+/** A two-car Line 2 train stalled on the beam over the road since the takeover: walk the beam through it. */
+export const TRAIN = { x0: 356, cars: 2, len: 14.8, gap: 0.4, w: 2.9 };
 const PLAZA = { x0: 22 * TILE, z0: 16 * TILE, x1: 27 * TILE, z1: 19 * TILE, y: 44 };
 
 export function buildJiaochangkou() {
-  const solids: Solid[] = [], decor: Solid[] = [], climbables: Climbable[] = [], inter: Inter[] = [];
+  const solids: Solid[] = [], decor: Solid[] = [], climbables: Climbable[] = [], inter: Inter[] = [], props: Prop[] = [];
   const bz0 = BEAM.z - BEAM.w / 2, bz1 = BEAM.z + BEAM.w / 2, bot = BEAM.top - BEAM.depth;
   const ground = (x: number) => tileAt(Math.floor(x / TILE), Math.floor(BEAM.z / TILE))?.h ?? 44;
 
@@ -47,6 +49,22 @@ export function buildJiaochangkou() {
     climbables.push({ kind: 'ladder', x: lx, z: bz0 - 5.85, y0: g, y1: deck + 1.1, nx: 0, nz: -1 }, { kind: 'ladder', x: lx, z: bz1 + 5.85, y0: g, y1: deck + 1.1, nx: 0, nz: 1 });
   }
 
+  // The stalled train: a floor a step above the beam, walls and roof, end doors jammed open. The render is the
+  // 'train' prop; these are its collision.
+  const top = BEAM.top, hw = TRAIN.w / 2, H = MAT.hidden;
+  for (let c = 0; c < TRAIN.cars; c++) {
+    const x0 = TRAIN.x0 + c * (TRAIN.len + TRAIN.gap), x1 = x0 + TRAIN.len;
+    solids.push(solid(x0, top + 0.25, BEAM.z - hw + 0.08, x1, top + 0.4, BEAM.z + hw - 0.08, H));
+    for (const z of [BEAM.z - hw, BEAM.z + hw - 0.08]) solids.push(solid(x0, top - 1.2, z, x1, top + 2.95, z + 0.08, H));
+    solids.push(solid(x0, top + 2.7, BEAM.z - hw, x1, top + 2.95, BEAM.z + hw, H));
+    for (const x of [x0, x1 - 0.08]) {
+      solids.push(solid(x, top + 0.4, BEAM.z - hw + 0.08, x + 0.08, top + 2.7, BEAM.z - 0.45, H), solid(x, top + 0.4, BEAM.z + 0.45, x + 0.08, top + 2.7, BEAM.z + hw - 0.08, H));
+      solids.push(solid(x, top + 2.3, BEAM.z - 0.45, x + 0.08, top + 2.7, BEAM.z + 0.45, H));
+    }
+    inter.push({ id: `jck-train${c}`, kind: 'container', x: x0 + 4 + c * 5, y: top + 0.9, z: BEAM.z + 1.0, r: 1.0, zh: '包', en: 'Bag', data: { type: 'bag', loot: 'car' } });
+  }
+  props.push({ kind: 'train', x: TRAIN.x0 + (TRAIN.cars * (TRAIN.len + TRAIN.gap) - TRAIN.gap) / 2, y: top, z: BEAM.z, yaw: Math.PI / 2, w: TRAIN.cars });
+
   // Terminus stairs from the plaza up to the south platform, with a landing.
   const term = STATIONS[0], sx = term.x1 - 6;
   stair(sx, bz1 + 5.8, sx + 3, bz1 + 5.8 + 14, PLAZA.y + 4.5, BEAM.top, 4, solids, decor);
@@ -74,5 +92,5 @@ export function buildJiaochangkou() {
     solids.push(solid(x, y + 0.25, z, x + w, y + 1.45, z + d, MAT.metal));
     inter.push({ id: `jck-car${i}`, kind: 'container', x: x + w / 2, y: y + 1.0, z: z + d / 2, r: 1.2, zh: '汽车', en: 'Car', data: { type: 'car', loot: 'car' } });
   });
-  return { solids, decor, climbables, inter };
+  return { solids, decor, climbables, inter, props };
 }
