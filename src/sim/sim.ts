@@ -20,7 +20,8 @@ import './food';
 import './shelter';
 import { survival } from '../data/survival';
 
-export const STATE_VERSION = 5;
+/** Saves of another version are dropped: 6 since runs moved to the real map (M3-41c), old saves held old-map places. */
+export const STATE_VERSION = 6;
 
 export function createState(seed: number, world: World): SimState {
   const s = world.spawn;
