@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M2. Next: M2-18 Containers, stash and transfer.
-Features done: 52 / 216 | Last done: M1-28
+**Status:** building M2. Next: M2-19 Loot placement by seed.
+Features done: 53 / 216 | Last done: M2-18
 <!-- /status -->
 
 ## Log
@@ -67,3 +67,4 @@ Features done: 52 / 216 | Last done: M1-28
 - M1-33 Mouse pull while gripping: mouse pull while gripping (U-005)
 - M1-34 Bar swing and lache: bar swing and lache (U-005)
 - M1-28 Gym climbing routes: gym climbing routes
+- M2-18 Containers, stash and transfer: containers, stash and transfer UI
