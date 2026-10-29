@@ -4,8 +4,9 @@ import { solid, rampSolid, type Solid } from '../geom';
 import { MAT } from '../mats';
 import { tiles, tileAt, TILE, type Tile } from '../map';
 import { makeRng, rand, randInt, hashString, type Rng } from '../../sim/rng';
-import type { Prop, Inter } from '../world';
+import type { Prop, Inter, Climbable, HideSpot } from '../world';
 import { canEnter, hollow } from './interiors';
+import { facades, alleys } from './climb';
 
 export type LotKind = 'res' | 'tower' | 'trad';
 export interface Lot {
@@ -13,7 +14,9 @@ export interface Lot {
   /** enterable buildings: a walking route from outside the door up the stairs and out onto the roof */
   route?: { x: number; y: number; z: number }[];
 }
-export interface Fabric { solids: Solid[]; decor: Solid[]; props: Prop[]; lots: Lot[]; inter: Inter[] }
+/** Holds, hide spots and alley pieces, for tests and tools: one group per hand-route column. */
+export interface Feature { kind: string; x: number; y: number; z: number; group: number }
+export interface Fabric { solids: Solid[]; decor: Solid[]; props: Prop[]; lots: Lot[]; inter: Inter[]; climbables: Climbable[]; hides: HideSpot[]; features: Feature[] }
 
 const FLOOR = 3;
 const STREETS = '.=sb';
@@ -51,7 +54,7 @@ function upperStreet(t: Tile): number {
 }
 
 export function buildFabric(): Fabric {
-  const out: Fabric = { solids: [], decor: [], props: [], lots: [], inter: [] };
+  const out: Fabric = { solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [] };
   for (const t of tiles()) {
     if (!BUILT.includes(t.type)) continue;
     const r = tileRng(t);
@@ -59,6 +62,7 @@ export function buildFabric(): Fabric {
     const up = upperStreet(t);
     // Shibati rows share one height so their ridges line up into rooftop routes.
     const tradFloors = 2 + (t.r % 3 === 0 ? 1 : 0);
+    const mine: Lot[] = [];
     for (const [x0, z0, x1, z1] of splitTile(t, r)) {
       let wall: number;
       if (kind === 'trad') wall = t.h + tradFloors * FLOOR;
@@ -69,8 +73,11 @@ export function buildFabric(): Fabric {
       const mat = kind === 'tower' ? MAT.glass : kind === 'trad' ? MAT.plaster : [MAT.tile, MAT.plaster, MAT.tile, MAT.concrete][randInt(r, 4)];
       const lot: Lot = { id: out.lots.length, x0, z0, x1, z1, base: t.h, wall, top: wall, kind, tile: t, mat };
       out.lots.push(lot);
+      mine.push(lot);
       mass(lot, r, out);
+      facades(lot, r, out);
     }
+    alleys(mine, r, out);
   }
   return out;
 }
@@ -92,7 +99,8 @@ function mass(l: Lot, r: Rng, out: Fabric) {
       const xm = (x0 + x1) / 2;
       out.solids.push(rampSolid(x0, wall, z0, xm, z1, wall, wall + rise, 1, MAT.roofTile), rampSolid(xm, wall, z0, x1, z1, wall, wall + rise, 2, MAT.roofTile));
     }
-    out.decor.push(solid(x0 - 0.4, wall - 0.12, z0 - 0.4, x1 + 0.4, wall, z1 + 0.4, MAT.wood));
+    // The eave plate is solid all round: its edge is the lip he pulls over onto the tiles.
+    out.solids.push(solid(x0 - 0.4, wall - 0.12, z0 - 0.4, x1 + 0.4, wall, z1 + 0.4, MAT.wood));
     l.top = wall + rise;
     return;
   }
