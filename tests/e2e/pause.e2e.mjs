@@ -1,10 +1,10 @@
-// M1-40: P pauses the game and shows the controls; the menu switches to the movement gym and jumps to an area.
+// M1-40, U-009: = pauses the game and shows the controls; the menu switches to the movement gym and jumps to an area.
 export default async function ({ open, fail, screenshot }) {
   const page = await open('?scenario=hideout&seed=1', 'pause');
   await page.evaluate('window.__cq.runFrames(5)');
-  await page.keyboard.press('KeyP');
+  await page.keyboard.press('Equal');
   const shown = await page.evaluate(`getComputedStyle(document.getElementById('pause')).display !== 'none' && document.querySelector('#pause .pz-keys').textContent.includes('wall-run')`);
-  if (!shown) fail('pause', 'P did not open the pause menu with the controls');
+  if (!shown) fail('pause', '= did not open the pause menu with the controls');
   const t0 = await page.evaluate('window.__cq.game.ticks');
   await new Promise(r => setTimeout(r, 400));
   const t1 = await page.evaluate('window.__cq.game.ticks');

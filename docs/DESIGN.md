@@ -25,9 +25,9 @@ The director's brief (BRIEF.md) is the vision. This is the build design. Numbers
 | Let go of everything | Q |
 | Use held item | Left mouse |
 | Reload / rotate an item while dragging | R |
-| Hotbar slots | 1-5 (0 = empty hands) |
+| Hotbar slots | 1-5 (0 or ` = empty hands, U-009) |
 | Backpack / laptop (Anna) / headlamp | Tab / L / H |
-| Pause: controls, movement gym and its areas, back to the game (also opens when the browser drops fullscreen or the mouse) | Esc or P |
+| Pause and settings: controls, movement gym and its areas, back to the game (also opens when the browser drops fullscreen or the mouse) | = (U-009; Esc works too) |
 
 **Hands (U-006, U-007).** Both 3D hands are always on screen. On his feet they sit low at his sides and swing with his stride, pumping loose fists when he sprints; in the air, on walls and crawling they reach forward, open up when something grabbable is in reach and close on what they grip. Items sit in the right hand; anything bigger than a 1x1 item under 0.4 kg (and the knife) also takes the left hand, so climbing means putting it away with 0 first.
 
@@ -354,6 +354,12 @@ Dialogue lives in `src/data/dialogue` (id, speaker, zh, en). Playback: `public/a
 ## 15. Art direction
 
 Fog (雾都) is the draw distance. Wet concrete and tile, mossy retaining walls, fig roots, tiled apartment blocks with balconies, AC units, water tanks and laundry poles; grey brick and timber eaves in Shibati; glass towers and huge LED screens in Jiefangbei. Neon and signs in simplified Chinese drawn on canvas with the system CJK font stack. Machines read clearly: lights white / amber / red by state. 2038 touches: smart lampposts, drone docks on towers, face-recognition gates, prefab barrier walls, LED boards with the machine's announcements. Everything is made in code: merged box geometry per chunk, canvas textures, instanced props.
+
+**The reference look (U-009).** The director's reference photo (to live at `docs/reference/look-01.jpg`) is the target for visuals and verticality: a hillside of abandoned Chongqing housing seen from above on an overcast day. What it shows:
+- Layers stacked up the slope: old two-to-five-storey brick blocks in the foreground (buff and grey brick, flat roofs with parapets, roof gardens gone wild, moss on every ledge, a few corrugated-metal roofs, decorative brick lattice screens over stair windows); behind them eight-to-twelve-storey concrete walk-ups; behind those 20-30 storey residential slabs, one in faded salmon-pink tile with white floor bands, one in pale concrete.
+- Facades are grids: every floor a band, every bay a dark recessed opening (most glassless and black inside, some with frames, bars or a rag), balconies with low solid parapets, enclosed balcony cages, AC units under windows, pipes and cables down the walls, laundry and tarps.
+- Weathering everywhere: grey rain streaks under every sill and slab edge, darker grime toward the bottom, green-black moss on ledges and roof edges, patched plaster, a few blossoming trees and weeds on roofs.
+- Light: soft, flat, overcast; no hard shadows; slight haze that greys the far slabs; muted palette (grey, buff, salmon, moss green) with rare colour accents (a teal roof, red cloth, yellow blossom).
 
 ## 16. Performance budgets
 

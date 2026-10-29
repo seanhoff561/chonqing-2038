@@ -35,12 +35,12 @@ Then open the printed URL. Other commands:
 | Interact (hold for timed actions) | E |
 | Let go | Q |
 | Reload, rotate item while dragging | R |
-| Hotbar | 1-5, 0 for empty hands |
+| Hotbar | 1-5, 0 or ` for empty hands |
 | Backpack / laptop / headlamp | Tab / L / H |
-| Pause (controls, movement gym, back to the game) | Esc or P |
+| Pause and settings (controls, movement gym, back to the game) | = (Esc also works, but leaves fullscreen) |
 
 ## Movement gym
-Press Esc (or P) in the game and click **Movement gym**. The pause menu then lists the gym's areas (mantle row, gap lanes, wall-run lane, sill route, bars over the pit and more): click one to go there, and **Back to the game** returns to your run. You can also open it directly: https://seanhoff561.github.io/chonqing-2038/?scenario=gym
+Press = in the game and click **Movement gym**. The pause menu then lists the gym's areas (mantle row, gap lanes, wall-run lane, sill route, bars over the pit and more): click one to go there, and **Back to the game** returns to your run. You can also open it directly: https://seanhoff561.github.io/chonqing-2038/?scenario=gym
 
 ## Dev flags
 | Flag | Effect |

@@ -1,5 +1,6 @@
-// Pause menu (U-007): Esc or P, or the browser dropping the mouse or fullscreen, pauses the sim and shows the
-// controls, with buttons for the movement gym (and its areas) and the game.
+// Pause menu (U-007, U-009): = (Esc too, though the browser may spend it on leaving fullscreen), or the browser
+// dropping the mouse or fullscreen, pauses the sim and shows the controls, with buttons for the movement gym
+// (and its areas) and the game. Settings join it in M8-13.
 import type { Game } from '../game';
 import { teleport } from '../sim/player';
 
@@ -15,9 +16,9 @@ const CONTROLS: [string, string][] = [
   ['Ctrl (hold) or C', 'crouch; while running: slide; landing: roll'],
   ['Z', 'crawl'],
   ['E (hold)', 'interact'],
-  ['1-5 / 0', 'hotbar / empty hands'],
+  ['1-5 / 0 or `', 'hotbar / empty hands'],
   ['Tab / L / H', 'backpack / laptop / headlamp'],
-  ['Esc or P', 'pause'],
+  ['= (or Esc)', 'pause and settings'],
 ];
 
 export class PauseMenu {
@@ -37,7 +38,7 @@ export class PauseMenu {
   }
 
   private key(e: KeyboardEvent) {
-    if (e.repeat || (e.code !== 'Escape' && e.code !== 'KeyP')) return;
+    if (e.repeat || (e.code !== 'Escape' && e.code !== 'Equal')) return;
     if ((e.target as HTMLElement | null)?.closest?.('input, select, textarea')) return;
     // The browser may report the same Esc as a key and as a lost pointer lock: don't reopen-and-close.
     if (this.open) { if (performance.now() - this.openedAt > 400) this.resume(); }
