@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M1. Next: M1-06 Space hops and the hand mantle.
-Features done: 34 / 211 | Last done: M1-05
+**Status:** building M1. Next: M1-10 Hanging and hand-over-hand traverse.
+Features done: 35 / 211 | Last done: M1-06
 <!-- /status -->
 
 ## Log
@@ -49,3 +49,4 @@ Features done: 34 / 211 | Last done: M1-05
 - M2-16 Vent grate view: vent grate view
 - M2-17 Interaction system: interaction system with hold-E actions and containers
 - M1-05 Jump: more vertical jump (U-004)
+- M1-06 Space hops and the hand mantle: Space hops and the hand mantle (U-002)
