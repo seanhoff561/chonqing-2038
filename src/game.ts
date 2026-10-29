@@ -1,4 +1,5 @@
 // The browser game: fixed-step sim, input, rendering with interpolation.
+import { hideNear } from './sim/hide';
 import { createState, step } from './sim/sim';
 import { DT, type SimState, type Vec3 } from './sim/types';
 import type { World } from './world/world';
@@ -35,6 +36,8 @@ import { raycast } from './world/geom';
 const FAR_HAZE = 2800;
 
 export interface GameOpts { scenario: string; seed: number; dev: boolean }
+
+const HIDE_NAMES: Record<string, [string, string]> = { crate: ['躲进箱子', 'Hide in the crate'], dumpster: ['躲进垃圾箱', 'Hide in the dumpster'], box: ['躲进箱子', 'Hide in the box'], wardrobe: ['躲进衣柜', 'Hide in the wardrobe'] };
 
 export class Game {
   world!: World;
@@ -184,7 +187,10 @@ export class Game {
     const s = this.state;
     if (s.task) { const n = Math.round((s.task.t / s.task.dur) * 10); this.hud.setPrompt(`${'■'.repeat(n)}${'□'.repeat(10 - n)}`); return; }
     const it = s.target ? allInters(s, this.world).find(i => i.id === s.target) : null;
-    this.hud.setPrompt(it && !this.input.uiOpen ? `E  ${it.zh}  ${it.en}` : '');
+    // Hiding spots get a prompt like everything else he can use (U-021).
+    const hide = !it && s.player.mode === 'ground' ? hideNear(this.world, s.player) : -1;
+    const hk = hide >= 0 ? HIDE_NAMES[this.world.hides[hide].kind] ?? ['躲进去', 'Hide'] : null;
+    this.hud.setPrompt(this.input.uiOpen ? '' : it ? `E  ${it.zh}  ${it.en}` : hk ? `E  ${hk[0]}  ${hk[1]}` : '');
   }
 
   private updateHands(dt: number) {
