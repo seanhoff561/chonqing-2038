@@ -31,3 +31,8 @@ Report: which buildings read right and which don't (colour, window sizes, weathe
 Start: `?scenario=shibati&dev=1`; noclip (dev panel) up above the tallest towers, or climb one.
 Try: look across the whole peninsula to both rivers; walk the Shibati stair street at 15:00 (sun shadows), 18:30 and 23:00 (dev time slider); watch the fps readout.
 Report: does the city feel endless from up high, and does the haze look right? Any visible seam where detail turns into the far blocks (about 160 m out)? Are shadows and night light good, and is the frame rate smooth on your machine?
+
+## PT-007 The reference look across the city (U-009)
+Start: `?scenario=shibati&dev=1`; look from the stair street and from rooftops toward the upper city; compare with docs/reference/look-01.jpg.
+Try: the residential slabs over the walk-ups, balcony bands, roof gardens, laundry and cables; the overcast light.
+Report: what still looks least like the photo (colours, window grids, regularity of the blocks, roofs)? Where should the city be denser or more broken?

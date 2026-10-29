@@ -88,7 +88,7 @@ export class Game {
     lodRadius.value = this.world.far.length ? this.drawDistance : 1e9;
     this.view.fp.cam.far = this.hazeDistance() + 100;
     this.view.fp.cam.updateProjectionMatrix();
-    this.sky.overcast = sc.overcast ? 1 : 0;
+    this.sky.overcast = sc.overcast ?? 0;
     this.view.setWorld(this.world);
   }
 

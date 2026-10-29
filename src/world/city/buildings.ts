@@ -7,6 +7,7 @@ import { makeRng, rand, randInt, hashString, type Rng } from '../../sim/rng';
 import type { Prop, Inter, Climbable, HideSpot, Site } from '../world';
 import { canEnter, hollow } from './interiors';
 import { facades, alleys } from './climb';
+import { details } from './details';
 
 export type LotKind = 'res' | 'tower' | 'trad';
 export interface Lot {
@@ -67,6 +68,8 @@ export function buildFabric(): Fabric {
       let wall: number;
       if (kind === 'trad') wall = t.h + tradFloors * FLOOR;
       else if (kind === 'tower') wall = t.h + (15 + randInt(r, 21)) * 3.3;
+      // Walk-ups of 4-9 floors; some lots carry the 15-30 floor slabs that tower over the old city (U-009).
+      else if (Math.min(x1 - x0, z1 - z0) >= 9 && rand(r) < 0.14) wall = t.h + (15 + randInt(r, 16)) * FLOOR;
       else wall = t.h + (4 + randInt(r, 6)) * FLOOR;
       // Hillside block whose roof is the street above (the Kuixinglou effect).
       if (kind === 'res' && up - t.h >= 6 && rand(r) < 0.5) wall = up;
@@ -94,7 +97,10 @@ function mass(l: Lot, r: Rng, out: Fabric) {
   // About a quarter of the blocks that fit a stair core can be entered.
   const open = canEnter(l) && rand(r) < 0.28;
   const look = open ? (l.mat === MAT.tile ? MAT.facadeTile : MAT.facade) : paint(l, r);
+  // Some tall solid blocks step their top two floors back from the edge.
+  const step = !open && l.kind === 'res' && wall - base >= 24 && rand(r) < 0.25 ? 1.6 : 0;
   if (open) hollow(l, r, out);
+  else if (step) out.solids.push(solid(x0, base, z0, x1, wall - 2 * FLOOR, z1, look), solid(x0 + step, wall - 2 * FLOOR, z0 + step, x1 - step, wall, z1 - step, look));
   else out.solids.push(solid(x0, base, z0, x1, wall, z1, look));
   // The far view's stand-in: the whole block in its painted facade, parapet included.
   if (l.kind !== 'trad') out.far.push(solid(x0, base, z0, x1, wall + 0.9, z1, look));
@@ -115,20 +121,25 @@ function mass(l: Lot, r: Rng, out: Fabric) {
     l.top = wall + rise;
     return;
   }
-  // Parapet: a lip to grab from the facade and a low wall on the roof.
+  // Parapet: a lip to grab from the facade and a low wall on the roof (round the top part of a stepped block).
   const p = 0.9, w = 0.2;
+  if (step) {
+    out.solids.push(solid(x0, wall - 2 * FLOOR, z0, x1, wall - 2 * FLOOR + 0.3, z0 + w, MAT.concrete), solid(x0, wall - 2 * FLOOR, z1 - w, x1, wall - 2 * FLOOR + 0.3, z1, MAT.concrete));
+  }
+  if (!open) details(l, r, out, wall - (step ? 2 * FLOOR : 0));
+  const px0 = x0 + step, pz0 = z0 + step, px1 = x1 - step, pz1 = z1 - step;
   out.solids.push(
-    solid(x0, wall, z0, x1, wall + p, z0 + w, MAT.concrete), solid(x0, wall, z1 - w, x1, wall + p, z1, MAT.concrete),
-    solid(x0, wall, z0 + w, x0 + w, wall + p, z1 - w, MAT.concrete), solid(x1 - w, wall, z0 + w, x1, wall + p, z1 - w, MAT.concrete),
+    solid(px0, wall, pz0, px1, wall + p, pz0 + w, MAT.concrete), solid(px0, wall, pz1 - w, px1, wall + p, pz1, MAT.concrete),
+    solid(px0, wall, pz0 + w, px0 + w, wall + p, pz1 - w, MAT.concrete), solid(px1 - w, wall, pz0 + w, px1, wall + p, pz1 - w, MAT.concrete),
   );
   l.top = wall + p;
   // Roof clutter: water tanks on stilts, AC condensers, sometimes a stairwell hut (enterable roofs have a real one).
   const n = open ? 0 : 1 + randInt(r, 3);
   for (let i = 0; i < n; i++) {
-    const cx = x0 + 1.5 + rand(r) * Math.max(0.1, x1 - x0 - 3), cz = z0 + 1.5 + rand(r) * Math.max(0.1, z1 - z0 - 3);
+    const cx = px0 + 1.5 + rand(r) * Math.max(0.1, px1 - px0 - 3), cz = pz0 + 1.5 + rand(r) * Math.max(0.1, pz1 - pz0 - 3);
     const k = randInt(r, 3);
     if (k === 0) { out.solids.push(solid(cx - 1, wall + 0.6, cz - 1, cx + 1, wall + 2.2, cz + 1, MAT.metal)); out.props.push({ kind: 'stilts', x: cx, y: wall, z: cz, yaw: 0, w: 2, h: 0.6 }); }
     else if (k === 1) out.solids.push(solid(cx - 0.5, wall, cz - 0.35, cx + 0.5, wall + 0.7, cz + 0.35, MAT.metal));
-    else if (x1 - x0 > 6 && z1 - z0 > 6) out.solids.push(solid(cx - 1.3, wall, cz - 1.3, cx + 1.3, wall + 2.6, cz + 1.3, MAT.concrete));
+    else if (px1 - px0 > 6 && pz1 - pz0 > 6) out.solids.push(solid(cx - 1.3, wall, cz - 1.3, cx + 1.3, wall + 2.6, cz + 1.3, MAT.concrete));
   }
 }

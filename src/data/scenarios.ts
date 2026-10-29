@@ -11,16 +11,16 @@ export interface Scenario {
   furnished?: boolean;
   /** draw distance in metres (default 160) */
   draw?: number;
-  /** flat overcast light (until the weather schedule drives it) */
-  overcast?: boolean;
+  /** 0 clear to 1 flat overcast light (until the weather schedule drives it) */
+  overcast?: number;
 }
 
 export const scenarios: Scenario[] = [
   { name: 'gym', world: 'gym', desc: 'movement gym with labelled obstacles' },
-  { name: 'shibati', world: 'city', desc: 'Shibati and Jiaochangkou' },
-  { name: 'run', world: 'city', desc: 'a new run: day 1 at the top of Shibati, no shelter yet', run: true, spawn: { x: 470, y: 44.05, z: 392, yaw: Math.PI } },
+  { name: 'shibati', world: 'city', desc: 'Shibati and Jiaochangkou', overcast: 0.6 },
+  { name: 'run', world: 'city', desc: 'a new run: day 1 at the top of Shibati, no shelter yet', run: true, overcast: 0.6, spawn: { x: 470, y: 44.05, z: 392, yaw: Math.PI } },
   { name: 'hideout', world: 'hideout', desc: 'the furnished air-raid shelter (test scene)', run: true, furnished: true },
-  { name: 'reference', world: 'reference', desc: 'the reference hillside (docs/reference/look-01.jpg) from the vantage roof', draw: 700, overcast: true },
+  { name: 'reference', world: 'reference', desc: 'the reference hillside (docs/reference/look-01.jpg) from the vantage roof', draw: 700, overcast: 1 },
 ];
 
 export const scenarioByName = (n: string) => scenarios.find(s => s.name === n);

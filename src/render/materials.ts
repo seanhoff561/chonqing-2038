@@ -100,6 +100,11 @@ const draws: Record<number, [Draw, number]> = {
     for (let x = 0; x < w; x += 16) { g.fillStyle = 'rgba(255,255,255,0.08)'; g.fillRect(x, 0, 6, h); g.fillStyle = 'rgba(0,0,0,0.15)'; g.fillRect(x + 10, 0, 4, h); }
     blotches(g, w, h, 222, 14, '120,90,60', 0.25, 10, 40);
   }, 2],
+  [MAT.cloth]: [(g, w, h) => {
+    const r = mulberry(231), cols = ['#8a2a22', '#3c5a7a', '#c9b98a', '#6a6f4a', '#d8d4c8', '#5a3d5c'];
+    for (let x = 0; x < w; x += 32) { g.fillStyle = cols[Math.floor(r() * cols.length)]; g.fillRect(x, 0, 32, h); }
+    blotches(g, w, h, 232, 20, '30,25,20', 0.3, 10, 40);
+  }, 1],
   [MAT.mark]: [(g, w, h) => { g.fillStyle = '#d4b020'; g.fillRect(0, 0, w, h); g.fillStyle = '#151515'; for (let x = -h; x < w; x += 48) { g.beginPath(); g.moveTo(x, h); g.lineTo(x + h, 0); g.lineTo(x + h + 24, 0); g.lineTo(x + 24, h); g.fill(); } }, 1],
 };
 

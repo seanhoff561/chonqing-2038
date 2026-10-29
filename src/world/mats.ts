@@ -6,7 +6,7 @@ export const MAT = {
   facade: 15, facadeTile: 16, facadeBrick: 17,
   /** abandoned block with big glassless openings; white balcony bands (M3-23) */
   facadeOpen: 18, facadeBand: 19,
-  blossom: 20, leaves: 21, tealMetal: 22,
+  blossom: 20, leaves: 21, tealMetal: 22, cloth: 23,
   /** collision only: a prop draws it */
   hidden: 99,
 } as const;

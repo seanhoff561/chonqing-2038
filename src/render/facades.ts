@@ -20,7 +20,7 @@ interface Style {
 
 const STYLES: Record<number, Style> = {
   [MAT.facade]: { seed: 21, wall: '#bdb6a8', band: '#cbc5b8', win: [1.4, 1.6], sill: 0.9, blank: 0.12 },
-  [MAT.facadeTile]: { seed: 22, wall: '#d6a48e', band: '#e8e2d6', win: [1.0, 1.1], sill: 1.1, tile: true, blank: 0.45, bandEvery: 2 },
+  [MAT.facadeTile]: { seed: 22, wall: '#e0b4a2', band: '#e8e2d6', win: [1.0, 1.1], sill: 1.1, tile: true, blank: 0.45, bandEvery: 2 },
   [MAT.facadeBrick]: { seed: 23, wall: '#b09b7f', band: '#a08d72', win: [0.9, 1.15], sill: 1.0, brick: true, lattice: true, blank: 0.4 },
   [MAT.facadeOpen]: { seed: 24, wall: '#87796a', band: '#958775', win: [2.2, 1.9], sill: 0.75, open: true },
   [MAT.facadeBand]: { seed: 25, wall: '#d6d4cd', band: '#ebe9e2', win: [2.4, 1.6], sill: 1.05, bands: true },
