@@ -83,6 +83,7 @@ export class Game {
     for (const e of this.state.events) {
       if (e.t === 'land') this.view.fp.landed(e.h);
       else if (e.t === 'sfx') playMove(this.audio, e.id);
+      else if (e.t === 'open') this.inv.toggle(true);
     }
   }
 
@@ -91,7 +92,7 @@ export class Game {
     const pos = { x: this.prev.x + (p.pos.x - this.prev.x) * alpha, y: this.prev.y + (p.pos.y - this.prev.y) * alpha, z: this.prev.z + (p.pos.z - this.prev.z) * alpha };
     this.view.fp.update(p, pos, this.input.yaw, this.input.pitch, dt);
     this.bodyFx.update(this.state, this.view.fp, dt);
-    this.hands.update(p, this.view.fp.cam, p.mode !== 'dead' && findGrab(this.world, p) !== null, dt);
+    this.hands.update(p, this.view.fp.cam, !this.input.uiOpen && p.mode !== 'dead' && findGrab(this.world, p) !== null, dt, this.input.uiOpen);
     this.inv.update();
     this.updatePrompt();
     this.updateHeld();
@@ -113,7 +114,7 @@ export class Game {
     const s = this.state;
     if (s.task) { const n = Math.round((s.task.t / s.task.dur) * 10); this.hud.setPrompt(`${'■'.repeat(n)}${'□'.repeat(10 - n)}`); return; }
     const it = s.target ? this.world.inter.find(i => i.id === s.target) : null;
-    this.hud.setPrompt(it ? `E  ${it.zh}  ${it.en}` : '');
+    this.hud.setPrompt(it && !this.input.uiOpen ? `E  ${it.zh}  ${it.en}` : '');
   }
 
   private updateHeld() {

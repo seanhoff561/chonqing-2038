@@ -1,7 +1,7 @@
 // The hideout: a brick-arched air-raid side tunnel (DESIGN section 9), built at an origin so the
 // standalone scenario and the city share it. Local x runs east along the chamber; floor at oy.
 import { solid, carve, type Solid, type Box } from '../geom';
-import type { Prop, Zone, Climbable } from '../world';
+import type { Prop, Zone, Climbable, Inter } from '../world';
 import { MAT } from '../mats';
 
 export interface HideoutParts {
@@ -11,6 +11,7 @@ export interface HideoutParts {
   props: Prop[];
   zones: Zone[];
   climbables: Climbable[];
+  inter: Inter[];
   /** named points for interactables and links */
   at: Record<string, { x: number; y: number; z: number }>;
 }
@@ -47,6 +48,11 @@ export function hideoutParts(ox: number, oy: number, oz: number): HideoutParts {
   ];
   return {
     cuts, solids, props, climbables: [],
+    inter: [
+      { id: 'stash', kind: 'container', x: ox + 13.15, y: oy + 0.6, z: oz + 1.55, r: 0.6, zh: '藏匿箱', en: 'Stash', data: { type: 'stash' } },
+      { id: 'mattress', kind: 'mattress', x: ox + 2.2, y: oy + 0.25, z: oz + 1.3, r: 0.8, zh: '床垫', en: 'Sleep' },
+      { id: 'bench', kind: 'bench', x: ox + 9.2, y: oy + 0.95, z: oz + 1.62, r: 0.7, zh: '工作台', en: 'Workbench' },
+    ],
     zones: [{ kind: 'under', box: { x0: ox - 1, y0: oy - 1, z0: oz - 8, x1: ox + H.length + 8, y1: oy + H.shaftTop - 0.5, z1: oz + 3 } }],
     at: {
       mattress: { x: ox + 2.2, y: oy + 0.22, z: oz + 1.3 },

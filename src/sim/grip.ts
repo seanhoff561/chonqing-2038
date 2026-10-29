@@ -7,7 +7,7 @@ import type { World } from '../world/world';
 import type { Player, Grip } from './player';
 import { movement as M } from '../data/movement';
 import { raycast, topAt } from '../world/geom';
-import { free, moveHorizontal, moveVertical } from './physics';
+import { free, moveHorizontal, moveVertical, groundGap } from './physics';
 import { startAction, kickOff } from './parkour';
 import { lim, sfx, lookDelta } from './move';
 
@@ -50,7 +50,7 @@ export function findGrab(world: World, p: Player): Grip | null {
       const edges = [
         { dist: hx - s.x0, nx: -1, nz: 0, x: s.x0, z: hz }, { dist: s.x1 - hx, nx: 1, nz: 0, x: s.x1, z: hz },
         { dist: hz - s.z0, nx: 0, nz: -1, x: hx, z: s.z0 }, { dist: s.z1 - hz, nx: 0, nz: 1, x: hx, z: s.z1 },
-      ].filter(e => e.dist <= G.edgeBand && -(e.nx * d.x + e.nz * d.z) > 0.2).sort((a, b) => a.dist - b.dist);
+      ].filter(e => e.dist <= G.edgeBand && Math.abs(e.nx * d.x + e.nz * d.z) > 0.2).sort((a, b) => a.dist - b.dist);
       const e = edges[0];
       if (e && free(world.index, e.x + e.nx * 0.2, s.y1 - 0.5, e.z + e.nz * 0.2, 0.45, 0.1))
         best = { x: e.x, y: s.y1, z: e.z, nx: e.nx, nz: e.nz, kind: 'lip', top: s.y1 };
@@ -58,7 +58,8 @@ export function findGrab(world: World, p: Player): Grip | null {
   }
   if (!best) return null;
   const rel = best.y - p.pos.y;
-  if (rel < G.lowest || rel > G.heightReach) return null;
+  // Waist height and up; crouched at an edge he can grab the lip under him to climb down.
+  if (rel < (p.posture === 'crouch' ? G.lowestCrouched : G.lowest) || rel > G.heightReach) return null;
   return best;
 }
 
@@ -164,7 +165,8 @@ export function stepGrip(s: SimState, world: World, input: InputFrame) {
   p.pull = Math.max(G.pullMin, Math.min(G.hangMax, p.pull));
   p.side = Math.max(-G.sideMax, Math.min(G.sideMax, p.side - look.dYaw * G.mousePull));
   const two = grips.length > 1, cap = two ? G.capTwo : G.capOne;
-  if (!foothold) {
+  // Free hanging (no wall under the feet, body well below the hands) swings; anything else is the spring.
+  if (!foothold && p.pos.y < ay - 1.2) {
     swing(s, ax, ay, az, input, look.dYaw, cap);
     return;
   }
@@ -173,9 +175,17 @@ export function stepGrip(s: SimState, world: World, input: InputFrame) {
   const sx = p.side * Math.cos(p.yaw), sz = -p.side * Math.sin(p.yaw); // along the camera's right
   const tx = ax + nx * G.wallGap + sx, ty = ay - p.pull, tz = az + nz * G.wallGap + sz;
   const k = G.spring, c = 2 * Math.sqrt(k);
-  let fx = k * (tx - p.pos.x) - c * p.vel.x, fy = k * (ty - p.pos.y) - c * p.vel.y + M.gravity, fz = k * (tz - p.pos.z) - c * p.vel.z;
+  // The spring pulls at most a reach's worth (0.3 m of error); hands pull, gravity does the lowering.
+  let ex = tx - p.pos.x, ez = tz - p.pos.z;
+  const ey = Math.max(-0.3, Math.min(0.3, ty - p.pos.y)), eh = Math.hypot(ex, ez);
+  if (eh > 0.3) { ex *= 0.3 / eh; ez *= 0.3 / eh; }
+  let fx = k * ex - c * p.vel.x, fy = Math.max(0, k * ey - c * p.vel.y + M.gravity), fz = k * ez - c * p.vel.z;
+  // Feet on the ground carry his weight, so only the sideways pull loads the hands then.
+  const supported = groundGap(world.index, p.pos, 0.03) !== Infinity;
+  const load = supported ? Math.hypot(fx, fz) : Math.hypot(fx, fy, fz);
   const f = Math.hypot(fx, fy, fz);
-  if (f > cap) { fx *= cap / f; fy *= cap / f; fz *= cap / f; p.strain += DT; }
+  if (f > cap) { fx *= cap / f; fy *= cap / f; fz *= cap / f; }
+  if (load > cap) p.strain += DT;
   else p.strain = Math.max(0, p.strain - DT);
   p.vel.x += fx * DT; p.vel.y += (fy - M.gravity) * DT; p.vel.z += fz * DT;
   if (p.strain > (two ? G.strainTwo : G.strainOne)) {
@@ -225,6 +235,8 @@ function swing(s: SimState, ax: number, ay: number, az: number, input: InputFram
   if (need > cap) { p.strain += DT; if (p.strain > G.strainOne) { p.strain = 0; releaseAll(p, G.regrab); sfx(s, 'slip'); return; } }
   else p.strain = Math.max(0, p.strain - DT);
   p.vel.x -= vr * dx; p.vel.y -= vr * dy; p.vel.z -= vr * dz;
+  const hs2 = Math.hypot(p.vel.x, p.vel.z);
+  if (hs2 > G.swingMax) { p.vel.x *= G.swingMax / hs2; p.vel.z *= G.swingMax / hs2; }
   x = ax + dx * p.pull; y = ay + dy * p.pull; z = az + dz * p.pull;
   const mx = x - p.pos.x, mz = z - p.pos.z;
   const blocked = moveHorizontal(world.index, p.pos, M.height.stand, mx, mz, 0.05);

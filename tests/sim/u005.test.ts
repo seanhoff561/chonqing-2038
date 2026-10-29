@@ -110,7 +110,7 @@ describe('bar swing and lache (M1-34)', () => {
     expect(state.player.mode).toBe('grip');
     let peak = 0, last = -99;
     for (let i = 0; i < secs(10); i++) {
-      const pump = i - last > 30 && state.player.vel.z < -0.3;
+      const pump = i - last > 20 && state.player.vel.z < -0.3;
       if (pump) last = i;
       run(state, world, 1, { buttons: LMB | RMB, yaw: 0, pressed: pump ? B.JUMP : 0 });
       peak = Math.max(peak, Math.hypot(state.player.vel.x, state.player.vel.z));
@@ -125,7 +125,7 @@ describe('bar swing and lache (M1-34)', () => {
     for (let i = 0; i < secs(14) && !caught; i++) {
       const p = state.player;
       if (!released) {
-        const pump = i - last > 30 && p.vel.z < -0.3;
+        const pump = i - last > 20 && p.vel.z < -0.3;
         if (pump) last = i;
         const go = i > secs(4) && p.vel.z < -2.5 && p.vel.y > 2.5; // let go on the way up the front of the swing
         if (go) released = true;

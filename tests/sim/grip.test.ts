@@ -201,3 +201,21 @@ describe('momentum through the hands (M1-26, U-004)', () => {
     expect(r.slipped).toBe(false);
   });
 });
+
+describe('climbing down (M1-26)', () => {
+  it('crouched at an edge he grabs the lip under him and hangs below it', () => {
+    const r = setup([floor(), solid(-2, 0, -30, 2, 3, -3)], { x: 0, y: 3, z: -3.4, yaw: Math.PI });
+    run(r.state, r.world, 5, { buttons: B.CROUCH });
+    for (let i = 0; i < 10 && r.state.player.mode !== 'grip'; i++) { aim(r.state, 0, 2.95, -3.0); run(r.state, r.world, 1, { buttons: B.CROUCH | LMB | RMB }); }
+    expect(r.state.player.mode).toBe('grip');
+    run(r.state, r.world, secs(3), { buttons: LMB | RMB, my: -1 });
+    expect(r.state.player.pos.y).toBeCloseTo(3 - 2.1, 1);
+    expect(r.state.player.pos.z).toBeGreaterThan(-3);
+  });
+  it('standing, nothing below the waist is grabbable', () => {
+    const r = setup([floor(), solid(-2, 0, -30, 2, 0.8, -3)], { x: 0, y: 0, z: -2.55, yaw: 0 });
+    run(r.state, r.world, 3);
+    aim(r.state, 0, 0.75, -3);
+    expect(findGrab(r.world, r.state.player)).toBeNull();
+  });
+});

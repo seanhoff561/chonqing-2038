@@ -26,7 +26,7 @@ export function buildHideoutScene(): World {
     { kind: 'patrolDecor', x: 10, y: 9, z: 0, yaw: 0 },
   ];
   return makeWorld({
-    name: 'hideout', solids, props, zones: h.zones, climbables: h.climbables,
+    name: 'hideout', solids, props, zones: h.zones, climbables: h.climbables, inter: h.inter,
     spawn: { ...h.at.spawn, yaw: -Math.PI / 2 },
     teleports: [
       { name: 'mattress', ...h.at.spawn, yaw: -Math.PI / 2 },

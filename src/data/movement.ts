@@ -27,14 +27,14 @@ export const movement = {
   wallKick: { reach: 0.8, max: 2, upPitch: 0.45, upSpeed: 4.6, speed: 5.5, up: 3.4, pitchUp: 1.5, minAway: 0.35, alongMax: 0.5 },
   /** hand climbing (U-002): grips, reach, reeling, mantles over lips, dynos */
   grip: {
-    rayReach: 1.6, heightReach: 2.2, lowest: 0.2, lipDepth: 0.35, edgeBand: 0.4, pipeRadius: 0.3,
+    rayReach: 1.6, heightReach: 2.2, lowest: 0.9, lowestCrouched: -0.3, lipDepth: 0.35, edgeBand: 0.4, pipeRadius: 0.3,
     pullMin: 1.15, hangMax: 2.1, pullSpeed: 1.1, wallGap: 0.4,
     /** spring toward the hanging spot, and how hard one or two hands can pull before slipping (U-004) */
     spring: 80, capOne: 35, capTwo: 80, strainOne: 0.1, strainTwo: 0.25,
     drainOne: 6, drainTwo: 2, ladderScale: 0.5, mantleFrom: 1.3, climbTime: 0.7,
     dynoUp: 4.6, regrab: 0.25,
     /** U-005: mouse drags move the body (radians to metres), sideways range; bar swings and laches */
-    mousePull: 0.7, sideMax: 0.45, mouseSwing: 2.5, pump: 1.6, swingMax: 6.5, swingDamp: 0.15,
+    mousePull: 0.7, sideMax: 0.45, mouseSwing: 2.5, pump: 2.0, swingMax: 6.5, swingDamp: 0.15,
   },
   falls: { safe: 4, rollSafe: 7, rollWindow: 0.3, lethal: 12, fractureFrom: 7, rollMax: 10, dmgPerM: 8, dmgPerMHigh: 10, sprainChance: 0.4, armChance: 0.2 },
   hide: { enterTime: 0.6, exitTime: 0.5, minInner: 0.8, reach: 1.6 },

@@ -90,7 +90,7 @@ export class Hands {
   }
 
   /** readied: a grabbable is under the reticle and in reach. */
-  update(p: Player, cam: THREE.Camera, readied: boolean, dt: number) {
+  update(p: Player, cam: THREE.Camera, readied: boolean, dt: number, hidden = false) {
     this.t += dt;
     const vh = innerHeight, vw = innerWidth, hh = vh * 0.3, hw = (hh * W) / H;
     const shake = p.endurance < 35 ? (35 - p.endurance) / 35 * 6 : 0;
@@ -120,6 +120,7 @@ export class Hands {
         y = vh * 0.8;
         pose = 'relaxed';
       } else { show = false; x = y = 0; pose = 'relaxed'; }
+      if (hidden) show = false;
       el.style.display = show ? 'block' : 'none';
       if (!show) return;
       this.draw(i, pose);
