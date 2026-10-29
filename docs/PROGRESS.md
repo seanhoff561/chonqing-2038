@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M1. Next: M1-17 Swimming and diving.
-Features done: 16 / 204 | Last done: M1-16
+**Status:** building M1. Next: M1-18 Movement noise events.
+Features done: 17 / 204 | Last done: M1-17
 <!-- /status -->
 
 ## Log
@@ -23,3 +23,4 @@ Features done: 16 / 204 | Last done: M1-16
 - M1-14 Fall outcomes and landing roll: fall outcomes and landing roll
 - M1-15 Hide in a box: hide in boxes
 - M1-16 Stamina: stamina
+- M1-17 Swimming and diving: swimming, diving and climbing out

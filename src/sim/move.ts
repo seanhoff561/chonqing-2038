@@ -8,6 +8,7 @@ import { free, moveHorizontal, moveVertical, groundGap } from './physics';
 import { groundParkour, airParkour, stepAction, stepHang, stepWallRun, stepWallClimb } from './parkour';
 import { climbableNear, attach, stepClimb } from './climb';
 import { hideNear, enterHide, stepHidden } from './hide';
+import { checkWater, stepSwim } from './swim';
 
 export const heightOf = (p: Posture) => M.height[p];
 
@@ -44,6 +45,7 @@ export function stepPlayer(state: SimState, world: World, input: InputFrame): vo
     case 'wallclimb': stepWallClimb(state, world, input); return;
     case 'climb': stepClimb(state, world, input); return;
     case 'hidden': stepHidden(state, world, input); return;
+    case 'swim': stepSwim(state, world, input); return;
   }
   if ((input.pressed & B.INTERACT) && p.onGround) {
     const h = hideNear(world, p);
@@ -161,6 +163,7 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
     if (p.pos.y > p.fallFrom) p.fallFrom = p.pos.y;
   }
   p.mode = p.onGround ? 'ground' : 'air';
+  if (world.water.length && checkWater(state, world)) return;
   if (!p.onGround) {
     if (p.wall.t < 0) p.wall.t = Math.min(0, p.wall.t + DT);
     else if (!airParkour(state, world, input) && input.my > 0) {
