@@ -8,6 +8,7 @@ import { Input } from './input/input';
 import { View } from './render/view';
 import { Hud } from './ui/hud';
 import { Sky } from './render/sky';
+import { BodyFx } from './render/body-fx';
 
 export interface GameOpts { scenario: string; seed: number; dev: boolean }
 
@@ -18,6 +19,7 @@ export class Game {
   readonly input: Input;
   readonly hud = new Hud();
   readonly sky: Sky;
+  readonly bodyFx: BodyFx;
   drawDistance = 160;
   scenario!: Scenario;
   private prev: Vec3 = { x: 0, y: 0, z: 0 };
@@ -30,6 +32,7 @@ export class Game {
     this.view = new View(document.body);
     this.input = new Input(this.view.renderer.domElement);
     this.sky = new Sky(this.view);
+    this.bodyFx = new BodyFx(this.view.renderer.domElement);
     this.load(opts.scenario, opts.seed);
   }
 
@@ -59,6 +62,7 @@ export class Game {
     const pos = { x: this.prev.x + (p.pos.x - this.prev.x) * alpha, y: this.prev.y + (p.pos.y - this.prev.y) * alpha, z: this.prev.z + (p.pos.z - this.prev.z) * alpha };
     this.view.fp.update(p, pos, this.input.yaw, this.input.pitch, dt);
     this.view.arms.update(p, dt, this.input.pitch);
+    this.bodyFx.update(this.state, this.view.fp, dt);
     this.sky.update(this.state.time, this.view.fp.cam.position, this.drawDistance);
     this.view.render();
     this.frames++;

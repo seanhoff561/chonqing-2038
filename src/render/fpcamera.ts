@@ -7,6 +7,8 @@ import { movement as M } from '../data/movement';
 export class FPCamera {
   readonly cam: THREE.PerspectiveCamera;
   baseFov = 75;
+  /** 0 none, 0.5 sprain, 1 broken leg: an uneven step */
+  limp = 0;
   private eye = M.eye.stand;
   private bob = 0;
   private dip = 0;
@@ -39,9 +41,10 @@ export class FPCamera {
     const sprintFov = sp > 6 ? 6 : 0;
     this.fov += (this.baseFov + sprintFov - this.fov) * k;
     if (Math.abs(this.cam.fov - this.fov) > 0.01) { this.cam.fov = this.fov; this.cam.updateProjectionMatrix(); }
-    const by = Math.abs(Math.sin(this.bob)) * 0.045 * amp, bx = Math.sin(this.bob) * 0.025 * amp;
+    const limpDip = this.limp * (walking ? Math.max(0, Math.sin(this.bob)) * 0.09 : 0);
+    const by = Math.abs(Math.sin(this.bob)) * 0.045 * amp - limpDip, bx = Math.sin(this.bob) * 0.025 * amp;
     this.cam.position.set(pos.x + Math.cos(yaw) * bx, pos.y + this.eye + by - this.dip, pos.z - Math.sin(yaw) * bx);
-    this.cam.rotation.set(pitch, yaw, this.roll);
+    this.cam.rotation.set(pitch, yaw, this.roll + limpDip * 0.4);
   }
 
   eyeHeight() { return this.eye; }

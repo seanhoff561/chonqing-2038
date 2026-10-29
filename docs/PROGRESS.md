@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M2. Next: M2-08 Body feedback without meters.
-Features done: 31 / 204 | Last done: M2-07
+**Status:** building M2. Next: M2-09 Item database.
+Features done: 32 / 204 | Last done: M2-08
 <!-- /status -->
 
 ## Log
@@ -38,3 +38,4 @@ Features done: 31 / 204 | Last done: M2-07
 - M2-05 Limb injuries: limb injuries
 - M2-06 Hunger, thirst and fatigue: hunger, thirst, fatigue and collapse
 - M2-07 Natural healing: natural healing
+- M2-08 Body feedback without meters: body feedback without meters
