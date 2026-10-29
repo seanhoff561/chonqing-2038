@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M2. Next: M2-09 Item database.
-Features done: 32 / 204 | Last done: M2-08
+**Status:** building M2. Next: M2-10 Grid inventory.
+Features done: 33 / 204 | Last done: M2-09
 <!-- /status -->
 
 ## Log
@@ -39,3 +39,4 @@ Features done: 32 / 204 | Last done: M2-08
 - M2-06 Hunger, thirst and fatigue: hunger, thirst, fatigue and collapse
 - M2-07 Natural healing: natural healing
 - M2-08 Body feedback without meters: body feedback without meters
+- M2-09 Item database: item database
