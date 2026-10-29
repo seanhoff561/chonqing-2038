@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M1. Next: M1-24 Dev panel and scenario loader.
-Features done: 23 / 204 | Last done: M1-23
+**Status:** building M2. Next: M2-01 Game clock and day phases.
+Features done: 24 / 204 | Last done: M1-24
 <!-- /status -->
 
 ## Log
@@ -30,3 +30,4 @@ Features done: 23 / 204 | Last done: M1-23
 - M1-21 First-person camera: first-person camera
 - M1-22 First-person arms: first-person arms
 - M1-23 Gym scenario: movement gym scenario
+- M1-24 Dev panel and scenario loader: dev panel and scenario loader
