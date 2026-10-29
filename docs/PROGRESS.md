@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M1. Next: M1-26 Hand grab core (White Knuckle style).
-Features done: 41 / 211 | Last done: M1-25
+**Status:** building M1. Next: M1-27 Hand sprites.
+Features done: 42 / 211 | Last done: M1-26
 <!-- /status -->
 
 ## Log
@@ -56,3 +56,4 @@ Features done: 41 / 211 | Last done: M1-25
 - M1-13 Pipes and ladders by hand: pipes and ladders by hand
 - M1-16 Grip endurance (no running stamina): grip endurance, no running stamina (U-003)
 - M1-25 Hold-to-crouch on Ctrl and slide cancel: hold-to-crouch on Ctrl and slide cancel (U-001)
+- M1-26 Hand grab core (White Knuckle style): hand grab core with force-limited grips (U-002, U-004)
