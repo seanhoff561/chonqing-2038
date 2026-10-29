@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-56 Nothing empty: a filled, ordered city (U-022, U-028).
-Features done: 103 / 262 | Last done: M3-56a
+**Status:** building M3. Next: M3-56c Ruins of the fighting on the rough ground (U-028, U-030).
+Features done: 104 / 264 | Last done: M3-56b
 <!-- /status -->
 
 ## Log
@@ -121,3 +121,4 @@ Features done: 103 / 262 | Last done: M3-56a
 - M3-54 Smooth streets (U-022): streets as meshes along their real lines: asphalt with lines, gutters, drains, manholes and crossings, kerbs and pavements; no cell-stepped edges
 - M3-55 Buildings that look like buildings, in 2038 (U-022, U-024): building fronts: entrances, cages, AC, skins, lobbies, open shop houses; slope jumps, leaf trees, light-box signs
 - M3-56a Clear, smooth streets; ruins and green marked (U-029): streets level and smooth with nothing poking through, carriageways clear, rough ground and green marked (docs/maps/marks.png)
+- M3-56b Green city: grass, parks and woods (U-028, U-029): grass blended into the ground, dense woods on the wild land, park trees and shrubs, weeds in the grass

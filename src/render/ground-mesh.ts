@@ -1,28 +1,30 @@
 // Heightfield ground meshes (M3-41a, D-016): one mesh per chunk and surface, the same triangles the collision
-// uses, smooth normals from the heights. Gentle slopes are paved ground; faces steeper than about 50 degrees are
-// retaining walls. The far view gets one coarse mesh at an eighth of the resolution.
+// uses, smooth normals from the heights. Gentle slopes are paved ground, or grass where the marks grow it
+// (M3-56b); faces steeper than about 50 degrees are retaining walls, or grassed banks. The far view gets one
+// coarse mesh at an eighth of the resolution.
 import * as THREE from 'three';
 import type { Heightfield } from '../world/heightfield';
-import { material, texScale, type Lod } from './materials';
+import { material, groundMaterial, texScale, type Lod } from './materials';
 import { MAT } from '../world/mats';
 import { CHUNK } from './world-mesh';
+import { grassAt, type Marks } from '../world/yuzhong/marks';
 
 const STEEP = 0.62;
 
 /** Ground meshes for the near view (or the whole world when lod is 'all'), chunked for culling. */
-export function buildGroundMeshes(g: Heightfield, lod: Lod, chunk = CHUNK): THREE.Mesh[] {
+export function buildGroundMeshes(g: Heightfield, lod: Lod, marks?: Marks, chunk = CHUNK): THREE.Mesh[] {
   const out: THREE.Mesh[] = [], per = Math.max(1, Math.round(chunk / g.cell));
   for (let cj = 0; cj < g.h - 1; cj += per) for (let ci = 0; ci < g.w - 1; ci += per) {
-    const m = surface(g, ci, cj, Math.min(ci + per, g.w - 1), Math.min(cj + per, g.h - 1), 1, lod);
+    const m = surface(g, ci, cj, Math.min(ci + per, g.w - 1), Math.min(cj + per, g.h - 1), 1, lod, marks);
     for (const mesh of m) { mesh.userData.chunk = { x: g.x0 + (ci + per / 2) * g.cell, z: g.z0 + (cj + per / 2) * g.cell }; out.push(mesh); }
   }
   return out;
 }
 
 /** One coarse mesh of the whole field for the far view (detail cut inside the near radius). */
-export const buildFarGround = (g: Heightfield) => surface(g, 0, 0, g.w - 1, g.h - 1, 8, 'far');
+export const buildFarGround = (g: Heightfield, marks?: Marks) => surface(g, 0, 0, g.w - 1, g.h - 1, 8, 'far', marks);
 
-function surface(g: Heightfield, i0: number, j0: number, i1: number, j1: number, k: number, lod: Lod): THREE.Mesh[] {
+function surface(g: Heightfield, i0: number, j0: number, i1: number, j1: number, k: number, lod: Lod, marks?: Marks): THREE.Mesh[] {
   const W = g.w, Y = g.y;
   const at = (i: number, j: number) => Y[Math.min(j, g.h - 1) * W + Math.min(i, W - 1)];
   const nrm = (i: number, j: number): [number, number, number] => {
@@ -34,14 +36,17 @@ function surface(g: Heightfield, i0: number, j0: number, i1: number, j1: number,
   // The level faces share one grid of vertices (M3-53: a sixth of the vertices of separate triangles), indexed.
   // Retaining walls, textured on their own planes, keep vertices of their own.
   const cols = Math.ceil((i1 - i0) / k) + 1, rows = Math.ceil((j1 - j0) / k) + 1, n = cols * rows;
-  const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), uv = new Float32Array(n * 2), col = new Float32Array(n * 3);
+  const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), uv = new Float32Array(n * 2), col = new Float32Array(n * 3), grass = new Float32Array(n);
+  // How much grass each vertex stands in: the share of four points a metre round it (M3-56b).
+  const green = (x: number, z: number) => (marks ? grassAt(marks, x, z) : false);
   const flat = 1 / texScale(MAT.concrete), wall = 1 / texScale(MAT.stone);
   const gi = (c: number) => Math.min(i0 + c * k, W - 1), gj = (r: number) => Math.min(j0 + r * k, g.h - 1);
   for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
     const v = r * cols + c, i = gi(c), j = gj(r), x = g.x0 + i * g.cell, z = g.z0 + j * g.cell, [nx, ny, nz] = nrm(i, j), sh = shade(x, z);
     pos.set([x, at(i, j), z], v * 3); nor.set([nx, ny, nz], v * 3); uv.set([x * flat, z * flat], v * 2); col.set([sh, sh, sh], v * 3);
+    grass[v] = ((green(x - 1, z - 1) ? 1 : 0) + (green(x + 1, z - 1) ? 1 : 0) + (green(x - 1, z + 1) ? 1 : 0) + (green(x + 1, z + 1) ? 1 : 0)) / 4;
   }
-  const lists: number[][] = [[]], mats = [MAT.concrete], steepBuf = new Buf();
+  const flatIdx: number[] = [], steepBuf = new Buf(), bankBuf = new Buf();
   for (let r = 0; r + 1 < rows; r++) for (let c = 0; c + 1 < cols; c++) {
     const i = gi(c), j = gj(r);
     if (k === 1 && g.hole[j * (W - 1) + i]) continue;
@@ -51,28 +56,26 @@ function surface(g: Heightfield, i0: number, j0: number, i1: number, j1: number,
       const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = cc[0] - a[0], vy = cc[1] - a[1], vz = cc[2] - a[2];
       const ny = (uz * vx - ux * vz) / (Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) || 1);
       if (ny < STEEP) {
-        const fx = Math.abs(uy * vz - uz * vy) > Math.abs(ux * vy - uy * vx);
-        for (const v of tri) steepBuf.push([pos[v * 3], pos[v * 3 + 1], pos[v * 3 + 2]], [nor[v * 3], nor[v * 3 + 1], nor[v * 3 + 2]], [(fx ? pos[v * 3 + 2] : pos[v * 3]) * wall, pos[v * 3 + 1] * wall], col[v * 3]);
+        const fx = Math.abs(uy * vz - uz * vy) > Math.abs(ux * vy - uy * vx), bank = green((a[0] + b[0] + cc[0]) / 3, (a[2] + b[2] + cc[2]) / 3);
+        for (const v of tri) (bank ? bankBuf : steepBuf).push([pos[v * 3], pos[v * 3 + 1], pos[v * 3 + 2]], [nor[v * 3], nor[v * 3 + 1], nor[v * 3 + 2]], [(fx ? pos[v * 3 + 2] : pos[v * 3]) * wall, pos[v * 3 + 1] * wall], col[v * 3]);
         continue;
       }
       // Streets are meshes of their own along their lines (M3-54); the ground under them is plain.
-      lists[0].push(...tri);
+      flatIdx.push(...tri);
     }
   }
-  const attrs = { position: new THREE.BufferAttribute(pos, 3), normal: new THREE.BufferAttribute(nor, 3), uv: new THREE.BufferAttribute(uv, 2), color: new THREE.BufferAttribute(col, 3) };
   const out: THREE.Mesh[] = [];
-  lists.forEach((idx, s) => {
-    if (!idx.length) return;
+  if (flatIdx.length) {
     const geo = new THREE.BufferGeometry();
-    for (const [name, at] of Object.entries(attrs)) geo.setAttribute(name, at);
-    geo.setIndex(new THREE.BufferAttribute(n > 65535 ? new Uint32Array(idx) : new Uint16Array(idx), 1));
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+    geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.setAttribute('grass', new THREE.BufferAttribute(grass, 1));
+    geo.setIndex(new THREE.BufferAttribute(n > 65535 ? new Uint32Array(flatIdx) : new Uint16Array(flatIdx), 1));
     geo.computeBoundingSphere();
-    const m = new THREE.Mesh(geo, material(mats[s], true, lod));
+    const m = new THREE.Mesh(geo, groundMaterial(lod));
     m.receiveShadow = true;
     out.push(m);
-  });
-  const steep = steepBuf.mesh(material(MAT.stone, true, lod));
-  if (steep) out.push(steep);
+  }
+  for (const [buf, mat] of [[steepBuf, MAT.stone], [bankBuf, MAT.grass]] as const) { const m = buf.mesh(material(mat, true, lod)); if (m) out.push(m); }
   return out;
 }
 

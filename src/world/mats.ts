@@ -9,6 +9,8 @@ export const MAT = {
   blossom: 20, leaves: 21, tealMetal: 22, cloth: 23,
   /** a glowing fitting: bulkhead lamps, lit signs */
   lamp: 24,
+  /** grass and weeds on open ground (M3-56b) */
+  grass: 25,
   /** collision only: a prop draws it */
   hidden: 99,
 } as const;

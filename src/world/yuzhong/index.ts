@@ -8,6 +8,7 @@ import { makeRng, hashString, rand, randInt, type Rng } from '../../sim/rng';
 import { buildLot, PARAPET, type Fabric, type Lot } from '../city/buildings';
 import { stepsFor } from '../steps';
 import { findMarks } from './marks';
+import { greenery } from './green';
 import { GEO } from '../geo';
 import type { Heightfield } from '../heightfield';
 import { buildGround, streets, onGround, WATER_Y, type Street } from './ground';
@@ -62,11 +63,14 @@ export function buildYuzhong(): World {
     plots.filter(p => p.route).map(p => ({ x: p.route![0].x, z: p.route![0].z, r: 2.5 })));
   const dress = dressStreets(buildIndex(solids, g), g, sts, land, inter, clear);
   solids.push(...dress.solids);
+  // Then the green on the marked open ground, round all that.
+  const marks = findMarks(g, land, plots, block), green = greenery(buildIndex(solids, g), g, marks);
+  solids.push(...green.solids);
   return makeWorld({
     name: 'yuzhong', solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? []),
-    props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], dress.props), inter, climbables: out.climbables.concat(line.climbables, site?.climbables ?? []),
+    props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], dress.props, green.props), inter, climbables: out.climbables.concat(line.climbables, site?.climbables ?? []),
     hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones,
-    far: out.far, ground: g, plots, features: out.features, marks: findMarks(g, land, plots, block), streets: sts.filter(onGround).map(s => ({ kind: s.kind, w: s.w, steps: s.steps, pts: s.pts })), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
+    far: out.far, ground: g, plots, features: out.features, marks, streets: sts.filter(onGround).map(s => ({ kind: s.kind, w: s.w, steps: s.steps, pts: s.pts })), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
     teleports, spawn: hide,
   });
 }

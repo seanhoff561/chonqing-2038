@@ -55,3 +55,15 @@ export function findMarks(g: Heightfield, land: Uint8Array, plots: Plot[], block
   }
   return { cell: MARK_CELL, w, h, m };
 }
+
+/** The mark at (x, z), 0 off the grid. */
+export const markAt = (mk: Marks, x: number, z: number) => {
+  const i = Math.floor(x / mk.cell), j = Math.floor(z / mk.cell);
+  return i < 0 || j < 0 || i >= mk.w || j >= mk.h ? 0 : mk.m[j * mk.w + i];
+};
+
+/** Whether grass grows at (x, z) (M3-56b): all over the parks and the woods, in patches on the open ground. */
+export function grassAt(mk: Marks, x: number, z: number): boolean {
+  const m = markAt(mk, x, z);
+  return m === MARK.park || m === MARK.wood || (m === MARK.open && Math.sin(x * 0.083 + z * 0.051) * Math.sin(x * 0.047 - z * 0.069) + 0.3 * Math.sin(x * 0.31 + z * 0.27) > -0.1);
+}

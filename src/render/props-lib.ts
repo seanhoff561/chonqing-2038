@@ -66,11 +66,11 @@ function vehicle(p: Prop, L: number, W: number, H: number, kind: 'car' | 'van' |
 function tree(p: Prop, big: boolean): THREE.Object3D {
   const k = new Kit(seedOf(p)).use('bark'), r = k.r, s = big ? 1.5 : 1;
   const h = (3 + r() * 1.5) * s;
-  k.cyl(0.2 * s, 0.13 * s, h, 0x4a3e32, 0, 0, 0, 7);
+  k.cyl(0.2 * s, 0.13 * s, h, 0x6e5e4c, 0, 0, 0, 7);
   const cards: { x: number; y: number; z: number; s: number; ry: number }[] = [];
   for (let i = 0; i < 4; i++) {
     const a = r() * Math.PI * 2, l = (1 + r()) * s;
-    k.cyl(0.07 * s, 0.04 * s, l, 0x4a3e32, Math.cos(a) * 0.3, h * 0.75, Math.sin(a) * 0.3, 5, 'x', a);
+    k.cyl(0.07 * s, 0.04 * s, l, 0x6e5e4c, Math.cos(a) * 0.3, h * 0.75, Math.sin(a) * 0.3, 5, 'x', a);
   }
   // The crown is leaves only (U-028): clusters of leaf cards, no solid core showing through.
   for (let i = 0; i < 7; i++) {
@@ -78,7 +78,7 @@ function tree(p: Prop, big: boolean): THREE.Object3D {
     for (let j = 0; j < 9; j++) cards.push({ x: Math.cos(a) * d + (r() - 0.5) * 2 * s, y: y + (r() - 0.5) * 1.4 * s, z: Math.sin(a) * d + (r() - 0.5) * 2 * s, s: (0.9 + r() * 0.6) * s, ry: r() * Math.PI });
   }
   // Fig trees drop aerial roots.
-  if (big) for (let i = 0; i < 10; i++) { const a = r() * Math.PI * 2, d = 0.5 + r() * 1.8; k.cyl(0.03, 0.02, h * (0.5 + r() * 0.4), 0x6a5e4e, Math.cos(a) * d, h * 0.2, Math.sin(a) * d, 4); }
+  if (big) for (let i = 0; i < 5; i++) { const a = r() * Math.PI * 2, d = 0.4 + r() * 1.2, l = h * (0.3 + r() * 0.3); k.cyl(0.025, 0.015, l, 0x9a8c74, Math.cos(a) * d, h * 0.85 - l, Math.sin(a) * d, 4); }
   return group([{ geo: k.geometry(), mat: PROP_MAT }, { geo: leafCards(cards, 0x9aa070), mat: leaves() }]);
 }
 

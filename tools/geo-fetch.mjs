@@ -146,7 +146,7 @@ function extract({ nodes, ways, rels }) {
     } else if (t.railway && ['monorail', 'subway', 'construction', 'abandoned', 'disused', 'platform'].includes(t.railway)) out.rails.push([t.railway, (t.bridge ? 2 : 0) | (t.tunnel ? 4 : 0), +(t.layer ?? 0) || 0, t.name ?? '', pts]);
     else if (t.aerialway || t['abandoned:aerialway']) out.aerial.push([t.name ?? '', pts]);
     else {
-      const kind = t.leisure === 'park' || t.landuse === 'grass' || t.landuse === 'forest' || t.natural === 'scrub' ? 'park' : t.natural === 'water' ? 'water' : t.natural === 'cliff' ? 'cliff' : t.man_made === 'pier' ? 'pier' : t.man_made === 'bridge' ? 'bridge' : t.leisure === 'pitch' ? 'pitch' : t.landuse ?? null;
+      const kind = t.leisure === 'park' || t.leisure === 'garden' || ['grass', 'forest', 'meadow', 'village_green', 'recreation_ground'].includes(t.landuse) || ['scrub', 'wood', 'grassland', 'wetland'].includes(t.natural) ? 'park' : t.natural === 'water' ? 'water' : t.natural === 'cliff' ? 'cliff' : t.man_made === 'pier' ? 'pier' : t.man_made === 'bridge' ? 'bridge' : t.leisure === 'pitch' ? 'pitch' : t.landuse ?? null;
       if (kind) out.areas.push([kind, t.name ?? '', pts]);
     }
   }
