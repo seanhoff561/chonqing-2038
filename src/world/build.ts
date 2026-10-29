@@ -3,8 +3,9 @@ import type { World } from './world';
 import { buildGym } from './sets/gym';
 import { buildHideoutScene } from './sets/hideout-scene';
 import { buildCity } from './city';
+import { buildReference } from './sets/reference';
 
-const builders: Record<string, () => World> = { gym: buildGym, hideout: buildHideoutScene, city: buildCity };
+const builders: Record<string, () => World> = { gym: buildGym, hideout: buildHideoutScene, city: buildCity, reference: buildReference };
 const cache = new Map<string, World>();
 
 export function getWorld(name: string): World {

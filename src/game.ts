@@ -74,6 +74,8 @@ export class Game {
     this.state.player.yaw = this.input.yaw = sc.spawn?.yaw ?? this.world.spawn.yaw;
     this.input.pitch = 0;
     this.prev = { ...this.state.player.pos };
+    this.drawDistance = sc.draw ?? 160;
+    this.sky.overcast = sc.overcast ? 1 : 0;
     this.view.setWorld(this.world);
   }
 

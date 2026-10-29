@@ -5,6 +5,7 @@ import type { View } from './view';
 import { setNight } from './materials';
 
 const DAY_SKY = new THREE.Color(0x9fabb2), DUSK_SKY = new THREE.Color(0x6b5a58), NIGHT_SKY = new THREE.Color(0x151a27);
+const OVERCAST = new THREE.Color(0xb4b8b8);
 const NIGHT_GROUND = new THREE.Color(0x3a2a18), DAY_GROUND = new THREE.Color(0x4a4438);
 const c = new THREE.Color();
 
@@ -12,6 +13,8 @@ export class Sky {
   readonly moon = new THREE.Mesh(new THREE.SphereGeometry(6, 12, 8), new THREE.MeshBasicMaterial({ color: 0xd8dce6, fog: false }));
   /** fog density multiplier set by weather (1 = clear haze) */
   fogMul = 1;
+  /** 0 clear to 1 overcast: flat light, no sun, pale haze */
+  overcast = 0;
 
   constructor(private view: View) { view.scene.add(this.moon); }
 
@@ -22,16 +25,18 @@ export class Sky {
     c.copy(NIGHT_SKY).lerp(DAY_SKY, d).lerp(DUSK_SKY, duskness * 0.6);
     (v.scene.background as THREE.Color).copy(c);
     const fog = v.scene.fog as THREE.Fog;
+    c.lerp(OVERCAST, this.overcast * d * 0.6);
+    (v.scene.background as THREE.Color).copy(c);
     fog.color.copy(c);
     fog.far = farBase / this.fogMul;
-    fog.near = Math.min(fog.far * 0.15, 25);
+    fog.near = Math.min(fog.far * 0.15, 25) * (1 - 0.6 * this.overcast);
     // Sun arcs east to west through the day; below the horizon at night.
     const a = ((h - 6) / 12) * Math.PI;
     v.sun.position.set(camPos.x + Math.cos(a) * 80, camPos.y + Math.sin(a) * 90, camPos.z + 30);
     v.sun.target.position.copy(camPos);
-    v.sun.intensity = 1.7 * d * (1 - under);
+    v.sun.intensity = 1.7 * d * (1 - under) * (1 - 0.8 * this.overcast);
     v.sun.color.setHSL(0.09, 0.5 - 0.3 * d, 0.85 + 0.1 * d);
-    v.hemi.intensity = (0.5 + 0.75 * d) * (1 - under * 0.92);
+    v.hemi.intensity = (0.5 + 0.75 * d) * (1 - under * 0.92) * (1 + 0.45 * this.overcast);
     v.hemi.color.copy(NIGHT_SKY).lerp(new THREE.Color(0xc8d4e0), d).lerp(new THREE.Color(0x46557a), (1 - d) * 0.8);
     v.hemi.groundColor.copy(NIGHT_GROUND).lerp(DAY_GROUND, d);
     setNight(Math.max(0, 1 - d * 1.6));
