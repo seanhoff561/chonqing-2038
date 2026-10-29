@@ -21,13 +21,13 @@ export class SleepUI {
     });
   }
 
-  toggle(on: boolean) {
+  toggle(on: boolean, rough = false) {
     this.open = on;
     this.game.input.uiOpen = on;
     if (on) document.exitPointerLock?.();
     this.el.style.display = on ? 'block' : 'none';
     if (!on) return;
-    this.el.innerHTML = `<div class="sl-title">睡觉 SLEEP · now ${clockText(this.game.state.time)}</div>` +
+    this.el.innerHTML = `<div class="sl-title">${rough ? '睡在地上 SLEEP ROUGH (less rest)' : '睡觉 SLEEP'} · now ${clockText(this.game.state.time)}</div>` +
       TIMES.map((h, i) => `<button data-h="${h}">${i + 1}  until ${String(h).padStart(2, '0')}:00</button>`).join('') +
       `<div class="sl-note">Esc to stay awake</div>`;
     this.el.querySelectorAll('button').forEach(b => { b.onclick = () => this.choose(Number(b.dataset.h)); });

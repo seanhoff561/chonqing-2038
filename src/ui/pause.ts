@@ -15,7 +15,7 @@ const CONTROLS: [string, string][] = [
   ['Q', 'let go'],
   ['Ctrl (hold) or C', 'crouch; while running: slide; landing: roll'],
   ['Z', 'crawl'],
-  ['E (hold)', 'interact'],
+  ['E (hold)', 'interact; with nothing in view: sleep rough'],
   ['1-5 / 0 or `', 'hotbar / empty hands'],
   ['Tab / L / H', 'backpack / laptop / headlamp'],
   ['= (or Esc)', 'pause and settings'],

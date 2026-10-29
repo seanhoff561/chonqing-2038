@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-27 Run start without a shelter (U-013).
-Features done: 71 / 228 | Last done: M3-23
+**Status:** building M3. Next: M3-28 Setting up a shelter (U-013).
+Features done: 72 / 228 | Last done: M3-27
 <!-- /status -->
 
 ## Log
@@ -89,3 +89,4 @@ Features done: 71 / 228 | Last done: M3-23
 - M3-10 Chunk meshes and textures: chunk meshes, weathered textures, painted facades with lit windows
 - M3-11 Chunk streaming and fog cover: chunks past the fog hidden; pipes, ladders and props merged per chunk
 - M3-23 Reference hillside (U-010): reference hillside rebuilt from look-01 with a vantage roof, first pass
+- M3-27 Run start without a shelter (U-013): runs start in Shibati with no shelter; sleep rough anywhere

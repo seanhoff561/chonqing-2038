@@ -21,7 +21,7 @@ The director's brief (BRIEF.md) is the vision. This is the build design. Numbers
 | Left hand / right hand: hold to grip what's under the reticle (empty hands only, U-007) | Left / right mouse |
 | Crouch (hold) / slide (while sprinting) / roll (just before landing) | Ctrl (or C) |
 | Crawl (toggle) | Z |
-| Interact / pick up / enter box (hold E for timed actions) | E |
+| Interact / pick up / enter box (hold E for timed actions); hold E with nothing in view to sleep rough (U-013) | E |
 | Let go of everything | Q |
 | Use held item | Left mouse |
 | Reload / rotate an item while dragging | R |

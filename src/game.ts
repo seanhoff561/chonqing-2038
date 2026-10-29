@@ -13,7 +13,7 @@ import { InventoryUI } from './ui/inventory-ui';
 import { heldStack } from './sim/use';
 import { item } from './data/items';
 import { Audio } from './audio/audio';
-import { startRun } from './sim/run';
+import { startRun, furnish } from './sim/run';
 import { teleport } from './sim/player';
 import { writeSave, readSave, type SaveFile } from './sim/save';
 import { syncWorld } from './sim/doors';
@@ -69,7 +69,8 @@ export class Game {
     this.scenario = sc;
     this.world = getWorld(sc.world);
     this.state = createState(seed, this.world);
-    if (sc.run) startRun(this.state, this.world);
+    if (sc.run) startRun(this.state);
+    if (sc.furnished) furnish(this.state, this.world);
     if (sc.spawn) teleport(this.state.player, sc.spawn.x, sc.spawn.y, sc.spawn.z);
     this.state.player.yaw = this.input.yaw = sc.spawn?.yaw ?? this.world.spawn.yaw;
     this.input.pitch = 0;
@@ -126,7 +127,7 @@ export class Game {
       if (e.t === 'land') this.view.fp.landed(e.h);
       else if (e.t === 'sfx') playMove(this.audio, e.id);
       else if (e.t === 'open') this.inv.toggle(true);
-      else if (e.t === 'sleep-menu') this.sleep.toggle(true);
+      else if (e.t === 'sleep-menu') this.sleep.toggle(true, e.id === 'rough');
       else if (e.t === 'slept' && this.scenario.run && !this.state.dead) writeSave(localStorage, this.scenario.name, this.state);
     }
     if (this.state.dead) this.death.show();

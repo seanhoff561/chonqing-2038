@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildHideoutScene } from '../../src/world/sets/hideout-scene';
 import { createState, step, stateHash } from '../../src/sim/sim';
-import { startRun } from '../../src/sim/run';
+import { furnish } from '../../src/sim/run';
 import { writeSave, readSave, deleteSave, type Storage } from '../../src/sim/save';
 import { syncWorld } from '../../src/sim/doors';
 import { emptyInput } from '../../src/sim/types';
@@ -12,7 +12,7 @@ describe('ironman save', () => {
   it('a save/load round trip is identical and the loaded run carries on the same', () => {
     const w = buildHideoutScene();
     const s = createState(11, w);
-    startRun(s, w);
+    furnish(s, w);
     for (let i = 0; i < 300; i++) step(s, w, { ...emptyInput(), my: 1, yaw: -1.5 });
     const st = shim();
     writeSave(st, 'hideout', s);

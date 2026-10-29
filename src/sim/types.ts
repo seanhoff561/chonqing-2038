@@ -33,7 +33,7 @@ export type SimEvent =
   | { t: 'noise'; x: number; y: number; z: number; r: number; kind: string }
   | { t: 'land'; h: number; roll: boolean; outcome: FallOutcome }
   | { t: 'hurt'; dmg: number; cause: string }
-  | { t: 'slept'; from: number; to: number; where: 'bed' | 'collapse' }
+  | { t: 'slept'; from: number; to: number; where: 'bed' | 'rough' | 'collapse' }
   | { t: 'use'; id: string }
   | { t: 'open'; id: string }
   | { t: 'sleep-menu'; id: string }

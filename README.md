@@ -32,7 +32,7 @@ Then open the printed URL. Other commands:
 | Pull up / let arms out while hanging | W / S, or drag the mouse |
 | Crouch (hold), slide, roll | Ctrl (or C) |
 | Crawl | Z |
-| Interact (hold for timed actions) | E |
+| Interact (hold for timed actions); hold with nothing in view to sleep rough | E |
 | Let go | Q |
 | Reload, rotate item while dragging | R |
 | Hotbar | 1-5, 0 or ` for empty hands |

@@ -12,6 +12,8 @@ export const survival = {
     sprintMul: 1.5, hotMul: 1.2,
     low: 20, starveHp: 2, thirstHp: 5,
   },
+  /** energy recovered sleeping rough, relative to a bed (U-013) */
+  roughRest: 0.6,
   heal: { awake: 1, asleep: 3, minNeeds: 30 },
   injury: {
     sprainHours: 36, fractureDays: 7, painkillerHours: 4,

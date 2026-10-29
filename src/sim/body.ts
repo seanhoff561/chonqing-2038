@@ -112,14 +112,15 @@ export function stepBody(state: SimState) {
 }
 
 /** Advance needs, sickness, healing and injury recovery by `hours` of game time (awake or asleep). */
-export function passTime(state: SimState, hours: number, asleep: boolean) {
+/** rest scales sleep's energy recovery (sleeping rough recovers less). */
+export function passTime(state: SimState, hours: number, asleep: boolean, rest = 1) {
   const b = state.body, N = S.needs;
   const sprinting = !asleep && Math.hypot(state.player.vel.x, state.player.vel.z) > 5;
   const hot = hourOf(state.time) >= 12 && hourOf(state.time) < 17 ? N.hotMul : 1;
   const act = sprinting ? N.sprintMul : 1;
   b.satiety = Math.max(0, b.satiety - (asleep ? N.satietySleep : N.satiety * act) * hours);
   b.hydration = Math.max(0, b.hydration - (asleep ? N.hydrationSleep : N.hydration * act * hot) * hours);
-  b.energy = asleep ? Math.min(100, b.energy + N.energySleep * hours) : Math.max(0, b.energy - N.energy * hours);
+  b.energy = asleep ? Math.min(100, b.energy + N.energySleep * rest * hours) : Math.max(0, b.energy - N.energy * hours);
   if (b.satiety <= 0) damage(state, N.starveHp * hours, 'starvation');
   if (b.hydration <= 0) damage(state, N.thirstHp * hours, 'thirst');
   const sick = state.time < b.sickUntil;

@@ -7,7 +7,7 @@ import { onCmd } from './commands';
 import { nextHour } from './clock';
 
 /** Sleep until game time `until`. Heavy bleeding while asleep is fatal; light bleeds clot. */
-export function sleepUntil(state: SimState, until: number, where: 'bed' | 'collapse') {
+export function sleepUntil(state: SimState, until: number, where: 'bed' | 'rough' | 'collapse') {
   const from = state.time, b = state.body;
   if (b.lightBleed >= 0) {
     damage(state, (S.bleed.clot - b.lightBleed) * S.bleed.light, 'bleeding');
@@ -16,7 +16,7 @@ export function sleepUntil(state: SimState, until: number, where: 'bed' | 'colla
   while (state.time < until && !state.dead) {
     const h = Math.min(1, (until - state.time) / 3600);
     if (b.heavyBleed && !b.tourniquet) damage(state, S.bleed.heavy * h * 90, 'bleeding');
-    passTime(state, h, true);
+    passTime(state, h, true, where === 'bed' ? 1 : S.roughRest);
     state.time += h * 3600;
   }
   state.events.push({ t: 'slept', from, to: state.time, where });
@@ -25,7 +25,7 @@ export function sleepUntil(state: SimState, until: number, where: 'bed' | 'colla
 /** At zero energy he collapses where he stands until he has a little back. */
 export function checkCollapse(state: SimState) {
   if (state.dead || state.body.energy > 0) return;
-  sleepUntil(state, state.time + (S.collapse.wakeEnergy / S.needs.energySleep) * 3600, 'collapse');
+  sleepUntil(state, state.time + (S.collapse.wakeEnergy / (S.needs.energySleep * S.roughRest)) * 3600, 'collapse');
 }
 
 /** Hooks that run when he wakes (the save) or when the night is interrupted (raids). */
@@ -35,10 +35,11 @@ onInteract('mattress', { now: (s, _w, it) => { s.events.push({ t: 'sleep-menu', 
 
 onCmd((s, c) => {
   if (c.c !== 'act' || c.name !== 'sleep' || s.dead) return;
-  const it = s.target;
-  if (!it) return;
+  // In a bed if he's at one; otherwise rough, on whatever floor he stands on (U-013).
+  const where = s.target ? 'bed' : s.player.mode === 'ground' ? 'rough' : null;
+  if (!where) return;
   let until = nextHour(s.time, Number(c.arg));
   for (const h of sleepHooks.beforeSleep) until = Math.min(until, h(s, until));
-  sleepUntil(s, until, 'bed');
+  sleepUntil(s, until, where);
   if (!s.dead) for (const h of sleepHooks.afterWake) h(s);
 });

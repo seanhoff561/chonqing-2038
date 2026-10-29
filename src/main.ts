@@ -12,7 +12,7 @@ import { playMove, MOVE_SOUNDS } from './audio/moves';
 const q = new URLSearchParams(location.search);
 const dev = q.get('dev') === '1';
 const seed = Number(q.get('seed')) || Math.floor(Math.random() * 1e9);
-const game = new Game({ scenario: q.get('scenario') ?? 'hideout', seed, dev });
+const game = new Game({ scenario: q.get('scenario') ?? 'run', seed, dev });
 if (dev) new DevPanel(game);
 const save = q.get('scenario') ? null : readSave(localStorage);
 if (save) bootMenu(game, save);

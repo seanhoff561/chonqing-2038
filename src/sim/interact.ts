@@ -5,6 +5,8 @@ import { movement as M } from '../data/movement';
 import { raycast } from '../world/geom';
 
 export const REACH = 2.0;
+/** the hold-E task that lies him down to sleep rough, and its length in seconds */
+export const ROUGH = 'rough', ROUGH_HOLD = 1.2;
 
 type Handler = (s: SimState, w: World, it: Inter) => void;
 const handlers = new Map<string, { now?: Handler; done?: Handler; dur?: (s: SimState, it: Inter) => number; can?: (s: SimState, it: Inter) => string | null }>();
@@ -47,6 +49,13 @@ export function stepInteract(s: SimState, w: World, input: InputFrame) {
   const p = s.player;
   if (p.mode === 'dead') return;
   const task = s.task;
+  if (task?.id === ROUGH) {
+    // Holding E on open floor lays him down to sleep rough (U-013); moving, hiding or a target cancels it.
+    if (!(input.buttons & B.INTERACT) || p.mode !== 'ground' || lookTarget(s, w) || Math.hypot(p.vel.x, p.vel.z) > 0.5) { s.task = null; return; }
+    task.t += DT;
+    if (task.t >= task.dur) { s.task = null; s.events.push({ t: 'sleep-menu', id: ROUGH }); }
+    return;
+  }
   if (task) {
     const it = w.inter.find(i => i.id === task.id);
     const still = it && lookTarget(s, w)?.id === it.id;
@@ -58,6 +67,8 @@ export function stepInteract(s: SimState, w: World, input: InputFrame) {
   }
   const it = p.mode === 'ground' || p.mode === 'swim' ? lookTarget(s, w) : null;
   s.target = it?.id ?? null;
+  // E with nothing in view starts the rough-sleep hold, leaving the press for hiding in a box.
+  if (!it && (input.pressed & B.INTERACT) && p.mode === 'ground') { s.task = { id: ROUGH, t: 0, dur: ROUGH_HOLD }; return; }
   if (!it || !(input.pressed & B.INTERACT)) return;
   input.pressed &= ~B.INTERACT;
   const h = handlers.get(it.kind);

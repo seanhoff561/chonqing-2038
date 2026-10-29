@@ -1,18 +1,27 @@
-// A new run: the hideout as Li Wei finds it on day 1 (DESIGN section 9).
+// A new run (U-013): day 1, 06:00, Li Wei in the street with his backpack and no shelter (DESIGN section 9).
+// The furnished air-raid shelter of earlier builds stays as a test scene (furnish).
 import type { SimState } from './types';
 import type { World } from '../world/world';
-import { grid, addItem } from './inventory';
+import { grid, addItem, type Grid } from './inventory';
 import { CONTAINER } from './containers';
 
-export const STARTING_STASH: [string, number, number?][] = [
+export const STARTING_SUPPLIES: [string, number, number?][] = [
   ['noodles', 2], ['luncheon', 1], ['bread', 1, 1], ['water', 3], ['bandage', 1],
 ];
 
-export function startRun(s: SimState, w: World) {
-  const stash = w.inter.find(i => i.id === 'stash');
-  if (stash) {
-    const g = (s.containers.stash = grid(CONTAINER.stash.w, CONTAINER.stash.h));
-    for (const [id, n, ageDays] of STARTING_STASH) addItem(s, g, id, n, ageDays ? { made: s.time - ageDays * 86400 } : {});
+const supply = (s: SimState, g: Grid) => {
+  for (const [id, n, ageDays] of STARTING_SUPPLIES) addItem(s, g, id, n, ageDays ? { made: s.time - ageDays * 86400 } : {});
+};
+
+export function startRun(s: SimState) {
+  supply(s, s.inv.pack);
+  s.shelter = { id: '', battery: 0, compromised: false };
+}
+
+/** The furnished test shelter: supplies in its stash and a car battery at 60%. */
+export function furnish(s: SimState, w: World) {
+  if (w.inter.some(i => i.id === 'stash')) {
+    supply(s, (s.containers.stash = grid(CONTAINER.stash.w, CONTAINER.stash.h)));
     s.wstate.searched.stash = true;
   }
   s.shelter = { id: 'hideout', battery: 60, compromised: false };
