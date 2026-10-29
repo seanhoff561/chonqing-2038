@@ -5,7 +5,7 @@ import type { Player, Posture, Mode } from './player';
 import { movement as M } from '../data/movement';
 import { raycast } from '../world/geom';
 import { free, moveHorizontal, moveVertical } from './physics';
-import { forward, setPosture } from './move';
+import { forward, setPosture, spend } from './move';
 
 const HW = M.width / 2;
 
@@ -54,6 +54,7 @@ function tryMantle(world: World, p: Player, l: Ledge, dur: number): boolean {
   // Room to rise straight up in place first.
   if (!free(world.index, p.pos.x, Math.max(p.pos.y, l.top) + 1e-3, p.pos.z, M.height.crouch)) return false;
   startAction(p, 'mantle', dur, b, 'ground', 'crouch', 0);
+  spend(p, M.stamina.mantle);
   return true;
 }
 
@@ -74,6 +75,7 @@ function tryVault(world: World, p: Player, l: Ledge): boolean {
   if (!free(world.index, lx, ly, lz, M.height.stand) || !free(world.index, mx, l.top + 0.05, mz, M.height.crouch)) return false;
   const sp = Math.hypot(p.vel.x, p.vel.z) * M.vault.keep;
   startAction(p, 'vault', M.vault.time, { x: lx, y: ly, z: lz }, 'ground', p.posture, sp);
+  spend(p, M.stamina.mantle);
   return true;
 }
 
@@ -87,7 +89,7 @@ export function groundParkour(state: SimState, world: World, input: InputFrame, 
     if (l.h <= M.vault.maxH && speed >= M.vault.minSpeed && tryVault(world, p, l)) return true;
     if (l.h <= maxMantle + 1e-3 && tryMantle(world, p, l, l.h < M.mantle.lowLimit ? M.mantle.lowTime : M.mantle.highTime)) return true;
   }
-  if (speed < M.wallRun.minSpeed || !(input.buttons & B.SPRINT)) return false;
+  if (speed < M.wallRun.minSpeed || !(input.buttons & B.SPRINT) || p.exhausted) return false;
   const f = forward(p.yaw);
   const wc = wallAhead(world, p, f.x, f.z, M.wallClimb.dist, [0.5, 1.2]);
   if (wc && (!l || l.h > maxMantle)) {
@@ -97,6 +99,7 @@ export function groundParkour(state: SimState, world: World, input: InputFrame, 
       p.wall = { nx: wc.nx, nz: wc.nz, t: 0, y: p.pos.y, id: -1 };
       p.vel.x = -wc.nx * 1.0; p.vel.z = -wc.nz * 1.0; p.vel.y = M.wallClimb.upSpeed;
       p.onGround = false;
+      spend(p, M.stamina.wallRun);
       return true;
     }
   }
@@ -118,6 +121,7 @@ function startWallRun(world: World, p: Player): boolean {
     p.wall = { nx: r.nx, nz: r.nz, t: 0, y: p.pos.y, id: -1 };
     p.vel.x = tx * M.wallRun.speed; p.vel.z = tz * M.wallRun.speed; p.vel.y = M.wallRun.upSpeed;
     p.onGround = false;
+    spend(p, M.stamina.wallRun);
     return true;
   }
   return false;
@@ -148,7 +152,8 @@ export function stepHang(state: SimState, world: World, input: InputFrame) {
   const p = state.player;
   const w = p.wall;
   w.t += DT;
-  if (input.pressed & B.DROP) { letGo(p, 0.6); return; }
+  spend(p, M.stamina.hang * DT);
+  if ((input.pressed & B.DROP) || p.stamina <= 0) { letGo(p, 0.6); return; }
   if (input.pressed & B.JUMP) {
     const l: Ledge = { top: w.y, h: 0, nx: w.nx, nz: w.nz, dist: 0, fx: p.pos.x - w.nx * (HW + 0.32), fz: p.pos.z - w.nz * (HW + 0.32) };
     const b = onTop(l, HW + 0.05);

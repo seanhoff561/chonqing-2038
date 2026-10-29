@@ -5,7 +5,7 @@ import type { Player } from './player';
 import { movement as M } from '../data/movement';
 import { free, groundGap } from './physics';
 import { startAction, letGo } from './parkour';
-import { forward } from './move';
+import { forward, spend } from './move';
 
 const HW = M.width / 2;
 const OFF = HW + 0.15;
@@ -42,7 +42,8 @@ export function stepClimb(state: SimState, world: World, input: InputFrame) {
   const p = state.player;
   const c = world.climbables[p.wall.id];
   p.wall.t += DT;
-  if (input.pressed & B.DROP) { letGo(p, 0.4); return; }
+  if (c.kind === 'pipe') spend(p, M.stamina.hang * DT);
+  if ((input.pressed & B.DROP) || p.stamina <= 0) { letGo(p, 0.4); return; }
   if (input.pressed & B.JUMP) {
     letGo(p, 3.0);
     p.vel.y = 2.0;

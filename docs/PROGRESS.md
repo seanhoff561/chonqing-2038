@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M1. Next: M1-16 Stamina.
-Features done: 15 / 204 | Last done: M1-15
+**Status:** building M1. Next: M1-17 Swimming and diving.
+Features done: 16 / 204 | Last done: M1-16
 <!-- /status -->
 
 ## Log
@@ -22,3 +22,4 @@ Features done: 15 / 204 | Last done: M1-15
 - M1-13 Pipes and ladders: pipes and ladders
 - M1-14 Fall outcomes and landing roll: fall outcomes and landing roll
 - M1-15 Hide in a box: hide in boxes
+- M1-16 Stamina: stamina

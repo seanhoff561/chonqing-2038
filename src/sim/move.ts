@@ -11,6 +11,20 @@ import { hideNear, enterHide, stepHidden } from './hide';
 
 export const heightOf = (p: Posture) => M.height[p];
 
+/** Spend stamina; hitting 0 leaves him exhausted until it recovers to the threshold. */
+export function spend(p: Player, amt: number) {
+  p.stamina = Math.max(0, p.stamina - amt);
+  p.staminaIdle = 0;
+  if (p.stamina <= 0) p.exhausted = true;
+}
+
+function regen(p: Player) {
+  const S = M.stamina;
+  p.staminaIdle += DT;
+  if (p.staminaIdle >= S.regenDelay) p.stamina = Math.min(S.max, p.stamina + S.regen * DT);
+  if (p.exhausted && p.stamina >= S.recover) p.exhausted = false;
+}
+
 export function forward(yaw: number) { return { x: -Math.sin(yaw), z: -Math.cos(yaw) }; }
 
 export function stepPlayer(state: SimState, world: World, input: InputFrame): void {
@@ -21,6 +35,7 @@ export function stepPlayer(state: SimState, world: World, input: InputFrame): vo
   if (state.flags.noclip) { noclip(p, input); return; }
   if (p.mode === 'noclip') p.mode = 'air';
   p.crouchAge += DT;
+  regen(p);
   if ((input.pressed & B.CROUCH) && !p.onGround) p.crouchAge = 0;
   switch (p.mode) {
     case 'action': stepAction(state, world); return;
@@ -77,7 +92,7 @@ function updatePosture(p: Player, world: World, input: InputFrame) {
 function targetSpeed(p: Player, input: InputFrame): number {
   if (p.posture === 'crawl') return M.speed.crawl;
   if (p.posture === 'crouch') return M.speed.crouch;
-  if ((input.buttons & B.SPRINT) && input.my > 0) return M.speed.sprint;
+  if ((input.buttons & B.SPRINT) && input.my > 0 && !p.exhausted) return M.speed.sprint;
   return M.speed.jog;
 }
 
@@ -102,6 +117,7 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
       if (!setPosture(p, world, 'crouch')) p.posture = 'crawl';
     }
   }
+  if (sp === M.speed.sprint && p.onGround && Math.hypot(p.vel.x, p.vel.z) > 4) spend(p, M.stamina.sprint * DT);
   const accel = (p.onGround ? (p.slide >= 0 ? 1000 : M.groundAccel) : M.airAccel) * DT;
   const dvx = wx * sp - p.vel.x, dvz = wz * sp - p.vel.z;
   const dl = Math.hypot(dvx, dvz);
@@ -114,6 +130,7 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
   if (p.onGround && (input.pressed & B.JUMP) && groundParkour(state, world, input, M.mantle.max)) return;
   if ((p.onGround || p.coyote > 0) && (input.pressed & B.JUMP) && p.posture === 'stand') {
     p.vel.y = M.jumpSpeed;
+    spend(p, M.stamina.jump);
     p.onGround = false;
     p.coyote = 0;
     jumped = true;
