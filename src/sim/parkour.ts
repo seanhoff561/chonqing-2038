@@ -232,5 +232,5 @@ export function stepAction(state: SimState, world: World) {
   p.onGround = a.then === 'ground';
   p.fallFrom = p.pos.y;
   if (a.speed > 0) { const f = forward(p.yaw); p.vel.x = f.x * a.speed; p.vel.z = f.z * a.speed; }
-  if (p.posture === 'crouch' && a.kind !== 'hide') setPosture(p, world, 'stand');
+  if (p.posture === 'crouch' && a.kind !== 'unhide') setPosture(p, world, 'stand');
 }

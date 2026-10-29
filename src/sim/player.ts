@@ -34,6 +34,8 @@ export interface Player {
   coyote: number;
   /** seconds into a slide, or -1 */
   slide: number;
+  /** where he climbs back out of a hiding spot */
+  hideExit: Vec3 | null;
 }
 
 export function createPlayer(x: number, y: number, z: number, yaw: number): Player {
@@ -41,6 +43,6 @@ export function createPlayer(x: number, y: number, z: number, yaw: number): Play
     pos: { x, y, z }, vel: { x: 0, y: 0, z: 0 }, yaw, pitch: 0,
     mode: 'air', posture: 'stand', onGround: false, fallFrom: y, crouchAge: 99,
     stamina: 100, exhausted: false, staminaIdle: 0, act: null,
-    wall: { nx: 0, nz: 0, t: 0, y: 0, id: -1 }, breath: 40, wetUntil: 0, stepAcc: 0, crawlToggle: false, hideId: -1, coyote: 0, slide: -1,
+    wall: { nx: 0, nz: 0, t: 0, y: 0, id: -1 }, breath: 40, wetUntil: 0, stepAcc: 0, crawlToggle: false, hideId: -1, coyote: 0, slide: -1, hideExit: null,
   };
 }

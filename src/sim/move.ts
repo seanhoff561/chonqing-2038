@@ -7,6 +7,7 @@ import { movement as M } from '../data/movement';
 import { free, moveHorizontal, moveVertical, groundGap } from './physics';
 import { groundParkour, airParkour, stepAction, stepHang, stepWallRun, stepWallClimb } from './parkour';
 import { climbableNear, attach, stepClimb } from './climb';
+import { hideNear, enterHide, stepHidden } from './hide';
 
 export const heightOf = (p: Posture) => M.height[p];
 
@@ -27,6 +28,11 @@ export function stepPlayer(state: SimState, world: World, input: InputFrame): vo
     case 'wallrun': stepWallRun(state, world, input); return;
     case 'wallclimb': stepWallClimb(state, world, input); return;
     case 'climb': stepClimb(state, world, input); return;
+    case 'hidden': stepHidden(state, world, input); return;
+  }
+  if ((input.pressed & B.INTERACT) && p.onGround) {
+    const h = hideNear(world, p);
+    if (h >= 0 && enterHide(state, world, h)) return;
   }
   if ((input.pressed & B.INTERACT) && p.posture !== 'crawl') {
     const c = climbableNear(world, p, M.climb.attachDist);

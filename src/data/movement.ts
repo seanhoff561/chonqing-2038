@@ -25,6 +25,6 @@ export const movement = {
   stamina: { max: 100, sprint: 6, jump: 8, mantle: 6, wallRun: 15, hang: 2, regen: 15, regenDelay: 1, recover: 30 },
   noise: { crawl: 1, crouch: 2, jog: 8, sprint: 16, land: 15, landMinH: 2, vault: 6, stepEvery: 0.55, rainScale: 0.5 },
   encumbrance: { heavy: 15, overloaded: 25, penalty: 0.15, overloadedMantle: 1.6 },
-} as const;
+};
 
 export type Movement = typeof movement;

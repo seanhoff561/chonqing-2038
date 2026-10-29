@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M1. Next: M1-15 Hide in a box.
-Features done: 14 / 204 | Last done: M1-14
+**Status:** building M1. Next: M1-16 Stamina.
+Features done: 15 / 204 | Last done: M1-15
 <!-- /status -->
 
 ## Log
@@ -21,3 +21,4 @@ Features done: 14 / 204 | Last done: M1-14
 - M1-12 Wall climb run-up: wall climb run-up into ledge grab
 - M1-13 Pipes and ladders: pipes and ladders
 - M1-14 Fall outcomes and landing roll: fall outcomes and landing roll
+- M1-15 Hide in a box: hide in boxes
