@@ -50,11 +50,13 @@ function updatePosture(p: Player, world: World, input: InputFrame) {
   if (p.mode !== 'ground' && p.mode !== 'air') return;
   if (input.pressed & B.CRAWL) setPosture(p, world, p.posture === 'crawl' ? 'crouch' : 'crawl');
   if ((input.pressed & B.CROUCH) && p.mode === 'ground') {
+    if (p.posture === 'stand' && Math.hypot(p.vel.x, p.vel.z) >= M.slide.minSpeed) { p.slide = 0; p.posture = 'crawl'; return; }
+    if (p.slide >= 0) return;
     if (p.posture === 'stand') setPosture(p, world, 'crouch');
     else if (!setPosture(p, world, 'stand')) setPosture(p, world, 'crouch');
   }
   // Sprinting from a crouch stands him up when there's room.
-  if ((input.buttons & B.SPRINT) && input.my > 0 && p.posture === 'crouch') setPosture(p, world, 'stand');
+  if ((input.buttons & B.SPRINT) && input.my > 0 && p.posture === 'crouch' && p.slide < 0) setPosture(p, world, 'stand');
 }
 
 function targetSpeed(p: Player, input: InputFrame): number {
@@ -73,8 +75,19 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
   let wx = f.x * input.my - f.z * input.mx, wz = f.z * input.my + f.x * input.mx;
   const wl = Math.hypot(wx, wz);
   if (wl > 1) { wx /= wl; wz /= wl; }
-  const sp = targetSpeed(p, input);
-  const accel = (p.onGround ? M.groundAccel : M.airAccel) * DT;
+  let sp = targetSpeed(p, input);
+  if (p.slide >= 0) {
+    // A slide keeps its heading and bleeds speed; it ends crouched (or crawling under something low).
+    const v = Math.hypot(p.vel.x, p.vel.z) || 1;
+    sp = M.slide.start + (M.slide.end - M.slide.start) * Math.min(1, p.slide / M.slide.time);
+    wx = p.vel.x / v; wz = p.vel.z / v;
+    p.slide += DT;
+    if (p.slide >= M.slide.time || v < 0.5) {
+      p.slide = -1;
+      if (!setPosture(p, world, 'crouch')) p.posture = 'crawl';
+    }
+  }
+  const accel = (p.onGround ? (p.slide >= 0 ? 1000 : M.groundAccel) : M.airAccel) * DT;
   const dvx = wx * sp - p.vel.x, dvz = wz * sp - p.vel.z;
   const dl = Math.hypot(dvx, dvz);
   if (p.onGround || wl > 0.01) {
