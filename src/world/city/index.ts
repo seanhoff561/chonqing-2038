@@ -2,13 +2,15 @@
 import { makeWorld, type World } from '../world';
 import { buildTerrain } from './terrain';
 import { buildFabric } from './buildings';
+import { buildShibati } from '../sets/shibati';
 import { TILE } from '../map';
 
 export function buildCity(): World {
   const t = buildTerrain();
   const f = buildFabric();
+  const sb = buildShibati();
   return makeWorld({
-    name: 'city', solids: t.solids.concat(f.solids), decor: t.decor.concat(f.decor), water: t.water, props: f.props, inter: f.inter, climbables: f.climbables, hides: f.hides,
+    name: 'city', solids: t.solids.concat(f.solids, sb.solids), decor: t.decor.concat(f.decor, sb.decor), water: t.water, props: f.props, inter: f.inter, climbables: f.climbables, hides: f.hides,
     spawn: { x: 23 * TILE + 10, y: 44, z: 17 * TILE + 10, yaw: Math.PI },
     teleports: [
       { name: 'Jiaochangkou plaza', x: 24 * TILE, y: 44, z: 17 * TILE, yaw: Math.PI },

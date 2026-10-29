@@ -70,7 +70,7 @@ export function buildFabric(): Fabric {
       else wall = t.h + (4 + randInt(r, 6)) * FLOOR;
       // Hillside block whose roof is the street above (the Kuixinglou effect).
       if (kind === 'res' && up - t.h >= 6 && rand(r) < 0.5) wall = up;
-      const mat = kind === 'tower' ? MAT.glass : kind === 'trad' ? MAT.plaster : [MAT.tile, MAT.plaster, MAT.tile, MAT.concrete][randInt(r, 4)];
+      const mat = kind === 'tower' ? MAT.glass : kind === 'trad' ? MAT.brick : [MAT.tile, MAT.plaster, MAT.tile, MAT.concrete][randInt(r, 4)];
       const lot: Lot = { id: out.lots.length, x0, z0, x1, z1, base: t.h, wall, top: wall, kind, tile: t, mat };
       out.lots.push(lot);
       mine.push(lot);

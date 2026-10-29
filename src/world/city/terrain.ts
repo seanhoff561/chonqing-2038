@@ -67,7 +67,7 @@ export function buildTerrain(): Terrain {
   return { solids, decor, water };
 }
 
-/** A stair-street tile: a 6 m flight down the middle between its low and high neighbours, terraces either side. */
+/** A stair-street tile: a 6 m wide stair down the middle between its low and high neighbours, terraces either side. */
 function stairStreet(t: Tile, solids: Solid[], decor: Solid[]) {
   const x0 = t.c * TILE, z0 = t.r * TILE, x1 = x0 + TILE, z1 = z0 + TILE;
   const n = tileAt(t.c, t.r - 1), s = tileAt(t.c, t.r + 1), w = tileAt(t.c - 1, t.r), e = tileAt(t.c + 1, t.r);
@@ -83,10 +83,15 @@ function stairStreet(t: Tile, solids: Solid[], decor: Solid[]) {
   if (alongZ) { solids.push(solid(x0, low - 0.05, z0, mid0, high, z1, MAT.stone), solid(mid1, low - 0.05, z0, x1, high, z1, MAT.stone)); }
   else { solids.push(solid(x0, low - 0.05, z0, x1, high, mid0, MAT.stone), solid(x0, low - 0.05, mid1, x1, high, z1, MAT.stone)); }
   if (high - low < 0.05) { solids.push(alongZ ? solid(mid0, low - 0.05, z0, mid1, low, z1, MAT.stone) : solid(x0, low - 0.05, mid0, x1, low, mid1, MAT.stone)); return; }
-  // Rising toward the higher neighbour.
+  // Rising toward the higher neighbour, in two flights with a landing halfway (M3-06).
   const dir: 1 | 2 | 3 | 4 = alongZ ? (ha > hb ? 4 : 3) : (ha > hb ? 2 : 1);
-  if (alongZ) stair(mid0, z0, mid1, z1, low, high, dir, solids, decor);
-  else stair(x0, mid0, x1, mid1, low, high, dir, solids, decor);
+  const up = dir === 1 || dir === 3, mid = (low + high) / 2;
+  const p0 = alongZ ? z0 : x0, p1 = p0 + 8, p2 = p0 + 12, p3 = p0 + TILE;
+  const flight = (a: number, b: number, lo: number, hi: number) =>
+    alongZ ? stair(mid0, a, mid1, b, lo, hi, dir, solids, decor) : stair(a, mid0, b, mid1, lo, hi, dir, solids, decor);
+  flight(p0, p1, up ? low : mid, up ? mid : high);
+  flight(p2, p3, up ? mid : low, up ? high : mid);
+  solids.push(alongZ ? solid(mid0, low - 0.05, p1, mid1, mid, p2, MAT.stone) : solid(p1, low - 0.05, mid0, p2, mid, mid1, MAT.stone));
 }
 
 /** Between level streets (and set pieces) that differ in height: a 4 m flight in the lower tile against the edge. */

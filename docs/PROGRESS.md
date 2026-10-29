@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-06 Shibati set piece.
-Features done: 67 / 220 | Last done: M3-05
+**Status:** building M3. Next: M3-07 Jiaochangkou and the Line 2 beam.
+Features done: 68 / 220 | Last done: M3-06
 <!-- /status -->
 
 ## Log
@@ -85,3 +85,4 @@ Features done: 67 / 220 | Last done: M3-05
 - M3-03 Building generator: building generator: lots, alleys, roofs, rooftop routes
 - M3-04 Enterable buildings: enterable buildings: door, windows, stair core to a roof hut, furnished floors
 - M3-05 Fabric climbables and hiding spots: pipes, ladders, hold columns, balconies, signs, alley hides, bars and crawl fences
+- M3-06 Shibati set piece: Shibati stair street: shop houses, timber fronts, landings
