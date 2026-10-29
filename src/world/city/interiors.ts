@@ -2,7 +2,7 @@
 // holds), floor slabs, a switchback stair core from the street to a hut on the roof, and furniture containers
 // on every floor.
 import { solid, rampSolid, carve } from '../geom';
-import { stepsFor } from './terrain';
+import { stepsFor } from '../steps';
 import { sides } from './climb';
 import { MAT } from '../mats';
 import { rand, randInt, type Rng } from '../../sim/rng';
@@ -83,7 +83,8 @@ export function hollow(l: Lot, r: Rng, out: Fabric) {
   facade(false, z0 + WALL, z1 - WALL, x0, x0 + WALL, false);
   facade(false, z0 + WALL, z1 - WALL, x1 - WALL, x1, !alongZ);
 
-  // Floor slabs and the roof, open over the flights.
+  // Floor slabs and the roof, open over the flights; the ground floor's slab hides the ground dipping under it.
+  out.solids.push(B(0, base - SLAB, 0, U, base + 0.03, V, MAT.concrete));
   for (let k = 1; k <= n; k++) {
     const y = base + k * FLOOR;
     out.solids.push(...carve([B(0, y - SLAB, 0, U, y, V, MAT.concrete)], B(CORE.near, y - SLAB - 1, 0, CORE_L, y + 1, CORE_W, 0)));
@@ -94,7 +95,8 @@ export function hollow(l: Lot, r: Rng, out: Fabric) {
   const flight = (u0: number, v0: number, u1: number, v1: number, low: number, up: boolean) => {
     const [ax, az] = at(u0, v0), [bx, bz] = at(u1, v1);
     const dir = alongZ ? (up ? 3 : 4) : up ? 1 : 2;
-    const ramp = rampSolid(Math.min(ax, bx), low - 0.3, Math.min(az, bz), Math.max(ax, bx), Math.max(az, bz), low, low + FLOOR / 4, dir, MAT.hidden);
+    // Thin under the low end (0.12 m), so a turned building's flights leave his square footprint the headroom too.
+    const ramp = rampSolid(Math.min(ax, bx), low - 0.12, Math.min(az, bz), Math.max(ax, bx), Math.max(az, bz), low, low + FLOOR / 4, dir, MAT.hidden);
     out.solids.push(ramp);
     stepsFor(ramp, out.decor, MAT.concrete);
   };

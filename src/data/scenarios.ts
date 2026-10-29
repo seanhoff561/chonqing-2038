@@ -3,8 +3,9 @@ export interface Scenario {
   name: string;
   world: string;
   desc: string;
-  /** optional spawn override */
+  /** optional spawn override: a point, or the name of one of the world's teleports */
   spawn?: { x: number; y: number; z: number; yaw: number };
+  at?: string;
   /** a fresh run (U-013, U-018): supplies in the backpack, starting in the friends' hideout; saves on sleep */
   run?: boolean;
   /** the furnished test shelter: stocked stash, battery */
@@ -17,10 +18,10 @@ export interface Scenario {
 
 export const scenarios: Scenario[] = [
   { name: 'gym', world: 'gym', desc: 'movement gym with labelled obstacles' },
-  { name: 'shibati', world: 'city', desc: 'Shibati and Jiaochangkou', overcast: 0.6 },
-  { name: 'run', world: 'city', desc: "a new run: day 1, 06:00, in the friends' hideout under the vent grate", run: true, overcast: 0.6, spawn: { x: 443.2, y: 32.05, z: 354.2, yaw: -Math.PI / 2 } },
+  { name: 'shibati', world: 'yuzhong', desc: 'Shibati and Jiaochangkou: the top of the Eighteen Stairs', overcast: 0.6, at: 'shibati' },
+  { name: 'run', world: 'yuzhong', desc: "a new run: day 1, 06:00, in the friends' hideout under the vent grate", run: true, overcast: 0.6 },
   { name: 'hideout', world: 'hideout', desc: 'the furnished air-raid shelter (test scene)', run: true, furnished: true },
-  { name: 'yuzhong', world: 'yuzhong', desc: 'Yuzhong at 1:1 from the real ground and map (M3-41b)', overcast: 0.6 },
+  { name: 'yuzhong', world: 'yuzhong', desc: 'Yuzhong at 1:1 from the real ground and map, from Jiefangbei', overcast: 0.6, at: 'jiefangbei' },
   { name: 'reference', world: 'reference', desc: 'the reference hillside (docs/reference/look-01.jpg) from the vantage roof', draw: 700, overcast: 1 },
 ];
 

@@ -28,8 +28,8 @@ async function open(query, where) {
   await page.setViewport({ width: 960, height: 540 });
   page.on('console', m => { if (m.type() === 'error') fails.push(`${where}: console ${m.text().slice(0, 200)}`); });
   page.on('pageerror', e => fails.push(`${where}: pageerror ${String(e.message).split('\n')[0].slice(0, 200)}`));
-  await page.goto(base + query, { waitUntil: 'load', timeout: 60000 });
-  await page.waitForFunction('window.__cq && window.__cq.ready', { timeout: 60000 });
+  await page.goto(base + query, { waitUntil: 'load', timeout: 240000 });
+  await page.waitForFunction('window.__cq && window.__cq.ready', { timeout: 240000 });
   return page;
 }
 

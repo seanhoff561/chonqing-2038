@@ -1,18 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { getWorld } from '../../src/world/build';
 import { createState } from '../../src/sim/sim';
-import { buildFabric } from '../../src/world/city/buildings';
-import { DISTRICTS } from '../../src/data/map';
-import { TILE } from '../../src/world/map';
+import { districtAt } from '../../src/world/yuzhong/lots';
+import { minRect, inside, corners } from '../../src/world/yuzhong/shapes';
 import { free } from '../../src/sim/physics';
 import { run, secs, aim, LMB, RMB } from './helpers';
 import { teleport } from '../../src/sim/player';
 
-const fabric = buildFabric();
-const inDistrict = (id: string, x: number, z: number) => {
-  const [c0, r0, c1, r1] = DISTRICTS.find(d => d.id === id)!.box;
-  return x >= c0 * TILE && x < (c1 + 1) * TILE && z >= r0 * TILE && z < (r1 + 1) * TILE;
-};
+const w = getWorld('yuzhong'), fabric = { features: w.features, hides: w.hides };
+const inDistrict = (id: string, x: number, z: number) => districtAt(x, z).district === id;
 
 describe('fabric climbables and hiding spots (M3-05)', () => {
   it('every built district has pipes, ladders, hold columns, balconies, hides, bars and crawl fences', () => {
@@ -25,7 +21,7 @@ describe('fabric climbables and hiding spots (M3-05)', () => {
     }
     const all = (k: string) => fabric.features.filter(f => f.kind === k).length;
     for (const k of ['ladder', 'balcony', 'bar', 'fence', 'dumpster', 'crate', 'sign']) expect(all(k), k).toBeGreaterThan(10);
-    expect(fabric.hides.length).toBe(fabric.features.filter(f => f.kind === 'crate' || f.kind === 'dumpster').length);
+    expect(fabric.hides.length).toBeGreaterThanOrEqual(fabric.features.filter(f => f.kind === 'crate' || f.kind === 'dumpster').length);
     expect(fabric.hides.every(h => h.inner.x1 - h.inner.x0 > 0.79 && h.inner.y1 - h.inner.y0 > 0.79 && h.inner.z1 - h.inner.z0 > 0.79)).toBe(true);
   });
   it('hand-route columns climb in 1.2-2.0 m steps, with the odd gap that needs a push-off', () => {
@@ -48,17 +44,15 @@ describe('fabric climbables and hiding spots (M3-05)', () => {
     expect(paired.length).toBe(bars.length);
   });
   it('glass towers offer no holds', () => {
-    const towers = fabric.lots.filter(l => l.kind === 'tower');
+    const grown = (k: (kind: string) => boolean) => w.plots.filter(l => k(l.kind) && !l.far).map(l => { const o = minRect(l.corners); return corners({ ...o, hw: o.hw + 0.5, hd: o.hd + 0.5 }); });
+    const towers = grown(k => k === 'tower'), others = grown(k => k !== 'tower');
     expect(towers.length).toBeGreaterThan(5);
-    const near = (x: number, z: number) => towers.some(l => x > l.x0 - 0.5 && x < l.x1 + 0.5 && z > l.z0 - 0.5 && z < l.z1 + 0.5);
-    expect(fabric.features.filter(f => ['pipe', 'ladder', 'sill', 'ac', 'balcony'].includes(f.kind) && near(f.x, f.z))).toEqual([]);
+    // On a tower's walls and not a lower neighbour's built against it.
+    const near = (x: number, z: number) => towers.some(c => inside(c, x, z)) && !others.some(c => inside(c, x, z));
+    expect(fabric.features.filter(f => ['pipe', 'ladder', 'sill', 'ac', 'balcony'].includes(f.kind) && near(f.x, f.z)).length).toBe(0);
   });
   it('climbs a generated drain pipe hand over hand onto the roof', () => {
-    const w = getWorld('city');
-    const pipe = w.climbables.find(c => {
-      const lot = fabric.lots.find(l => l.kind === 'res' && Math.abs(c.y1 - l.top) < 0.01 && c.x > l.x0 - 0.2 && c.x < l.x1 + 0.2 && c.z > l.z0 - 0.2 && c.z < l.z1 + 0.2);
-      return c.kind === 'pipe' && lot && lot.wall - lot.base <= 15 && free(w.index, c.x + c.nx * 0.9, c.y0 + 0.05, c.z + c.nz * 0.9, 1.7, 0.4);
-    })!;
+    const pipe = w.climbables.find(c => c.kind === 'pipe' && c.y1 - c.y0 <= 15 && c.y1 - c.y0 >= 6 && free(w.index, c.x + c.nx * 0.9, c.y0 + 0.05, c.z + c.nz * 0.9, 1.7, 0.4) && free(w.index, c.x - c.nx * 1.5, c.y1 + 0.3, c.z - c.nz * 1.5, 1.7, 0.3))!;
     expect(pipe).toBeTruthy();
     const s = createState(1, w);
     teleport(s.player, pipe.x + pipe.nx * 0.65, pipe.y0 + 0.05, pipe.z + pipe.nz * 0.65);

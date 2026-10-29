@@ -9,8 +9,7 @@ import { raycast } from '../world/geom';
 import { free } from './physics';
 import { movement as M } from '../data/movement';
 import { takeStack } from './inventory';
-import { tileAt, TILE } from '../world/map';
-import { DISTRICTS } from '../data/map';
+import { districtAt, DISTRICT_NAMES } from '../world/yuzhong/lots';
 
 export const SHELTER_R = 15;
 const PLACE_REACH = 3;
@@ -41,10 +40,12 @@ export function shelterAt(s: SimState, x: number, y: number, z: number): Shelter
 }
 export const inShelter = (s: SimState, x: number, y: number, z: number) => shelterAt(s, x, y, z) !== null;
 
-/** A hideout's own storage: the containers nearer its bed than any other hideout's, within reach. */
+/** A hideout's own storage: the containers nearer its bed than any other hideout's, within reach, and those of
+ *  the room its bed is in. */
 export function stashIds(s: SimState, w: World, h: Shelter | null = shelterAt(s, s.player.pos.x, s.player.pos.y, s.player.pos.z)): string[] {
   if (!h) return [];
-  return w.inter.concat(placedInters(s)).filter(i => i.kind === 'container' && shelterAt(s, i.x, i.y, i.z) === h).map(i => i.id);
+  const room = w.sites.find(x => x.bed === h.id)?.containers ?? [];
+  return w.inter.concat(placedInters(s)).filter(i => i.kind === 'container' && (shelterAt(s, i.x, i.y, i.z) === h || room.includes(i.id))).map(i => i.id);
 }
 
 export const isBench = (s: SimState, it: Inter) => it.kind === 'bench' || (it.kind === 'table' && !!s.wstate.benches?.[it.id]);
@@ -91,9 +92,9 @@ onInteract('table', {
 export function hideoutList(s: SimState, w: World): { id: string; zh: string; en: string; place: [string, string]; dist: number }[] {
   const beds = allBeds(s, w), p = s.player.pos;
   return s.shelters.map(h => {
-    const d = DISTRICTS.find(x => x.id === tileAt(Math.floor(h.x / TILE), Math.floor(h.z / TILE))?.district);
+    const d = w.ground ? DISTRICT_NAMES[districtAt(h.x, h.z).district] : null;
     const b = beds.find(i => i.id === h.id);
-    return { id: h.id, zh: b?.zh ?? '床', en: b?.en ?? 'Bed', place: [d?.zh ?? '城里', d?.en ?? 'the city'] as [string, string], dist: Math.hypot(h.x - p.x, h.z - p.z) };
+    return { id: h.id, zh: b?.zh ?? '床', en: b?.en ?? 'Bed', place: d ?? ['城里', 'the city'] as [string, string], dist: Math.hypot(h.x - p.x, h.z - p.z) };
   }).sort((a, b) => a.dist - b.dist);
 }
 const allBeds = (s: SimState, w: World) => w.inter.concat(placedInters(s)).filter(i => i.kind === 'mattress');

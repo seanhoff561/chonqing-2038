@@ -1,19 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { getWorld } from '../../src/world/build';
 import { createState } from '../../src/sim/sim';
-import { DISTRICTS } from '../../src/data/map';
-import { TILE } from '../../src/world/map';
+import { districtAt } from '../../src/world/yuzhong/lots';
 import { teleport } from '../../src/sim/player';
 import { stashIds } from '../../src/sim/shelter';
 import { loot } from '../../src/data/loot';
 import { run, aim } from './helpers';
 import { B } from '../../src/sim/types';
 
-const w = getWorld('city');
-const inDistricts = (x: number, z: number) => ['shibati', 'jiaochangkou'].some(id => {
-  const [c0, r0, c1, r1] = DISTRICTS.find(d => d.id === id)!.box;
-  return x >= c0 * TILE && x < (c1 + 1) * TILE && z >= r0 * TILE && z < (r1 + 1) * TILE;
-});
+const w = getWorld('yuzhong');
+const inDistricts = (x: number, z: number) => ['shibati', 'jiaochangkou'].includes(districtAt(x, z).district);
 const local = w.sites.filter(s => inDistricts(s.x, s.z));
 
 describe('shelter sites (M3-29, U-013)', () => {

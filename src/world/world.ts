@@ -27,8 +27,11 @@ export interface Site {
 /** Areas with special rules: 'under' = underground (no sky light). */
 export interface Zone { kind: string; box: Box }
 
+/** A hold, hide spot or alley piece: one group per hand-route column. */
+export interface Feature { kind: string; x: number; y: number; z: number; group: number }
+
 /** A built lot as laid out on the map (Yuzhong): its corners, base and walking route, for tests and tools. */
-export interface Plot { corners: [number, number][]; base: number; wall: number; /** foundation bottom */ found: number; route?: { x: number; y: number; z: number }[]; far: boolean; osm: boolean }
+export interface Plot { corners: [number, number][]; base: number; wall: number; /** roof top (ridge or parapet) */ top: number; kind: string; /** its infill row, if any */ row?: string; /** foundation bottom */ found: number; route?: { x: number; y: number; z: number }[]; far: boolean; osm: boolean }
 
 export interface Teleport { name: string; x: number; y: number; z: number; yaw: number }
 
@@ -47,6 +50,8 @@ export interface World {
   /** heightfield ground (M3-41a), also in the index */
   ground?: Heightfield;
   plots: Plot[];
+  /** holds, hide spots and alley pieces as built (Yuzhong), for tests and tools */
+  features: Feature[];
   index: SolidIndex;
   water: Box[];
   climbables: Climbable[];
@@ -72,6 +77,7 @@ export interface WorldParts {
   /** heightfield ground (M3-41a) */
   ground?: Heightfield;
   plots?: Plot[];
+  features?: Feature[];
   spawn: World['spawn'];
 }
 
@@ -82,6 +88,7 @@ export function makeWorld(p: WorldParts): World {
     solids: p.solids,
     ground: p.ground,
     plots: p.plots ?? [],
+    features: p.features ?? [],
     index: buildIndex(p.solids, p.ground),
     water: p.water ?? [],
     climbables: p.climbables ?? [],

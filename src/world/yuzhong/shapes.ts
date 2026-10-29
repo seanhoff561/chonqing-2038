@@ -90,3 +90,13 @@ export function rasterPoly(poly: P2[], x0: number, z0: number, cell: number, w: 
     }
   }
 }
+
+/** Whether (x, z) is inside a polygon. */
+export function inside(poly: P2[], x: number, z: number): boolean {
+  let n = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, zi] = poly[i], [xj, zj] = poly[j];
+    if ((zi > z) !== (zj > z) && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) n = !n;
+  }
+  return n;
+}

@@ -17,7 +17,7 @@ export const streets = (): Street[] => GEO.streets.map(([kind, w, f, layer, name
 /** Streets on the ground: not bridges, not tunnels or underground levels. */
 export const onGround = (s: Street) => !s.bridge && !s.tunnel && s.layer >= 0;
 
-/** Cells under a street's surface (set by buildGround): lot aprons leave them alone. */
+/** Cells under a street's surface (set by buildGround): 1 a street, 2 a stair street. Lot aprons leave them alone. */
 export let streetCells = new Uint8Array(0);
 
 export function buildGround(): Heightfield {
@@ -52,7 +52,7 @@ function level(g: Heightfield) {
         const y = hs[k] + (hs[k + 1] - hs[k]) * t, k2 = j * g.w + i, f = d <= half ? 1 : 1 - (d - half) / 3;
         // The strongest claim wins where streets meet or run side by side.
         if (f > wt[k2]) { wt[k2] = f; set[k2] = y; }
-        if (d <= s.w / 2) { streetCells[k2] = 1; g.surf![k2] = s.steps || PAVED.has(s.kind) ? 2 : 1; }
+        if (d <= s.w / 2) { streetCells[k2] = Math.max(streetCells[k2], s.steps ? 2 : 1); g.surf![k2] = s.steps || PAVED.has(s.kind) ? 2 : 1; }
       }
     }
   }

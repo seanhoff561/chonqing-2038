@@ -28,8 +28,9 @@ describe('Yuzhong at 1:1 (M3-41b)', () => {
       // Outside each corner the ground must reach the foundation (which goes down to the lowest ground round it).
       const out = p.corners.map(([x, z]) => { const l = Math.hypot(cx - x, cz - z) || 1; return heightAt(g, x - ((cx - x) / l) * 1.0, z - ((cz - z) / l) * 1.0); });
       if (out.some(h => h !== null && h < p.found - 0.05)) gaps++;
-      // The middle exactly at the floor; corners within a hand's breadth (a sloping street in front leans them).
-      if (p.route && (hs.some(h => h === null || Math.abs(h - p.base) > 0.3) || Math.abs(hs[0]! - p.base) > 0.05)) poking++;
+      // Nothing above the floor: the middle at most at it, corners within a hand's breadth (a sloping street in
+      // front leans them); ground falling away under one is hidden by its ground-floor slab (M3-41c).
+      if (p.route && (hs.some(h => h === null || h - p.base > 0.3) || hs[0]! - p.base > 0.05)) poking++;
     }
     expect(gaps, 'gaps under walls').toBe(0);
     expect(poking, 'ground in enterable buildings').toBe(0);

@@ -1,38 +1,42 @@
+// M3-07 on the real map (M3-41c, D-016): Line 2's elevated beams along the Jialing bank from the Linjiangmen
+// portal to the map's edge, walkable on top through the stalled train, with maintenance ladders up to them; the
+// metro's street entrances stand at the real stations (the underground stations open in M3-43).
 import { describe, it, expect } from 'vitest';
 import { getWorld } from '../../src/world/build';
 import { createState } from '../../src/sim/sim';
-import { BEAM, STATIONS, TRAIN } from '../../src/world/sets/jiaochangkou';
 import { teleport } from '../../src/sim/player';
+import { buildGround } from '../../src/world/yuzhong/ground';
+import { buildLine2, BEAM, TRAIN } from '../../src/world/yuzhong/line2';
 import { run } from './helpers';
 
-const w = getWorld('city');
+const w = getWorld('yuzhong'), line = buildLine2(buildGround());
 
-describe('Jiaochangkou and the Line 2 beam (M3-07)', () => {
-  it('walks the beam west from the terminus to the next station without falling off', () => {
-    const s = createState(1, w);
-    teleport(s.player, STATIONS[0].x0 - 2, BEAM.top + 0.05, BEAM.z);
-    run(s, w, 10, { yaw: Math.PI / 2 });
-    let lowest = Infinity, aboard = 0;
-    for (let i = 0; i < 60 * 70 && s.player.pos.x > STATIONS[1].x1 - 2; i++) {
-      run(s, w, 1, { my: 1, yaw: Math.PI / 2 });
-      lowest = Math.min(lowest, s.player.pos.y);
-      if (s.player.pos.x > TRAIN.x0 + 1 && s.player.pos.x < TRAIN.x0 + 2 * TRAIN.len && s.player.pos.y > BEAM.top + 0.3) aboard++;
+describe('Line 2 on the real map (M3-07, M3-41c)', () => {
+  it('walks the beam from the portal 240 m west, through the stalled train, without falling off', { timeout: 60000 }, () => {
+    const b = line.beams[0], s = createState(1, w);
+    teleport(s.player, b.pts[1][0], b.top[1] + 0.05, b.pts[1][1]);
+    run(s, w, 10);
+    let k = 2, lowest = Infinity, aboard = 0;
+    for (let t = 0; t < 60 * 120 && k <= 40; t++) {
+      const p = s.player, [tx, tz] = b.pts[k];
+      if (Math.hypot(tx - p.pos.x, tz - p.pos.z) < 0.6) { k++; continue; }
+      run(s, w, 1, { my: 1, yaw: Math.atan2(-(tx - p.pos.x), -(tz - p.pos.z)) });
+      lowest = Math.min(lowest, p.pos.y - Math.min(b.top[k - 1], b.top[k]));
+      if (Math.hypot(p.pos.x - line.train.x, p.pos.z - line.train.z) < TRAIN.len && p.pos.y > line.train.top + 0.3) aboard++;
     }
-    // Through the stalled train on the way (M3-34): in at one end door, out of the other.
-    expect(aboard).toBeGreaterThan(60);
-    expect(s.player.pos.x).toBeLessThan(STATIONS[1].x1 - 2);
-    expect(lowest).toBeGreaterThan(BEAM.top - 0.1);
+    expect(k).toBe(41);
+    expect(aboard, 'walked through the train').toBeGreaterThan(60);
+    expect(lowest).toBeGreaterThan(-0.1);
     expect(s.dead).toBeFalsy();
   });
-  it('climbs the terminus stairs from the junction plaza to the platform', () => {
-    const s = createState(1, w), sx = STATIONS[0].x1 - 6 + 1.5;
-    teleport(s.player, sx, 44.05, BEAM.z + BEAM.w / 2 + 36);
-    run(s, w, 10, { yaw: 0 });
-    for (let i = 0; i < 60 * 20 && s.player.pos.z > BEAM.z + 4; i++) run(s, w, 1, { my: 1, yaw: 0 });
-    expect(s.player.pos.z).toBeLessThan(BEAM.z + 4);
-    expect(s.player.pos.y).toBeCloseTo(BEAM.top, 1);
+  it('stands the beam on piers about 9 m over the ground, with ladders up to it', () => {
+    const b = line.beams[0];
+    expect(b.pts.length).toBeGreaterThan(40);
+    expect(w.climbables.filter(c => c.kind === 'ladder' && Math.hypot(c.x - line.train.x, c.z - line.train.z) < 30 && c.y1 > line.train.top).length).toBeGreaterThanOrEqual(2);
+    expect(line.climbables.length).toBeGreaterThanOrEqual(4);
+    expect(BEAM.w).toBeLessThan(1);
   });
-  it('has a maintenance ladder up to each platform', () => {
-    for (const st of STATIONS) expect(w.climbables.filter(c => c.kind === 'ladder' && c.x > st.x0 && c.x < st.x1 && Math.abs(c.z - BEAM.z) < 7 && c.y1 > BEAM.top).length).toBe(2);
+  it('puts the metro entrances at the real stations', () => {
+    for (const n of ['较场口', '临江门', '小什字', '朝天门']) expect(w.teleports.some(t => t.name === `Metro ${n}`), n).toBe(true);
   });
 });

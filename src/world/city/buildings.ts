@@ -1,12 +1,11 @@
-// The ordinary city fabric: building tiles split into lots with alleys, masses by kind and district,
-// parapets, pitched roofs in Shibati, roof clutter, and hillside roofs flush with the street above.
+// The ordinary city fabric: one lot's building by kind (walk-ups, slabs, towers, Shibati's traditional houses),
+// parapets, pitched roofs, roof clutter, facade climbing and interiors.
 import { solid, rampSolid, type Solid } from '../geom';
 import { MAT } from '../mats';
-import { tiles, tileAt, TILE, type Tile } from '../map';
 import { makeRng, rand, randInt, hashString, type Rng } from '../../sim/rng';
-import type { Prop, Inter, Climbable, HideSpot, Site } from '../world';
+import type { Prop, Inter, Climbable, HideSpot, Site, Feature } from '../world';
 import { canEnter, hollow } from './interiors';
-import { facades, alleys } from './climb';
+import { facades } from './climb';
 import { details } from './details';
 import { tower } from './towers';
 import { tintFor, PAINTED } from './palette';
@@ -14,8 +13,6 @@ import { tintFor, PAINTED } from './palette';
 export type LotKind = 'res' | 'tower' | 'trad';
 export interface Lot {
   id: number; x0: number; z0: number; x1: number; z1: number; base: number; top: number; wall: number; kind: LotKind; mat: number;
-  /** the tile it stands on (the old tile city only) */
-  tile?: Tile;
   /** facing a street on its north, south, west and east sides */
   street: [boolean, boolean, boolean, boolean];
   /** per side, how far across the street the next building stands (0: none), for cables strung over it */
@@ -29,87 +26,12 @@ export interface Lot {
   /** enterable buildings: a walking route from outside the door up the stairs and out onto the roof */
   route?: { x: number; y: number; z: number }[];
 }
-/** Holds, hide spots and alley pieces, for tests and tools: one group per hand-route column. */
-export interface Feature { kind: string; x: number; y: number; z: number; group: number }
 export interface Fabric { solids: Solid[]; decor: Solid[]; props: Prop[]; lots: Lot[]; inter: Inter[]; climbables: Climbable[]; hides: HideSpot[]; features: Feature[]; sites: Site[]; far: Solid[] }
 
 const FLOOR = 3;
 /** Roof parapets: a lip to grab, cover when crouched, low enough to jump over (U-014). */
 export const PARAPET = 0.6;
-const STREETS = '.=sb';
-const BUILT = '#Th';
-
-export const tileRng = (t: Tile, salt = '') => makeRng(hashString(`cq2038:${t.c}:${t.r}:${salt}`));
-
-/** Split a tile into 1, 2 or 4 lots with alleys; margins toward neighbours make the alleys between tiles. */
-function splitTile(t: Tile, r: Rng): [number, number, number, number][] {
-  const x0 = t.c * TILE, z0 = t.r * TILE;
-  const m = (dc: number, dr: number) => (BUILT.includes(tileAt(t.c + dc, t.r + dr)?.type ?? '~') ? 1.25 : 1.0);
-  const L = x0 + m(-1, 0), R = x0 + TILE - m(1, 0), N = z0 + m(0, -1), S = z0 + TILE - m(0, 1);
-  const kind = t.type;
-  if (kind === 'h') {
-    const xm = (L + R) / 2, zm = (N + S) / 2;
-    return [[L, N, xm - 1, zm - 1], [xm + 1, N, R, zm - 1], [L, zm + 1, xm - 1, S], [xm + 1, zm + 1, R, S]];
-  }
-  const pattern = kind === 'T' ? (rand(r) < 0.6 ? 1 : 2) : [1, 2, 2, 4][randInt(r, 4)];
-  const gap = kind === 'T' ? 3 + rand(r) : 1.6 + rand(r) * 1.6;
-  const f = 0.4 + rand(r) * 0.2;
-  if (pattern === 1) return [[L, N, R, S]];
-  const xm = L + (R - L) * f, zm = N + (S - N) * f;
-  if (pattern === 2) return rand(r) < 0.5 ? [[L, N, xm - gap / 2, S], [xm + gap / 2, N, R, S]] : [[L, N, R, zm - gap / 2], [L, zm + gap / 2, R, S]];
-  return [[L, N, xm - gap / 2, zm - gap / 2], [xm + gap / 2, N, R, zm - gap / 2], [L, zm + gap / 2, xm - gap / 2, S], [xm + gap / 2, zm + gap / 2, R, S]];
-}
-
-/** Which sides of a lot on tile t face a street tile, and whether a built tile stands across it. */
-function tileSides(t: Tile, x0: number, z0: number, x1: number, z1: number): Pick<Lot, 'street' | 'across'> {
-  const tx = t.c * TILE, tz = t.r * TILE;
-  const dirs = [[0, -1, z0 - tz < 1.3], [0, 1, tz + TILE - z1 < 1.3], [-1, 0, x0 - tx < 1.3], [1, 0, tx + TILE - x1 < 1.3]] as const;
-  const street = dirs.map(([dc, dr, edge]) => edge && STREETS.includes(tileAt(t.c + dc, t.r + dr)?.type ?? '~')) as Lot['street'];
-  const across = dirs.map(([dc, dr], i) => (street[i] && BUILT.includes(tileAt(t.c + dc * 2, t.r + dr * 2)?.type ?? '~') ? TILE + 2 : 0)) as Lot['across'];
-  return { street, across };
-}
-
-/** Highest neighbouring street level, for roofs that sit flush with the street above. */
-function upperStreet(t: Tile): number {
-  let h = -Infinity;
-  for (const [dc, dr] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
-    const o = tileAt(t.c + dc, t.r + dr);
-    if (o && STREETS.includes(o.type)) h = Math.max(h, o.h);
-  }
-  return h;
-}
-
-export function buildFabric(): Fabric {
-  const out: Fabric = { solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [], sites: [], far: [] };
-  for (const t of tiles()) {
-    if (!BUILT.includes(t.type)) continue;
-    const r = tileRng(t);
-    const kind: LotKind = t.type === 'T' ? 'tower' : t.type === 'h' ? 'trad' : 'res';
-    const up = upperStreet(t);
-    // Shibati rows share one height so their ridges line up into rooftop routes.
-    const tradFloors = 2 + (t.r % 3 === 0 ? 1 : 0);
-    const mine: Lot[] = [];
-    for (const [x0, z0, x1, z1] of splitTile(t, r)) {
-      let wall: number;
-      if (kind === 'trad') wall = t.h + tradFloors * FLOOR;
-      else if (kind === 'tower') wall = t.h + (15 + randInt(r, 21)) * 3.3;
-      // Walk-ups of 4-9 floors; some lots carry the 15-30 floor slabs that tower over the old city (U-009).
-      else if (Math.min(x1 - x0, z1 - z0) >= 9 && rand(r) < 0.14) wall = t.h + (15 + randInt(r, 16)) * FLOOR;
-      else wall = t.h + (4 + randInt(r, 6)) * FLOOR;
-      // Hillside block whose roof is the street above (the Kuixinglou effect).
-      if (kind === 'res' && up - t.h >= 6 && rand(r) < 0.5) wall = up;
-      const mat = kind === 'tower' ? MAT.glass : kind === 'trad' ? MAT.brick : [MAT.tile, MAT.plaster, MAT.tile, MAT.concrete][randInt(r, 4)];
-      const lot: Lot = { id: out.lots.length, x0, z0, x1, z1, base: t.h, wall, top: wall, kind, tile: t, mat, ...tileSides(t, x0, z0, x1, z1) };
-      out.lots.push(lot);
-      mine.push(lot);
-      buildLot(lot, r, out);
-    }
-    alleys(mine, r, out);
-  }
-  return out;
-}
-
-/** Build one lot (its mass, roof and facade climbing) into out: the tile city's lots and Yuzhong's alike. Its
+/** Build one lot (its mass, roof and facade climbing) into out. Its
  *  walls, slabs and glass take its colour (M3-46), from a stream of its own so the layout never shifts. */
 export function buildLot(l: Lot, r: Rng, out: Fabric) {
   const s0 = out.solids.length, f0 = out.far.length;
@@ -127,8 +49,8 @@ function paint(l: Lot, r: Rng): number {
 
 function mass(l: Lot, r: Rng, out: Fabric) {
   const { x0, z0, x1, z1, base, wall } = l;
-  // About a quarter of the blocks that fit a stair core can be entered.
-  const open = canEnter(l) && rand(r) < 0.28;
+  // Half the blocks that fit a stair core can be entered (U-022: more of the city opens up).
+  const open = canEnter(l) && rand(r) < 0.5;
   const look = open ? (l.mat === MAT.tile ? MAT.facadeTile : MAT.facade) : paint(l, r);
   // Some tall solid blocks step their top two floors back from the edge.
   const step = !open && l.kind === 'res' && wall - base >= 24 && rand(r) < 0.25 ? 1.6 : 0;
@@ -138,10 +60,10 @@ function mass(l: Lot, r: Rng, out: Fabric) {
   // The far view's stand-in: the whole block in its painted facade, parapet included.
   if (l.kind !== 'trad') out.far.push(solid(x0, base, z0, x1, wall + PARAPET, z1, look));
   if (l.kind === 'trad') {
-    // Pitched tiled roof: ridges run along the row (the hill's contour), so a row of houses lines up into a
-    // rooftop route; eaves overhang as decor.
+    // Pitched tiled roof: ridges run along the street it fronts, so a row of houses lines up into a rooftop
+    // route; eaves overhang as decor.
     const rise = 2;
-    if (x1 - x0 >= (z1 - z0) * 0.7) {
+    if (l.street[0] || l.street[1] || (!l.street[2] && !l.street[3] && x1 - x0 >= (z1 - z0) * 0.7)) {
       const zm = (z0 + z1) / 2;
       out.solids.push(rampSolid(x0, wall, z0, x1, zm, wall, wall + rise, 3, MAT.roofTile), rampSolid(x0, wall, zm, x1, z1, wall, wall + rise, 4, MAT.roofTile));
     } else {

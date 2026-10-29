@@ -7,38 +7,40 @@ import { MAT } from '../mats';
 import { GEO } from '../geo';
 import type { Heightfield } from '../heightfield';
 import type { Prop, Inter, Climbable } from '../world';
-import { points, type P2 } from './shapes';
+import { points, type P2, type Obb } from './shapes';
 
 export const BEAM = { w: 0.85, depth: 1.6, over: 9 };
-export const TRAIN = { cars: 2, len: 14.8, gap: 0.4, w: 2.9, at: 70 };
+export const TRAIN = { cars: 2, len: 14.8, gap: 0.4, w: 2.9, at: 120 };
 
 export interface Line2 { solids: Solid[]; decor: Solid[]; props: Prop[]; inter: Inter[]; climbables: Climbable[]; beams: { pts: P2[]; top: number[] }[]; train: { x: number; z: number; yaw: number; top: number } }
 
 const hAt = (g: Heightfield, x: number, z: number) => g.y[Math.max(0, Math.min(g.h - 1, Math.round(z / g.cell))) * g.w + Math.max(0, Math.min(g.w - 1, Math.round(x / g.cell)))];
 
-/** The two elevated beams: the OSM monorail ways on bridges, chained from the portal, clipped to the map. */
+/** The two elevated beams: the OSM monorail ways on bridges (and the short covered stretches between them),
+ *  joined where one way's last node is the next one's first, cut where they leave the map. */
 export function beamLines(): P2[][] {
-  const el = GEO.rails.filter(r => r[0] === 'monorail' && r[1] & 2).map(r => points(r[4], 0.1));
-  // Chain pieces that meet end to start (within 6 m) into runs, then keep the two longest.
-  const runs: P2[][] = [];
-  for (const p of el) {
-    const hit = runs.find(r => Math.hypot(r[r.length - 1][0] - p[0][0], r[r.length - 1][1] - p[0][1]) < 6 || Math.hypot(r[0][0] - p[p.length - 1][0], r[0][1] - p[p.length - 1][1]) < 6);
-    if (!hit) { runs.push([...p]); continue; }
-    if (Math.hypot(hit[hit.length - 1][0] - p[0][0], hit[hit.length - 1][1] - p[0][1]) < 6) hit.push(...p.slice(1)); else hit.unshift(...p.slice(0, -1));
+  const runs = GEO.rails.filter(r => r[0] === 'monorail' && (r[1] & 2 || (r[1] & 4 && r[4].length < 10))).map(r => points(r[4], 0.1));
+  const d = (a: P2, b: P2) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+  for (let joined = true; joined;) {
+    joined = false;
+    for (let i = 0; i < runs.length && !joined; i++) for (let j = 0; j < runs.length && !joined; j++) {
+      if (i !== j && d(runs[i][runs[i].length - 1], runs[j][0]) < 0.5) { runs[i].push(...runs[j].slice(1)); runs.splice(j, 1); joined = true; }
+    }
   }
-  return runs.map(r => clip(r)).filter(r => r.length > 1).sort((a, b) => len(b) - len(a)).slice(0, 2);
+  return runs.map(clip).filter(r => r.length > 1).sort((a, b) => len(b) - len(a)).slice(0, 2);
 }
 
 const len = (p: P2[]) => p.slice(1).reduce((a, q, i) => a + Math.hypot(q[0] - p[i][0], q[1] - p[i][1]), 0);
-/** Points inside the map (x and z at least 1 m in), cutting the line where it leaves. */
+/** The stretch inside the map (1 m in from its edges), ended where it crosses the edge. */
 function clip(p: P2[]): P2[] {
-  const inside = (q: P2) => q[0] >= 1 && q[1] >= 1 && q[0] <= GEO.size[0] - 1 && q[1] <= GEO.size[1] - 1;
-  const out: P2[] = [];
+  const [W, H] = GEO.size, inside = (q: P2) => q[0] >= 1 && q[1] >= 1 && q[0] <= W - 1 && q[1] <= H - 1;
+  const edge = (a: P2, b: P2): P2 => { let t = 1; for (const [v, lo, hi] of [[0, 1, W - 1], [1, 1, H - 1]] as const) { const dv = b[v] - a[v]; if (b[v] < lo) t = Math.min(t, (lo - a[v]) / dv); if (b[v] > hi) t = Math.min(t, (hi - a[v]) / dv); } return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]; };
+  let best: P2[] = [], cur: P2[] = [];
   for (let i = 0; i < p.length; i++) {
-    if (inside(p[i])) { out.push(p[i]); continue; }
-    if (out.length) { const a = out[out.length - 1], b = p[i], t = (a[0] - 1) / (a[0] - b[0] || 1); if (b[0] < 1) out.push([1, a[1] + (b[1] - a[1]) * Math.max(0, Math.min(1, t))]); break; }
+    if (inside(p[i])) { if (!cur.length && i > 0) cur.push(edge(p[i], p[i - 1])); cur.push(p[i]); continue; }
+    if (cur.length) { cur.push(edge(p[i - 1], p[i])); if (len(cur) > len(best)) best = cur; cur = []; }
   }
-  return out;
+  return len(cur) > len(best) ? cur : best;
 }
 
 /** Resample a line every `step` metres. */
@@ -68,6 +70,8 @@ export function buildLine2(g: Heightfield): Line2 {
       const x0 = cx - sl / 2 - 0.02, x1 = cx + sl / 2 + 0.02, z0 = cz - BEAM.w / 2, z1 = cz + BEAM.w / 2;
       const beam = hi - lo < 0.02 ? solid(x0, lo - BEAM.depth, z0, x1, lo, z1, MAT.concrete) : rampSolid(x0, lo - BEAM.depth, z0, x1, z1, lo, hi, top[i] < top[i + 1] ? 1 : 2, MAT.concrete);
       L.solids.push(...turn([beam], yaw, cx, cz));
+      // Maintenance ladders up beside the beam every 150 m.
+      if (i % 25 === 12) { const nx = Math.sin(yaw), nz = -Math.cos(yaw), lx = cx - nx * 1.3, lz = cz - nz * 1.3; L.climbables.push({ kind: 'ladder', x: lx, z: lz, y0: hAt(g, lx, lz), y1: lo + 0.3, nx, nz }); }
       // T-piers every 24 m.
       if (i % 4 === 2) L.solids.push(...turn([solid(cx - 0.6, ground[i] - 1, cz - 1.1, cx + 0.6, lo - BEAM.depth - 0.6, cz + 1.1, MAT.concrete), solid(cx - 0.9, lo - BEAM.depth - 0.6, cz - 1.4, cx + 0.9, lo - BEAM.depth, cz + 1.4, MAT.concrete)], yaw, cx, cz));
     }
@@ -109,6 +113,38 @@ export function buildLine2(g: Heightfield): Line2 {
     L.decor.push(...turn([solid(px + 1.5, y, pz - 4.5, px + 2, y + 9.5, pz + 4.5, MAT.asphalt)], yaw, px, pz));
   }
   return L;
+}
+
+/** The metro's street entrances at the real stations and entrances (OSM), the underground stations themselves
+ *  closed for now (M3-43 opens the way in at Jiaochangkou): a glass canopy over the stair down, shutter rolled
+ *  down, set beside the nearest street and facing it. Returns where they stand, for the lots to keep clear of. */
+export function stationEntrances(g: Heightfield, sts: { pts: P2[]; w: number }[], land: Uint8Array): { solids: Solid[]; props: Prop[]; keep: Obb[]; at: { name: string; x: number; z: number }[] } {
+  const out = { solids: [] as Solid[], props: [] as Prop[], keep: [] as Obb[], at: [] as { name: string; x: number; z: number }[] };
+  for (const [name, kind, xd, zd] of GEO.stations) {
+    if (kind !== 'station' && kind !== 'subway_entrance') continue;
+    const px = xd / 10, pz = zd / 10, cell = Math.round(pz / g.cell) * g.w + Math.round(px / g.cell);
+    if (px < 10 || pz < 10 || px > GEO.size[0] - 10 || pz > GEO.size[1] - 10 || land[cell] !== 1 || out.at.some(a => Math.hypot(a.x - px, a.z - pz) < 40)) continue;
+    // The nearest street, and the side of it the station node is on.
+    let best: { d: number; x: number; z: number; ux: number; uz: number; w: number } | null = null;
+    for (const s of sts) for (let k = 0; k + 1 < s.pts.length; k++) {
+      const [ax, az] = s.pts[k], [bx, bz] = s.pts[k + 1], vx = bx - ax, vz = bz - az, l2 = vx * vx + vz * vz || 1, t = Math.max(0, Math.min(1, ((px - ax) * vx + (pz - az) * vz) / l2));
+      const x = ax + vx * t, z = az + vz * t, d = Math.hypot(px - x, pz - z), l = Math.sqrt(l2);
+      if (!best || d < best.d) best = { d, x, z, ux: vx / l, uz: vz / l, w: s.w };
+    }
+    if (!best || best.d > 40) continue;
+    const side = (px - best.x) * -best.uz + (pz - best.z) * best.ux >= 0 ? 1 : -1, nx = -best.uz * side, nz = best.ux * side;
+    const cx = best.x + nx * (best.w / 2 + 4.5), cz = best.z + nz * (best.w / 2 + 4.5), y = hAt(g, cx, cz), yaw = Math.atan2(nz, nx);
+    // In its own frame: x away from the street (0 at the front), z along it.
+    const box = (x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, mat: number) => solid(cx + x0 - 3.5, y + y0, cz + z0, cx + x1 - 3.5, y + y1, cz + z1, mat);
+    out.solids.push(...turn([
+      box(0, -1, -2, 7, 0.15, 2, MAT.stone), box(0.1, 0.15, -2, 7, 2.6, -1.85, MAT.glass), box(0.1, 0.15, 1.85, 7, 2.6, 2, MAT.glass),
+      box(6.8, 0.15, -1.85, 7, 2.6, 1.85, MAT.concrete), box(-0.2, 2.6, -2.2, 7.2, 2.9, 2.2, MAT.metal), box(0.1, 0.15, -1.85, 0.25, 2.6, 1.85, MAT.metal),
+    ], yaw, cx, cz));
+    out.props.push({ kind: 'neonblade', x: cx - nx * 3.6, y: y + 2.9, z: cz - nz * 3.6, yaw: Math.PI / 2 - yaw, h: 1.2 });
+    out.keep.push({ cx, cz, hw: 3.8, hd: 2.4, yaw });
+    out.at.push({ name, x: cx, z: cz });
+  }
+  return out;
 }
 
 /** (x, z) turned by yaw about (cx, cz), as geom's turn(). */

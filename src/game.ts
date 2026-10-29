@@ -87,8 +87,9 @@ export class Game {
     this.state = createState(seed, this.world);
     if (sc.run) startRun(this.state, this.world);
     if (sc.furnished) furnish(this.state, this.world);
-    if (sc.spawn) teleport(this.state.player, sc.spawn.x, sc.spawn.y, sc.spawn.z);
-    this.state.player.yaw = this.input.yaw = sc.spawn?.yaw ?? this.world.spawn.yaw;
+    const sp = sc.spawn ?? this.world.teleports.find(t => t.name === sc.at);
+    if (sp) teleport(this.state.player, sp.x, sp.y, sp.z);
+    this.state.player.yaw = this.input.yaw = sp?.yaw ?? this.world.spawn.yaw;
     this.input.pitch = 0;
     this.prev = { ...this.state.player.pos };
     this.drawDistance = sc.draw ?? 160;

@@ -87,7 +87,7 @@ export function facades(l: Lot, r: Rng, out: Fabric) {
   }
 }
 
-/** Alleys between the buildings of one tile. */
+/** The alley between neighbouring buildings in one frame, on the lower one's floor. */
 export function alleys(lots: Lot[], r: Rng, out: Fabric) {
   for (let i = 0; i < lots.length; i++) for (let j = i + 1; j < lots.length; j++) {
     const a = lots[i], b = lots[j];
@@ -97,8 +97,8 @@ export function alleys(lots: Lot[], r: Rng, out: Fabric) {
     const alongZ = gx > 0;
     const w0 = alongZ ? Math.min(a.x1, b.x1) : Math.min(a.z1, b.z1), w1 = w0 + (alongZ ? gx : gz);
     const l0 = alongZ ? Math.max(a.z0, b.z0) : Math.max(a.x0, b.x0), l1 = alongZ ? Math.min(a.z1, b.z1) : Math.min(a.x1, b.x1);
-    if (l1 - l0 < 5 || a.base !== b.base) continue;
-    const y = a.base;
+    if (l1 - l0 < 5) continue;
+    const y = Math.min(a.base, b.base);
     const B = (p0: number, q0: number, p1: number, q1: number, y0: number, y1: number, mat: number) =>
       alongZ ? solid(p0, y0, q0, p1, y1, q1, mat) : solid(q0, y0, p0, q1, y1, p1, mat);
     const at = (p: number, q: number) => (alongZ ? { x: p, z: q } : { x: q, z: p });
