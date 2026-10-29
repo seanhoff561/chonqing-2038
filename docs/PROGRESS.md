@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M2. Next: M2-06 Hunger, thirst and fatigue.
-Features done: 29 / 204 | Last done: M2-05
+**Status:** building M2. Next: M2-07 Natural healing.
+Features done: 30 / 204 | Last done: M2-06
 <!-- /status -->
 
 ## Log
@@ -36,3 +36,4 @@ Features done: 29 / 204 | Last done: M2-05
 - M2-03 Health, damage and death: health, damage and death
 - M2-04 Bleeding: bleeding
 - M2-05 Limb injuries: limb injuries
+- M2-06 Hunger, thirst and fatigue: hunger, thirst, fatigue and collapse

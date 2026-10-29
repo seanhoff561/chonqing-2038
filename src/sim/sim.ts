@@ -6,6 +6,7 @@ import type { World } from '../world/world';
 import { stepPlayer } from './move';
 import { GAME_PER_TICK } from './clock';
 import { createBody, stepBody } from './body';
+import { checkCollapse } from './sleep';
 import { survival } from '../data/survival';
 
 export const STATE_VERSION = 1;
@@ -30,6 +31,7 @@ export function step(state: SimState, world: World, input: InputFrame): void {
   state.events.length = 0;
   stepPlayer(state, world, input);
   stepBody(state);
+  checkCollapse(state);
   state.tick++;
   state.time += GAME_PER_TICK;
 }
