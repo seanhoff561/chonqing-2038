@@ -2,7 +2,7 @@
 
 <!-- status -->
 **Status:** building M1. Next: M1-28 Gym climbing routes.
-Features done: 44 / 211 | Last done: M1-29
+Features done: 45 / 211 | Last done: M1-30
 <!-- /status -->
 
 ## Log
@@ -59,3 +59,4 @@ Features done: 44 / 211 | Last done: M1-29
 - M1-26 Hand grab core (White Knuckle style): hand grab core with force-limited grips (U-002, U-004)
 - M1-27 Hand sprites: hand sprites
 - M1-29 Sprinting reads clearly: sprinting reads clearly (U-003)
+- M1-30 Wall jump by camera direction: wall jump by camera direction (U-004)
