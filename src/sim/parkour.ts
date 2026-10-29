@@ -134,7 +134,7 @@ export function airParkour(state: SimState, world: World, input: InputFrame): bo
   const l = findLedge(world, p, M.hang.wallGap, M.hang.reachHigh + 0.1);
   if (!l || !isFinite(l.h)) return false;
   if (l.h >= 0.3 && l.h < M.hang.reachLow && (input.buttons & B.JUMP)) return tryMantle(world, p, l, M.mantle.lowTime);
-  if (l.h >= M.hang.reachLow && l.h <= M.hang.reachHigh && lim().climb) return grab(world, p, l);
+  if (l.h >= M.hang.reachLow && l.h <= M.hang.reachHigh && lim().hang) return grab(world, p, l);
   return false;
 }
 

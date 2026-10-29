@@ -53,7 +53,7 @@ Player collision is an axis-aligned box 0.5 m wide. All values live in `src/data
 | Hide in box | E at a box, crate, dumpster or cabinet with an interior of 0.8 m or more: 0.6 s in, 0.5 s out |
 | Swimming | surface 1.4 m/s (sprint 2.2), dive with C, breath 40 s, then 8 HP/s; leaves him wet for 120 game minutes |
 | Stamina (0-100) | sprint 6/s, jump 8, mantle 6, wall-run 15, hang 2/s; regen 15/s after 1 s still; at 0 no sprint until 30 |
-| Encumbrance | over 15 kg: sprint and jump -15%; over 25 kg: no sprint, no wall-run, mantle max 1.6 m |
+| Encumbrance | over 15 kg: sprint and jump -15%; over 25 kg: no sprint, no wall-run, no ledge grabs, mantle max 1.6 m |
 
 **Fall outcomes** (h = fall height): no roll: h <= 4 nothing; 4-7 m: (h-4) x 8 damage, 40% sprain; 7-12 m: (h-4) x 10 damage and a broken leg; over 12 m: death. With a roll: h <= 7 nothing; 7-10 m: (h-7) x 8 damage, 40% sprain; above 10 m as without a roll. Chances use the run's seeded RNG.
 
