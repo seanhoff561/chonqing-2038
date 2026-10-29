@@ -5,7 +5,7 @@ import type { Player, Posture, Mode } from './player';
 import { movement as M } from '../data/movement';
 import { raycast } from '../world/geom';
 import { free, moveHorizontal, moveVertical } from './physics';
-import { forward, setPosture, spend } from './move';
+import { forward, setPosture, spend, noise } from './move';
 
 const HW = M.width / 2;
 
@@ -86,8 +86,8 @@ export function groundParkour(state: SimState, world: World, input: InputFrame, 
   const speed = Math.hypot(p.vel.x, p.vel.z);
   const l = findLedge(world, p, M.mantle.reach, maxMantle);
   if (l && l.h >= M.mantle.min) {
-    if (l.h <= M.vault.maxH && speed >= M.vault.minSpeed && tryVault(world, p, l)) return true;
-    if (l.h <= maxMantle + 1e-3 && tryMantle(world, p, l, l.h < M.mantle.lowLimit ? M.mantle.lowTime : M.mantle.highTime)) return true;
+    if (l.h <= M.vault.maxH && speed >= M.vault.minSpeed && tryVault(world, p, l)) { noise(state, M.noise.vault, 'vault'); return true; }
+    if (l.h <= maxMantle + 1e-3 && tryMantle(world, p, l, l.h < M.mantle.lowLimit ? M.mantle.lowTime : M.mantle.highTime)) { noise(state, M.noise.mantle, 'mantle'); return true; }
   }
   if (speed < M.wallRun.minSpeed || !(input.buttons & B.SPRINT) || p.exhausted) return false;
   const f = forward(p.yaw);
@@ -191,6 +191,7 @@ export function stepWallRun(state: SimState, world: World, input: InputFrame) {
     return;
   }
   p.vel.y -= M.gravity * M.wallRun.gravityScale * DT;
+  if (Math.floor(w.t / M.wallRun.stepEvery) !== Math.floor((w.t - DT) / M.wallRun.stepEvery)) noise(state, M.noise.sprint, 'step');
   const blocked = moveHorizontal(world.index, p.pos, M.height.stand, p.vel.x * DT, p.vel.z * DT, 0.05);
   const hit = moveVertical(world.index, p.pos, M.height.stand, p.vel.y * DT);
   if (hit === 1) { p.mode = 'ground'; p.onGround = true; p.vel.y = 0; return; }

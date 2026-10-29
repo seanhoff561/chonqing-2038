@@ -23,7 +23,7 @@ export const movement = {
   hide: { enterTime: 0.6, exitTime: 0.5, minInner: 0.8, reach: 1.6 },
   swim: { speed: 1.4, sprint: 2.2, dive: 1.2, breath: 40, drownDps: 8, wetMinutes: 120, climbOut: 0.6, floatDepth: 1.2 },
   stamina: { max: 100, sprint: 6, jump: 8, mantle: 6, wallRun: 15, hang: 2, regen: 15, regenDelay: 1, recover: 30 },
-  noise: { crawl: 1, crouch: 2, jog: 8, sprint: 16, land: 15, landMinH: 2, vault: 6, stepEvery: 0.55, rainScale: 0.5 },
+  noise: { crawl: 1, crouch: 2, jog: 8, sprint: 16, land: 15, landMinH: 2, vault: 6, mantle: 3, slide: 8, rainScale: 0.5, stride: { crawl: 0.4, crouch: 0.6, jog: 1.2, sprint: 1.8 } },
   encumbrance: { heavy: 15, overloaded: 25, penalty: 0.15, overloadedMantle: 1.6 },
 };
 

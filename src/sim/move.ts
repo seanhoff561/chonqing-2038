@@ -26,6 +26,22 @@ function regen(p: Player) {
   if (p.exhausted && p.stamina >= S.recover) p.exhausted = false;
 }
 
+/** Emit a noise event at the player's feet; footsteps shrink in rain. */
+export function noise(state: SimState, r: number, kind: string) {
+  const p = state.player;
+  if (kind === 'step') r *= 1 - (1 - M.noise.rainScale) * Math.min(1, state.flags.rain);
+  state.events.push({ t: 'noise', x: p.pos.x, y: p.pos.y, z: p.pos.z, r, kind });
+}
+
+/** Footsteps by gait, one per stride travelled on the ground. */
+function footsteps(state: SimState, dist: number) {
+  const p = state.player, N = M.noise;
+  const sp = Math.hypot(p.vel.x, p.vel.z);
+  const gait = p.posture === 'crawl' ? 'crawl' : p.posture === 'crouch' ? 'crouch' : sp > 5 ? 'sprint' : 'jog';
+  p.stepAcc += dist;
+  if (p.stepAcc >= N.stride[gait]) { p.stepAcc = 0; noise(state, N[gait], 'step'); }
+}
+
 export function forward(yaw: number) { return { x: -Math.sin(yaw), z: -Math.cos(yaw) }; }
 
 export function stepPlayer(state: SimState, world: World, input: InputFrame): void {
@@ -139,6 +155,7 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
   }
   if (!p.onGround) p.vel.y = Math.max(-M.maxFall, p.vel.y - M.gravity * DT);
   const wasGround = p.onGround;
+  const x0 = p.pos.x, z0 = p.pos.z;
   const blocked = moveHorizontal(idx, p.pos, h, p.vel.x * DT, p.vel.z * DT, p.onGround ? M.stepHeight : 0.05);
   if (blocked & 1) p.vel.x = 0;
   if (blocked & 2) p.vel.z = 0;
@@ -157,7 +174,11 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
       if (gap !== Infinity) { p.pos.y -= gap; p.onGround = true; p.vel.y = 0; }
     }
   }
-  if (p.onGround) { p.fallFrom = p.pos.y; p.coyote = jumped ? 0 : M.coyote; }
+  if (p.onGround) {
+    p.fallFrom = p.pos.y; p.coyote = jumped ? 0 : M.coyote;
+    if (p.slide >= 0) { if (p.slide < DT * 1.5) noise(state, M.noise.slide, 'slide'); }
+    else footsteps(state, Math.hypot(p.pos.x - x0, p.pos.z - z0));
+  }
   else {
     p.coyote = Math.max(0, p.coyote - DT);
     if (p.pos.y > p.fallFrom) p.fallFrom = p.pos.y;
@@ -180,6 +201,7 @@ function land(state: SimState) {
   const roll = p.crouchAge <= M.falls.rollWindow;
   const outcome = fallOutcome(h, roll, () => rand(state.rng));
   state.events.push({ t: 'land', h, roll, outcome });
+  if (h > M.noise.landMinH) noise(state, M.noise.land, 'land');
   if (roll && h > 1) { p.posture = 'crouch'; p.vel.x *= 0.6; p.vel.z *= 0.6; }
   p.fallFrom = p.pos.y;
 }

@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M1. Next: M1-18 Movement noise events.
-Features done: 17 / 204 | Last done: M1-17
+**Status:** building M1. Next: M1-19 Movement tuning in data.
+Features done: 18 / 204 | Last done: M1-18
 <!-- /status -->
 
 ## Log
@@ -24,3 +24,4 @@ Features done: 17 / 204 | Last done: M1-17
 - M1-15 Hide in a box: hide in boxes
 - M1-16 Stamina: stamina
 - M1-17 Swimming and diving: swimming, diving and climbing out
+- M1-18 Movement noise events: movement noise events
