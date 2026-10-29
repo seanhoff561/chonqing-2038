@@ -6,7 +6,7 @@ import { B, DT, type InputFrame, type SimState } from './types';
 import type { World } from '../world/world';
 import type { Player, Grip } from './player';
 import { movement as M } from '../data/movement';
-import { raycast, topAt } from '../world/geom';
+import { raycast, topAt, frameIn, frameOut, frameDirOut } from '../world/geom';
 import { free, moveHorizontal, moveVertical, groundGap } from './physics';
 import { startAction, kickOff } from './parkour';
 import { lim, sfx, lookDelta } from './move';
@@ -47,11 +47,13 @@ export function findGrab(world: World, p: Player): Grip | null {
       if (top - hy <= G.lipDepth && free(world.index, hx - h.nx * 0.07, top + 0.02, hz - h.nz * 0.07, 0.3, 0.05))
         best = { x: hx, y: top, z: hz, nx: h.nx, nz: h.nz, kind: 'lip', top };
     } else if (h.ny > 0.7 && !s.ramp) {
-      // On a top surface near an edge facing him: grip that edge.
+      // On a top surface near an edge facing him: grip that edge (found in a turned solid's own frame).
+      const b = s.rot ?? s, [lx, lz] = frameIn(s, hx, hz), dl = frameIn(s, hx + d.x, hz + d.z), ldx = dl[0] - lx, ldz = dl[1] - lz;
       const edges = [
-        { dist: hx - s.x0, nx: -1, nz: 0, x: s.x0, z: hz }, { dist: s.x1 - hx, nx: 1, nz: 0, x: s.x1, z: hz },
-        { dist: hz - s.z0, nx: 0, nz: -1, x: hx, z: s.z0 }, { dist: s.z1 - hz, nx: 0, nz: 1, x: hx, z: s.z1 },
-      ].filter(e => e.dist <= G.edgeBand && Math.abs(e.nx * d.x + e.nz * d.z) > 0.2).sort((a, b) => a.dist - b.dist);
+        { dist: lx - b.x0, nx: -1, nz: 0, x: b.x0, z: lz }, { dist: b.x1 - lx, nx: 1, nz: 0, x: b.x1, z: lz },
+        { dist: lz - b.z0, nx: 0, nz: -1, x: lx, z: b.z0 }, { dist: b.z1 - lz, nx: 0, nz: 1, x: lx, z: b.z1 },
+      ].filter(e => e.dist <= G.edgeBand && Math.abs(e.nx * ldx + e.nz * ldz) > 0.2).sort((a, b) => a.dist - b.dist)
+        .map(e => { const [x, z] = frameOut(s, e.x, e.z), [nx, nz] = frameDirOut(s, e.nx, e.nz); return { ...e, x, z, nx, nz }; });
       const e = edges[0];
       if (e && free(world.index, e.x + e.nx * 0.2, s.y1 - 0.5, e.z + e.nz * 0.2, 0.45, 0.1))
         best = { x: e.x, y: s.y1, z: e.z, nx: e.nx, nz: e.nz, kind: 'lip', top: s.y1 };

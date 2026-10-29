@@ -1,5 +1,5 @@
 // Player-box collision against the world: horizontal moves with step-up, vertical sweeps, ground probes.
-import { query, overlaps, topOver, type Box, type SolidIndex } from '../world/geom';
+import { query, overlaps, topOver, xzHit, type Box, type SolidIndex } from '../world/geom';
 import type { Vec3 } from './types';
 import { movement as M } from '../data/movement';
 
@@ -19,6 +19,7 @@ function overlapTop(idx: SolidIndex, b: Box): number {
   for (const i of query(idx, b.x0, b.z0, b.x1, b.z1, ids)) {
     const s = idx.solids[i];
     if (b.x1 <= s.x0 + 1e-6 || b.x0 >= s.x1 - 1e-6 || b.z1 <= s.z0 + 1e-6 || b.z0 >= s.z1 - 1e-6) continue;
+    if (s.rot && !xzHit(s, b.x0, b.z0, b.x1, b.z1)) continue;
     const t = topOver(s, b.x0, b.z0, b.x1, b.z1);
     if (b.y1 <= s.y0 + 1e-6 || b.y0 >= t - 1e-6) continue;
     if (t > top) top = t;
@@ -74,6 +75,7 @@ export function moveVertical(idx: SolidIndex, pos: Vec3, h: number, dy: number):
   for (const i of query(idx, b.x0, b.z0, b.x1, b.z1, ids)) {
     const s = idx.solids[i];
     if (b.x1 <= s.x0 + 1e-6 || b.x0 >= s.x1 - 1e-6 || b.z1 <= s.z0 + 1e-6 || b.z0 >= s.z1 - 1e-6) continue;
+    if (s.rot && !xzHit(s, b.x0, b.z0, b.x1, b.z1)) continue;
     const top = topOver(s, b.x0, b.z0, b.x1, b.z1);
     if (y1 <= s.y0 || y0 >= top) continue;
     if (dy < 0 && b.y0 >= top - 0.02) { const lim = top - b.y0; if (lim > d) { d = lim; hit = 1; } }
@@ -90,6 +92,7 @@ export function groundGap(idx: SolidIndex, pos: Vec3, maxDrop: number): number {
   for (const i of query(idx, b.x0, b.z0, b.x1, b.z1, ids)) {
     const s = idx.solids[i];
     if (b.x1 <= s.x0 + 1e-6 || b.x0 >= s.x1 - 1e-6 || b.z1 <= s.z0 + 1e-6 || b.z0 >= s.z1 - 1e-6) continue;
+    if (s.rot && !xzHit(s, b.x0, b.z0, b.x1, b.z1)) continue;
     const top = topOver(s, b.x0, b.z0, b.x1, b.z1);
     if (top > pos.y + 0.02 || s.y0 > pos.y) continue;
     const gap = pos.y - top;

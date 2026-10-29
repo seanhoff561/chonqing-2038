@@ -1,5 +1,5 @@
 // The movement gym: a floodlit yard of labelled obstacles at standard sizes (DESIGN section 3).
-import { solid, carve, type Solid } from '../geom';
+import { solid, carve, turn, type Solid } from '../geom';
 import { makeWorld, type World, type Label, type Climbable, type HideSpot } from '../world';
 import { MAT } from '../mats';
 
@@ -88,6 +88,22 @@ export function buildGym(): World {
     label(`藏身 BOX ${s} m`, x + s / 2, s + 0.35, 24 + s / 2, 'up');
   }
 
+  // Turned walls (M3-40): the same moves on a group turned 30 degrees, as real streets run at every angle.
+  {
+    const px = 20, pz = 50, th = Math.PI / 6, c = Math.cos(th), s = Math.sin(th);
+    const at = (x: number, z: number): [number, number] => [px + c * (x - px) - s * (z - pz), pz + s * (x - px) + c * (z - pz)];
+    solids.push(...turn([
+      solid(10, 0, 44, 14, 1.0, 48, MAT.block), // hop
+      solid(16, 0, 44, 20, 2.0, 48, MAT.block), // lip to pull up on
+      solid(22, 0, 40, 22.3, 4, 60, MAT.block), // wall-run wall
+      { ...solid(26, 0, 40, 30, 2.4, 52, MAT.concrete), ramp: 4, low: 0 }, // ramp rising north
+    ], th, px, pz));
+    for (const [t, x, y, z] of [['斜 TURNED 1.0 m', 12, 1.3, 48], ['斜 TURNED 2.0 m', 18, 2.3, 48], ['斜 WALL-RUN', 22.5, 2, 58], ['斜 RAMP', 28, 0.8, 52]] as const) {
+      const [lx, lz] = at(x, z);
+      label(t, lx, y, lz, 'up');
+    }
+  }
+
   return makeWorld({
     name: 'gym', solids, labels, climbables, hides,
     water: [{ x0: -30, y0: -3.3, z0: 24, x1: -16, y1: -0.3, z1: 36 }],
@@ -103,6 +119,7 @@ export function buildGym(): World {
       { name: 'sill route / smooth wall', x: -55, y: 0, z: -21, yaw: 0 },
       { name: 'bars over the pit', x: -41, y: 0, z: -9.6, yaw: 0 },
       { name: 'ledge traverse', x: -58, y: 0, z: 27, yaw: Math.PI },
+      { name: 'turned walls', x: 14, y: 0, z: 58, yaw: Math.PI / 6 },
     ],
   });
 }

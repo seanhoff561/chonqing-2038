@@ -27,6 +27,19 @@ function hash(a: number, b: number, c: number): number {
 /** Faces go to b; a facade's roof and underside go to roof (plain concrete) instead. */
 /** ao: occlusion for the +z, -z, +x and -x walls (1 open, lower in a narrow alley). */
 export function pushSolid(s: Solid, b: Buf, roof: Buf = b, ao: number[] = OPEN) {
+  if (s.rot) {
+    // A turned solid (M3-40): build it unturned, then turn the vertices it wrote.
+    const r = s.rot, bufs = roof === b ? [b] : [b, roof], from = bufs.map(o => o.n);
+    pushSolid({ ...s, x0: r.x0, z0: r.z0, x1: r.x1, z1: r.z1, rot: undefined }, b, roof, OPEN);
+    bufs.forEach((o, k) => {
+      for (let v = from[k]; v < o.n; v++) {
+        const dx = o.pos[v * 3] - r.px, dz = o.pos[v * 3 + 2] - r.pz, nx = o.nor[v * 3], nz = o.nor[v * 3 + 2];
+        o.pos[v * 3] = r.px + r.c * dx - r.s * dz; o.pos[v * 3 + 2] = r.pz + r.s * dx + r.c * dz;
+        o.nor[v * 3] = r.c * nx - r.s * nz; o.nor[v * 3 + 2] = r.s * nx + r.c * nz;
+      }
+    });
+    return;
+  }
   const sc = 1 / texScale(s.mat), facade = isFacade(s.mat), rsc = facade ? 1 / texScale(MAT.concrete) : sc;
   const h = hash(s.x0, s.z0, s.mat), h2 = hash(s.z1, s.x1, s.mat + 31);
   const bay = FACADE_BAY;
@@ -84,6 +97,7 @@ export function pushSolid(s: Solid, b: Buf, roof: Buf = b, ao: number[] = OPEN) 
 /** Chunk meshes, each tagged with its chunk centre for distance culling. */
 /** How shut in each wall of a tall solid is: one short ray out from each face, low down. */
 function occlusion(s: Solid, idx: SolidIndex): number[] {
+  if (s.rot) return OPEN;
   if (s.y1 - s.y0 < 2.5 || s.mat === MAT.glass) return OPEN;
   const y = Math.min(s.y0 + 1.5, (s.y0 + s.y1) / 2), cx = (s.x0 + s.x1) / 2, cz = (s.z0 + s.z1) / 2;
   const ray = (ox: number, oz: number, dx: number, dz: number) => {

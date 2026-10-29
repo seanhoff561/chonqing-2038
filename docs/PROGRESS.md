@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-40 Rotated solids (U-017).
-Features done: 92 / 243 | Last done: M3-42
+**Status:** building M3. Next: M3-41 The city at 1:1 (U-017).
+Features done: 93 / 243 | Last done: M3-40
 <!-- /status -->
 
 ## Log
@@ -110,3 +110,4 @@ Features done: 92 / 243 | Last done: M3-42
 - M3-39 Geo data for Yuzhong (U-017): real elevation and OpenStreetMap data for eastern Yuzhong in local metres
 - M8-25 Intro screenplay for AI video (U-018): intro screenplay and shot list for AI video, with trailer cut
 - M3-42 Start hideout and many hideouts (U-018): start in the friends' vent hideout; any number of hideouts, each with its own storage
+- M3-40 Rotated solids (U-017): turned solids: collision, rays, parkour and rendering at any angle
