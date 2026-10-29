@@ -7,8 +7,6 @@ import { moveHorizontal, moveVertical } from './physics';
 import { findLedge, startAction } from './parkour';
 import { forward, spend } from './move';
 
-const FLOAT = 1.45; // feet below the surface while swimming (head just out)
-
 /** Water surface height at the player's position, or -Infinity. */
 export function surfaceAt(world: World, p: Player): number {
   for (const w of world.water)
@@ -54,7 +52,7 @@ export function stepSwim(state: SimState, world: World, input: InputFrame) {
   if (wl > 1) { wx /= wl; wz /= wl; }
   p.vel.x += (wx * sp - p.vel.x) * Math.min(1, 4 * DT);
   p.vel.z += (wz * sp - p.vel.z) * Math.min(1, 4 * DT);
-  const target = s - FLOAT;
+  const target = s - M.swim.float;
   if (input.buttons & B.CROUCH) p.vel.y = -M.swim.dive;
   else if (input.buttons & B.JUMP) p.vel.y = M.swim.dive;
   else p.vel.y = Math.max(-1.5, Math.min(1.0, (target - p.pos.y) * 3));

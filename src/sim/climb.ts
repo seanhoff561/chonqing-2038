@@ -45,8 +45,8 @@ export function stepClimb(state: SimState, world: World, input: InputFrame) {
   if (c.kind === 'pipe') spend(p, M.stamina.hang * DT);
   if ((input.pressed & B.DROP) || p.stamina <= 0) { letGo(p, 0.4); return; }
   if (input.pressed & B.JUMP) {
-    letGo(p, 3.0);
-    p.vel.y = 2.0;
+    letGo(p, M.climb.leap);
+    p.vel.y = M.climb.leapUp;
     return;
   }
   const up = c.kind === 'ladder' ? M.climb.ladder : M.climb.pipeUp;
@@ -54,7 +54,7 @@ export function stepClimb(state: SimState, world: World, input: InputFrame) {
   const v = input.my > 0 ? up * input.my : input.my < 0 ? down * input.my : 0;
   let y = p.pos.y + v * DT;
   // At the top: step off onto the ledge behind the climbable if there's room.
-  const topFeet = c.y1 - 1.2;
+  const topFeet = c.y1 - M.climb.topReach;
   if (y >= topFeet) {
     y = topFeet;
     if (input.my > 0) {
