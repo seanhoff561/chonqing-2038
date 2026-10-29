@@ -172,18 +172,16 @@ export function poseFor(p: Player, i: number, readied: boolean, holding: boolean
     return { curl: 0.85, thumb: 0.7, pos: grip.sub(fist), rot: LEFT_ROT.clone() };
   }
   if (readied) return { curl: 0.1, thumb: 0.15, pos: P(0.16, -0.12, -0.38), rot: R(0.9, 0.15, 0.1) };
-  // On his feet (U-007): hands low at his sides, forearms running down out of view, swinging with the stride;
-  // running pumps loose fists up into the corners of the view.
+  // On his feet (U-007): hands low at his sides, forearms running down out of view, swinging with the stride,
+  // the same at a run.
   if (p.mode === 'ground' && p.posture !== 'crawl') {
     const sp = Math.hypot(p.vel.x, p.vel.z);
-    const run = Math.min(1, Math.max(0, (sp - 3.6) / 3));
-    const amp = Math.min(1, sp / 3) * (0.35 + 0.65 * run);
-    const sw = Math.sin(stride) * -s * amp;
-    const up = Math.max(0, sw);
+    // Running holds the hands as walking does (U-026: the walking hands look right; pumped fists didn't).
+    const amp = Math.min(1, sp / 3) * 0.35, sw = Math.sin(stride) * -s * amp, up = Math.max(0, sw);
     return {
-      curl: 0.45 + run * 0.5, thumb: 0.35 + run * 0.45,
-      pos: P(0.3 - up * 0.03 * run, -0.33 + up * (0.03 + 0.05 * run) + Math.min(0, sw) * 0.05, -0.36 - sw * (0.05 + 0.02 * run)),
-      rot: R(0.2 + run * 0.1 + sw * (0.2 + 0.1 * run), 0.1, -0.9 - run * 0.4),
+      curl: 0.45, thumb: 0.35,
+      pos: P(0.3, -0.33 + up * 0.03 + Math.min(0, sw) * 0.05, -0.36 - sw * 0.05),
+      rot: R(0.2 + sw * 0.2, 0.1, -0.9),
     };
   }
   return { curl: 0.4, thumb: 0.3, pos: P(0.2, -0.2, -0.36), rot: R(0.15, 0.2, 0.15) };

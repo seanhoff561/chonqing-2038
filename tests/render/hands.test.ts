@@ -13,14 +13,14 @@ describe('walking and running hands (M1-39, U-007)', () => {
       expect(poseFor(at('ground', 0.5, 'crawl'), i, false, false, null, 0)).toEqual(air);
     }
   });
-  it('the arms swing opposite each other with the stride, wider when running', () => {
+  it('the arms swing opposite each other with the stride, running as walking (U-026)', () => {
     const swing = (speed: number) => {
       const p = at('ground', speed);
       const z = (i: number, ph: number) => poseFor(p, i, false, false, null, ph).pos.z;
       expect(Math.sign(z(0, Math.PI / 2) - z(0, -Math.PI / 2))).toBe(-Math.sign(z(1, Math.PI / 2) - z(1, -Math.PI / 2)));
       return Math.abs(z(1, Math.PI / 2) - z(1, -Math.PI / 2)) + Math.abs(poseFor(p, 1, false, false, null, Math.PI / 2).pos.y - poseFor(p, 1, false, false, null, -Math.PI / 2).pos.y);
     };
-    expect(swing(7)).toBeGreaterThan(swing(3.2) * 1.5);
+    expect(swing(7)).toBeCloseTo(swing(3.2), 5);
     expect(swing(3.2)).toBeGreaterThan(0.02);
   });
 });
