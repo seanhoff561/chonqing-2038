@@ -40,6 +40,8 @@ export interface SimState {
   seed: number;
   rng: Rng;
   tick: number;
+  /** game seconds since day 1, 00:00 */
+  time: number;
   player: import('./player').Player;
   /** events emitted during the latest tick */
   events: SimEvent[];

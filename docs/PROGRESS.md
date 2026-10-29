@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M2. Next: M2-01 Game clock and day phases.
-Features done: 24 / 204 | Last done: M1-24
+**Status:** building M2. Next: M2-02 Sky, sun, moon and ambient light by time.
+Features done: 25 / 204 | Last done: M2-01
 <!-- /status -->
 
 ## Log
@@ -31,3 +31,4 @@ Features done: 24 / 204 | Last done: M1-24
 - M1-22 First-person arms: first-person arms
 - M1-23 Gym scenario: movement gym scenario
 - M1-24 Dev panel and scenario loader: dev panel and scenario loader
+- M2-01 Game clock and day phases: game clock and day phases

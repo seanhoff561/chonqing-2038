@@ -15,5 +15,5 @@ Phase 0 asks for `.claude/settings.json` with `"autoCompactWindow": 300000`, all
 }
 ```
 
-## Q-002 GitHub Pages source (open)
+## Q-002 GitHub Pages source (resolved: deploys succeed)
 The deploy workflow publishes with GitHub Actions. If the Pages source in the repo settings isn't set to "GitHub Actions", the deploy job fails while tests and build still pass. Default: leave the workflow as is; set Settings > Pages > Source to GitHub Actions once.
