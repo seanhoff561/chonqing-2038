@@ -40,7 +40,7 @@ export class Sky {
     v.sun.castShadow = d > 0.05 && under < 0.5;
     v.sun.intensity = 1.7 * d * (1 - under) * (1 - 0.7 * this.overcast);
     v.sun.color.setHSL(0.09, 0.5 - 0.3 * d, 0.85 + 0.1 * d);
-    v.hemi.intensity = (1.4 - 0.15 * d) * (1 - under * 0.92) * (1 + 0.1 * this.overcast);
+    v.hemi.intensity = (1.4 - 0.15 * d) * (1 - under * 0.85) * (1 + 0.1 * this.overcast);
     v.hemi.color.copy(NIGHT_SKY).lerp(new THREE.Color(0xc8d4e0), d).lerp(new THREE.Color(0x5f74a8), (1 - d) * 0.9);
     v.hemi.groundColor.copy(NIGHT_GROUND).lerp(DAY_GROUND, d);
     setNight(Math.max(0, 1 - d * 1.6));

@@ -133,7 +133,10 @@ export function material(id: number, vc = false, lod: Lod = 'all'): THREE.MeshLa
   const key = `${id}:${vc}:${lod}`;
   let m = mats.get(key);
   if (m) return m;
-  if (isFacade(id)) {
+  if (id === MAT.lamp) {
+    m = new THREE.MeshLambertMaterial({ color: 0xfff1c0, emissive: 0xffd890, emissiveIntensity: 1.2, vertexColors: vc });
+    lodCut(m, lod);
+  } else if (isFacade(id)) {
     const map = canvasTexture(`facade${id}`, 1024, 1024, (g, w) => drawFacade(id, g, w));
     const lights = canvasTexture(`facadeLit${id}`, 512, 512, (g, w) => drawFacadeLights(id, g, w));
     m = new THREE.MeshLambertMaterial({ map, vertexColors: vc, emissive: 0xffffff, emissiveMap: lights, emissiveIntensity: 0 });

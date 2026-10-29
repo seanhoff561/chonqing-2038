@@ -19,7 +19,7 @@ export interface Inter { id: string; kind: string; x: number; y: number; z: numb
  *  out; windows (per floor) is how much light leaks out at night; streetSides is how many of its walls face a
  *  street where patrols walk. */
 export interface Site {
-  id: string; kind: 'flat' | 'roof hut'; x: number; y: number; z: number;
+  id: string; kind: 'flat' | 'roof hut' | 'cellar'; x: number; y: number; z: number;
   bed: string | null; table: string | null; containers: string[]; exits: number; windows: number; streetSides: number;
 }
 

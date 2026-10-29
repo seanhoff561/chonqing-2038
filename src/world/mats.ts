@@ -7,6 +7,8 @@ export const MAT = {
   /** abandoned block with big glassless openings; white balcony bands (M3-23) */
   facadeOpen: 18, facadeBand: 19,
   blossom: 20, leaves: 21, tealMetal: 22, cloth: 23,
+  /** a glowing fitting: bulkhead lamps, lit signs */
+  lamp: 24,
   /** collision only: a prop draws it */
   hidden: 99,
 } as const;

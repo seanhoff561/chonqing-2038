@@ -2,7 +2,7 @@
 
 <!-- status -->
 **Status:** building M3. Next: M3-24 Place references (U-011).
-Features done: 78 / 228 | Last done: M3-07
+Features done: 79 / 228 | Last done: M3-08
 <!-- /status -->
 
 ## Log
@@ -96,3 +96,4 @@ Features done: 78 / 228 | Last done: M3-07
 - M3-26 Lighting and shadows (U-012): soft sun shadows, baked alley occlusion, filmic light, moonlit nights
 - M3-22 Reference look (U-009): reference look across the city: slabs, setbacks, balconies, gardens, cables, overcast
 - M3-07 Jiaochangkou and the Line 2 beam: Jiaochangkou junction, Line 2 terminus, the walkable beam west
+- M3-08 Grand Tunnel network: Grand Tunnel network: side tunnel to the Shibati gate, plaza exit, hotpot cool room
