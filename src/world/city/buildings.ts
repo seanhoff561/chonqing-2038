@@ -4,11 +4,16 @@ import { solid, rampSolid, type Solid } from '../geom';
 import { MAT } from '../mats';
 import { tiles, tileAt, TILE, type Tile } from '../map';
 import { makeRng, rand, randInt, hashString, type Rng } from '../../sim/rng';
-import type { Prop } from '../world';
+import type { Prop, Inter } from '../world';
+import { canEnter, hollow } from './interiors';
 
 export type LotKind = 'res' | 'tower' | 'trad';
-export interface Lot { id: number; x0: number; z0: number; x1: number; z1: number; base: number; top: number; wall: number; kind: LotKind; tile: Tile; mat: number }
-export interface Fabric { solids: Solid[]; decor: Solid[]; props: Prop[]; lots: Lot[] }
+export interface Lot {
+  id: number; x0: number; z0: number; x1: number; z1: number; base: number; top: number; wall: number; kind: LotKind; tile: Tile; mat: number;
+  /** enterable buildings: a walking route from outside the door up the stairs and out onto the roof */
+  route?: { x: number; y: number; z: number }[];
+}
+export interface Fabric { solids: Solid[]; decor: Solid[]; props: Prop[]; lots: Lot[]; inter: Inter[] }
 
 const FLOOR = 3;
 const STREETS = '.=sb';
@@ -46,7 +51,7 @@ function upperStreet(t: Tile): number {
 }
 
 export function buildFabric(): Fabric {
-  const out: Fabric = { solids: [], decor: [], props: [], lots: [] };
+  const out: Fabric = { solids: [], decor: [], props: [], lots: [], inter: [] };
   for (const t of tiles()) {
     if (!BUILT.includes(t.type)) continue;
     const r = tileRng(t);
@@ -72,7 +77,10 @@ export function buildFabric(): Fabric {
 
 function mass(l: Lot, r: Rng, out: Fabric) {
   const { x0, z0, x1, z1, base, wall } = l;
-  out.solids.push(solid(x0, base, z0, x1, wall, z1, l.mat));
+  // About a quarter of the blocks that fit a stair core can be entered.
+  const open = canEnter(l) && rand(r) < 0.28;
+  if (open) hollow(l, r, out);
+  else out.solids.push(solid(x0, base, z0, x1, wall, z1, l.mat));
   if (l.kind === 'trad') {
     // Pitched tiled roof: ridges run along the row (the hill's contour), so a row of houses lines up into a
     // rooftop route; eaves overhang as decor.
@@ -95,8 +103,8 @@ function mass(l: Lot, r: Rng, out: Fabric) {
     solid(x0, wall, z0 + w, x0 + w, wall + p, z1 - w, MAT.concrete), solid(x1 - w, wall, z0 + w, x1, wall + p, z1 - w, MAT.concrete),
   );
   l.top = wall + p;
-  // Roof clutter: water tanks on stilts, AC condensers, sometimes a stairwell hut.
-  const n = 1 + randInt(r, 3);
+  // Roof clutter: water tanks on stilts, AC condensers, sometimes a stairwell hut (enterable roofs have a real one).
+  const n = open ? 0 : 1 + randInt(r, 3);
   for (let i = 0; i < n; i++) {
     const cx = x0 + 1.5 + rand(r) * Math.max(0.1, x1 - x0 - 3), cz = z0 + 1.5 + rand(r) * Math.max(0.1, z1 - z0 - 3);
     const k = randInt(r, 3);

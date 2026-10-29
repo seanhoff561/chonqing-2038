@@ -275,6 +275,8 @@ The Yuzhong peninsula compressed to 1.4 x 0.7 km. World axes: x east, y up, z so
 | Riverfronts | north edge (Jialing), south edge (Yangtze) | riverside roads, prefab barrier walls, docks |
 | Western border | x 0-60 | the wall across the Eling neck: turrets, floodlit, impassable |
 
+**City fabric.** Building tiles split into 1, 2 or 4 lots with 1.5-4 m alleys; walls 4-9 floors in the lower and upper city, 15-35 for CBD towers; parapets 0.9 m (a lip to grab, a wall to hide behind) and roof clutter. Shibati houses are 2-3 floors under pitched tile roofs whose ridges run along the hillside rows at one height per row, so a row is a rooftop route of 2-2.5 m jumps. About a quarter of the ordinary blocks that fit one are enterable: a street door, windows every 4.5 m on every floor (their sills are hand holds), an open floor per storey with 1-3 containers (cabinet, drawers, fridge, locker; a shop crate on some ground floors), and a switchback stair core in one corner from the street to a roof hut.
+
 Landmarks moved for play are logged in DECISIONS.md. Dongshuimen Bridge leaves the Yangtze side at (1080, 560) and runs south to Nan'an; road deck at 40 m, Line 6 rail deck inside the truss at 32 m. Qiansimen Bridge (Jialing side, from 960, 100) is sealed by a collapsed span: a vantage point, not a route. The cableway runs from Xinhua Road (980, 540) south across the Yangtze. Nan'an and Jiangbei across the rivers are backdrop.
 
 ### High-security sites

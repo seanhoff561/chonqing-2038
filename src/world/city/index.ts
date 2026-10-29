@@ -8,7 +8,7 @@ export function buildCity(): World {
   const t = buildTerrain();
   const f = buildFabric();
   return makeWorld({
-    name: 'city', solids: t.solids.concat(f.solids), decor: t.decor.concat(f.decor), water: t.water, props: f.props,
+    name: 'city', solids: t.solids.concat(f.solids), decor: t.decor.concat(f.decor), water: t.water, props: f.props, inter: f.inter,
     spawn: { x: 23 * TILE + 10, y: 44, z: 17 * TILE + 10, yaw: Math.PI },
     teleports: [
       { name: 'Jiaochangkou plaza', x: 24 * TILE, y: 44, z: 17 * TILE, yaw: Math.PI },

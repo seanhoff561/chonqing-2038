@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-04 Enterable buildings.
-Features done: 65 / 220 | Last done: M3-03
+**Status:** building M3. Next: M3-05 Fabric climbables and hiding spots.
+Features done: 66 / 220 | Last done: M3-04
 <!-- /status -->
 
 ## Log
@@ -83,3 +83,4 @@ Features done: 65 / 220 | Last done: M3-03
 - M1-39 Walking and running hands: walking and running hand poses (U-007)
 - M1-40 Pause menu with the movement gym: pause menu with the movement gym and its areas (U-007)
 - M3-03 Building generator: building generator: lots, alleys, roofs, rooftop routes
+- M3-04 Enterable buildings: enterable buildings: door, windows, stair core to a roof hut, furnished floors
