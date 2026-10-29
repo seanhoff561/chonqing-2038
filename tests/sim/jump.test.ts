@@ -4,13 +4,13 @@ import { solid } from '../../src/world/geom';
 import { B } from '../../src/sim/types';
 
 describe('jump', () => {
-  it('standing jump apex is 0.4-0.55 m', () => {
+  it('standing jump apex is 0.6-0.7 m (U-004)', () => {
     const { world, state } = setup([solid(-5, -1, -5, 5, 0, 5)]);
     run(state, world, 5);
     let apex = 0;
     run(state, world, secs(1), { pressed: B.JUMP }, s => { apex = Math.max(apex, s.player.pos.y); });
-    expect(apex).toBeGreaterThan(0.4);
-    expect(apex).toBeLessThan(0.55);
+    expect(apex).toBeGreaterThan(0.6);
+    expect(apex).toBeLessThan(0.7);
   });
   it('a sprinting jump clears a 4.5 m gap', () => {
     const s = gapJump(4.5).state;
@@ -27,5 +27,12 @@ describe('jump', () => {
     run(state, world, 1, { pressed: B.JUMP });
     run(state, world, secs(0.5), { mx: 1 });
     expect(Math.abs(state.player.vel.x)).toBeLessThan(4 * 0.5 + 0.1);
+  });
+  it('in the air he cannot speed up past his take-off speed', () => {
+    const { world, state } = setup([solid(-50, -1, -50, 50, 0, 50)]);
+    run(state, world, 5);
+    run(state, world, 1, { pressed: B.JUMP });
+    run(state, world, secs(0.5), { my: 1, buttons: B.SPRINT });
+    expect(Math.hypot(state.player.vel.x, state.player.vel.z)).toBeLessThanOrEqual(3.21);
   });
 });

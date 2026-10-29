@@ -66,6 +66,6 @@ export class DevPanel {
     this.el.querySelector('.seed')!.textContent = `seed ${this.game.state.seed}`;
     this.el.querySelector('.clock')!.textContent = clockText(this.game.state.time);
     this.stats.innerHTML = `${fps.toFixed(0)} fps | ${info.calls} calls | ${(info.triangles / 1000).toFixed(0)}k tris<br>` +
-      `pos ${p.pos.x.toFixed(1)} ${p.pos.y.toFixed(1)} ${p.pos.z.toFixed(1)} | ${p.mode}/${p.posture} | st ${p.stamina.toFixed(0)}`;
+      `pos ${p.pos.x.toFixed(1)} ${p.pos.y.toFixed(1)} ${p.pos.z.toFixed(1)} | ${p.mode}/${p.posture} | grip ${p.endurance.toFixed(0)}`;
   }
 }

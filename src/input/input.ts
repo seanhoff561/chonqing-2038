@@ -3,7 +3,7 @@ import { B, emptyInput, type InputFrame } from '../sim/types';
 import type { Cmd } from '../sim/commands';
 
 const KEYS: Record<string, number> = {
-  Space: B.JUMP, ShiftLeft: B.SPRINT, ShiftRight: B.SPRINT, KeyC: B.CROUCH, ControlLeft: B.CROUCH,
+  Space: B.JUMP, ShiftLeft: B.SPRINT, ShiftRight: B.SPRINT, KeyC: B.CROUCH, ControlLeft: B.CROUCH, ControlRight: B.CROUCH,
   KeyZ: B.CRAWL, KeyE: B.INTERACT, KeyQ: B.DROP, KeyR: B.RELOAD, KeyH: B.HEADLAMP,
 };
 
@@ -17,7 +17,8 @@ export class Input {
   private held = new Set<string>();
   private buttons = 0;
   private pressed = 0;
-  private mouse = 0;
+  /** held mouse buttons as USE/AIM bits */
+  mouse = 0;
   private slot = -1;
   /** single-shot UI keys (Tab, L, Esc...) read by the game each frame */
   readonly uiKeys: string[] = [];
@@ -29,7 +30,7 @@ export class Input {
     addEventListener('keyup', e => this.key(e, false));
     addEventListener('blur', () => { this.held.clear(); this.buttons = 0; this.mouse = 0; });
     el.addEventListener('mousedown', e => {
-      if (!this.uiOpen && document.pointerLockElement !== el) { el.requestPointerLock?.(); return; }
+      if (!this.uiOpen && document.pointerLockElement !== el) { this.capture(); return; }
       if (this.uiOpen) return;
       const bit = e.button === 0 ? B.USE : e.button === 2 ? B.AIM : 0;
       this.mouse |= bit; this.pressed |= bit;
@@ -44,7 +45,20 @@ export class Input {
     });
   }
 
+  /**
+   * Capture the mouse. Ctrl is crouch (U-001) and Ctrl+W would close the tab, so ask for fullscreen and
+   * lock the keyboard where the browser allows it (D-014).
+   */
+  capture() {
+    const el = this.el;
+    const lock = () => { (navigator as Navigator & { keyboard?: { lock?: (k?: string[]) => Promise<void> } }).keyboard?.lock?.().catch(() => {}); };
+    if (!document.fullscreenElement && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().then(lock, () => {});
+    else lock();
+    try { (el.requestPointerLock?.() as unknown as Promise<void> | undefined)?.catch?.(() => {}); } catch { /* not allowed without a gesture */ }
+  }
+
   private key(e: KeyboardEvent, down: boolean) {
+    if (e.ctrlKey && document.pointerLockElement) e.preventDefault();
     if (e.repeat) { if (['Tab', 'Space'].includes(e.code)) e.preventDefault(); return; }
     if (down && ['Tab', 'KeyL', 'Escape', 'Backquote', 'KeyI'].includes(e.code)) { this.uiKeys.push(e.code); e.preventDefault(); return; }
     if (down && /^Digit[0-5]$/.test(e.code)) { this.slot = Number(e.code[5]); return; }

@@ -2,10 +2,14 @@
 import type { Vec3 } from './types';
 
 export type Posture = 'stand' | 'crouch' | 'crawl' | 'hidden';
-export type Mode = 'ground' | 'air' | 'action' | 'hang' | 'wallrun' | 'wallclimb' | 'climb' | 'swim' | 'hidden' | 'dead' | 'noclip';
+export type Mode = 'ground' | 'air' | 'action' | 'grip' | 'wallrun' | 'wallclimb' | 'swim' | 'hidden' | 'dead' | 'noclip';
 
 /** A timed scripted move (mantle, vault, climb-up, entering a box): lerps the feet from a to b. */
 export interface Action { kind: string; t: number; dur: number; a: Vec3; b: Vec3; then: Mode; posture: Posture; speed: number }
+
+/** A gripping hand: where, which way the surface faces, what kind, and the lip top when there is one. */
+export interface Grip { x: number; y: number; z: number; nx: number; nz: number; kind: 'lip' | 'pipe' | 'rung'; top: number }
+export interface Hand { grip: Grip | null }
 
 export interface Player {
   pos: Vec3;
@@ -19,9 +23,18 @@ export interface Player {
   fallFrom: number;
   /** seconds since crouch was last pressed (roll window) */
   crouchAge: number;
-  stamina: number;
+  /** grip endurance 0-100; at 0 the hands slip until it recovers */
+  endurance: number;
   exhausted: boolean;
-  staminaIdle: number;
+  hands: [Hand, Hand];
+  /** metres from grip down to the feet while hanging (pulled up small, arms out large) */
+  pull: number;
+  /** seconds before the hands may grab again (after a dyno or slip) */
+  regrab: number;
+  /** wall moves used this airtime */
+  kicks: number;
+  /** seconds the hands have been pulling at their limit */
+  strain: number;
   act: Action | null;
   /** wall normal and timers for hang, wall-run and climbs */
   wall: { nx: number; nz: number; t: number; y: number; id: number };
@@ -42,7 +55,7 @@ export function createPlayer(x: number, y: number, z: number, yaw: number): Play
   return {
     pos: { x, y, z }, vel: { x: 0, y: 0, z: 0 }, yaw, pitch: 0,
     mode: 'air', posture: 'stand', onGround: false, fallFrom: y, crouchAge: 99,
-    stamina: 100, exhausted: false, staminaIdle: 0, act: null,
+    endurance: 100, exhausted: false, hands: [{ grip: null }, { grip: null }], pull: 1.5, regrab: 0, kicks: 0, strain: 0, act: null,
     wall: { nx: 0, nz: 0, t: 0, y: 0, id: -1 }, breath: 40, wetUntil: 0, stepAcc: 0, crawlToggle: false, hideId: -1, coyote: 0, slide: -1, hideExit: null,
   };
 }

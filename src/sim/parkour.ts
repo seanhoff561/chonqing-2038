@@ -1,11 +1,11 @@
-// Parkour: ledge finding, mantles, vaults, ledge hangs, wall-runs and wall climbs, and scripted actions.
+// Parkour with the legs: ledge finding, hops, vaults, wall-runs, run-ups and scripted actions. Hands are in grip.ts.
 import { B, DT, type InputFrame, type SimState, type Vec3 } from './types';
 import type { World } from '../world/world';
 import type { Player, Posture, Mode } from './player';
 import { movement as M } from '../data/movement';
 import { raycast } from '../world/geom';
 import { free, moveHorizontal, moveVertical } from './physics';
-import { forward, setPosture, spend, noise, lim } from './move';
+import { forward, setPosture, noise, lim, sfx } from './move';
 
 const HW = M.width / 2;
 
@@ -54,7 +54,6 @@ function tryMantle(world: World, p: Player, l: Ledge, dur: number): boolean {
   // Room to rise straight up in place first.
   if (!free(world.index, p.pos.x, Math.max(p.pos.y, l.top) + 1e-3, p.pos.z, M.height.crouch)) return false;
   startAction(p, 'mantle', dur, b, 'ground', 'crouch', 0);
-  spend(p, M.stamina.mantle);
   return true;
 }
 
@@ -75,7 +74,6 @@ function tryVault(world: World, p: Player, l: Ledge): boolean {
   if (!free(world.index, lx, ly, lz, M.height.stand) || !free(world.index, mx, l.top + 0.05, mz, M.height.crouch)) return false;
   const sp = Math.hypot(p.vel.x, p.vel.z) * M.vault.keep;
   startAction(p, 'vault', M.vault.time, { x: lx, y: ly, z: lz }, 'ground', p.posture, sp);
-  spend(p, M.stamina.mantle);
   return true;
 }
 
@@ -86,129 +84,120 @@ export function groundParkour(state: SimState, world: World, input: InputFrame, 
   const speed = Math.hypot(p.vel.x, p.vel.z);
   const l = findLedge(world, p, M.mantle.reach, maxMantle);
   if (l && l.h >= M.mantle.min) {
-    if (l.h <= M.vault.maxH && speed >= M.vault.minSpeed && tryVault(world, p, l)) { noise(state, M.noise.vault, 'vault'); return true; }
-    if (l.h <= maxMantle + 1e-3 && tryMantle(world, p, l, l.h < M.mantle.lowLimit ? M.mantle.lowTime : M.mantle.highTime)) { noise(state, M.noise.mantle, 'mantle'); return true; }
+    if (l.h <= M.vault.maxH && speed >= M.vault.minSpeed && tryVault(world, p, l)) { noise(state, M.noise.vault, 'vault'); sfx(state, 'vault'); return true; }
+    if (l.h <= maxMantle + 1e-3 && tryMantle(world, p, l, l.h < M.mantle.lowLimit ? M.mantle.lowTime : M.mantle.highTime)) { noise(state, M.noise.mantle, 'mantle'); sfx(state, 'hop'); return true; }
   }
-  if (speed < M.wallRun.minSpeed || !(input.buttons & B.SPRINT) || p.exhausted || !lim().wallRun) return false;
-  const f = forward(p.yaw);
-  const wc = wallAhead(world, p, f.x, f.z, M.wallClimb.dist, [0.5, 1.2]);
-  if (wc && (!l || l.h > maxMantle)) {
-    const along = -(p.vel.x * wc.nx + p.vel.z * wc.nz) / speed;
-    if (along >= Math.cos((M.wallClimb.maxAngle * Math.PI) / 180)) {
-      p.mode = 'wallclimb';
-      p.wall = { nx: wc.nx, nz: wc.nz, t: 0, y: p.pos.y, id: -1 };
-      p.vel.x = -wc.nx * 1.0; p.vel.z = -wc.nz * 1.0; p.vel.y = M.wallClimb.upSpeed;
-      p.onGround = false;
-      spend(p, M.stamina.wallRun);
-      return true;
+  return false;
+}
+
+/** Nearest wall around the body within reach (8 directions, two heights). */
+export function wallNear(world: World, p: Player, reach: number): { nx: number; nz: number; d: number } | null {
+  let best: { nx: number; nz: number; d: number } | null = null;
+  for (let k = 0; k < 8; k++) {
+    const a = (k * Math.PI) / 4, dx = Math.cos(a), dz = Math.sin(a);
+    for (const hh of [0.5, 1.2]) {
+      const r = raycast(world.index, p.pos.x, p.pos.y + hh, p.pos.z, dx, 0, dz, HW + reach);
+      if (r && Math.abs(r.ny) < 0.3 && (!best || r.t < best.d)) best = { nx: r.nx, nz: r.nz, d: r.t };
     }
   }
-  return startWallRun(world, p);
+  return best;
 }
 
-function startWallRun(world: World, p: Player): boolean {
+function lookFlat(p: Player, nx: number, nz: number) {
+  let hx = -Math.sin(p.yaw), hz = -Math.cos(p.yaw);
+  const l = Math.hypot(hx, hz);
+  if (l < 1e-3) { hx = nx; hz = nz; } else { hx /= l; hz /= l; }
+  return { hx, hz };
+}
+
+/** Kick off a wall toward where he looks, never into it. */
+function kickOff(state: SimState, nx: number, nz: number) {
+  const p = state.player, K = M.wallKick;
+  let { hx, hz } = lookFlat(p, nx, nz);
+  const away = hx * nx + hz * nz;
+  if (away < K.minAway) {
+    hx += nx * (K.minAway - away); hz += nz * (K.minAway - away);
+    const l = Math.hypot(hx, hz); hx /= l; hz /= l;
+  }
+  p.vel.x = hx * K.speed; p.vel.z = hz * K.speed;
+  p.vel.y = K.up + Math.max(0, p.pitch) * K.pitchUp;
+  p.mode = 'air';
+  p.onGround = false;
+  sfx(state, 'wallkick');
+  noise(state, M.noise.vault, 'wallkick');
+}
+
+/**
+ * The second Space in the air (U-004): looking up at a wall kicks up it, looking along it at speed
+ * starts a wall-run, anything else kicks off in the look direction. Two wall moves per airtime.
+ */
+export function airWall(state: SimState, world: World): boolean {
+  const p = state.player, K = M.wallKick;
+  if (p.kicks >= K.max || !lim().wallRun || p.posture !== 'stand') return false;
+  const w = wallNear(world, p, K.reach);
+  if (!w) return false;
+  const { hx, hz } = lookFlat(p, w.nx, w.nz);
+  const into = -(hx * w.nx + hz * w.nz);
   const speed = Math.hypot(p.vel.x, p.vel.z);
-  const vx = p.vel.x / speed, vz = p.vel.z / speed;
-  for (const side of [1, -1]) {
-    const dx = -vz * side, dz = vx * side; // right, then left of travel
-    const r = raycast(world.index, p.pos.x, p.pos.y + 1.0, p.pos.z, dx, 0, dz, HW + M.wallRun.wallDist);
-    if (!r || Math.abs(r.ny) > 0.3) continue;
-    if (Math.abs(vx * r.nx + vz * r.nz) > Math.sin((M.wallRun.maxAngle * Math.PI) / 180)) continue;
-    // Run along the wall's tangent in the direction of travel.
-    let tx = -r.nz, tz = r.nx;
-    if (tx * vx + tz * vz < 0) { tx = -tx; tz = -tz; }
-    p.mode = 'wallrun';
-    p.wall = { nx: r.nx, nz: r.nz, t: 0, y: p.pos.y, id: -1 };
-    p.vel.x = tx * M.wallRun.speed; p.vel.z = tz * M.wallRun.speed; p.vel.y = M.wallRun.upSpeed;
-    p.onGround = false;
-    spend(p, M.stamina.wallRun);
+  p.kicks++;
+  if (into > 0.5 && p.pitch > K.upPitch) {
+    p.mode = 'wallclimb';
+    p.wall = { nx: w.nx, nz: w.nz, t: 0, y: p.pos.y, id: -1 };
+    p.vel.x = -w.nx * 0.6; p.vel.z = -w.nz * 0.6; p.vel.y = K.upSpeed;
+    sfx(state, 'wallkick');
+    noise(state, M.noise.vault, 'wallkick');
     return true;
   }
-  return false;
-}
-
-/** In the air: low ledges mantle (Space), reachable ones are grabbed. */
-export function airParkour(state: SimState, world: World, input: InputFrame): boolean {
-  const p = state.player;
-  if (p.posture !== 'stand' || input.my <= 0 || p.wall.t < 0) return false;
-  const l = findLedge(world, p, M.hang.wallGap, M.hang.reachHigh + 0.1);
-  if (!l || !isFinite(l.h)) return false;
-  if (l.h >= 0.3 && l.h < M.hang.reachLow && (input.buttons & B.JUMP)) return tryMantle(world, p, l, M.mantle.lowTime);
-  if (l.h >= M.hang.reachLow && l.h <= M.hang.reachHigh && lim().hang) return grab(world, p, l);
-  return false;
-}
-
-function grab(world: World, p: Player, l: Ledge): boolean {
-  const x = l.fx + l.nx * (0.3 + HW + 0.02), z = l.fz + l.nz * (0.3 + HW + 0.02), y = l.top - M.hang.hangDrop;
-  if (!free(world.index, x, y, z, M.height.stand)) return false;
-  p.pos.x = x; p.pos.y = y; p.pos.z = z;
-  p.vel.x = p.vel.y = p.vel.z = 0;
-  p.mode = 'hang';
-  p.wall = { nx: l.nx, nz: l.nz, t: 0, y: l.top, id: -1 };
+  if (Math.abs(into) < K.alongMax && speed >= M.wallRun.minSpeed) {
+    let tx = -w.nz, tz = w.nx;
+    if (tx * hx + tz * hz < 0) { tx = -tx; tz = -tz; }
+    p.mode = 'wallrun';
+    p.wall = { nx: w.nx, nz: w.nz, t: 0, y: p.pos.y, id: -1 };
+    p.vel.x = tx * M.wallRun.speed; p.vel.z = tz * M.wallRun.speed; p.vel.y = M.wallRun.upSpeed;
+    sfx(state, 'wallrun');
+    return true;
+  }
+  kickOff(state, w.nx, w.nz);
   return true;
 }
 
-export function stepHang(state: SimState, world: World, input: InputFrame) {
+/** In the air with Space held: hop onto a low ledge (lips higher up need the hands). */
+export function airParkour(state: SimState, world: World, input: InputFrame): boolean {
   const p = state.player;
-  const w = p.wall;
-  w.t += DT;
-  spend(p, M.stamina.hang * DT);
-  if ((input.pressed & B.DROP) || p.stamina <= 0) { letGo(p, 0.6); return; }
-  if (input.pressed & B.JUMP) {
-    const l: Ledge = { top: w.y, h: 0, nx: w.nx, nz: w.nz, dist: 0, fx: p.pos.x - w.nx * (HW + 0.32), fz: p.pos.z - w.nz * (HW + 0.32) };
-    const b = onTop(l, HW + 0.05);
-    if (free(world.index, b.x, b.y, b.z, M.height.crouch) && free(world.index, p.pos.x, w.y + 1e-3, p.pos.z, M.height.crouch)) {
-      startAction(p, 'climbup', M.hang.climbTime, b, 'ground', 'crouch', 0);
-    }
-    return;
-  }
-  if (input.mx !== 0) {
-    // Shimmy along the wall's tangent; facing the wall, right is (nz, -nx).
-    const s = Math.sign(input.mx) * M.hang.shimmy * DT;
-    const nx = p.pos.x + w.nz * s, nz = p.pos.z - w.nx * s;
-    const probe = raycast(world.index, nx - w.nx * (HW + 0.3), w.y + 0.3, nz - w.nz * (HW + 0.3), 0, -1, 0, 0.5);
-    if (probe && Math.abs(0.3 - probe.t) < 0.12 && free(world.index, nx, p.pos.y, nz, M.height.stand)) { p.pos.x = nx; p.pos.z = nz; }
-  }
-}
-
-/** Drop from a hang or climb, pushed slightly off the wall; no regrab for a moment. */
-export function letGo(p: Player, push: number) {
-  p.mode = 'air';
-  p.vel.x = p.wall.nx * push; p.vel.z = p.wall.nz * push; p.vel.y = 0;
-  p.wall.t = -M.hang.regrab;
-  p.fallFrom = p.pos.y;
+  if (p.posture !== 'stand' || input.my <= 0 || !(input.buttons & B.JUMP)) return false;
+  const l = findLedge(world, p, 0.6, 1.1);
+  if (!l || !isFinite(l.h) || l.h < 0.3 || l.h >= 1.0) return false;
+  return tryMantle(world, p, l, M.mantle.lowTime);
 }
 
 export function stepWallRun(state: SimState, world: World, input: InputFrame) {
   const p = state.player;
   const w = p.wall;
   w.t += DT;
-  if (input.pressed & B.JUMP) {
-    p.vel.x = p.vel.x * 0.6 + w.nx * M.wallRun.leapSpeed;
-    p.vel.z = p.vel.z * 0.6 + w.nz * M.wallRun.leapSpeed;
-    p.vel.y = M.wallRun.leapUp;
-    p.mode = 'air'; p.wall.t = -0.2;
+  if ((input.pressed & B.JUMP) && p.kicks < M.wallKick.max) {
+    p.kicks++;
+    kickOff(state, w.nx, w.nz);
     return;
   }
   p.vel.y -= M.gravity * M.wallRun.gravityScale * DT;
-  if (Math.floor(w.t / M.wallRun.stepEvery) !== Math.floor((w.t - DT) / M.wallRun.stepEvery)) noise(state, M.noise.sprint, 'step');
+  if (Math.floor(w.t / M.wallRun.stepEvery) !== Math.floor((w.t - DT) / M.wallRun.stepEvery)) { noise(state, M.noise.sprint, 'step'); sfx(state, 'wallstep'); }
   const blocked = moveHorizontal(world.index, p.pos, M.height.stand, p.vel.x * DT, p.vel.z * DT, 0.05);
   const hit = moveVertical(world.index, p.pos, M.height.stand, p.vel.y * DT);
   if (hit === 1) { p.mode = 'ground'; p.onGround = true; p.vel.y = 0; return; }
   if (hit === -1) p.vel.y = Math.min(0, p.vel.y);
   const still = raycast(world.index, p.pos.x, p.pos.y + 1.0, p.pos.z, -w.nx, 0, -w.nz, HW + M.wallRun.wallDist + 0.1);
-  if (blocked || w.t >= M.wallRun.maxTime || !still) { p.mode = 'air'; p.wall.t = -0.2; }
+  if (blocked || w.t >= M.wallRun.maxTime || !still) p.mode = 'air';
 }
 
 export function stepWallClimb(state: SimState, world: World, input: InputFrame) {
   const p = state.player;
   const w = p.wall;
   w.t += DT;
+  if ((input.pressed & B.JUMP) && airWall(state, world)) return;
   p.vel.y -= M.gravity * DT;
   moveHorizontal(world.index, p.pos, M.height.stand, p.vel.x * DT, p.vel.z * DT, 0.05);
   if (moveVertical(world.index, p.pos, M.height.stand, p.vel.y * DT) === -1) p.vel.y = Math.min(0, p.vel.y);
-  if (airParkour(state, world, { ...input, my: 1 })) return;
-  if (w.t >= M.wallClimb.time) { p.mode = 'air'; p.vel.x = w.nx * 0.5; p.vel.z = w.nz * 0.5; }
+  if (w.t >= M.wallClimb.time) { p.mode = 'air'; p.vel.x = w.nx * 0.3; p.vel.z = w.nz * 0.3; }
 }
 
 /** Advance a scripted action: rise first, then move across (mantle, climb-up) or arc over (vault). */

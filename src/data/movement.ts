@@ -7,22 +7,34 @@ export const movement = {
   groundAccel: 30,
   airAccel: 4,
   gravity: 9.81,
-  jumpSpeed: 3.1,
-  coyote: 0.1,
+  jumpSpeed: 3.55,
+  /** horizontal speed kept at take-off above a jog (U-004: more vertical, less horizontal) */
+  jumpCarry: 0.88,
+  coyote: 0.03,
   stepHeight: 0.45,
   snapDown: 0.5,
   maxFall: 50,
-  mantle: { min: 0.5, max: 2.4, reach: 0.7, lowTime: 0.35, highTime: 0.8, lowLimit: 1.0 },
+  mantle: { min: 0.5, max: 2.4, hop: 1.2, reach: 0.7, lowTime: 0.35, highTime: 0.8, lowLimit: 1.0 },
   vault: { minH: 0.5, maxH: 1.2, maxDepth: 1.2, minSpeed: 2.5, time: 0.45, keep: 0.85 },
   slide: { minSpeed: 6.0, time: 1.0, start: 7.5, end: 3.0 },
-  hang: { reachLow: 1.0, reachHigh: 1.9, hangDrop: 1.8, shimmy: 0.8, climbTime: 0.9, wallGap: 0.6, regrab: 0.35 },
   wallRun: { maxTime: 0.9, speed: 6.5, upSpeed: 3.0, minSpeed: 5.5, stepEvery: 0.3, gravityScale: 0.6, wallDist: 0.8, maxAngle: 35, leapSpeed: 5.0, leapUp: 3.0 },
-  wallClimb: { maxAngle: 30, dist: 1.2, upSpeed: 5.75, time: 0.6 },
-  climb: { pipeUp: 1.0, pipeDown: 1.4, ladder: 1.5, attachDist: 0.7, topReach: 1.2, leap: 3.0, leapUp: 2.0 },
+  wallClimb: { time: 0.6 },
+  /** second Space in the air near a wall, read from the camera (U-004) */
+  wallKick: { reach: 0.8, max: 2, upPitch: 0.45, upSpeed: 4.6, speed: 5.5, up: 3.4, pitchUp: 1.5, minAway: 0.35, alongMax: 0.5 },
+  /** hand climbing (U-002): grips, reach, reeling, mantles over lips, dynos */
+  grip: {
+    rayReach: 1.6, heightReach: 2.2, lowest: 0.2, lipDepth: 0.35, edgeBand: 0.4, pipeRadius: 0.3,
+    pullMin: 1.15, hangMax: 2.1, pullSpeed: 1.1, wallGap: 0.4,
+    /** spring toward the hanging spot, and how hard one or two hands can pull before slipping (U-004) */
+    spring: 80, capOne: 35, capTwo: 80, strainOne: 0.1, strainTwo: 0.25,
+    drainOne: 6, drainTwo: 2, ladderScale: 0.5, mantleFrom: 1.3, climbTime: 0.7,
+    dynoUp: 4.6, dynoFrom: 1.45, regrab: 0.25,
+  },
   falls: { safe: 4, rollSafe: 7, rollWindow: 0.3, lethal: 12, fractureFrom: 7, rollMax: 10, dmgPerM: 8, dmgPerMHigh: 10, sprainChance: 0.4, armChance: 0.2 },
   hide: { enterTime: 0.6, exitTime: 0.5, minInner: 0.8, reach: 1.6 },
   swim: { float: 1.45, speed: 1.4, sprint: 2.2, dive: 1.2, breath: 40, drownDps: 8, wetMinutes: 120, climbOut: 0.6, floatDepth: 1.2 },
-  stamina: { max: 100, sprint: 6, jump: 8, mantle: 6, wallRun: 15, hang: 2, regen: 15, regenDelay: 1, recover: 30 },
+  /** grip endurance (U-003: no running stamina) */
+  endurance: { max: 100, regen: 30, recover: 25 },
   noise: { crawl: 1, crouch: 2, jog: 8, sprint: 16, land: 15, landMinH: 2, vault: 6, mantle: 3, slide: 8, rainScale: 0.5, stride: { crawl: 0.4, crouch: 0.6, jog: 1.2, sprint: 1.8 } },
   encumbrance: { heavy: 15, overloaded: 25, penalty: 0.15, overloadedMantle: 1.6 },
 };

@@ -5,7 +5,7 @@ import { B } from '../../src/sim/types';
 
 describe('player kinematics', () => {
   it('jogs, sprints and crouch-walks at the tuned speeds', () => {
-    for (const [buttons, pressed, want] of [[0, 0, 3.2], [B.SPRINT, 0, 7.0], [0, B.CROUCH, 1.6]] as const) {
+    for (const [buttons, pressed, want] of [[0, 0, 3.2], [B.SPRINT, 0, 7.0], [B.CROUCH, B.CROUCH, 1.6]] as const) {
       const { world, state } = setup([floor()]);
       run(state, world, 5);
       run(state, world, secs(2), { my: 1, buttons, pressed });
@@ -56,10 +56,9 @@ describe('player kinematics', () => {
     run(state, world, 5);
     run(state, world, secs(4), { my: 1 });
     expect(state.player.pos.z).toBeGreaterThan(-4); // blocked standing
-    run(state, world, 1, { pressed: B.CROUCH });
-    run(state, world, secs(3), { my: 1 });
+    run(state, world, secs(3), { my: 1, buttons: B.CROUCH });
     expect(state.player.pos.z).toBeLessThan(-6);
-    run(state, world, 1, { pressed: B.CROUCH });
-    expect(state.player.posture).toBe('crouch');
+    run(state, world, 1);
+    expect(state.player.posture).toBe('crouch'); // released under the ceiling: stays down
   });
 });

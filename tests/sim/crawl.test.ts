@@ -10,8 +10,7 @@ describe('crouch and crawl', () => {
   it('crawling passes a 0.6 m gap that crouching cannot', () => {
     const a = gapWorld();
     run(a.state, a.world, 3);
-    run(a.state, a.world, 1, { pressed: B.CROUCH });
-    run(a.state, a.world, secs(6), { my: 1 });
+    run(a.state, a.world, secs(6), { my: 1, buttons: B.CROUCH });
     expect(a.state.player.pos.z).toBeGreaterThan(-3);
     const b = gapWorld();
     run(b.state, b.world, 3);
@@ -28,7 +27,7 @@ describe('crouch and crawl', () => {
     expect(b.state.player.pos.z).toBeLessThan(-3.5);
     run(b.state, b.world, 1, { pressed: B.CRAWL });
     expect(b.state.player.posture).toBe('crawl');
-    run(b.state, b.world, 1, { pressed: B.CROUCH });
+    run(b.state, b.world, 1, { buttons: B.CROUCH });
     expect(b.state.player.posture).toBe('crawl');
   });
 });
@@ -39,14 +38,28 @@ describe('slide', () => {
     run(state, world, 3);
     run(state, world, secs(1.6), { my: 1, buttons: B.SPRINT });
     expect(hspeed(state)).toBeGreaterThan(6);
-    run(state, world, 1, { my: 1, pressed: B.CROUCH });
+    run(state, world, 1, { my: 1, pressed: B.CROUCH, buttons: B.CROUCH });
     expect(state.player.slide).toBeGreaterThanOrEqual(0);
     const v0 = hspeed(state);
     let t = 0;
-    run(state, world, secs(1.1), { my: 1 }, s => { if (s.player.slide >= 0) t++; });
+    run(state, world, secs(1.1), { my: 1, buttons: B.CROUCH }, s => { if (s.player.slide >= 0) t++; });
     expect(v0).toBeGreaterThan(7);
     expect(t / 60).toBeCloseTo(1.0, 1);
     expect(state.player.pos.z).toBeLessThan(-9.2);
     expect(state.player.posture).toBe('crouch');
+    run(state, world, 2);
+    expect(state.player.posture).toBe('stand');
+  });
+  it('releasing crouch mid-slide stands him up keeping some speed (U-001)', () => {
+    const { world, state } = setup([floor()], { x: 0, y: 0, z: 6, yaw: 0 });
+    run(state, world, 3);
+    run(state, world, secs(1.6), { my: 1, buttons: B.SPRINT });
+    run(state, world, 1, { my: 1, pressed: B.CROUCH, buttons: B.CROUCH });
+    run(state, world, 15, { my: 1, buttons: B.CROUCH });
+    expect(state.player.slide).toBeGreaterThan(0);
+    run(state, world, 1, { my: 1 });
+    expect(state.player.slide).toBe(-1);
+    expect(state.player.posture).toBe('stand');
+    expect(hspeed(state)).toBeGreaterThan(4);
   });
 });

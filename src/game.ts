@@ -11,8 +11,11 @@ import { Sky } from './render/sky';
 import { BodyFx } from './render/body-fx';
 import { InventoryUI } from './ui/inventory-ui';
 import { heldStack } from './sim/use';
-import { heldMesh } from './render/held';
 import { item } from './data/items';
+import { Audio } from './audio/audio';
+import { playMove } from './audio/moves';
+import { Hands } from './ui/hands';
+import { findGrab } from './sim/grip';
 
 export interface GameOpts { scenario: string; seed: number; dev: boolean }
 
@@ -25,6 +28,8 @@ export class Game {
   readonly sky: Sky;
   readonly bodyFx: BodyFx;
   readonly inv: InventoryUI;
+  readonly audio = new Audio();
+  readonly hands = new Hands();
   drawDistance = 160;
   scenario!: Scenario;
   private heldId = '';
@@ -75,15 +80,18 @@ export class Game {
     const f = this.input.frame();
     step(this.state, this.world, f);
     this.ticks++;
-    for (const e of this.state.events) if (e.t === 'land') this.view.fp.landed(e.h);
+    for (const e of this.state.events) {
+      if (e.t === 'land') this.view.fp.landed(e.h);
+      else if (e.t === 'sfx') playMove(this.audio, e.id);
+    }
   }
 
   render(alpha: number, dt: number) {
     const p = this.state.player;
     const pos = { x: this.prev.x + (p.pos.x - this.prev.x) * alpha, y: this.prev.y + (p.pos.y - this.prev.y) * alpha, z: this.prev.z + (p.pos.z - this.prev.z) * alpha };
     this.view.fp.update(p, pos, this.input.yaw, this.input.pitch, dt);
-    this.view.arms.update(p, dt, this.input.pitch);
     this.bodyFx.update(this.state, this.view.fp, dt);
+    this.hands.update(p, this.view.fp.cam, p.mode !== 'dead' && findGrab(this.world, p) !== null, dt);
     this.inv.update();
     this.updatePrompt();
     this.updateHeld();
@@ -112,8 +120,6 @@ export class Game {
     const st = heldStack(this.state), id = st?.id ?? '';
     if (id === this.heldId) return;
     this.heldId = id;
-    this.view.arms.held.clear();
-    if (id) this.view.arms.held.add(heldMesh(id));
     this.hud.setHeld(id ? `${item(id).zh} ${item(id).en}` : '');
   }
 

@@ -6,14 +6,12 @@ import { buildLabels } from './labels';
 import { material } from './materials';
 import { MAT } from '../world/mats';
 import { FPCamera } from './fpcamera';
-import { Arms } from './arms';
 import { buildProps, tickProps } from './props';
 
 export class View {
   readonly renderer: THREE.WebGLRenderer;
   readonly scene = new THREE.Scene();
   readonly fp: FPCamera;
-  readonly arms = new Arms();
   readonly sun = new THREE.DirectionalLight(0xfff1dd, 1.6);
   readonly hemi = new THREE.HemisphereLight(0xc8d4e0, 0x4a4438, 1.2);
   readonly world = new THREE.Group();
@@ -25,7 +23,6 @@ export class View {
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     container.appendChild(this.renderer.domElement);
     this.fp = new FPCamera(innerWidth / innerHeight);
-    this.fp.cam.add(this.arms.group);
     this.scene.add(this.fp.cam, this.world, this.sun, this.sun.target, this.hemi);
     this.scene.background = new THREE.Color(0x9aa6ad);
     this.scene.fog = new THREE.Fog(0x9aa6ad, 20, 160);

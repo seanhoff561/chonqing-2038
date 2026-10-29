@@ -5,8 +5,8 @@ import type { World } from '../world/world';
 import type { Player, Posture } from './player';
 import { movement as M } from '../data/movement';
 import { free, moveHorizontal, moveVertical, groundGap } from './physics';
-import { groundParkour, airParkour, stepAction, stepHang, stepWallRun, stepWallClimb } from './parkour';
-import { climbableNear, attach, stepClimb } from './climb';
+import { groundParkour, airParkour, airWall, stepAction, stepWallRun, stepWallClimb } from './parkour';
+import { stepHands, stepGrip } from './grip';
 import { hideNear, enterHide, stepHidden } from './hide';
 import { checkWater, stepSwim } from './swim';
 import { limits, type Limits } from './body';
@@ -17,25 +17,16 @@ export const lim = () => L;
 
 export const heightOf = (p: Posture) => M.height[p];
 
-/** Spend stamina; hitting 0 leaves him exhausted until it recovers to the threshold. */
-export function spend(p: Player, amt: number) {
-  p.stamina = Math.max(0, p.stamina - amt);
-  p.staminaIdle = 0;
-  if (p.stamina <= 0) p.exhausted = true;
-}
-
-function regen(p: Player) {
-  const S = M.stamina;
-  p.staminaIdle += DT;
-  if (p.staminaIdle >= S.regenDelay) p.stamina = Math.min(S.max, p.stamina + S.regen * L.regenScale * DT);
-  if (p.exhausted && p.stamina >= S.recover) p.exhausted = false;
-}
-
 /** Emit a noise event at the player's feet; footsteps shrink in rain. */
 export function noise(state: SimState, r: number, kind: string) {
   const p = state.player;
   if (kind === 'step') r *= 1 - (1 - M.noise.rainScale) * Math.min(1, state.flags.rain);
   state.events.push({ t: 'noise', x: p.pos.x, y: p.pos.y, z: p.pos.z, r, kind });
+}
+
+/** A movement sound cue (U-004): every action has its own fixed sound. */
+export function sfx(state: SimState, id: string) {
+  state.events.push({ t: 'sfx', id });
 }
 
 /** Footsteps by gait, one per stride travelled on the ground. */
@@ -44,7 +35,7 @@ function footsteps(state: SimState, dist: number) {
   const sp = Math.hypot(p.vel.x, p.vel.z);
   const gait = p.posture === 'crawl' ? 'crawl' : p.posture === 'crouch' ? 'crouch' : sp > 5 ? 'sprint' : 'jog';
   p.stepAcc += dist;
-  if (p.stepAcc >= N.stride[gait]) { p.stepAcc = 0; noise(state, N[gait], 'step'); }
+  if (p.stepAcc >= N.stride[gait]) { p.stepAcc = 0; noise(state, N[gait], 'step'); sfx(state, `step-${gait}`); }
 }
 
 export function forward(yaw: number) { return { x: -Math.sin(yaw), z: -Math.cos(yaw) }; }
@@ -58,14 +49,13 @@ export function stepPlayer(state: SimState, world: World, input: InputFrame): vo
   if (state.flags.noclip) { noclip(p, input); return; }
   if (p.mode === 'noclip') p.mode = 'air';
   p.crouchAge += DT;
-  regen(p);
   if ((input.pressed & B.CROUCH) && !p.onGround) p.crouchAge = 0;
+  stepHands(state, world, input);
   switch (p.mode) {
     case 'action': stepAction(state, world); return;
-    case 'hang': stepHang(state, world, input); return;
+    case 'grip': stepGrip(state, world, input); return;
     case 'wallrun': stepWallRun(state, world, input); return;
     case 'wallclimb': stepWallClimb(state, world, input); return;
-    case 'climb': stepClimb(state, world, input); return;
     case 'hidden': stepHidden(state, world, input); return;
     case 'swim': stepSwim(state, world, input); return;
   }
@@ -73,11 +63,7 @@ export function stepPlayer(state: SimState, world: World, input: InputFrame): vo
     const h = hideNear(world, p);
     if (h >= 0 && enterHide(state, world, h)) return;
   }
-  if ((input.pressed & B.INTERACT) && p.posture !== 'crawl') {
-    const c = climbableNear(world, p, M.climb.attachDist);
-    if (c >= 0 && attach(world, p, c)) return;
-  }
-  updatePosture(p, world, input);
+  updatePosture(state, world, input);
   groundAir(state, world, input);
 }
 
@@ -100,24 +86,40 @@ export function setPosture(p: Player, world: World, want: Posture): boolean {
   return true;
 }
 
-function updatePosture(p: Player, world: World, input: InputFrame) {
+/** Ctrl (or C) is hold-to-crouch (U-001); pressed at a sprint it slides, released mid-slide he gets up. Z toggles a crawl. */
+function updatePosture(state: SimState, world: World, input: InputFrame) {
+  const p = state.player;
   if (p.mode !== 'ground' && p.mode !== 'air') return;
-  if (input.pressed & B.CRAWL) setPosture(p, world, p.posture === 'crawl' ? 'crouch' : 'crawl');
-  if ((input.pressed & B.CROUCH) && p.mode === 'ground') {
-    if (p.posture === 'stand' && Math.hypot(p.vel.x, p.vel.z) >= M.slide.minSpeed) { p.slide = 0; p.posture = 'crawl'; return; }
-    if (p.slide >= 0) return;
-    if (p.posture === 'stand') setPosture(p, world, 'crouch');
-    else if (!setPosture(p, world, 'stand')) setPosture(p, world, 'crouch');
+  const held = (input.buttons & B.CROUCH) !== 0;
+  if (input.pressed & B.CRAWL) {
+    if (p.posture === 'crawl') { if (!setPosture(p, world, held ? 'crouch' : 'stand')) setPosture(p, world, 'crouch'); }
+    else { p.slide = -1; setPosture(p, world, 'crawl'); }
+    return;
   }
-  // Sprinting from a crouch stands him up when there's room.
-  if ((input.buttons & B.SPRINT) && input.my > 0 && p.posture === 'crouch' && p.slide < 0) setPosture(p, world, 'stand');
+  if (p.slide >= 0) {
+    if (!held) { endSlide(p, world); p.vel.x *= 0.8; p.vel.z *= 0.8; }
+    return;
+  }
+  if ((input.pressed & B.CROUCH) && p.mode === 'ground' && p.posture === 'stand' && Math.hypot(p.vel.x, p.vel.z) >= M.slide.minSpeed) {
+    p.slide = 0; p.posture = 'crawl';
+    sfx(state, 'slide');
+    return;
+  }
+  if (p.posture === 'crawl' && !(input.pressed & B.CROUCH)) return;
+  if (held) setPosture(p, world, 'crouch');
+  else if (!setPosture(p, world, 'stand')) setPosture(p, world, 'crouch');
+}
+
+export function endSlide(p: Player, world: World, crouching = false) {
+  p.slide = -1;
+  if (!setPosture(p, world, crouching ? 'crouch' : 'stand') && !setPosture(p, world, 'crouch')) p.posture = 'crawl';
 }
 
 function targetSpeed(p: Player, input: InputFrame): number {
   let sp = M.speed.jog;
   if (p.posture === 'crawl') sp = M.speed.crawl;
   else if (p.posture === 'crouch') sp = M.speed.crouch;
-  else if ((input.buttons & B.SPRINT) && input.my > 0 && !p.exhausted && L.sprint) sp = M.speed.sprint * L.sprintScale;
+  else if ((input.buttons & B.SPRINT) && input.my > 0 && L.sprint) sp = M.speed.sprint * L.sprintScale;
   return Math.min(sp, L.speedCap);
 }
 
@@ -137,12 +139,10 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
     sp = M.slide.start + (M.slide.end - M.slide.start) * Math.min(1, p.slide / M.slide.time);
     wx = p.vel.x / v; wz = p.vel.z / v;
     p.slide += DT;
-    if (p.slide >= M.slide.time || v < 0.5) {
-      p.slide = -1;
-      if (!setPosture(p, world, 'crouch')) p.posture = 'crawl';
-    }
+    if (p.slide >= M.slide.time || v < 0.5) endSlide(p, world, (input.buttons & B.CROUCH) !== 0);
   }
-  if (sp > M.speed.jog && p.onGround && Math.hypot(p.vel.x, p.vel.z) > 4) spend(p, M.stamina.sprint * DT);
+  // In the air he can steer and slow but not speed up past his take-off speed (or a jog).
+  if (!p.onGround) sp = Math.min(sp, Math.max(M.speed.jog, Math.hypot(p.vel.x, p.vel.z)));
   const accel = (p.onGround ? (p.slide >= 0 ? 1000 : M.groundAccel) : M.airAccel) * DT;
   const dvx = wx * sp - p.vel.x, dvz = wz * sp - p.vel.z;
   const dl = Math.hypot(dvx, dvz);
@@ -152,11 +152,12 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
   }
   // Jump.
   let jumped = false;
-  if (p.onGround && (input.pressed & B.JUMP) && groundParkour(state, world, input, L.maxMantle)) return;
+  if (p.onGround && (input.pressed & B.JUMP) && groundParkour(state, world, input, Math.min(M.mantle.hop, L.maxMantle))) return;
   if ((p.onGround || p.coyote > 0) && (input.pressed & B.JUMP) && p.posture === 'stand' && L.jumpScale > 0) {
     p.vel.y = M.jumpSpeed * Math.sqrt(L.jumpScale);
-    spend(p, M.stamina.jump);
+    if (Math.hypot(p.vel.x, p.vel.z) > M.speed.jog) { p.vel.x *= M.jumpCarry; p.vel.z *= M.jumpCarry; }
     p.onGround = false;
+    sfx(state, 'jump');
     p.coyote = 0;
     jumped = true;
   }
@@ -182,7 +183,7 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
     }
   }
   if (p.onGround) {
-    p.fallFrom = p.pos.y; p.coyote = jumped ? 0 : M.coyote;
+    p.fallFrom = p.pos.y; p.coyote = jumped ? 0 : M.coyote; p.kicks = 0;
     if (p.slide >= 0) { if (p.slide < DT * 1.5) noise(state, M.noise.slide, 'slide'); }
     else footsteps(state, Math.hypot(p.pos.x - x0, p.pos.z - z0));
   }
@@ -194,11 +195,7 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
   if (world.water.length && checkWater(state, world)) return;
   if (!p.onGround) {
     if (p.wall.t < 0) p.wall.t = Math.min(0, p.wall.t + DT);
-    else if (!airParkour(state, world, input) && input.my > 0) {
-      // Jumping into a pipe or ladder grabs it.
-      const c = climbableNear(world, p, 0.45);
-      if (c >= 0) attach(world, p, c);
-    }
+    else if (!airParkour(state, world, input) && (input.pressed & B.JUMP) && !jumped) airWall(state, world);
   }
 }
 
@@ -209,6 +206,7 @@ function land(state: SimState) {
   const outcome = fallOutcome(h, roll, () => rand(state.rng));
   state.events.push({ t: 'land', h, roll, outcome });
   if (h > M.noise.landMinH) noise(state, M.noise.land, 'land');
+  if (h > 0.4) sfx(state, roll && h > 1 ? 'roll' : h > M.noise.landMinH ? 'land-hard' : 'land');
   if (roll && h > 1) { p.posture = 'crouch'; p.vel.x *= 0.6; p.vel.z *= 0.6; }
   p.fallFrom = p.pos.y;
 }

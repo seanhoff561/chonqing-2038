@@ -3,7 +3,7 @@ import { setup, run, floor, secs, hspeed, approachAndJump } from './helpers';
 import { solid } from '../../src/world/geom';
 import { B } from '../../src/sim/types';
 
-function mantleOnto(h: number) {
+function hopOnto(h: number) {
   const { world, state } = setup([floor(), solid(-5, 0, -10, 5, h, -3)], { x: 0, y: 0, z: 0, yaw: 0 });
   run(state, world, 5);
   approachAndJump(state, world);
@@ -12,23 +12,13 @@ function mantleOnto(h: number) {
   return { state, actionTime: actionTicks / 60 };
 }
 
-describe('mantle', () => {
-  it('mantles onto ledges from 1.0 to 2.4 m', () => {
-    for (const h of [1.0, 1.5, 2.0, 2.4]) {
-      const { state } = mantleOnto(h);
-      expect(state.player.pos.y, `ledge ${h}`).toBeCloseTo(h, 2);
-      expect(state.player.pos.z).toBeLessThan(-3.2);
-    }
+describe('Space hops (U-002)', () => {
+  it('hops onto ledges from 0.5 to 1.2 m in about 0.35 s', () => {
+    for (const h of [0.6, 0.9, 1.2]) expect(hopOnto(h).state.player.pos.y, `ledge ${h}`).toBeCloseTo(h, 2);
+    expect(hopOnto(0.8).actionTime).toBeCloseTo(0.35, 1);
   });
-  it('refuses ledges higher than 2.4 m', () => {
-    for (const h of [2.5, 2.6, 3.0]) {
-      const { state } = mantleOnto(h);
-      expect(state.player.pos.y, `ledge ${h}`).toBeLessThan(0.01);
-    }
-  });
-  it('low ledges are quick and high ones slower', () => {
-    expect(mantleOnto(0.8).actionTime).toBeCloseTo(0.35, 1);
-    expect(mantleOnto(2.0).actionTime).toBeCloseTo(0.8, 1);
+  it('higher ledges are refused for Space', () => {
+    for (const h of [1.5, 2.0]) expect(hopOnto(h).state.player.pos.y, `ledge ${h}`).toBeLessThan(0.01);
   });
 });
 

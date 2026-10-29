@@ -5,7 +5,7 @@ import type { Player } from './player';
 import { movement as M } from '../data/movement';
 import { moveHorizontal, moveVertical } from './physics';
 import { findLedge, startAction } from './parkour';
-import { forward, spend } from './move';
+import { forward } from './move';
 
 /** Water surface height at the player's position, or -Infinity. */
 export function surfaceAt(world: World, p: Player): number {
@@ -40,13 +40,11 @@ export function stepSwim(state: SimState, world: World, input: InputFrame) {
     const l = findLedge(world, p, M.mantle.reach, s - p.pos.y + M.swim.climbOut);
     if (l && isFinite(l.h) && l.top - s <= M.swim.climbOut + 1e-3) {
       startAction(p, 'mantle', M.mantle.highTime, { x: l.fx - l.nx * (M.width / 2 + 0.05 - 0.3), y: l.top + 1e-3, z: l.fz - l.nz * (M.width / 2 + 0.05 - 0.3) }, 'ground', 'crouch', 0);
-      spend(p, M.stamina.mantle);
       return;
     }
   }
-  const sprint = (input.buttons & B.SPRINT) && !p.exhausted;
+  const sprint = (input.buttons & B.SPRINT) !== 0;
   const sp = sprint ? M.swim.sprint : M.swim.speed;
-  if (sprint) spend(p, M.stamina.sprint * DT);
   let wx = f.x * input.my - f.z * input.mx, wz = f.z * input.my + f.x * input.mx;
   const wl = Math.hypot(wx, wz);
   if (wl > 1) { wx /= wl; wz /= wl; }

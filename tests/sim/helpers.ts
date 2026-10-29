@@ -15,7 +15,7 @@ export function setup(solids: Solid[], spawn = { x: 0, y: 0, z: 0, yaw: 0 }, ext
 /** Run n ticks with an input built per tick. `pressed` bits fire only on the first tick of the run. */
 export function run(state: SimState, world: World, n: number, inp: Partial<InputFrame> = {}, each?: (s: SimState, i: number) => void) {
   for (let i = 0; i < n; i++) {
-    const f = { ...emptyInput(), yaw: state.player.yaw, ...inp };
+    const f = { ...emptyInput(), yaw: state.player.yaw, pitch: state.player.pitch, ...inp };
     if (i > 0) f.pressed = 0;
     step(state, world, f);
     each?.(state, i);
@@ -52,3 +52,14 @@ export function gapJump(gap: number, after = 1.5) {
   run(state, world, secs(after), { my: 1, buttons: B.SPRINT });
   return { world, state };
 }
+
+/** Point his view at a world point (sets yaw and pitch for the following ticks). */
+export function aim(state: SimState, x: number, y: number, z: number) {
+  const p = state.player;
+  const ey = p.pos.y + ({ stand: 1.62, crouch: 0.98, crawl: 0.38, hidden: 0.55 } as const)[p.posture];
+  const dx = x - p.pos.x, dy = y - ey, dz = z - p.pos.z;
+  p.yaw = Math.atan2(-dx, -dz);
+  p.pitch = Math.atan2(dy, Math.hypot(dx, dz));
+}
+
+export const LMB = B.USE, RMB = B.AIM;

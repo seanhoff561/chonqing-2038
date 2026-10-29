@@ -20,3 +20,6 @@ The deploy workflow publishes with GitHub Actions. If the Pages source in the re
 
 ## Q-003 Hand sprites (open)
 The White Knuckle sprite sheets you shared are that game's copyrighted art, and images pasted in chat don't reach the cloud session as files. Default: original hand sprites drawn in code in the same dithered style (idle, readied, gripping, pulling, both hands). If you have rights to other art, commit the PNGs under public/hands/ and I'll use them.
+
+## Q-004 Stamina (open)
+You weren't sure about stamina. Default: no running stamina at all; only grip endurance while hanging (it refills as soon as the hands are free, and the hands shake as it runs low). Say if you want grip to be unlimited too, or a light running limit back.

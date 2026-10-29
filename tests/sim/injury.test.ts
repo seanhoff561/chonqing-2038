@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { setup, run, secs, floor, hspeed } from './helpers';
+import { setup, run, secs, floor, hspeed, aim, LMB } from './helpers';
 import { solid } from '../../src/world/geom';
 import { B } from '../../src/sim/types';
 import { sprainLeg, breakBone } from '../../src/sim/body';
@@ -24,7 +24,7 @@ describe('limb injuries', () => {
   it('a sprained leg: no sprint, half jump height; heals after 36 game hours', () => {
     expect(sprintSpeed(s => sprainLeg(s))).toBeCloseTo(3.2, 1);
     const a = apex(s => sprainLeg(s));
-    expect(a).toBeCloseTo(0.49 / 2, 1);
+    expect(a).toBeCloseTo((3.5 * 3.5) / (2 * 9.81) / 2, 1);
     const { world, state } = setup([floor()]);
     sprainLeg(state);
     state.time += 36 * 3600;
@@ -43,25 +43,25 @@ describe('limb injuries', () => {
       expect(state.player.pos.y > h - 0.01, `mantle ${h}`).toBe(ok);
     }
   });
-  it('a broken arm: no pipes or hanging; a splint allows slow climbing', () => {
-    const mk = () => setup([floor(), solid(-5, 0, -10, 5, 6, -3)], { x: 0, y: 0, z: -2.1, yaw: 0 }, { climbables: [{ kind: 'pipe', x: 0, z: -2.95, y0: 0, y1: 6, nx: 0, nz: 1 }] });
+  it('a broken arm: no grabbing; a splint allows slow climbing with a weaker grip', () => {
+    const mk = () => {
+      const r = setup([floor(), solid(-2, 0, -30, 2, 2.0, -3), solid(-2, 2.0, -30, 2, 6, -3.4)], { x: 0, y: 0, z: -2.55, yaw: 0 });
+      run(r.state, r.world, 3);
+      return r;
+    };
+    const grab = (r: ReturnType<typeof mk>) => { for (let i = 0; i < 5; i++) { aim(r.state, 0, 1.9, -3); run(r.state, r.world, 1, { buttons: LMB }); } };
     const a = mk();
     breakBone(a.state, true);
-    run(a.state, a.world, 3);
-    run(a.state, a.world, 1, { pressed: B.INTERACT });
-    expect(a.state.player.mode).not.toBe('climb');
+    grab(a);
+    expect(a.state.player.mode).not.toBe('grip');
     const b = mk();
     breakBone(b.state, true);
     b.state.body.armSplint = true;
-    run(b.state, b.world, 3);
-    run(b.state, b.world, 1, { pressed: B.INTERACT });
-    run(b.state, b.world, secs(2), { my: 1 });
-    expect(b.state.player.mode).toBe('climb');
-    expect(b.state.player.pos.y).toBeCloseTo(1.0, 1);
-    const c = setup([floor(), solid(-2, 0, -6, 2, 3, -3)], { x: 0, y: 1.5, z: -2.7, yaw: 0 });
-    breakBone(c.state, true);
-    run(c.state, c.world, 10, { my: 1 });
-    expect(c.state.player.mode).not.toBe('hang');
+    grab(b);
+    expect(b.state.player.mode).toBe('grip');
+    const e0 = b.state.player.endurance;
+    run(b.state, b.world, secs(1), { buttons: LMB });
+    expect(e0 - b.state.player.endurance).toBeCloseTo(12, 0);
   });
   it('a 9 m fall breaks a bone through the fall table', () => {
     const { world, state } = setup([solid(-5, -1, -30, 5, 0, 30), solid(-5, 0, -2, 5, 9, 10)], { x: 0, y: 9, z: 0, yaw: 0 });

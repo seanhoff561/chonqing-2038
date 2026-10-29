@@ -18,7 +18,7 @@ describe('movement noise', () => {
   it('footstep radii by gait', () => {
     const r = (xs: Noise[]) => Math.max(...xs.filter(e => e.kind === 'step').map(e => e.r));
     expect(r(collect(0, B.CRAWL))).toBe(1);
-    expect(r(collect(0, B.CROUCH))).toBe(2);
+    expect(r(collect(B.CROUCH, 0))).toBe(2);
     expect(r(collect(0, 0))).toBe(8);
     expect(r(collect(B.SPRINT, 0))).toBe(16);
   });
