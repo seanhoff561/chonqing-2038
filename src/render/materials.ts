@@ -118,8 +118,8 @@ function wetSky(): THREE.CubeTexture {
   const face = (top: boolean, bottom: boolean) => {
     const c = document.createElement('canvas'); c.width = c.height = 32;
     const g = c.getContext('2d')!, grd = g.createLinearGradient(0, 0, 0, 32);
-    grd.addColorStop(0, top || !bottom ? '#c4c9cc' : '#3a3b3c'); grd.addColorStop(1, bottom || !top ? '#4a4c4e' : '#c4c9cc');
-    g.fillStyle = bottom ? '#3a3b3c' : top ? '#c4c9cc' : grd; g.fillRect(0, 0, 32, 32);
+    grd.addColorStop(0, top || !bottom ? '#7e868c' : '#2a2b2c'); grd.addColorStop(1, bottom || !top ? '#3a3c3e' : '#7e868c');
+    g.fillStyle = bottom ? '#2a2b2c' : top ? '#7e868c' : grd; g.fillRect(0, 0, 32, 32);
     return c;
   };
   skyEnv = new THREE.CubeTexture([face(false, false), face(false, false), face(true, false), face(false, true), face(false, false), face(false, false)]);
@@ -171,17 +171,21 @@ export function material(id: number, vc = false, lod: Lod = 'all'): THREE.MeshPh
 const DRY = { shininess: 30, specular: 0x000000, reflectivity: 0, combine: THREE.MixOperation };
 let wet = -1;
 /** 0 dry to 1 soaked (M3-13): surfaces darken, pick up a sheen and reflect the grey sky. */
-export function setWet(k: number) {
-  if (Math.abs(k - wet) < 0.01) return;
-  wet = k;
+/** k: how wet (0..1); day: daylight 0..1, so the sky's reflection fades at night. Wet surfaces go darker with a
+ *  sheen (U-019): no fresnel in Phong, so the reflection stays faint rather than washing everything pale. */
+export function setWet(k: number, day = 1) {
+  const r = 0.1 * k * (0.15 + 0.85 * day);
+  if (Math.abs(k - wet) < 0.01 && Math.abs(r - wetR) < 0.005) return;
+  wet = k; wetR = r;
   for (const m of mats.values()) {
     if (m.emissiveIntensity > 1) continue;
     if (k > 0 && !m.envMap) { m.envMap = wetSky(); m.needsUpdate = true; }
-    m.color.setScalar(1 - 0.28 * k);
-    m.specular.setScalar(0.22 * k);
-    m.reflectivity = 0.16 * k;
+    m.color.setScalar(1 - 0.34 * k);
+    m.specular.setScalar(0.25 * k * (0.3 + 0.7 * day));
+    m.reflectivity = r;
   }
 }
+let wetR = 0;
 
 /** 0 by day to 1 at night: lit windows glow. */
 export function setNight(k: number) { for (const m of glowing) m.emissiveIntensity = k * 0.9; }

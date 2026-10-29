@@ -5,7 +5,7 @@ import { SHADOW_R, type View } from './view';
 import { setNight, setWet } from './materials';
 
 const DAY_SKY = new THREE.Color(0x9fabb2), DUSK_SKY = new THREE.Color(0x6b5a58), NIGHT_SKY = new THREE.Color(0x151a27);
-const OVERCAST = new THREE.Color(0xb4b8b8);
+const OVERCAST = new THREE.Color(0xb4b8b8), RAIN_SKY = new THREE.Color(0x5a6268);
 const NIGHT_GROUND = new THREE.Color(0x3a2a18), DAY_GROUND = new THREE.Color(0x7a7266);
 const c = new THREE.Color();
 
@@ -24,15 +24,17 @@ export class Sky {
     // Fog and rain flatten the light like an overcast sky, and fog closes the view from kilometres to ~120 m.
     const flat = Math.max(this.overcast, weather.fog * 0.9, weather.rain);
     const fogK = Math.exp(-3.1 * weather.fog);
-    setWet(weather.rain);
+    setWet(weather.rain, d);
     const duskness = Math.max(0, 1 - Math.abs(d - 0.5) * 2) * (d < 1 && d > 0 ? 1 : 0);
     c.copy(NIGHT_SKY).lerp(DAY_SKY, d).lerp(DUSK_SKY, duskness * 0.6);
     (v.scene.background as THREE.Color).copy(c);
     const fog = v.scene.fog as THREE.Fog;
     c.lerp(OVERCAST, flat * d * 0.6);
+    // Rain darkens (U-019): low cloud and a grey-blue murk, never a white wash.
+    c.lerp(RAIN_SKY, weather.rain * 0.75 * d);
     (v.scene.background as THREE.Color).copy(c);
     fog.color.copy(c);
-    fog.far = Math.max(Math.min(farBase, 110), farBase * fogK) / this.fogMul;
+    fog.far = Math.min(Math.max(Math.min(farBase, 110), farBase * fogK), farBase + (380 - farBase) * weather.rain) / this.fogMul;
     // Overcast haze builds slowly with distance; otherwise the fog closes in near the draw distance.
     fog.near = flat > 0.3 ? fog.far * (weather.fog > 0.3 ? 0.05 : 0.14) : Math.min(fog.far * 0.15, 25);
     // Sun arcs east to west through the day; below the horizon at night.
@@ -42,9 +44,9 @@ export class Sky {
     v.sun.target.position.set(cx, camPos.y, cz);
     v.sun.position.set(cx + Math.cos(a) * 160, camPos.y + Math.max(20, Math.sin(a) * 180), cz + 60);
     v.sun.castShadow = d > 0.05 && under < 0.5;
-    v.sun.intensity = 1.7 * d * (1 - under) * (1 - 0.7 * flat);
+    v.sun.intensity = 1.7 * d * (1 - under) * (1 - 0.7 * flat) * (1 - 0.5 * weather.rain);
     v.sun.color.setHSL(0.09, 0.5 - 0.3 * d, 0.85 + 0.1 * d);
-    v.hemi.intensity = (1.4 - 0.15 * d) * (1 - under * 0.85) * (1 + 0.1 * flat);
+    v.hemi.intensity = (1.4 - 0.15 * d) * (1 - under * 0.85) * (1 + 0.1 * flat) * (1 - 0.3 * weather.rain);
     v.hemi.color.copy(NIGHT_SKY).lerp(new THREE.Color(0xc8d4e0), d).lerp(new THREE.Color(0x5f74a8), (1 - d) * 0.9);
     v.hemi.groundColor.copy(NIGHT_GROUND).lerp(DAY_GROUND, d);
     setNight(Math.max(0, 1 - d * 1.6));
