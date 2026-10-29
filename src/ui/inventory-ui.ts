@@ -1,5 +1,6 @@
 // The backpack (Tab) and an open container side by side. Drag to move, R rotates while dragging,
 // 1-5 over an item binds it to the hotbar. Moves go to the sim as commands.
+import { hideoutList } from '../sim/shelter';
 import type { Game } from '../game';
 import type { Grid, Stack } from '../sim/inventory';
 import { dims, weight } from '../sim/inventory';
@@ -49,12 +50,20 @@ export class InventoryUI {
     if (!this.open) return;
     const s = this.game.state;
     const cont = s.openContainer ? s.containers[s.openContainer] : null;
-    const sig = JSON.stringify([s.inv.pack, s.inv.hotbar, s.openContainer, cont]);
+    const sig = JSON.stringify([s.inv.pack, s.inv.hotbar, s.openContainer, cont, s.shelters.length, Math.round(s.player.pos.x / 10), Math.round(s.player.pos.z / 10)]);
     if (sig === this.sig) return;
     this.sig = sig;
     this.el.innerHTML = '';
     this.el.appendChild(this.panel('背包 BACKPACK', 'pack', s.inv.pack, `${weight(s.inv.pack).toFixed(1)} kg`));
     if (cont && s.openContainer) this.el.appendChild(this.panel(this.game.containerName(s.openContainer), s.openContainer, cont, ''));
+    // His hideouts (U-018), nearest first: until Anna's journal lists them (M5-02).
+    const hs = hideoutList(s, this.game.world);
+    if (hs.length) {
+      const d = document.createElement('div');
+      d.className = 'inv-hideouts';
+      d.innerHTML = `<b>藏身处 Hideouts</b>` + hs.map(h => `<div>${h.place[0]} ${h.place[1]} · ${h.zh} ${h.en} · ${Math.round(h.dist)} m</div>`).join('');
+      this.el.appendChild(d);
+    }
   }
 
   private panel(title: string, ref: string, g: Grid, note: string): HTMLDivElement {

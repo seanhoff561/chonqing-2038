@@ -1,11 +1,11 @@
-// M3-27 (U-013): a new run starts in Shibati with supplies in the backpack and no shelter; holding E on open
-// floor opens the rough-sleep menu, and sleeping rough saves the run.
+// M3-27 (U-013): a new run has supplies in the backpack (and since U-018 starts in the friends' hideout); out in
+// Shibati, holding E on open floor opens the rough-sleep menu, and sleeping rough saves the run.
 export default async function ({ open, fail }) {
   const page = await open('?scenario=run&seed=3', 'rough');
   await page.evaluate('localStorage.clear()');
-  const start = await page.evaluate(`(() => { const s = window.__cq.game.state; return { n: s.inv.pack.items.length, shelter: s.shelter.id, y: s.player.pos.y }; })()`);
-  if (start.n < 5 || start.shelter !== '') fail('rough', `start ${JSON.stringify(start)}`);
-  await page.evaluate(`(() => { const g = window.__cq.game; g.input.pitch = -1.2; window.__cq.runFrames(20); })()`);
+  const start = await page.evaluate(`(() => { const s = window.__cq.game.state; return { n: s.inv.pack.items.length, shelters: s.shelters.map(h => h.id) }; })()`);
+  if (start.n < 5 || start.shelters.join() !== 'airraid-mattress') fail('rough', `start ${JSON.stringify(start)}`);
+  await page.evaluate(`(() => { const g = window.__cq.game; Object.assign(g.state.player.pos, { x: 470, y: 44.05, z: 392 }); g.input.pitch = -1.2; window.__cq.runFrames(20); })()`);
   await page.keyboard.down('KeyE');
   for (let i = 0; i < 12; i++) await page.evaluate('window.__cq.runFrames(10)');
   await page.keyboard.up('KeyE');

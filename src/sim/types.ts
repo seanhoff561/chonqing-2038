@@ -47,6 +47,8 @@ export interface Placed { id: string; item: string; x: number; y: number; z: num
 
 export interface FallOutcome { damage: number; sprain: boolean; fracture: boolean; arm: boolean; lethal: boolean }
 
+export interface Shelter { id: string; x: number; y: number; z: number; battery: number; compromised: boolean }
+
 export interface SimState {
   version: number;
   seed: number;
@@ -60,9 +62,9 @@ export interface SimState {
   /** container grids by id, created when first opened */
   containers: Record<string, import('./inventory').Grid>;
   nextUid: number;
-  /** his shelter (U-013): the claimed bed (id '' for none) and where it is, car battery charge (%) and whether
-   *  the machines know where it is */
-  shelter: { id: string; x: number; y: number; z: number; battery: number; compromised: boolean };
+  /** his hideouts (U-013, U-018): every bed he has claimed, where it is, its car battery charge (%) and
+   *  whether the machines know where it is */
+  shelters: Shelter[];
   /** furniture he has put down: beds, crates */
   placed: Placed[];
   /** container currently open beside the backpack, or null */

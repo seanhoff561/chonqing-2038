@@ -241,14 +241,14 @@ Food (shelf life from manufacture; loot spawns with a seeded age): instant noodl
 
 Salvage: a downed drone yields rotors, a radio module, a camera module and a battery pack; a disabled quadruped yields servos, a sensor head and a power cell; a humanoid yields armour plate, a power cell and a rifle that will not fire for him (biometric lock).
 
-## 9. Shelters (U-013)
+## 9. Hideouts (U-013, U-018)
 
-There is no ready-made hideout. The intro ends at 06:00 on day 1 with Li Wei in the street with his backpack (2 instant noodles, 1 luncheon meat, 1 bread a day old, 3 water bottles, 1 bandage) and nowhere to sleep. He makes his own shelter, and where he makes it changes every run:
+The intro ends at 06:00 on day 1 in his friends' old hideout: the brick-arched air-raid chamber under Jiaochangkou, its vent shaft rising to a grate in the plaza under shop neon, searchlights and passing patrols. It has their old mattress and their crate (a string of firecrackers, tape, a rag) and nothing else: no bench, no power. His backpack holds 2 instant noodles, 1 luncheon meat, 1 bread a day old, 3 water bottles and 1 bandage. From there he makes more hideouts, as many as he likes, and where he makes them changes every run:
 - **Scouting.** Any enclosed space can be a shelter: a flat in an enterable block, a roof hut, a shop's back room, a basement, a tunnel chamber such as the brick-arched air-raid side tunnel under Jiaochangkou (gate in a Shibati retaining wall, a vent shaft to the grate under the junction's searchlights). Good sites are off patrol routes and drone corridors, show no light outside, and have two ways out. He learns that by watching, and Anna can rate a site once the laptop is up.
 - **Bed.** Claim a bed where one is (a mattress in a flat, a bunk in a site office), or carry a bedroll or mattress there and place it. Sleeping rough anywhere else works but restores 40% less energy, and he is exposed while asleep.
 - **Workbench.** Any table or bench becomes a workbench once a toolbox is placed on it.
-- **Storage.** A container within 15 m of his bed becomes his stash (or he places a crate). Everything in it stays put between trips.
-- The shelter is wherever his claimed bed is; the bench, stash, power (car battery and inverter) and a lamp count when within 15 m. Sleeping in his bed saves the run (ironman).
+- **Storage.** Each hideout keeps its own: the containers within 15 m of its bed and nearer it than any other hideout's (or a crate he places). Everything stays put between trips.
+- A hideout is a claimed bed; the bench, storage, power (car battery and inverter, per hideout) and a lamp count when within 15 m. Sleeping in any of his beds saves the run (ironman). The inventory screen lists his hideouts, nearest first, until Anna's journal does (M5-02).
 - Every furnished floor of an enterable block and every roof hut is a recorded site (world `sites`): its bed, table and containers, exits, windows (light leak at night) and street-facing walls (ground patrols); M4 adds patrol and drone routes, Anna's rating reads them.
 - The fixed air-raid shelter of earlier builds (`?scenario=hideout`) stays as a furnished test scene.
 

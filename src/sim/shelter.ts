@@ -1,7 +1,7 @@
-// Shelters he makes himself (U-013, DESIGN section 9): claim a bed or lay one down, turn a table into a
-// workbench with a toolbox, keep things in containers near the bed. The shelter is the claimed bed and
-// everything within SHELTER_R of it.
-import type { SimState } from './types';
+// Hideouts (U-013, U-018, DESIGN section 9): he starts in the friends' old one under the vent grate and makes
+// more: claim a bed or lay one down, turn a table into a workbench with a toolbox, keep things in containers
+// near the bed. A hideout is a claimed bed and everything within SHELTER_R of it; he can have any number.
+import type { SimState, Shelter } from './types';
 import type { World, Inter } from '../world/world';
 import { onUseId } from './use';
 import { onInteract, extraInters, lookTarget } from './interact';
@@ -9,6 +9,8 @@ import { raycast } from '../world/geom';
 import { free } from './physics';
 import { movement as M } from '../data/movement';
 import { takeStack } from './inventory';
+import { tileAt, TILE } from '../world/map';
+import { DISTRICTS } from '../data/map';
 
 export const SHELTER_R = 15;
 const PLACE_REACH = 3;
@@ -23,19 +25,26 @@ function placedInters(s: SimState): Inter[] {
 }
 extraInters.push(placedInters);
 
-export function claimBed(s: SimState, it: Inter) {
-  if (s.shelter.id === it.id) return;
-  s.shelter = { ...s.shelter, id: it.id, x: it.x, y: it.y, z: it.z, compromised: false };
-  s.events.push({ t: 'msg', text: 'your bed now' });
+/** Claim a bed: a new hideout, or nothing if it's already one of his. */
+export function claimBed(s: SimState, it: Inter, battery = 0) {
+  if (s.shelters.some(h => h.id === it.id)) return;
+  s.shelters.push({ id: it.id, x: it.x, y: it.y, z: it.z, battery, compromised: false });
+  s.events.push({ t: 'msg', text: s.shelters.length > 1 ? 'another hideout' : 'your bed now' });
 }
 
-export const hasShelter = (s: SimState) => s.shelter.id !== '';
-export const inShelter = (s: SimState, x: number, y: number, z: number) =>
-  hasShelter(s) && Math.hypot(x - s.shelter.x, y - s.shelter.y, z - s.shelter.z) <= SHELTER_R;
+export const hasShelter = (s: SimState) => s.shelters.length > 0;
+/** The hideout whose bed is nearest (x, y, z) within SHELTER_R, or null. */
+export function shelterAt(s: SimState, x: number, y: number, z: number): Shelter | null {
+  let best: Shelter | null = null, bd = SHELTER_R;
+  for (const h of s.shelters) { const d = Math.hypot(x - h.x, y - h.y, z - h.z); if (d <= bd) { best = h; bd = d; } }
+  return best;
+}
+export const inShelter = (s: SimState, x: number, y: number, z: number) => shelterAt(s, x, y, z) !== null;
 
-/** Containers counted as the shelter's stash: every one within reach of the bed. */
-export function stashIds(s: SimState, w: World): string[] {
-  return w.inter.concat(placedInters(s)).filter(i => i.kind === 'container' && inShelter(s, i.x, i.y, i.z)).map(i => i.id);
+/** A hideout's own storage: the containers nearer its bed than any other hideout's, within reach. */
+export function stashIds(s: SimState, w: World, h: Shelter | null = shelterAt(s, s.player.pos.x, s.player.pos.y, s.player.pos.z)): string[] {
+  if (!h) return [];
+  return w.inter.concat(placedInters(s)).filter(i => i.kind === 'container' && shelterAt(s, i.x, i.y, i.z) === h).map(i => i.id);
 }
 
 export const isBench = (s: SimState, it: Inter) => it.kind === 'bench' || (it.kind === 'table' && !!s.wstate.benches?.[it.id]);
@@ -77,3 +86,14 @@ onUseId('toolbox', (s, w, st) => {
 onInteract('table', {
   now: (s, _w, it) => { s.events.push({ t: 'msg', text: isBench(s, it) ? 'workbench' : 'a table: put a toolbox on it to make a workbench' }); },
 });
+
+/** His hideouts for the journal: where each is (district) and what its bed is, nearest first. */
+export function hideoutList(s: SimState, w: World): { id: string; zh: string; en: string; place: [string, string]; dist: number }[] {
+  const beds = allBeds(s, w), p = s.player.pos;
+  return s.shelters.map(h => {
+    const d = DISTRICTS.find(x => x.id === tileAt(Math.floor(h.x / TILE), Math.floor(h.z / TILE))?.district);
+    const b = beds.find(i => i.id === h.id);
+    return { id: h.id, zh: b?.zh ?? '床', en: b?.en ?? 'Bed', place: [d?.zh ?? '城里', d?.en ?? 'the city'] as [string, string], dist: Math.hypot(h.x - p.x, h.z - p.z) };
+  }).sort((a, b) => a.dist - b.dist);
+}
+const allBeds = (s: SimState, w: World) => w.inter.concat(placedInters(s)).filter(i => i.kind === 'mattress');

@@ -41,7 +41,7 @@ describe('shelter sites (M3-29, U-013)', () => {
     run(s, w, 10);
     aim(s, bed.x, bed.y, bed.z);
     run(s, w, 1, { pressed: B.INTERACT });
-    expect(s.shelter.id).toBe(bed.id);
+    expect(s.shelters.map(h => h.id)).toContain(bed.id);
     expect(stashIds(s, w)).toEqual(expect.arrayContaining(site.containers));
   });
 });

@@ -19,7 +19,7 @@ import './food';
 import './shelter';
 import { survival } from '../data/survival';
 
-export const STATE_VERSION = 3;
+export const STATE_VERSION = 4;
 
 export function createState(seed: number, world: World): SimState {
   const s = world.spawn;
@@ -34,7 +34,7 @@ export function createState(seed: number, world: World): SimState {
     inv: { pack: grid(8, 6), hotbar: [null, null, null, null, null], held: 0 },
     containers: {},
     nextUid: 0,
-    shelter: { id: '', x: 0, y: 0, z: 0, battery: 0, compromised: false },
+    shelters: [],
     placed: [],
     openContainer: null,
     target: null,

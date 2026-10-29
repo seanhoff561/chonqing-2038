@@ -262,6 +262,17 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
     }
     return group([{ geo: k.geometry(), mat: PROP_MAT }]);
   },
+  // A shop's neon sign on a gantry (old commercial neon, not the occupier's cyan): a box sign of glowing glyphs
+  // on both faces with a lit strip under it, on two thin posts; length w along x, h the height of its bottom.
+  neonsign: p => {
+    const k = new Kit(seedOf(p)).use('metal'), r = k.r, w = p.w ?? 3, y = p.h ?? 4, c = [0xff4fa0, 0xffb040, 0x80ff90][Math.floor(r() * 3)];
+    for (const x of [-w / 2 + 0.1, w / 2 - 0.1]) k.box(0.08, y, 0.08, 0x3a3a3a, x, 0);
+    k.use('paint').box(w, 0.9, 0.3, 0x1a1a1e, 0, y);
+    const glow = new Kit(seedOf(p) + 2);
+    for (const z of [0.16, -0.16]) for (let x = -w / 2 + 0.25; x < w / 2 - 0.4;) { const gw = 0.3 + r() * 0.25; glow.box(gw, 0.55, 0.02, c, x + gw / 2, y + 0.18, z); x += gw + 0.12; }
+    glow.box(w - 0.1, 0.03, 0.26, c, 0, y - 0.02);
+    return group([{ geo: k.geometry(), mat: PROP_MAT }, { geo: glow.geometry(), mat: GLOW_MAT }]);
+  },
   dronewreck: p => {
     const k = new Kit(seedOf(p)).use('metal'), r = k.r;
     k.box(0.5, 0.18, 0.7, 0x2a2e32, 0, 0, 0, 0, (r() - 0.5) * 0.4, (r() - 0.5) * 0.4);

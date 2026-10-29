@@ -17,18 +17,43 @@ function hold(state: SimState, id: string) {
 }
 
 describe('setting up a shelter (M3-28, U-013)', () => {
-  it('E at a bed claims it; claiming another bed moves the shelter', () => {
+  it('E at a bed claims it; another bed makes a second hideout (U-018), and he sleeps in either', () => {
     const { world, state } = setup([floor()], { x: 0, y: 0, z: 0, yaw: 0 }, { inter: [bed('a', -1.2), bed('b', 30)] });
     run(state, world, 3, { pitch: -0.6 });
-    expect(state.shelter.id).toBe('');
+    expect(state.shelters).toEqual([]);
     run(state, world, 1, { pitch: -0.6, pressed: B.INTERACT });
-    expect(state.shelter.id).toBe('a');
+    expect(state.shelters.map(h => h.id)).toEqual(['a']);
     expect(state.events.some(e => e.t === 'sleep-menu')).toBe(true);
     state.player.pos.z = 31.2;
     run(state, world, 3, { pitch: -0.6 });
     run(state, world, 1, { pitch: -0.6, pressed: B.INTERACT });
-    expect(state.shelter.id).toBe('b');
-    expect(state.shelter.z).toBe(30);
+    expect(state.shelters.map(h => h.id)).toEqual(['a', 'b']);
+    expect(state.shelters[1].z).toBe(30);
+    for (const z of [31.2, 0]) {
+      state.player.pos.z = z;
+      state.body.energy = 10;
+      run(state, world, 3, { pitch: -0.6 });
+      run(state, world, 1, { pitch: -0.6, pressed: B.INTERACT });
+      run(state, world, 1, { pitch: -0.6, cmds: [{ c: 'act', name: 'sleep', arg: 4 }] } as never);
+      const slept = state.events.find(e => e.t === 'slept');
+      expect(slept && slept.t === 'slept' && slept.where, `bed at ${z}`).toBe('bed');
+    }
+    expect(state.shelters.length).toBe(2);
+  });
+  it('each hideout keeps its own storage: the containers nearest its bed', () => {
+    const { world, state } = setup([floor()], { x: 0, y: 0, z: 0, yaw: 0 }, { inter: [bed('a', -1.2), bed('b', 22), box('nearA', 3, 2), box('nearB', 3, 18), box('far', 40, 0)] });
+    run(state, world, 3, { pitch: -0.6 });
+    run(state, world, 1, { pitch: -0.6, pressed: B.INTERACT });
+    state.player.pos.z = 23.2;
+    run(state, world, 3, { pitch: -0.6 });
+    run(state, world, 1, { pitch: -0.6, pressed: B.INTERACT });
+    expect(stashIds(state, world, state.shelters[0])).toEqual(['nearA']);
+    expect(stashIds(state, world, state.shelters[1])).toEqual(['nearB']);
+    // Storage stays put: what goes in one hideout's box is not in the other's.
+    addItem(state, (state.containers.nearB = { w: 6, h: 4, items: [] }), 'water', 2);
+    expect(count(state.containers.nearB, 'water')).toBe(2);
+    expect(state.containers.nearA).toBeUndefined();
+    expect(stashIds(state, world)).toEqual(['nearB']);
   });
   it('a carried bedroll goes down on open floor, claims the shelter and sleeps like a bed', () => {
     const { world, state } = setup([floor()], { x: 0, y: 0, z: 0, yaw: 0 });
@@ -40,7 +65,7 @@ describe('setting up a shelter (M3-28, U-013)', () => {
     run(state, world, 1, { pitch: -0.9, pressed: LMB, buttons: LMB });
     expect(state.placed.map(p => p.item)).toEqual(['bedroll']);
     expect(count(state.inv.pack, 'bedroll')).toBe(0);
-    expect(state.shelter.id).toBe(state.placed[0].id);
+    expect(state.shelters.map(h => h.id)).toEqual([state.placed[0].id]);
     run(state, world, 3, { pitch: -0.9 });
     run(state, world, 1, { pitch: -0.9, pressed: B.INTERACT });
     expect(state.events.some(e => e.t === 'sleep-menu')).toBe(true);
@@ -82,7 +107,7 @@ describe('setting up a shelter (M3-28, U-013)', () => {
     writeSave(st, 'run', state);
     const loaded = readSave(st)!.state;
     expect(loaded.placed).toEqual(state.placed);
-    expect(loaded.shelter.id).toBe(state.placed[0].id);
+    expect(loaded.shelters.map(h => h.id)).toEqual([state.placed[0].id]);
     expect(allInters(loaded, world).some(i => i.id === state.placed[0].id && i.kind === 'mattress')).toBe(true);
   });
 });

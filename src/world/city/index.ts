@@ -35,7 +35,7 @@ export function buildCity(): World {
       { name: 'Jiaochangkou plaza', x: 24 * TILE, y: 44, z: 17 * TILE, yaw: Math.PI },
       { name: 'Shibati top', x: 23 * TILE + 10, y: 44, z: 19 * TILE + 2, yaw: Math.PI },
       { name: 'Shibati bottom', x: 23 * TILE + 10, y: 6, z: 28 * TILE + 15, yaw: 0 },
-      { name: 'Air-raid shelter (rotten mattress)', x: AIRRAID.x + 3.6, y: AIRRAID.y + 0.05, z: AIRRAID.z + 0.2, yaw: -Math.PI / 2 },
+      { name: "Friends' hideout (vent grate)", x: AIRRAID.x + 3.6, y: AIRRAID.y + 0.05, z: AIRRAID.z + 0.2, yaw: -Math.PI / 2 },
       { name: 'Grand Tunnel junction', x: 465.6, y: 32.05, z: 345, yaw: Math.PI / 2 },
       { name: 'Line 2 terminus platform', x: STATIONS[0].x0 + 10, y: BEAM.top + 0.05, z: BEAM.z + 3, yaw: Math.PI / 2 },
       { name: 'Line 2 beam, west of the terminus', x: STATIONS[0].x0 - 5, y: BEAM.top + 0.05, z: BEAM.z, yaw: Math.PI / 2 },

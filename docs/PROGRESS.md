@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-42 Start hideout and many hideouts (U-018).
-Features done: 91 / 243 | Last done: M8-25
+**Status:** building M3. Next: M3-40 Rotated solids (U-017).
+Features done: 92 / 243 | Last done: M3-42
 <!-- /status -->
 
 ## Log
@@ -109,3 +109,4 @@ Features done: 91 / 243 | Last done: M8-25
 - M3-15 Street props: street props delivered by the M3-34 library
 - M3-39 Geo data for Yuzhong (U-017): real elevation and OpenStreetMap data for eastern Yuzhong in local metres
 - M8-25 Intro screenplay for AI video (U-018): intro screenplay and shot list for AI video, with trailer cut
+- M3-42 Start hideout and many hideouts (U-018): start in the friends' vent hideout; any number of hideouts, each with its own storage
