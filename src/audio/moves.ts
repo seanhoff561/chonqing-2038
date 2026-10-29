@@ -28,6 +28,9 @@ export const MOVE_SOUNDS: Record<string, Play> = {
   slip: (a, t) => { a.noise(t, 0.3, 0.25, 'bandpass', 3500, 1.5, 900); breath(a, t + 0.05, 0.14, 0.2, 1300); },
   release: (a, t) => a.noise(t, 0.12, 0.06, 'bandpass', 1200, 0.8, 600),
   pullover: (a, t) => { breath(a, t, 0.12, 0.3, 500); a.noise(t + 0.15, 0.3, 0.12, 'bandpass', 900, 0.6, 400); },
+  // Palm flat on the wall: a soft pat and a breath in.
+  cling: (a, t) => { a.noise(t, 0.06, 0.18, 'lowpass', 1400); a.noise(t + 0.02, 0.18, 0.05, 'bandpass', 700, 1, 1100); },
+  pump: (a, t) => { a.noise(t, 0.2, 0.06, 'bandpass', 500, 0.7, 900); a.tone(t, 0.12, 0.05, 220, 180, 'triangle'); },
   dyno: (a, t) => { a.tone(t, 0.1, 0.35, 130, 60, 'triangle'); breath(a, t, 0.14, 0.22, 800); },
 };
 

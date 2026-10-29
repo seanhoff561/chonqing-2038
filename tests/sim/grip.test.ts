@@ -15,8 +15,8 @@ function wall(h: number, extra: ReturnType<typeof solid>[] = []) {
 /** Hold a mouse button while looking at the lip; optionally jump first. */
 function grabLip(state: SimState, world: World, top: number, bits = LMB, jump = false, x = 0) {
   aim(state, x, top - 0.1, -3);
-  if (jump) run(state, world, 1, { pressed: B.JUMP });
-  for (let i = 0; i < 40 && state.player.mode !== 'grip'; i++) { aim(state, x, top - 0.1, -3); run(state, world, 1, { buttons: bits }); }
+  if (jump) run(state, world, 1, { pressed: B.JUMP, buttons: B.JUMP });
+  for (let i = 0; i < 40 && state.player.mode !== 'grip'; i++) { aim(state, x, top - 0.1, -3); run(state, world, 1, { buttons: bits | (jump ? B.JUMP : 0) }); }
 }
 
 function handMantle(h: number, jump: boolean) {

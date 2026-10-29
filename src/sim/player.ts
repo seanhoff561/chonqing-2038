@@ -2,7 +2,7 @@
 import type { Vec3 } from './types';
 
 export type Posture = 'stand' | 'crouch' | 'crawl' | 'hidden';
-export type Mode = 'ground' | 'air' | 'action' | 'grip' | 'wallrun' | 'wallclimb' | 'swim' | 'hidden' | 'dead' | 'noclip';
+export type Mode = 'ground' | 'air' | 'action' | 'grip' | 'cling' | 'wallrun' | 'wallclimb' | 'swim' | 'hidden' | 'dead' | 'noclip';
 
 /** A timed scripted move (mantle, vault, climb-up, entering a box): lerps the feet from a to b. */
 export interface Action { kind: string; t: number; dur: number; a: Vec3; b: Vec3; then: Mode; posture: Posture; speed: number }
@@ -35,6 +35,12 @@ export interface Player {
   kicks: number;
   /** seconds the hands have been pulling at their limit */
   strain: number;
+  /** sideways body shift against the hands from mouse drags (U-005) */
+  side: number;
+  /** Space still held since a ground jump (released early cuts the jump) */
+  jumpHeld: boolean;
+  /** cling already used this airtime */
+  clung: boolean;
   act: Action | null;
   /** wall normal and timers for hang, wall-run and climbs */
   wall: { nx: number; nz: number; t: number; y: number; id: number };
@@ -55,7 +61,7 @@ export function createPlayer(x: number, y: number, z: number, yaw: number): Play
   return {
     pos: { x, y, z }, vel: { x: 0, y: 0, z: 0 }, yaw, pitch: 0,
     mode: 'air', posture: 'stand', onGround: false, fallFrom: y, crouchAge: 99,
-    endurance: 100, exhausted: false, hands: [{ grip: null }, { grip: null }], pull: 1.5, regrab: 0, kicks: 0, strain: 0, act: null,
+    endurance: 100, exhausted: false, hands: [{ grip: null }, { grip: null }], pull: 1.5, regrab: 0, kicks: 0, strain: 0, side: 0, jumpHeld: false, clung: false, act: null,
     wall: { nx: 0, nz: 0, t: 0, y: 0, id: -1 }, breath: 40, wetUntil: 0, stepAcc: 0, crawlToggle: false, hideId: -1, coyote: 0, slide: -1, hideExit: null,
   };
 }

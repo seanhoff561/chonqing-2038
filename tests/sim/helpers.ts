@@ -30,7 +30,7 @@ export function approachAndJump(state: SimState, world: World, buttons = 0, at =
   for (let i = 0; i < secs(5); i++) {
     const near = state.player.pos.z - 0.25 - face <= at;
     run(state, world, 1, { my: 1, buttons: buttons | (near ? B.JUMP : 0), pressed: near ? B.JUMP : 0 });
-    if (near) return;
+    if (near) { if (state.player.mode === 'air') run(state, world, 12, { my: 1, buttons: buttons | B.JUMP }); return; }
   }
 }
 
@@ -39,7 +39,7 @@ export function sprintJumpAt(state: SimState, world: World, z: number) {
   for (let i = 0; i < secs(10); i++) {
     const at = state.player.pos.z <= z;
     run(state, world, 1, { my: 1, buttons: B.SPRINT | (at ? B.JUMP : 0), pressed: at ? B.JUMP : 0 });
-    if (at) return;
+    if (at) { run(state, world, 20, { my: 1, buttons: B.SPRINT | B.JUMP }); return; }
   }
 }
 

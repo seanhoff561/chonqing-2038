@@ -17,7 +17,7 @@ describe('movement sound cues (M1-31)', () => {
     }
     const j = setup([floor()]);
     run(j.state, j.world, 5);
-    run(j.state, j.world, secs(1.5), { pressed: B.JUMP }, collect);
+    run(j.state, j.world, secs(1.5), { pressed: B.JUMP, buttons: B.JUMP }, collect);
     const sl = setup([floor()]);
     run(sl.state, sl.world, secs(1.5), { my: 1, buttons: B.SPRINT });
     run(sl.state, sl.world, secs(1), { my: 1, buttons: B.CROUCH, pressed: B.CROUCH }, collect);

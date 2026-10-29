@@ -10,6 +10,10 @@ export const movement = {
   jumpSpeed: 3.55,
   /** horizontal speed kept at take-off above a jog (U-004: more vertical, less horizontal) */
   jumpCarry: 0.88,
+  /** releasing Space while rising multiplies the upward speed (a tap reaches about 40%) */
+  jumpCut: 0.63,
+  /** jumping into a wall holds him there briefly (U-005) */
+  cling: { time: 0.35, slide: 0.4, minInto: 1.0, after: 1.2 },
   coyote: 0.03,
   stepHeight: 0.45,
   snapDown: 0.5,
@@ -28,7 +32,9 @@ export const movement = {
     /** spring toward the hanging spot, and how hard one or two hands can pull before slipping (U-004) */
     spring: 80, capOne: 35, capTwo: 80, strainOne: 0.1, strainTwo: 0.25,
     drainOne: 6, drainTwo: 2, ladderScale: 0.5, mantleFrom: 1.3, climbTime: 0.7,
-    dynoUp: 4.6, dynoFrom: 1.45, regrab: 0.25,
+    dynoUp: 4.6, regrab: 0.25,
+    /** U-005: mouse drags move the body (radians to metres), sideways range; bar swings and laches */
+    mousePull: 0.7, sideMax: 0.45, mouseSwing: 2.5, pump: 1.6, swingMax: 6.5, swingDamp: 0.15,
   },
   falls: { safe: 4, rollSafe: 7, rollWindow: 0.3, lethal: 12, fractureFrom: 7, rollMax: 10, dmgPerM: 8, dmgPerMHigh: 10, sprainChance: 0.4, armChance: 0.2 },
   hide: { enterTime: 0.6, exitTime: 0.5, minInner: 0.8, reach: 1.6 },

@@ -16,7 +16,7 @@ describe('movement tuning lives in data', () => {
       const b = setup([floor()]);
       run(b.state, b.world, 5);
       let apex = 0;
-      run(b.state, b.world, secs(1.2), { pressed: B.JUMP }, s => { apex = Math.max(apex, s.player.pos.y); });
+      run(b.state, b.world, secs(1.2), { pressed: B.JUMP, buttons: B.JUMP }, s => { apex = Math.max(apex, s.player.pos.y); });
       expect(apex).toBeGreaterThan(0.75);
     } finally {
       Object.assign(movement, saved);

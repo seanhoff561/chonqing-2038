@@ -8,8 +8,8 @@ import type { Player, Grip } from './player';
 import { movement as M } from '../data/movement';
 import { raycast, topAt } from '../world/geom';
 import { free, moveHorizontal, moveVertical } from './physics';
-import { startAction } from './parkour';
-import { lim, sfx } from './move';
+import { startAction, kickOff } from './parkour';
+import { lim, sfx, lookDelta } from './move';
 
 const HW = M.width / 2;
 const G = M.grip;
@@ -102,6 +102,7 @@ export function stepHands(s: SimState, world: World, input: InputFrame) {
       p.slide = -1;
       if (p.posture !== 'stand' && free(world.index, p.pos.x, p.pos.y + 1e-3, p.pos.z, M.height.stand)) p.posture = 'stand';
       p.pull = Math.max(G.pullMin, Math.min(G.hangMax, g.y - p.pos.y));
+      p.side = 0;
     }
     p.kicks = 0;
     s.events.push({ t: 'grab', hand: i, kind: g.kind });
@@ -110,7 +111,10 @@ export function stepHands(s: SimState, world: World, input: InputFrame) {
   if (p.mode === 'grip' && !gripping(p)) { releaseAll(p); sfx(s, 'release'); }
 }
 
+let curWorld: World | null = null;
+
 export function stepGrip(s: SimState, world: World, input: InputFrame) {
+  curWorld = world;
   const p = s.player, L = lim();
   const grips = p.hands.map(h => h.grip).filter((g): g is Grip => g !== null);
   if (!grips.length) { releaseAll(p); return; }
@@ -136,26 +140,39 @@ export function stepGrip(s: SimState, world: World, input: InputFrame) {
       return;
     }
   }
-  // Dyno: the legs push off the wall; the hands must catch something on the way.
-  if ((input.pressed & B.JUMP) && p.pull <= G.dynoFrom && L.jumpScale > 0) {
+  // Feet on the wall below the hands? Then Space pushes off; without footing it pumps a swing (U-005).
+  const foothold = !!raycast(world.index, p.pos.x, p.pos.y + 0.45, p.pos.z, -nx, 0, -nz, HW + 0.45);
+  const look = lookDelta();
+  if ((input.pressed & B.JUMP) && L.jumpScale > 0 && foothold) {
     releaseAll(p, G.regrab);
-    p.vel.y = G.dynoUp * Math.sqrt(L.jumpScale);
-    p.vel.x = -nx * 0.3; p.vel.z = -nz * 0.3;
+    const { hx, hz } = { hx: -Math.sin(p.yaw), hz: -Math.cos(p.yaw) };
+    if (-(hx * nx + hz * nz) > 0.3 || p.pitch > M.wallKick.upPitch) {
+      p.vel.y = G.dynoUp * Math.sqrt(L.jumpScale);
+      p.vel.x = -nx * 0.3; p.vel.z = -nz * 0.3;
+      sfx(s, 'dyno');
+    } else kickOff(s, nx, nz);
     s.events.push({ t: 'noise', x: p.pos.x, y: p.pos.y, z: p.pos.z, r: M.noise.vault, kind: 'dyno' });
-    sfx(s, 'dyno');
     return;
   }
+  // Mouse drags move the body against the hands (U-005): down hauls him up, sideways shifts him.
   if (L.pull) {
     if (input.my > 0) p.pull -= G.pullSpeed * L.climbScale * DT;
     else if (input.my < 0) p.pull += G.pullSpeed * DT;
+    p.pull += look.dPitch * G.mousePull;
   }
   p.pull = Math.max(G.pullMin, Math.min(G.hangMax, p.pull));
+  p.side = Math.max(-G.sideMax, Math.min(G.sideMax, p.side - look.dYaw * G.mousePull));
+  const two = grips.length > 1, cap = two ? G.capTwo : G.capOne;
+  if (!foothold) {
+    swing(s, ax, ay, az, input, look.dYaw, cap);
+    return;
+  }
   // The hands are a force-limited spring toward the hanging spot (U-004): momentum carries through,
   // one hand holds his weight when slow but slips after redirecting him when fast, two hands stop him.
-  const tx = ax + nx * G.wallGap, ty = ay - p.pull, tz = az + nz * G.wallGap;
+  const sx = p.side * Math.cos(p.yaw), sz = -p.side * Math.sin(p.yaw); // along the camera's right
+  const tx = ax + nx * G.wallGap + sx, ty = ay - p.pull, tz = az + nz * G.wallGap + sz;
   const k = G.spring, c = 2 * Math.sqrt(k);
   let fx = k * (tx - p.pos.x) - c * p.vel.x, fy = k * (ty - p.pos.y) - c * p.vel.y + M.gravity, fz = k * (tz - p.pos.z) - c * p.vel.z;
-  const two = grips.length > 1, cap = two ? G.capTwo : G.capOne;
   const f = Math.hypot(fx, fy, fz);
   if (f > cap) { fx *= cap / f; fy *= cap / f; fz *= cap / f; p.strain += DT; }
   else p.strain = Math.max(0, p.strain - DT);
@@ -174,4 +191,44 @@ export function stepGrip(s: SimState, world: World, input: InputFrame) {
   // A hand whose hold has drifted out of reach lets go.
   for (const h of p.hands) if (h.grip && Math.hypot(h.grip.x - p.pos.x, h.grip.y - eyeY(p), h.grip.z - p.pos.z) > G.rayReach + 0.8) h.grip = null;
   if (!gripping(p)) releaseAll(p);
+}
+
+/**
+ * Hanging free from a bar or beam: a pendulum around the grip (arms as the rope). Space pumps toward
+ * where he looks; letting go mid-swing keeps the velocity (a lache). The grip still has a force limit.
+ */
+function swing(s: SimState, ax: number, ay: number, az: number, input: InputFrame, dYaw: number, cap: number) {
+  const p = s.player, world = curWorld!;
+  // Hanging free, his head has to stay under the bar.
+  p.pull = Math.max(p.pull, M.height.stand + 0.1);
+  if (input.pressed & B.JUMP) {
+    const hx = -Math.sin(p.yaw), hz = -Math.cos(p.yaw);
+    p.vel.x += hx * G.pump; p.vel.z += hz * G.pump;
+    sfx(s, 'pump');
+  }
+  // Sideways mouse drags add a little swing too.
+  p.vel.x += Math.cos(p.yaw) * -dYaw * G.mouseSwing; p.vel.z += -Math.sin(p.yaw) * -dYaw * G.mouseSwing;
+  const hs = Math.hypot(p.vel.x, p.vel.z);
+  if (hs > G.swingMax) { p.vel.x *= G.swingMax / hs; p.vel.z *= G.swingMax / hs; }
+  p.vel.y -= M.gravity * DT;
+  p.vel.x *= 1 - G.swingDamp * DT; p.vel.z *= 1 - G.swingDamp * DT;
+  let x = p.pos.x + p.vel.x * DT, y = p.pos.y + p.vel.y * DT, z = p.pos.z + p.vel.z * DT;
+  // Keep the feet on a sphere of radius `pull` around the grip; remove the radial velocity.
+  let dx = x - ax, dy = y - ay, dz = z - az;
+  const d = Math.hypot(dx, dy, dz) || 1;
+  dx /= d; dy /= d; dz /= d;
+  const vr = p.vel.x * dx + p.vel.y * dy + p.vel.z * dz;
+  // The pull the hands must hold: centripetal plus gravity along the arms.
+  const v2 = p.vel.x ** 2 + p.vel.y ** 2 + p.vel.z ** 2 - vr * vr;
+  const need = v2 / p.pull - M.gravity * dy;
+  if (need > cap) { p.strain += DT; if (p.strain > G.strainOne) { p.strain = 0; releaseAll(p, G.regrab); sfx(s, 'slip'); return; } }
+  else p.strain = Math.max(0, p.strain - DT);
+  p.vel.x -= vr * dx; p.vel.y -= vr * dy; p.vel.z -= vr * dz;
+  x = ax + dx * p.pull; y = ay + dy * p.pull; z = az + dz * p.pull;
+  const mx = x - p.pos.x, mz = z - p.pos.z;
+  const blocked = moveHorizontal(world.index, p.pos, M.height.stand, mx, mz, 0.05);
+  if (blocked & 1) p.vel.x = 0;
+  if (blocked & 2) p.vel.z = 0;
+  if (moveVertical(world.index, p.pos, M.height.stand, y - p.pos.y) !== 0) p.vel.y = 0;
+  p.fallFrom = p.pos.y;
 }

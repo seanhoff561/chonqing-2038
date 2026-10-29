@@ -106,6 +106,11 @@ export class Hands {
         pose = 'grip';
         if (v.z > 1) show = false;
         x += Math.sin(this.t * 40 + i) * shake; y += Math.cos(this.t * 37 + i * 2) * shake;
+      } else if (p.mode === 'cling') {
+        // Palms flat on the wall in front.
+        x = vw / 2 + side * vw * 0.16;
+        y = vh * 0.36;
+        pose = 'open';
       } else if (readied && p.mode !== 'action') {
         x = vw / 2 + side * vw * 0.2;
         y = vh * 0.62;

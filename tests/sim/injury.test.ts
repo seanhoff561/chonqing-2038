@@ -16,7 +16,7 @@ const apex = (prep: (s: ReturnType<typeof setup>['state']) => void) => {
   prep(state);
   run(state, world, 5);
   let a = 0;
-  run(state, world, secs(1), { pressed: B.JUMP }, s => { a = Math.max(a, s.player.pos.y); });
+  run(state, world, secs(1), { pressed: B.JUMP, buttons: B.JUMP }, s => { a = Math.max(a, s.player.pos.y); });
   return a;
 };
 

@@ -8,7 +8,7 @@ describe('jump', () => {
     const { world, state } = setup([solid(-5, -1, -5, 5, 0, 5)]);
     run(state, world, 5);
     let apex = 0;
-    run(state, world, secs(1), { pressed: B.JUMP }, s => { apex = Math.max(apex, s.player.pos.y); });
+    run(state, world, secs(1), { pressed: B.JUMP, buttons: B.JUMP }, s => { apex = Math.max(apex, s.player.pos.y); });
     expect(apex).toBeGreaterThan(0.6);
     expect(apex).toBeLessThan(0.7);
   });
@@ -24,8 +24,8 @@ describe('jump', () => {
   it('air control is limited', () => {
     const { world, state } = setup([solid(-50, -1, -50, 50, 0, 50)]);
     run(state, world, 5);
-    run(state, world, 1, { pressed: B.JUMP });
-    run(state, world, secs(0.5), { mx: 1 });
+    run(state, world, 1, { pressed: B.JUMP, buttons: B.JUMP });
+    run(state, world, secs(0.5), { mx: 1, buttons: B.JUMP });
     expect(Math.abs(state.player.vel.x)).toBeLessThan(4 * 0.5 + 0.1);
   });
   it('in the air he cannot speed up past his take-off speed', () => {

@@ -111,7 +111,7 @@ function lookFlat(p: Player, nx: number, nz: number) {
 }
 
 /** Kick off a wall toward where he looks, never into it. */
-function kickOff(state: SimState, nx: number, nz: number) {
+export function kickOff(state: SimState, nx: number, nz: number) {
   const p = state.player, K = M.wallKick;
   let { hx, hz } = lookFlat(p, nx, nz);
   const away = hx * nx + hz * nz;
@@ -228,4 +228,30 @@ export function stepAction(state: SimState, world: World) {
   p.fallFrom = p.pos.y;
   if (a.speed > 0) { const f = forward(p.yaw); p.vel.x = f.x * a.speed; p.vel.z = f.z * a.speed; }
   if (p.posture === 'crouch' && a.kind !== 'unhide') setPosture(p, world, 'stand');
+}
+
+/** A short hold against a wall after jumping into it: time to choose a kick, a wall-run or a grab (U-005). */
+export function startCling(state: SimState, nx: number, nz: number): boolean {
+  const p = state.player;
+  p.mode = 'cling';
+  p.clung = true;
+  p.wall = { nx, nz, t: 0, y: p.pos.y, id: -1 };
+  p.vel.x = p.vel.z = 0;
+  p.vel.y = Math.min(0, p.vel.y) * 0.2;
+  p.jumpHeld = false;
+  sfx(state, 'cling');
+  return true;
+}
+
+export function stepCling(state: SimState, world: World, input: InputFrame) {
+  const p = state.player, w = p.wall;
+  w.t += DT;
+  if ((input.pressed & B.JUMP) && airWall(state, world)) return;
+  if ((input.pressed & B.DROP) || w.t >= M.cling.time) {
+    p.mode = 'air';
+    p.vel.y = -M.cling.after;
+    return;
+  }
+  p.vel.y = -M.cling.slide;
+  if (moveVertical(world.index, p.pos, M.height.stand, p.vel.y * DT) === 1) { p.mode = 'ground'; p.onGround = true; p.vel.y = 0; p.clung = false; }
 }

@@ -23,3 +23,6 @@ The White Knuckle sprite sheets you shared are that game's copyrighted art, and 
 
 ## Q-004 Stamina (open)
 You weren't sure about stamina. Default: no running stamina at all; only grip endurance while hanging (it refills as soon as the hands are free, and the hands shake as it runs low). Say if you want grip to be unlimited too, or a light running limit back.
+
+## Q-005 Mouse pull direction while gripping (open)
+Default: dragging the mouse down hauls him up toward the hands and sideways swings him that way, like White Knuckle. If you meant the body should follow the mouse (drag down to lower yourself), say so and it becomes the default; either way an invert option goes into settings.

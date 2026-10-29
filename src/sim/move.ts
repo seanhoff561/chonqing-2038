@@ -5,13 +5,17 @@ import type { World } from '../world/world';
 import type { Player, Posture } from './player';
 import { movement as M } from '../data/movement';
 import { free, moveHorizontal, moveVertical, groundGap } from './physics';
-import { groundParkour, airParkour, airWall, stepAction, stepWallRun, stepWallClimb } from './parkour';
+import { groundParkour, airParkour, airWall, stepAction, stepWallRun, stepWallClimb, stepCling } from './parkour';
 import { stepHands, stepGrip } from './grip';
+import { startCling } from './parkour';
 import { hideNear, enterHide, stepHidden } from './hide';
 import { checkWater, stepSwim } from './swim';
 import { limits, type Limits } from './body';
 
 let L: Limits;
+let look = { dYaw: 0, dPitch: 0 };
+/** How far the mouse moved the view this tick. */
+export const lookDelta = () => look;
 /** This tick's body limits (injuries, needs, load). */
 export const lim = () => L;
 
@@ -44,6 +48,9 @@ export function stepPlayer(state: SimState, world: World, input: InputFrame): vo
   const p = state.player;
   if (p.mode === 'dead') return;
   L = limits(state);
+  let dYaw = input.yaw - p.yaw;
+  dYaw -= Math.round(dYaw / (2 * Math.PI)) * 2 * Math.PI;
+  look = { dYaw, dPitch: input.pitch - p.pitch };
   p.yaw = input.yaw;
   p.pitch = Math.max(-1.5, Math.min(1.5, input.pitch));
   if (state.flags.noclip) { noclip(p, input); return; }
@@ -54,6 +61,7 @@ export function stepPlayer(state: SimState, world: World, input: InputFrame): vo
   switch (p.mode) {
     case 'action': stepAction(state, world); return;
     case 'grip': stepGrip(state, world, input); return;
+    case 'cling': stepCling(state, world, input); return;
     case 'wallrun': stepWallRun(state, world, input); return;
     case 'wallclimb': stepWallClimb(state, world, input); return;
     case 'hidden': stepHidden(state, world, input); return;
@@ -157,16 +165,28 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
     p.vel.y = M.jumpSpeed * Math.sqrt(L.jumpScale);
     if (Math.hypot(p.vel.x, p.vel.z) > M.speed.jog) { p.vel.x *= M.jumpCarry; p.vel.z *= M.jumpCarry; }
     p.onGround = false;
+    p.jumpHeld = true;
     sfx(state, 'jump');
     p.coyote = 0;
     jumped = true;
   }
   if (!p.onGround) p.vel.y = Math.max(-M.maxFall, p.vel.y - M.gravity * DT);
+  // Letting go of Space early cuts a jump short (U-005).
+  if (p.jumpHeld && !jumped) {
+    if (!(input.buttons & B.JUMP) && p.vel.y > 0) { p.vel.y *= M.jumpCut; p.jumpHeld = false; }
+    else if (p.vel.y <= 0) p.jumpHeld = false;
+  }
+  const into = { x: p.vel.x, z: p.vel.z };
   const wasGround = p.onGround;
   const x0 = p.pos.x, z0 = p.pos.z;
   const blocked = moveHorizontal(idx, p.pos, h, p.vel.x * DT, p.vel.z * DT, p.onGround ? M.stepHeight : 0.05);
   if (blocked & 1) p.vel.x = 0;
   if (blocked & 2) p.vel.z = 0;
+  // Jumping into a wall clings for a moment (U-005).
+  if (blocked && !p.onGround && !p.clung && p.posture === 'stand' && !jumped) {
+    const nx = blocked & 1 ? -Math.sign(into.x) : 0, nz = blocked & 1 ? 0 : -Math.sign(into.z);
+    if (Math.abs(nx ? into.x : into.z) > M.cling.minInto && startCling(state, nx, nz)) return;
+  }
   const vy = p.onGround ? -0.05 : p.vel.y * DT;
   const hit = moveVertical(idx, p.pos, h, vy);
   if (hit === 1) {
@@ -183,7 +203,7 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
     }
   }
   if (p.onGround) {
-    p.fallFrom = p.pos.y; p.coyote = jumped ? 0 : M.coyote; p.kicks = 0;
+    p.fallFrom = p.pos.y; p.coyote = jumped ? 0 : M.coyote; p.kicks = 0; p.clung = false;
     if (p.slide >= 0) { if (p.slide < DT * 1.5) noise(state, M.noise.slide, 'slide'); }
     else footsteps(state, Math.hypot(p.pos.x - x0, p.pos.z - z0));
   }

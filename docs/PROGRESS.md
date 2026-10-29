@@ -2,7 +2,7 @@
 
 <!-- status -->
 **Status:** building M1. Next: M1-28 Gym climbing routes.
-Features done: 46 / 211 | Last done: M1-31
+Features done: 47 / 216 | Last done: M1-36
 <!-- /status -->
 
 ## Log
@@ -61,3 +61,4 @@ Features done: 46 / 211 | Last done: M1-31
 - M1-29 Sprinting reads clearly: sprinting reads clearly (U-003)
 - M1-30 Wall jump by camera direction: wall jump by camera direction (U-004)
 - M1-31 Movement sound cues: movement sound cues (U-004)
+- M1-36 Tap and hold jump height: tap and hold jump height (U-005)
