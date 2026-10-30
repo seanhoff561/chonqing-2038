@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 51 of 66 done
+## M3: 52 of 72 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -461,10 +461,35 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Many more and much taller buildings, packed side by side in clusters a running jump or a wall-run apart; buildings stacked and bridging over each other and over the lanes (skybridges, a block built across a street, Chongqing's street-on-the-roof levels with entrances on many floors); futuristic megastructures (U-024)
   - Gaps between packed buildings sized from the envelope (a running jump or a wall-run, some at its maximum); a unit test measures them
   - Screenshots of a skybridge, a block over a lane and a street-on-the-roof level
-- [ ] **M3-58** The underground city (U-023, U-024)
+- [x] **M3-58** The underground city (U-023, U-024)
   - Several levels under the peninsula: air-raid tunnels, basements, storm culverts and the metro joined into a network, and in places a whole underground layer of streets, shops and buildings with shafts, stairs and drops between its levels, futuristic like the city above
   - Many ways in (building basements, stairs, grates, culvert mouths, metro entrances), some only by a climb or a squeeze; patrols walk it (M4-01)
   - A bot walks underground between three districts and between two levels; a unit test counts at least 30 ways in
+- [ ] **M3-59** Props that make sense (U-031)
+  - Hanging cords and lines (laundry, bunting, cable bundles) run only between two real anchors at heights the buildings have; none float or end in the air; a unit test checks every one
+  - Bicycles and scooters lie fallen; signs never pass through balconies (moved in front, hung from the rail, or the balcony goes); no plain untextured boxes where the real thing has detail
+  - Shopfronts in many styles, colours and patterns, and only on faces open to a street with nothing in front; a unit test checks the variety and the placement
+  - Things beside the streets stand back from the kerb edge in loose, varied groups, not in a line on the edge
+  - The Line 2 train sits on its beam, following it; searchlights are off by day
+  - Screenshots of each
+- [ ] **M3-60** Open ground with structure (U-031)
+  - Open ground is laid out on purpose: parks (paths, lawns and beds edged with kerbs, trees in order, benches), parking lots (marked bays, cars parked in them), plazas and walking streets (paving, food stalls, seating, planters); grass ends at a kerb or a path, never overlapping paving or cut through
+  - Walkways have smooth kerbed edges and never pass through a building
+  - Between buildings: built structures (sheds, kiosks, stair towers, canopies) or a civic use, not a lone tree or car in a void
+  - A unit test checks kerbs round the grass, the parking lots' cars in bays and no walkway through a building; screenshots of a park, a parking lot and a plaza
+- [ ] **M3-61** Ruins that look fallen (U-031)
+  - The rough ground reads as collapse: boulders and broken slabs, fallen beams and columns, sections of facade lying where they fell from the building beside them (its material and colour), sediment and rubble filling the hollows organically
+  - A unit test checks each ruin matches its neighbouring building; screenshots of three
+- [ ] **M3-62** Foliage (U-031)
+  - Several tree species of varied size and shape (camphor, banyan, palm, bamboo, ginkgo), shrubs, hedges, ferns and potted plants; rooftop gardens of planters and climbing plants instead of bushes on bare roofs
+  - Screenshots of a park, a street and a rooftop
+- [ ] **M3-63** A realistic sky, rain and night (U-031)
+  - The sky from photographic reference: fine pinpoint stars, natural cloud (no orange cast), the sky running down to a visible horizon; rain from reference: streaks, splashes, wet sheen, mist
+  - At night only a few windows lit (the city is emptied), lights where people or machines are
+  - Screenshots by day, dusk, night and in rain
+- [ ] **M3-64** The far ground drawn properly (U-031)
+  - The far view carries the roads, pavements, grass and ground textures, matching the near view at the seam
+  - Screenshots across the seam; perf stays in budget
 - [ ] **M3-51** Sandbox parkour areas (U-021)
   - Skatepark-style areas in the plain parts of the city: dense, varied geometry (roofs at mixed heights, walls, poles, bars, slopes, scaffolds, cables) built to the envelope, with many lines through and no single solution; riskier (more patrols, less cover)
   - A bot test finds at least three different routes across each area
@@ -535,6 +560,7 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
   - Patrol routes run underground too: the tunnels and the underground layer (U-024)
   - Main patrol lines run the clear streets; robots and drones break off them into side alleys and buildings (U-028)
   - Convoys (U-030): the main roads carry the machines' columns (humanoids, quadrupeds, carriers, drones overhead) out of the city at all hours from the factory, so streets and open ground are where he gets seen; they start on the factory's convoy paths (world.convoys, M3-57b) and replace its decor columns (render/convoys.ts)
+  - Columns move like a military unit (U-031): squads in loose staggered formation crossing streets by bounds, not single-file lines; patrols peel off the columns into alleys and buildings and rejoin them
 - [ ] **M4-02** Navigation graph and pathing
   - A nav graph built from streets, stairs and tunnels with levels; A* between any two reachable nodes
   - Unit types filter edges (delivery robots avoid stairs)
@@ -567,6 +593,7 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
 - [ ] **M4-10** Humanoids
   - 2.5 m/s walk, 4.5 m/s run, stairs only, armoured, armed
   - A sim test covers patrol and pursuit speed
+  - Humanoids act like human soldiers hunting him (U-031): cover, flanking, calling to each other, searching methodically
 - [ ] **M4-11** Turrets, motion sensors, tripwires and acoustic sensors
   - Static sensors behave per DESIGN section 7; turrets fire when Engaged
   - Sim tests: crossing a tripwire engages; a motion sensor ignores a slow crawl
@@ -618,6 +645,7 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
 - [ ] **M4-26** Machine models
   - Code-built meshes: cameras, lamppost cameras, patrol and hunter drones with spinning rotors, quadrupeds with leg animation, humanoids, turrets and docks
   - ?scenario=units shows a lineup; a screenshot
+  - The machines (U-031): white so they're seen, detailed and armed (rifles, launchers, armour plates, sensor heads); they move like soldiers (human-like walk, run, crouch, aim and turn animations), not robots; genuinely intimidating; models and animations from openly licensed sources if found, else built to reference
 - [ ] **M4-27** The world shows the alert state
   - Unit lights go white, amber or red by state; LED boards switch to alert text; sirens sound
   - No HUD indicator; screenshots Unaware and Engaged

@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-58 The underground city (U-023, U-024).
-Features done: 114 / 266 | Last done: M3-57
+**Status:** building M3. Next: M3-59 Props that make sense (U-031).
+Features done: 115 / 272 | Last done: M3-58
 <!-- /status -->
 
 ## Log
@@ -132,3 +132,4 @@ Features done: 114 / 266 | Last done: M3-57
 - M3-57a Climbing the towers (U-023): tower climbing lines: stubs a dyno apart, broken floors, vantage platforms
 - M3-57b The factory at Chaotianmen (U-030): the factory in Raffles City's podium, lit, guarded, columns marching out
 - M3-57 The vertical city: packed, stacked and bridged (U-023, U-024): the vertical city: skybridges, blocks over lanes, roof streets, megastructures, clustered towers, envelope-sized gaps
+- M3-58 The underground city (U-023, U-024): the underground city: a network off the Grand Tunnel to a two-level city under Jiefangbei and on to Xiaoshizi, 40+ ways in

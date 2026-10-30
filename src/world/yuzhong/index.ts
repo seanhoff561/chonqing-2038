@@ -19,7 +19,8 @@ import { buildGround, streets, onGround, WATER_Y, type Street } from './ground';
 import { planLots, levelLots, markEnterable, type Plan } from './lots';
 import { corners, rasterPoly, type Obb } from './shapes';
 import { alleys } from '../city/climb';
-import { buildTunnels } from './tunnels';
+import { buildTunnels, tunnelFrame, JUNCTION } from './tunnels';
+import { buildUnder } from './under';
 import { buildSite } from './site';
 import { podiumMask, buildFactory } from './factory';
 import { verticalCity } from './vertical';
@@ -34,7 +35,10 @@ export function buildYuzhong(): World {
   // The set pieces cut and level the ground first; lots keep clear of them.
   const tun = buildTunnels(g), site = buildSite(g), line = buildLine2(g);
   const land = landMask(g), metro = stationEntrances(g, sts.filter(onGround), land), block = new Uint8Array(g.y.length), mark = (poly: [number, number][], m = block) => rasterPoly(poly, 0, 0, g.cell, g.w, g.h, (i0, i1, j) => m.fill(1, j * g.w + i0, j * g.w + i1 + 1));
-  for (const o of tun.keep.concat(metro.keep)) mark(corners({ ...o, hw: o.hw + KEEP, hd: o.hd + KEEP }));
+  // The underground network off the Grand Tunnel (M3-58), its ways in kept clear of lots.
+  const { W: tw } = tunnelFrame(), gtAt = (uu: number, vv: number) => { const [x, z] = tw(uu, vv); return { x, y: tun.frame.floor, z }; };
+  const under = buildUnder(g, { floor: tun.frame.floor, junction: tun.at.junction, ways: [tun.at.entrance, tun.at.exit, tun.at.grate], walk: [gtAt(195, 0), gtAt(JUNCTION.u, 0), gtAt(JUNCTION.u, 8)] });
+  for (const o of tun.keep.concat(metro.keep, under.keep)) mark(corners({ ...o, hw: o.hw + KEEP, hd: o.hd + KEEP }));
   for (const b of line.beams) for (let k = 0; k + 1 < b.pts.length; k++) {
     const [[ax, az], [bx, bz]] = [b.pts[k], b.pts[k + 1]];
     mark(corners({ cx: (ax + bx) / 2, cz: (az + bz) / 2, hw: Math.hypot(bx - ax, bz - az) / 2 + 1, hd: BEAM.w / 2 + 3, yaw: Math.atan2(bz - az, bx - ax) }));
@@ -69,6 +73,11 @@ export function buildYuzhong(): World {
     // roof under a megastructure.
     ...([['skybridge', 'Skybridge', 0, 0], ['overLane', 'Block over a lane', 0, -4.4], ['roofStreet', 'Roof street', -2, 0.3], ['mega', 'Megastructure', 0, -4.2]] as const).flatMap(([k, name, out, up]) =>
       vert.features.filter((f, i, all) => f.kind === k && !all.some((q, j) => j < i && q.group === f.group)).slice(0, 3).map((f, n) => ({ name: `${name} ${n + 1}`, x: f.x + f.nx! * out, y: f.y + up + 1.5, z: f.z + f.nz! * out, yaw: Math.atan2(f.nx!, f.nz!) }))),
+    // Down below (M3-58).
+    { name: 'Underground city deck', x: under.at.deck.x, y: under.at.deck.y + 1.5, z: under.at.deck.z, yaw: 0 },
+    { name: 'Underground city concourse', x: under.at.concourse.x, y: under.at.concourse.y + 1.5, z: under.at.concourse.z, yaw: 0 },
+    { name: 'Underground Xiaoshizi', x: under.at.xiaoshizi.x, y: under.at.xiaoshizi.y + 1.5, z: under.at.xiaoshizi.z, yaw: 0 },
+    ...under.features.filter(f => f.kind === 'way:culvert' || f.kind === 'way:drain').map((f, n) => ({ name: `${f.kind === 'way:drain' ? 'Drain' : 'Culvert'} mouth ${n + 1}`, x: f.x, y: f.y + 1.5, z: f.z, yaw: 0 })),
     ...(fac?.gates ?? []).map((q, n) => ({ name: `Factory gate ${n + 1}`, x: q.x + q.nx * 16, y: q.y + 1.5, z: q.z + q.nz * 16, yaw: Math.atan2(q.nx, q.nz) })),
   ], metro.at.map(m => ({ name: `Metro ${m.name}`, x: m.x, y: hAt(g, m.x, m.z) + 1.5, z: m.z, yaw: 0 })),
   // Vantage ledges high on the towers (M3-57a), looking out.
@@ -76,13 +85,13 @@ export function buildYuzhong(): World {
     { name: 'Construction site', x: site.frame.x, y: site.base + 0.05, z: site.frame.z, yaw: 0 },
     { name: 'Construction site crane', x: site.crane.x, y: site.crane.top + 2.55, z: site.crane.z, yaw: 0 },
   ] : []);
-  const solids = out.solids.concat(line.solids, metro.solids, site?.solids ?? [], fac?.solids ?? [], vert.solids, tun.solids), inter = out.inter.concat(tun.inter, line.inter);
+  const solids = out.solids.concat(line.solids, metro.solids, site?.solids ?? [], fac?.solids ?? [], vert.solids, under.solids, tun.solids), inter = out.inter.concat(tun.inter, line.inter);
   // The tunnel gate's door switches its own collision solid, the tunnels' last.
   tun.inter.find(i => i.id === 'shibati-gate')!.data!.solid = solids.length - 1;
   // Street dressing goes last, round everything else (its solids append, so the gate's index holds).
   const clear = [tun.at.entrance, tun.at.exit, tun.at.grate, ...metro.at].map(q => ({ x: q.x, z: q.z, r: 9 })).concat(site ? [{ x: site.frame.x, z: site.frame.z, r: 50 }] : [],
     plots.filter(p => p.route).map(p => ({ x: p.route![0].x, z: p.route![0].z, r: 2.5 })),
-    (fac?.gates ?? []).map(q => ({ x: q.x + q.nx * 8, z: q.z + q.nz * 8, r: 13 })));
+    (fac?.gates ?? []).map(q => ({ x: q.x + q.nx * 8, z: q.z + q.nz * 8, r: 13 })), under.features.map(f => ({ x: f.x, z: f.z, r: 6 })));
   const dress = dressStreets(buildIndex(solids, g), g, sts, land, inter, clear);
   solids.push(...dress.solids);
   // Then the green and the ruins on the marked open ground, round all that.
@@ -92,10 +101,10 @@ export function buildYuzhong(): World {
   const filled = fill(buildIndex(solids, g), g, marks, plots), strung = cables(plans, buildIndex(solids, g));
   solids.push(...filled.solids, ...strung.masts);
   const world = makeWorld({
-    name: 'yuzhong', solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? [], fac?.decor ?? [], vert.decor, filled.decor),
-    props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], fac?.props ?? [], dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(line.climbables, site?.climbables ?? [], vert.climbables),
-    hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones,
-    far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(fac?.features ?? [], vert.features), marks, lines: strung.lines, convoys: fac?.convoys, streets: sts.filter(onGround).map(s => ({ kind: s.kind, w: s.w, steps: s.steps, pts: s.pts })), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
+    name: 'yuzhong', solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? [], fac?.decor ?? [], vert.decor, under.decor, filled.decor),
+    props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], fac?.props ?? [], under.props, dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(line.climbables, site?.climbables ?? [], vert.climbables, under.climbables),
+    hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones.concat(under.zones),
+    far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(fac?.features ?? [], vert.features, under.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n }))), marks, lines: strung.lines, convoys: fac?.convoys, streets: sts.filter(onGround).map(s => ({ kind: s.kind, w: s.w, steps: s.steps, pts: s.pts })), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
     teleports, spawn: hide,
   });
   // Nothing floats or sinks (M3-56): whatever stands on something above ground settles onto what's under it, or
@@ -197,6 +206,9 @@ function place(f: Fabric, o: Obb, prefix: string, out: Fabric): (x: number, z: n
 /** The alleys between neighbours in each row of infill (U-005): hide spots, scaffold bars, fences and litter,
  *  laid out in the first one's frame. */
 function rowAlleys(plans: Plan[], out: Fabric, g: Heightfield) {
+  // Along each row the alleys take turns, the first one first: something to hide in, bars to swing from, a fence
+  // to get over, a hide again.
+  const turn = new Map<string, number>();
   for (let n = 0; n + 1 < plans.length; n++) {
     const a = plans[n], b = plans[n + 1];
     // Neighbours square to each other (to a few degrees, round a bend): b laid out in a's frame.
@@ -207,7 +219,10 @@ function rowAlleys(plans: Plan[], out: Fabric, g: Heightfield) {
     const f = empty();
     // Its floor: the ground between them (a lane may keep it higher than either, a slope lower).
     const y = heightAt(g, (o.cx + b.obb.cx) / 2, (o.cz + b.obb.cz) / 2) ?? Math.min(a.base, b.base);
-    alleys([lot(o.cx, o.cz, o.hw, o.hd, y), lot(bx, bz, b.obb.hw, b.obb.hd, y)], makeRng(hashString(`alley${a.seed}`)), f);
+    // Seeded by where it is, so what's in it doesn't change when lots elsewhere come or go.
+    const k = turn.get(a.row) ?? 0;
+    turn.set(a.row, k + 1);
+    alleys([lot(o.cx, o.cz, o.hw, o.hd, y), lot(bx, bz, b.obb.hw, b.obb.hd, y)], makeRng(hashString(`alley${Math.round(o.cx)},${Math.round(o.cz)}`)), f, [0.1, 0.5, 0.8, 0.3][k % 4]);
     place(f, o, `${a.seed}a`, out);
   }
 }

@@ -185,7 +185,7 @@ export class Game {
     this.furniture.sync(this.state, this.world);
     this.status.update(this.state, dt);
     const cam = this.view.fp.cam.position;
-    this.sky.update(this.state.time, cam, this.hazeDistance(), this.underAmount(dt), this.state.weather);
+    this.sky.update(this.state.time, cam, this.hazeDistance(), this.underAmount(dt), this.state.weather, this.lit);
     const wet = this.underwater.update(this.world, this.state.tick / 60);
     this.sky.dome.mesh.visible = !wet;
     // The lines he has rigged (M3-52).
@@ -205,11 +205,15 @@ export class Game {
   }
 
   private under = 0;
+  /** How far into a lit underground space (the underground city's lights, M3-58), 0..1. */
+  private lit = 0;
   /** Eases toward 1 while the camera is inside an underground zone. */
   private underAmount(dt: number): number {
     const c = this.view.fp.cam.position;
-    const inside = this.world.zones.some(z => z.kind === 'under' && c.x > z.box.x0 && c.x < z.box.x1 && c.y > z.box.y0 && c.y < z.box.y1 && c.z > z.box.z0 && c.z < z.box.z1);
-    this.under += ((inside ? 1 : 0) - this.under) * (1 - Math.exp(-3 * dt));
+    const zone = this.world.zones.find(z => z.kind === 'under' && c.x > z.box.x0 && c.x < z.box.x1 && c.y > z.box.y0 && c.y < z.box.y1 && c.z > z.box.z0 && c.z < z.box.z1);
+    const k = 1 - Math.exp(-3 * dt);
+    this.under += ((zone ? 1 : 0) - this.under) * k;
+    this.lit += ((zone?.lit ? 1 : 0) - this.lit) * k;
     return this.under;
   }
 

@@ -31,7 +31,7 @@ export interface Site {
 }
 
 /** Areas with special rules: 'under' = underground (no sky light). */
-export interface Zone { kind: string; box: Box }
+export interface Zone { kind: string; box: Box; /** an underground space with its own lights (M3-58) */ lit?: boolean }
 
 /** A street's line on the ground: its kind (OSM highway), width, whether it's a stair, its points. */
 export interface StreetLine { kind: string; w: number; steps: boolean; pts: [number, number][] }

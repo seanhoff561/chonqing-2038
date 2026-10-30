@@ -105,7 +105,8 @@ export function facades(l: Lot, r: Rng, out: Fabric) {
 }
 
 /** The alley between neighbouring buildings in one frame, on the lower one's floor. */
-export function alleys(lots: Lot[], r: Rng, out: Fabric) {
+/** pick: which kind of alley (0..1 as the roll below), when the caller deals them out in turn. */
+export function alleys(lots: Lot[], r: Rng, out: Fabric, pick?: number) {
   for (let i = 0; i < lots.length; i++) for (let j = i + 1; j < lots.length; j++) {
     const a = lots[i], b = lots[j];
     const gx = Math.max(a.x0, b.x0) - Math.min(a.x1, b.x1), gz = Math.max(a.z0, b.z0) - Math.min(a.z1, b.z1);
@@ -120,7 +121,7 @@ export function alleys(lots: Lot[], r: Rng, out: Fabric) {
       alongZ ? solid(p0, y0, q0, p1, y1, q1, mat) : solid(q0, y0, p0, q1, y1, p1, mat);
     const at = (p: number, q: number) => (alongZ ? { x: p, z: q } : { x: q, z: p });
     // Most alleys hold something to hide in, swing from or get over (U-023).
-    const x = rand(r);
+    const x = pick ?? rand(r);
     if (x < 0.4) {
       // Hide spots against one wall: a crate (0.8 m inside) or a dumpster.
       const k = 1 + randInt(r, 2);

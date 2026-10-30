@@ -26,6 +26,8 @@ const T35 = Math.tan(0.61), HALF = 1.5, WALL = 4.4, HEAD = 3.2;
 const CHAMBER = { u: 91.2, v: 11 };
 /** The way out: a stairway south off the Grand Tunnel near its end, up to the street below Jiaochangkou. */
 const EXIT_U = 202;
+/** Where a passage leaves the Grand Tunnel's north side for the underground network (M3-58), and how far it runs. */
+export const JUNCTION = { u: 40, v: 14 };
 
 /** A stairway in its own frame (a from its top at 0 down to its foot at len, b across) mapped onto the tunnel
  *  frame's local boxes: along x (u) or z (v), a increasing toward +sa. */
@@ -67,6 +69,8 @@ export function buildTunnels(g: Heightfield): Tunnels {
     { u0: inRun, u1: 212, v: 0, w: 5, h: 4, alongU: true },
     { u0: 2.5, u1: 13, v: 117.2, w: 2.4, h: 3, alongU: false },
     { u0: 212, u1: 222, v: 0, w: 9, h: 3, alongU: true },
+    // Open at its far end, where the underground network's junction room takes it (under.ts).
+    { u0: 2.5, u1: JUNCTION.v, v: JUNCTION.u, w: 3, h: 3.2, alongU: false, open: true },
   ];
   const bores: Box[] = [], lining: Solid[] = [], decor: Solid[] = [], kept: Solid[] = [];
   for (const r of runs) {
@@ -74,7 +78,7 @@ export function buildTunnels(g: Heightfield): Tunnels {
     bores.push({ x0: a0, y0: floor, z0: b0, x1: a1, y1: floor + r.h, z1: b1 });
     lining.push(solid(a0 - 0.5, floor - 1, b0 - 0.5, a1 + 0.5, floor, b1 + 0.5, MAT.stone), solid(a0 - 0.5, floor + r.h, b0 - 0.5, a1 + 0.5, floor + r.h + 0.8, b1 + 0.5, MAT.stone));
     if (r.alongU) lining.push(solid(a0, floor, b0 - 0.5, a1, floor + r.h, b0, MAT.stone), solid(a0, floor, b1, a1, floor + r.h, b1 + 0.5, MAT.stone), solid(a1, floor, b0, a1 + 0.5, floor + r.h, b1, MAT.stone));
-    else lining.push(solid(a0 - 0.5, floor, b0, a0, floor + r.h, b1, MAT.stone), solid(a1, floor, b0, a1 + 0.5, floor + r.h, b1, MAT.stone), solid(a0, floor, b1, a1, floor + r.h, b1 + 0.5, MAT.stone));
+    else lining.push(solid(a0 - 0.5, floor, b0, a0, floor + r.h, b1, MAT.stone), solid(a1, floor, b0, a1 + 0.5, floor + r.h, b1, MAT.stone), ...('open' in r ? [] : [solid(a0, floor, b1, a1, floor + r.h, b1 + 0.5, MAT.stone)]));
     // Old bulkhead lamps on the crown, a few still burning off the shelter's batteries.
     if (r.alongU) for (let u = r.u0 + 6; u < r.u1 - 2; u += 18) decor.push(solid(X(u) - 0.3, floor + r.h - 0.12, Z(r.v) - 0.12, X(u) + 0.3, floor + r.h, Z(r.v) + 0.12, MAT.lamp));
     for (let u = r.u0; u < r.u1; u += 4) {
@@ -162,8 +166,9 @@ export function buildTunnels(g: Heightfield): Tunnels {
   }));
   for (const [k, q] of Object.entries(h.at)) { const [x, z] = P(q.x, q.z); out.at[k] = { x, y: q.y, z }; }
   out.sites.push({ id: 'airraid', kind: 'cellar', x: out.at.mattress.x, y: floor, z: out.at.mattress.z, bed: 'airraid-mattress', table: null, containers: ['airraid-stash'], exits: 1, windows: 0, streetSides: 0 });
-  const [gx, gz] = W(gu, gv);
+  const [gx, gz] = W(gu, gv), [jx, jz] = W(JUNCTION.u, JUNCTION.v);
   out.at.grate = { x: gx, y: gy, z: gz };
+  out.at.junction = { x: jx, y: floor, z: jz };
   return out;
 }
 
