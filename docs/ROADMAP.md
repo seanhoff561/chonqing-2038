@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 58 of 77 done
+## M3: 59 of 77 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -396,28 +396,28 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Everything purposeful (U-033): M3-60's grid-cell parks, plazas and parking lots replaced; the open ground filled with buildings (blocks, low layers, fillers) right up to each other and the streets; green only in the few real parks, laid inside their real outlines; what open ground is left is hardscape shaped to the buildings and streets round it (paving to the building lines, forecourts, steps, a parking court between buildings) with its walkways running from somewhere to somewhere (street to entrance, street to stair) like the roads; nothing on the cell grid, nothing jagged or repeated
   - Short and medium buildings about twice as tall; between them half-height layers (low blocks, decks, scaffolding, platforms) and short fillers as low as today's short ones, so the city stands in layers to be crossed by parkour; bridges between buildings, beams sticking out, vertical alleys (narrow slots between tall walls to climb or wall-run up)
   - A unit test measures the layers (heights spread across bands) and the vertical alleys; screenshots
-  - U-034: the shorter buildings beside tall ones 60-80% of their height and no building far over the ones round it (a test bounds each building's height against its neighbours'); many more low fillers in the open ground and the small parks left
+  - U-034, U-037: more variety, so a short building beside a tall one isn't always a huge step: many of the shorter ones beside tall ones at 60-80% of their height, more low fillers on the open ground (today's parks kept as they are); big gaps between buildings are fine and a big building may stand over its neighbours (a test measures the spread of heights beside the tall ones)
   - U-034: Shibati's old houses rebuilt as apartment blocks like the rest of the city
   - U-034: megastructures only low over roofs of near one height, on thick columns (a test bounds their columns' height and thickness)
 - [ ] **M3-38** Interiors with variety (U-014)
   - Room templates (flats, stairwells, corridors, shops, restaurants, offices, workshops) furnished from a furniture and clutter set in states of decay: collapsed ceilings, debris, water damage, overturned furniture
   - Several variants per template so rooms rarely repeat; references from docs/reference interiors
   - Screenshots of five different rooms
-- [ ] **M3-36** Building access by design (U-014)
-  - Hand-made building templates in several variations each: most doors locked or jammed, stair doors chained, only a few rooms open, the rest collapsed or blocked; ways in like a window off a neighbour's roof, a hole in a floor, a balcony to crawl along, a fire door opened from inside
-  - Generic pipes, ladders and hold columns are removed; climbables appear only where a template or route places them
+- [ ] **M3-36** Building access by design (U-014, U-037)
+  - Procedural building insides in several variations each: most doors locked or jammed, stair doors chained, only a few rooms open, the rest collapsed or blocked; ways in like a window off a neighbour's roof, a hole in a floor, a balcony to crawl along, a fire door opened from inside
+  - U-037: the city's holds stay as they are; ways in are designed around rooms, windows and insides rather than added holds, and holds are taken away only round places meant to be reached one designed way
   - Loot is scarce: a few containers per open building, most rooms empty or picked over
-  - Sim tests take one way into each template and find the locked alternatives refuse him
+  - Unit tests check the insides' data (rooms, open windows, locks per building) and that a locked door or barred window refuses him; whether each way in plays well is for the director (U-037: no tests that a way is possible)
   - U-034 procedural insides and connections: each building a number of enterable windows by its size, into rooms, stairs up to more rooms; most of it locked or collapsed, a few rooms per building open, each with a window to it (broken in, to break, locked or barred); from some windows a makeshift beam bridge to a building nearby or a short fire escape; ground doors sometimes to an unlocked stairwell; roof doors locked but breakable; walkways joining buildings to cross over
   - U-034 windows: fewer and bigger (real sizes), spread out, real openings with frames and glass close up (painted far off)
   - U-034, Q-008: the open shells (every floor open round a stair core, empty, like a car park) are gone, replaced by these insides
   - U-035: sills only under real windows; some buildings with a ledge running all the way round to traverse on
 - [ ] **M3-37** The ant-hill route network (U-014, U-021, U-023)
-  - Hand-designed main routes like highways across the district over roofs, through buildings, along beams and through tunnels, carrying the sites and key supplies needed to finish the game; branching neighbourhood routes off them; streets are the dangerous shortcut
+  - Hand-designed main routes like highways across the district over roofs, through buildings, along beams and through tunnels, carrying the sites and key supplies needed to finish the game; branching neighbourhood routes off them; streets are the dangerous shortcut; organic, the whole map playing like a skatepark, the ways made of rooms, windows and insides rather than added holds (U-037)
   - Every gap, height and reach on a route is within the movement envelope (M3-50) and near its top (U-023): main routes demand the full movement set (chained wall kicks, a back-jump to a grab, wall-runs, swings and laches, item tricks), risky branches sit at the maximum; nothing on a route is a walk
   - A readable visual language: planks, open windows, broken railings and worn paths mark the way; dead ends read as dead ends
   - Route and patrol data: the routes as graphs, patrols laid against them; a patrol route and a drone corridor pass over the start hideout's vent grate at night (U-018)
-  - A bot walks each main route end to end; screenshots of three junctions
+  - U-037 metroidvania: some key places and buildings reached only by one designed way that needs a tool (the grappling hook, M5-20, and others), the holds round them taken away so no other method gets there; routes are not tested for being possible (the director plays them), a PLAYTEST request instead
   - U-034 street crossings: the streets are where the city stops for parkour, so that's where the crossings are: makeshift bridges and planks, beams, cables to hang from, blocks built over the street; generated ziplines gone (M5-33 makes them the player's)
   - U-034 thick electrical cords: cable bundles thick enough to walk across, sagging between buildings close together (relatively common), a balance walk along their curve; they sway and can hold his weight
   - U-035: the cords dressed to look dystopian, junk hanging off them (cables, rags, shoes, lamps, signs); bars across the gap wherever two buildings stand close together
@@ -539,7 +539,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
 - [ ] **M3-64** The far ground drawn properly (U-031)
   - The far view carries the roads, pavements, grass and ground textures, matching the near view at the seam
   - Screenshots across the seam; perf stays in budget
-- [ ] **M3-51** Sandbox parkour areas (U-021)
+- [x] **M3-51** Sandbox parkour areas (U-021)
   - Skatepark-style areas in the plain parts of the city: dense, varied geometry (roofs at mixed heights, walls, poles, bars, slopes, scaffolds, cables) built to the envelope, with many lines through and no single solution; riskier (more patrols, less cover)
   - A bot test finds at least three different routes across each area
 - [x] **M3-52** Ziplines (U-021)
