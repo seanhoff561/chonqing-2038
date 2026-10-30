@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 56 of 76 done
+## M3: 56 of 77 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -385,6 +385,12 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Tunnels short and real: a metro tunnel (track bed, cable trays, cross passages, signals) and service tunnels with their own props, joined to the underground city's levels rather than long empty runs
   - Layers step down off the street into the underground city in places, so ground level keeps going down (moved here from M3-66, where the underground is reworked)
   - A bot walk and screenshots
+- [ ] **M3-69** Quick fixes from U-034 and U-035
+  - What looks solid on a facade is solid and grabbable: AC units and vents, the metal skins over upper floors, canopies and signboards over shopfronts (none of it giving a building its own way up from the street, M3-67)
+  - Hanging from a bar or edge with no wall for his feet, holding Space mantles him up onto it
+  - Holding crouch he can't walk or slide off an edge: he stops at it, as Minecraft's sneak
+  - No zipline spawns on its own (U-034; M5-33 makes them the player's)
+  - Sim tests for each: a vent grabbed, a facade skin stood against, a bar mantled, a crouch stopped at a roof edge; the climbing and envelope tests still pass
 - [ ] **M3-66** The layered city, filled with buildings, evened (U-032, U-033, U-034)
   - Everything purposeful (U-033): M3-60's grid-cell parks, plazas and parking lots replaced; the open ground filled with buildings (blocks, low layers, fillers) right up to each other and the streets; green only in the few real parks, laid inside their real outlines; what open ground is left is hardscape shaped to the buildings and streets round it (paving to the building lines, forecourts, steps, a parking court between buildings) with its walkways running from somewhere to somewhere (street to entrance, street to stair) like the roads; nothing on the cell grid, nothing jagged or repeated
   - Short and medium buildings about twice as tall; between them half-height layers (low blocks, decks, scaffolding, platforms) and short fillers as low as today's short ones, so the city stands in layers to be crossed by parkour; bridges between buildings, beams sticking out, vertical alleys (narrow slots between tall walls to climb or wall-run up)
@@ -404,6 +410,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - U-034 procedural insides and connections: each building a number of enterable windows by its size, into rooms, stairs up to more rooms; most of it locked or collapsed, a few rooms per building open, each with a window to it (broken in, to break, locked or barred); from some windows a makeshift beam bridge to a building nearby or a short fire escape; ground doors sometimes to an unlocked stairwell; roof doors locked but breakable; walkways joining buildings to cross over
   - U-034 windows: fewer and bigger (real sizes), spread out, real openings with frames and glass close up (painted far off)
   - U-034, Q-008: the open shells (every floor open round a stair core, empty, like a car park) are gone, replaced by these insides
+  - U-035: sills only under real windows; some buildings with a ledge running all the way round to traverse on
 - [ ] **M3-37** The ant-hill route network (U-014, U-021, U-023)
   - Hand-designed main routes like highways across the district over roofs, through buildings, along beams and through tunnels, carrying the sites and key supplies needed to finish the game; branching neighbourhood routes off them; streets are the dangerous shortcut
   - Every gap, height and reach on a route is within the movement envelope (M3-50) and near its top (U-023): main routes demand the full movement set (chained wall kicks, a back-jump to a grab, wall-runs, swings and laches, item tricks), risky branches sit at the maximum; nothing on a route is a walk
@@ -412,6 +419,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - A bot walks each main route end to end; screenshots of three junctions
   - U-034 street crossings: the streets are where the city stops for parkour, so that's where the crossings are: makeshift bridges and planks, beams, cables to hang from, blocks built over the street; generated ziplines gone (M5-33 makes them the player's)
   - U-034 thick electrical cords: cable bundles thick enough to walk across, sagging between buildings close together (relatively common), a balance walk along their curve; they sway and can hold his weight
+  - U-035: the cords dressed to look dystopian, junk hanging off them (cables, rags, shoes, lamps, signs); bars across the gap wherever two buildings stand close together
 - [ ] **M3-43** The subway way in (U-018)
   - The underground Line 1/2 station at Jiaochangkou (platforms, concourse, dead escalators, screen doors) and a running tunnel joining the Grand Tunnel system near Shibati
   - A sim test walks from the station to the vent hideout underground
@@ -521,6 +529,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
 - [ ] **M3-62** Foliage (U-031)
   - Several tree species of varied size and shape (camphor, banyan, palm, bamboo, ginkgo), shrubs, hedges, ferns and potted plants; rooftop gardens of planters and climbing plants instead of bushes on bare roofs
   - Screenshots of a park, a street and a rooftop
+  - U-035: trees, vines on walls and other foliage he can climb
 - [ ] **M3-63** A realistic sky, rain and night; the visual overhaul (U-031, U-032)
   - The sky from photographic reference: fine pinpoint stars, natural cloud (no orange cast), the sky running down to a visible horizon; rain from reference: streaks, splashes, wet sheen, mist
   - At night only a few windows lit (the city is emptied), lights where people or machines are
