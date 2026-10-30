@@ -111,7 +111,7 @@ function road(s: Street, len: number, at: (t: number, off: number) => [number, n
     // On the pavement, or where a building stands on it, shoved further off into whatever space is beside the road.
     if (rand(r) < (cyber ? 0.35 : 0.55)) for (let i = 0, n = 1 + randInt(r, 3); i < n; i++) {
       // Shoved, so askew and not evenly spaced.
-      const kind = rand(r) < 0.15 ? 'van' : 'car', yaw = along + (rand(r) < 0.5 ? 0 : Math.PI) + (rand(r) - 0.5) * 0.7, tt = t + i * (4.6 + rand(r) * 2);
+      const kind = rand(r) < 0.15 ? 'van' : 'car', yaw = along + (rand(r) < 0.5 ? 0 : Math.PI) + (rand(r) - 0.5) * 0.4, tt = t + i * (4.6 + rand(r) * 2);
       for (const o of [1.05, 2.6, 4.2, -1.05, -2.6, -4.2]) { const [x, z] = at(tt, side * Math.sign(o) * (kerb + Math.abs(o) + rand(r) * 0.4)); if (put(kind, x, z, yaw)) break; }
     }
   }

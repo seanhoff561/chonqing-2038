@@ -10,6 +10,7 @@ import { buildLot, PARAPET, type Fabric, type Lot } from '../city/buildings';
 import { stepsFor } from '../steps';
 import { findMarks } from './marks';
 import { greenery } from './green';
+import { layout } from './layout';
 import { ruins } from './ruins';
 import { fill } from './fill';
 import { cables } from './cables';
@@ -95,16 +96,19 @@ export function buildYuzhong(): World {
   const dress = dressStreets(buildIndex(solids, g), g, sts, land, inter, clear);
   solids.push(...dress.solids);
   // Then the green and the ruins on the marked open ground, round all that.
-  const marks = findMarks(g, land, plots, block), idx = buildIndex(solids, g), green = greenery(idx, g, marks), rubble = ruins(idx, g, marks);
+  // The open ground's parcels laid out first (M3-60: parks, parking lots, plazas), the green and the ruins round them.
+  const marks = findMarks(g, land, plots, block), laid = layout(buildIndex(solids, g), g, marks);
+  solids.push(...laid.solids);
+  const idx = buildIndex(solids, g), green = greenery(idx, g, marks), rubble = ruins(idx, g, marks);
   solids.push(...green.solids, ...rubble.solids);
   // And the rest of the open ground filled, round all of it; cables strung over the streets.
   const filled = fill(buildIndex(solids, g), g, marks, plots), strung = cables(plans, buildIndex(solids, g));
   solids.push(...filled.solids, ...strung.masts);
   const world = makeWorld({
-    name: 'yuzhong', solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? [], fac?.decor ?? [], vert.decor, under.decor, filled.decor),
-    props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], fac?.props ?? [], under.props, dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(line.climbables, site?.climbables ?? [], vert.climbables, under.climbables),
+    name: 'yuzhong', solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? [], fac?.decor ?? [], vert.decor, under.decor, laid.decor, filled.decor),
+    props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], fac?.props ?? [], under.props, laid.props, dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(line.climbables, site?.climbables ?? [], vert.climbables, under.climbables),
     hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones.concat(under.zones),
-    far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(fac?.features ?? [], vert.features, under.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n }))), marks, lines: strung.lines, convoys: fac?.convoys, streets: sts.filter(onGround).map(s => ({ kind: s.kind, w: s.w, steps: s.steps, pts: s.pts })), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
+    far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(fac?.features ?? [], vert.features, under.features, laid.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n }))), marks, cover: laid.cover, lines: strung.lines, convoys: fac?.convoys, streets: drawnStreets(sts.filter(onGround), plots), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
     teleports, spawn: hide,
   });
   // Nothing floats or sinks (M3-56): whatever stands on something above ground settles onto what's under it, or
@@ -140,6 +144,38 @@ export function buildYuzhong(): World {
     world.hides.push({ id: world.hides.length, kind: h.kind, yaw: p.yaw, inner: { x0: x - h.w / 2, y0: p.y + h.y, z0: z - h.d / 2, x1: x + h.w / 2, y1: p.y + h.y + h.h, z1: z + h.d / 2 } });
   }
   return world;
+}
+
+/** The streets to draw: a walkway's stretches inside a building (a passage through it) left out (U-031). */
+function drawnStreets(sts: Street[], plots: Plot[]): { kind: string; w: number; steps: boolean; pts: [number, number][] }[] {
+  const cells = new Map<number, Plot[]>(), key = (x: number, z: number) => Math.floor(x / 16) * 65536 + Math.floor(z / 16);
+  for (const p of plots) {
+    if (p.far) continue;
+    const xs = p.corners.map(c => c[0]), zs = p.corners.map(c => c[1]);
+    for (let x = Math.min(...xs); x <= Math.max(...xs) + 16; x += 16) for (let z = Math.min(...zs); z <= Math.max(...zs) + 16; z += 16) { const k = key(x, z), a = cells.get(k); if (a) a.push(p); else cells.set(k, [p]); }
+  }
+  const inside = (x: number, z: number) => (cells.get(key(x, z)) ?? []).some(p => p.corners.every((c, i) => { const d = p.corners[(i + 1) % 4]; return (d[0] - c[0]) * (z - c[1]) - (d[1] - c[1]) * (x - c[0]) >= 0; }) || p.corners.every((c, i) => { const d = p.corners[(i + 1) % 4]; return (d[0] - c[0]) * (z - c[1]) - (d[1] - c[1]) * (x - c[0]) <= 0; }));
+  const out: { kind: string; w: number; steps: boolean; pts: [number, number][] }[] = [];
+  for (const s of sts) {
+    if (MAIN_ROADS.has(s.kind)) { out.push({ kind: s.kind, w: s.w, steps: s.steps, pts: s.pts }); continue; }
+    let piece: [number, number][] = [];
+    const flush = () => { if (piece.length > 1) out.push({ kind: s.kind, w: s.w, steps: s.steps, pts: piece }); piece = []; };
+    // Looked at every metre: inside a building it breaks off (at the last metre out) and starts again at the first
+    // metre out; its own corners kept in between.
+    let was = true;
+    for (let k = 0; k + 1 < s.pts.length; k++) {
+      const [ax, az] = s.pts[k], [bx, bz] = s.pts[k + 1], n = Math.max(1, Math.ceil(Math.hypot(bx - ax, bz - az)));
+      let last: [number, number] = [ax, az];
+      for (let i = k === 0 ? 0 : 1; i <= n; i++) {
+        const p: [number, number] = [ax + ((bx - ax) * i) / n, az + ((bz - az) * i) / n], inn = inside(...p);
+        if (inn && !was) { piece.push(last); flush(); }
+        else if (!inn && (was || i === n)) piece.push(p);
+        was = inn; last = p;
+      }
+    }
+    flush();
+  }
+  return out;
 }
 
 /** How far lots keep from the set pieces: past their aprons, which level the ground round them. */

@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 53 of 72 done
+## M3: 54 of 76 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -472,21 +472,36 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Things beside the streets stand back from the kerb edge in loose, varied groups, not in a line on the edge
   - The Line 2 train sits on its beam, following it; searchlights are off by day
   - Screenshots of each
-- [ ] **M3-60** Open ground with structure (U-031)
+- [x] **M3-60** Open ground with structure (U-031)
   - Open ground is laid out on purpose: parks (paths, lawns and beds edged with kerbs, trees in order, benches), parking lots (marked bays, cars parked in them), plazas and walking streets (paving, food stalls, seating, planters); grass ends at a kerb or a path, never overlapping paving or cut through
   - Walkways have smooth kerbed edges and never pass through a building
   - Between buildings: built structures (sheds, kiosks, stair towers, canopies) or a civic use, not a lone tree or car in a void
   - A unit test checks kerbs round the grass, the parking lots' cars in bays and no walkway through a building; screenshots of a park, a parking lot and a plaza
+- [ ] **M3-65** Quick fixes from U-032
+  - Every ladder has something behind it (a wall or its own frame) so he can climb it; a unit test climbs one of each kind
+  - The red and blue plastic stools are gone
+  - Interact and sleep are on F (E and Q free for leaning, M4-21); prompts and the help say so
+- [ ] **M3-66** The layered city (U-032)
+  - Short and medium buildings about twice as tall; between them half-height layers (low blocks, decks, scaffolding, platforms) and short fillers as low as today's short ones, so the city stands in layers to be crossed by parkour; bridges between buildings, beams sticking out, vertical alleys (narrow slots between tall walls to climb or wall-run up)
+  - Layers step down off the street into the underground city in places, so ground level keeps going down
+  - A unit test measures the layers (heights spread across bands) and the vertical alleys; screenshots
+- [ ] **M3-67** Climbing reworked (U-032)
+  - No building can be climbed to its top by itself: its holds (vents, sills, short ladders, pipes, beams) are scarce and scattered, ground floors bare; reaching a roof takes crossing from other buildings and things beside them (climbable street poles, kiosks, walls, scaffolding) using the whole envelope (wall-runs, kicks, long jumps, items)
+  - A unit test finds no building whose own holds chain from the ground to its roof, and a bot reaches three roofs over 20 m by crossing from others
+- [ ] **M3-68** The underground reworked (U-032)
+  - Tunnels short and real: a metro tunnel (track bed, cable trays, cross passages, signals) and service tunnels with their own props, joined to the underground city's levels rather than long empty runs
+  - A bot walk and screenshots
 - [ ] **M3-61** Ruins that look fallen (U-031)
   - The rough ground reads as collapse: boulders and broken slabs, fallen beams and columns, sections of facade lying where they fell from the building beside them (its material and colour), sediment and rubble filling the hollows organically
   - A unit test checks each ruin matches its neighbouring building; screenshots of three
 - [ ] **M3-62** Foliage (U-031)
   - Several tree species of varied size and shape (camphor, banyan, palm, bamboo, ginkgo), shrubs, hedges, ferns and potted plants; rooftop gardens of planters and climbing plants instead of bushes on bare roofs
   - Screenshots of a park, a street and a rooftop
-- [ ] **M3-63** A realistic sky, rain and night (U-031)
+- [ ] **M3-63** A realistic sky, rain and night; the visual overhaul (U-031, U-032)
   - The sky from photographic reference: fine pinpoint stars, natural cloud (no orange cast), the sky running down to a visible horizon; rain from reference: streaks, splashes, wet sheen, mist
   - At night only a few windows lit (the city is emptied), lights where people or machines are
   - Screenshots by day, dusk, night and in rain
+  - The visual overhaul (U-032): the ground, props and doors muted, worn and near monotone (pavement aged, paint faded, sediment and grime, cars dull) so robots, crates and things to grab stand out; the sky cloudier; nights dark enough to need the headlamp; the cyberpunk light (signs, screens, robots' lights) stronger against it; building colours kept, the light changed
 - [ ] **M3-64** The far ground drawn properly (U-031)
   - The far view carries the roads, pavements, grass and ground textures, matching the near view at the seam
   - Screenshots across the seam; perf stays in budget
@@ -629,6 +644,7 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
 - [ ] **M4-21** Pistol
   - Hitscan with spread and sway, magazines and reloads; each shot is a hostile 150 m noise
   - A sim test: head shots blind a quadruped
+  - Guns made real (U-032): realistic models, firing and recoil, scoping, leaning with Q and E
 - [ ] **M4-22** Tracking tags
   - A quadruped's tag launcher sticks a tracking tag to his clothes on a hit; it stays until removed
   - A sim test covers it
@@ -674,7 +690,7 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
   - Rooftop searchlights sweep at night, adding full light inside their cone; on contact they converge on the last known position
   - A sim test covers sweep and convergence
 
-## M5: 0 of 32 done
+## M5: 0 of 33 done
 
 M5 Anna and tech: the laptop interface, scanning, food checks, the auto-map and patrol logs, hacking cameras and drones, jamming, crafting at the workbench, healing items, weapons, and the full item set.
 
@@ -762,6 +778,9 @@ M5 Anna and tech: the laptop interface, scanning, food checks, the auto-map and 
 - [ ] **M5-27** Shelter power
   - The car battery and inverter charge the laptop and run bench power tools and drain by use; car batteries come out of abandoned cars; a solar charger adds 5% a day
   - A sim test covers it
+- [ ] **M5-28** Seasons (U-032)
+  - The game starts in autumn and moves into winter: foliage colour and leaf fall, grass, light and weather change with the days
+  - A unit test steps the calendar
 - [ ] **M5-28** Every tool has two uses
   - A data test: every tool lists at least two uses and each use maps to an implemented action
   - No single tool opens every lock grade or hazard

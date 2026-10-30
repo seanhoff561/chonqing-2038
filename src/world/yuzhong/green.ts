@@ -21,7 +21,7 @@ export function greenery(index: SolidIndex, g: Heightfield, mk: Marks): { props:
   };
   for (let j = 0; j < mk.h; j++) for (let i = 0; i < mk.w; i++) {
     const m = mk.m[j * mk.w + i];
-    if (!m || m === MARK.ruin) continue;
+    if (!m || m === MARK.ruin || m === MARK.laid) continue;
     const r = makeRng(hashString(`green${i},${j}`)), x = (i + 0.2 + rand(r) * 0.6) * mk.cell, z = (j + 0.2 + rand(r) * 0.6) * mk.cell, q = rand(r), yaw = rand(r) * Math.PI * 2;
     if (m === MARK.wood) {
       if (q < 0.45) put(rand(r) < 0.25 ? 'figtree' : 'tree', x, z, yaw);

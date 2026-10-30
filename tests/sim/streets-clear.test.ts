@@ -71,11 +71,12 @@ describe('clear, smooth streets (M3-56a)', () => {
   });
   it('marks the open ground for filling: ruins on the rough ground, woods, parks and open ground (U-029)', () => {
     const mk = w.marks!, ha = (v: number) => (mk.m.filter(x => x === v).length * mk.cell * mk.cell) / 1e4;
-    // Hectares of each: the rough embankments and slopes by the buildings, the wild land, the real parks, the rest.
+    // Hectares of each: the rough embankments and slopes by the buildings, the wild land, the rest (the real parks
+    // and the bigger open parcels laid out since, M3-60; the smaller left open for filling).
     expect(ha(MARK.ruin)).toBeGreaterThan(10);
     expect(ha(MARK.wood)).toBeGreaterThan(2);
-    expect(ha(MARK.park)).toBeGreaterThan(5);
-    expect(ha(MARK.open)).toBeGreaterThan(20);
+    expect(ha(MARK.laid)).toBeGreaterThan(10);
+    expect(ha(MARK.open)).toBeGreaterThan(2);
     // None under a street.
     let bad = 0;
     for (const s of roads) across(s, (x, z) => { const i = Math.floor(x / mk.cell), j = Math.floor(z / mk.cell); if (i >= 0 && j >= 0 && i < mk.w && j < mk.h && mk.m[j * mk.w + i]) bad++; });

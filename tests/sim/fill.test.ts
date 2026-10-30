@@ -27,10 +27,12 @@ describe('nothing empty, everything in order (M3-56)', () => {
     const used = new Uint8Array(mk.m.length), mark = (x: number, z: number) => { const i = Math.floor(x / mk.cell), j = Math.floor(z / mk.cell); if (i >= 0 && j >= 0 && i < mk.w && j < mk.h) used[j * mk.w + i] = 1; };
     for (const p of w.props) mark(p.x, p.z);
     for (const s of w.solids) if (s.x1 - s.x0 < 40 && s.z1 - s.z0 < 40) for (let x = s.x0; x <= s.x1 + 1e-6; x += mk.cell / 2) for (let z = s.z0; z <= s.z1 + 1e-6; z += mk.cell / 2) mark(x, z);
+    // Ground laid out (M3-60) is a lawn, a path, a plaza or a parking lot: never bare.
+    w.cover!.m.forEach((c, k) => { if (c) used[k] = 1; });
     let bare = 0, windows = 0;
     for (let j = 0; j + 2 < mk.h; j++) for (let i = 0; i + 2 < mk.w; i++) {
       let open = true, any = false;
-      for (let b = 0; b < 3 && open; b++) for (let a = 0; a < 3; a++) { const k = (j + b) * mk.w + i + a; if (mk.m[k] !== MARK.open) { open = false; break; } any ||= !!used[k]; }
+      for (let b = 0; b < 3 && open; b++) for (let a = 0; a < 3; a++) { const k = (j + b) * mk.w + i + a; if (mk.m[k] !== MARK.open && mk.m[k] !== MARK.laid) { open = false; break; } any ||= !!used[k]; }
       if (!open) continue;
       windows++;
       if (!any) bare++;
@@ -80,13 +82,20 @@ describe('nothing empty, everything in order (M3-56)', () => {
   });
   it('squares what stands by a street to it', () => {
     const KINDS = new Set(['bench', 'stall', 'kiosk', 'car', 'van', 'bus', 'edict', 'dronedock', 'bin', 'lamppost']);
+    // Every street segment filed by 16 m cell (with its half width and a 4 m margin), to find the nearest fast.
+    const segs = new Map<number, number[][]>();
+    for (const s of w.streets) for (let k = 0; k + 1 < s.pts.length; k++) {
+      const [ax, az] = s.pts[k], [bx, bz] = s.pts[k + 1], m = s.w / 2 + 4;
+      for (let i = Math.floor((Math.min(ax, bx) - m) / 16); i <= Math.floor((Math.max(ax, bx) + m) / 16); i++)
+        for (let j = Math.floor((Math.min(az, bz) - m) / 16); j <= Math.floor((Math.max(az, bz) + m) / 16); j++) { const c = segs.get(i * 65536 + j); if (c) c.push([ax, az, bx, bz, s.w / 2]); else segs.set(i * 65536 + j, [[ax, az, bx, bz, s.w / 2]]); }
+    }
     let n = 0, skew = 0;
     for (const p of w.props) {
       if (!KINDS.has(p.kind)) continue;
       let best = Infinity, dir = 0;
-      for (const s of w.streets) for (let k = 0; k + 1 < s.pts.length; k++) {
-        const [ax, az] = s.pts[k], [bx, bz] = s.pts[k + 1], vx = bx - ax, vz = bz - az, t = Math.max(0, Math.min(1, ((p.x - ax) * vx + (p.z - az) * vz) / (vx * vx + vz * vz || 1)));
-        const d = Math.hypot(p.x - ax - vx * t, p.z - az - vz * t) - s.w / 2;
+      for (const [ax, az, bx, bz, h] of segs.get(Math.floor(p.x / 16) * 65536 + Math.floor(p.z / 16)) ?? []) {
+        const vx = bx - ax, vz = bz - az, t = Math.max(0, Math.min(1, ((p.x - ax) * vx + (p.z - az) * vz) / (vx * vx + vz * vz || 1)));
+        const d = Math.hypot(p.x - ax - vx * t, p.z - az - vz * t) - h;
         if (d < best) { best = d; dir = Math.atan2(vx, vz); }
       }
       if (best > 3) continue;

@@ -11,7 +11,8 @@ import { points, rasterPoly } from './shapes';
 import { streetCells } from './ground';
 
 export const MARK_CELL = 4;
-export const MARK = { ruin: 1, wood: 2, park: 3, open: 4 } as const;
+/** laid: open or park ground given a use (layout.ts: a park, a parking lot, a plaza), drawn by its cover. */
+export const MARK = { ruin: 1, wood: 2, park: 3, open: 4, laid: 5 } as const;
 export interface Marks { cell: number; w: number; h: number; m: Uint8Array }
 
 /** How near a building ground counts as the city's (beyond, it's gone wild), and how steep or broken is rough. */
@@ -62,8 +63,7 @@ export const markAt = (mk: Marks, x: number, z: number) => {
   return i < 0 || j < 0 || i >= mk.w || j >= mk.h ? 0 : mk.m[j * mk.w + i];
 };
 
-/** Whether grass grows at (x, z) (M3-56b): all over the parks and the woods, in patches on the open ground. */
+/** Whether grass grows wild at (x, z) (M3-56b): over the woods. The parks' lawns are laid in beds (layout.ts). */
 export function grassAt(mk: Marks, x: number, z: number): boolean {
-  const m = markAt(mk, x, z);
-  return m === MARK.park || m === MARK.wood || (m === MARK.open && Math.sin(x * 0.083 + z * 0.051) * Math.sin(x * 0.047 - z * 0.069) + 0.3 * Math.sin(x * 0.31 + z * 0.27) > -0.1);
+  return markAt(mk, x, z) === MARK.wood;
 }

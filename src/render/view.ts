@@ -91,7 +91,7 @@ export class View {
     const detail = buildSolidMeshes(w.decor.filter(small), 'near').children.filter(m => !m.castShadow);
     for (const m of detail) m.userData.detail = true;
     if (detail.length) meshes.add(...detail);
-    if (w.ground) meshes.add(...buildGroundMeshes(w.ground, this.hasFar ? 'near' : 'all', w.marks), ...buildStreetMeshes(w.ground, w.streets, this.hasFar ? 'near' : 'all'));
+    if (w.ground) meshes.add(...buildGroundMeshes(w.ground, this.hasFar ? 'near' : 'all', w.marks), ...buildStreetMeshes(w.ground, w.streets, this.hasFar ? 'near' : 'all', w.cover));
     const props = buildProps(w.props);
     this.world.add(meshes, buildLabels(w.labels), props);
     if (this.hasFar) {
