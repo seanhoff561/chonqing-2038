@@ -116,15 +116,15 @@ export function warren(K: Kit): number[] {
     }
     K.site(made);
   }
-  if (floors.length > 1) vertical(K, floors, facade, corridors, slots, shaftAt, backD || north);
+  if (floors.length > 1) vertical(K, floors, facade, corridors, slots, shaftAt, backD || north, north);
   return floors;
 }
 
 /** Between the band's floors: a hole through the slab from a facade room to the one over it, now and then a
  *  collapsed slab leaning up the corridor's far end to the corridor over it (a slope too narrow to do more than
- *  brace and climb, M3-78), and the shaft up the slot kept for it (a low opening at its foot and at its head into the
- *  rooms either side, nothing between). */
-function vertical(K: Kit, floors: number[], facade: Map<number, Room[]>, corridors: Map<number, Room>, slots: [number, number][], shaftAt: number, d: number) {
+ *  brace and climb, M3-78), and the shaft up the slot kept for it (a low duct from the corridor at its foot and at
+ *  its head, nothing between). */
+function vertical(K: Kit, floors: number[], facade: Map<number, Room[]>, corridors: Map<number, Room>, slots: [number, number][], shaftAt: number, d: number, north: number) {
   const { r, rect, box, yOf, U } = K;
   for (let i = 0; i + 1 < floors.length; i++) {
     const lo = facade.get(floors[i]) ?? [], hi = facade.get(floors[i + 1]) ?? [];
@@ -146,9 +146,8 @@ function vertical(K: Kit, floors: number[], facade: Map<number, Room[]>, corrido
     const q = rect(1, u, u + SHAFT, 0.3, d - 0.3), [x, z] = K.at((q[0] + q[2]) / 2, (q[1] + q[3]) / 2);
     K.cut(box(q, y0, y1 + FLOOR - SLAB));
     K.out.features.push({ kind: 'shaft', x, y: y0, z, group: K.out.features.length }, { kind: 'shafthead', x, y: y1, z, group: K.out.features.length + 1 });
-    for (const [y, side] of [[y0, -1], [y1, 1]] as const) {
-      const w0 = side < 0 ? u - GAP - 0.01 : u + SHAFT - 0.01, w1 = side < 0 ? u + 0.01 : u + SHAFT + GAP + 0.01, c = d / 2;
-      K.cut(box(rect(1, w0, w1, c - 0.45, c + 0.45), y, y + 1.1));
-    }
+    // In at its foot and out at its head through its end, a duct the shaft's width from the corridor: the walls he
+    // braces between run on through it.
+    for (const y of [y0, y1]) K.cut(box(rect(1, u, u + SHAFT, d - 0.31, north + GAP + 0.01), y, y + 1.2));
   }
 }

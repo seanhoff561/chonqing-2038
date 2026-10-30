@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-78 Chimneying (U-043).
-Features done: 134 / 290 | Last done: M3-77
+**Status:** building M3. Next: M3-76 The anthill: routes through buildings, unmarked (U-043).
+Features done: 135 / 290 | Last done: M3-78
 <!-- /status -->
 
 ## Log
@@ -82,3 +82,4 @@ Features done: 134 / 290 | Last done: M3-77
 - M3-72 The start hideout under the alley (U-038): the start hideout under an alley: the chamber moved off the roads, a ladder up its shaft to a grate under bin bags, slow and loud to unbolt and bolt from below, found in your sleep if left open or traced; dropping things (U-038)
 - M3-79 Monotone buildings (U-043): monotone buildings: every building colour muted to a fifth of its hue, the per-building cast quartered (U-043)
 - M3-77 Buildings as warrens: many rooms, a structure to explore (U-043): buildings as warrens: whole floors built, corridors, rooms off rooms, locked doors, cracks to squeeze, shafts and collapsed slabs between floors; rooms' walls drawn as the block's interior (U-043)
+- M3-78 Chimneying (U-043): chimneying: braced across a 0.6-1.25 m gap, worked up or down the way he looks, upright or sloped; a gym station; warren shafts ducted from the corridors (U-043)

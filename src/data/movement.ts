@@ -34,6 +34,9 @@ export const movement = {
   tear: { speed: 15, keep: 0.8, damage: 6, regrab: 0.6 },
   wallRun: { maxTime: 0.9, speed: 6.5, upSpeed: 3.0, minSpeed: 5.5, stepEvery: 0.3, gravityScale: 0.6, wallDist: 0.8, maxAngle: 35, leapSpeed: 5.0, leapUp: 3.0 },
   wallClimb: { time: 0.6 },
+  /** Chimneying (M3-78): braced back and feet across a gap min to max wide, worked up or down at these speeds (m/s),
+   *  a scrape heard this far (m) each stride. */
+  chimney: { min: 0.6, max: 1.25, up: 0.7, down: 0.9, stride: 0.5, noise: 3 },
   /** second Space in the air near a wall, read from the camera (U-004) */
   wallKick: { reach: 0.8, max: 2, upPitch: 0.45, upSpeed: 4.6, speed: 5.5, up: 3.4, pitchUp: 1.5, minAway: 0.35, alongMax: 0.5 },
   /** hand climbing (U-002): grips, reach, reeling, mantles over lips, dynos */

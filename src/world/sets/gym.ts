@@ -58,6 +58,18 @@ export function buildGym(): World {
     label(`落差 DROP ${h} m`, x + 1.5, 2.2, 11);
   });
 
+  // Chimneys (M3-78): a shaft 0.8 m across, open at its west end, 6 m up to a deck to the east between the same walls
+  // (Space in the air braces, W works him the way he looks); a slot 0.9 m across whose floor rises 40 degrees under
+  // a ceiling stepping up with it.
+  add(solid(50, 0, 7, 57, 7, 7.5, MAT.brick)); add(solid(50, 0, 8.3, 57, 7, 8.8, MAT.brick));
+  add(solid(53, 0, 7.5, 53.3, 6, 8.3, MAT.brick)); add(solid(53.3, 5.8, 7.5, 57, 6, 8.3, MAT.concrete));
+  label('撑爬 CHIMNEY 0.8 m', 51.5, 1.5, 7, 'n');
+  add(solid(59, 0, 7, 64, 6, 7.45, MAT.brick)); add(solid(59, 0, 8.35, 64, 6, 8.8, MAT.brick));
+  add({ ...solid(59.5, 0, 7.45, 63.5, 3.36, 8.35, MAT.concrete), ramp: 1, low: 0 });
+  for (let i = 0; i < 4; i++) add(solid(59.5 + i, 1.8 + (i + 1) * 0.84, 7.45, 60.5 + i, 6, 8.35, MAT.concrete));
+  add(solid(63.5, 3.16, 7.45, 66, 3.36, 8.35, MAT.concrete));
+  label('斜撑 SLOPED 40°', 60, 1.5, 7, 'n');
+
   // Hand routes (U-002..U-005), west side of the yard.
   // Sill wall: 9 m, sills 1.6 m apart need push-off dynos; the top lip is in reach from the last sill.
   add(solid(-62, 0, -30, -54, 9, -24, MAT.brick));
@@ -126,6 +138,7 @@ export function buildGym(): World {
       { name: 'wall-run lane', x: 41, y: 2, z: -12, yaw: 0 },
       { name: 'vault / crawl / slide', x: -20, y: 0, z: 18, yaw: 0 },
       { name: 'pipes, ladders, drops', x: 20, y: 0, z: 16, yaw: 0 },
+      { name: 'chimneys', x: 55, y: 0, z: 4, yaw: Math.PI },
       { name: 'pool and boxes', x: -12, y: 0, z: 22, yaw: Math.PI },
       { name: 'sill route / smooth wall', x: -55, y: 0, z: -21, yaw: 0 },
       { name: 'bars over the pit', x: -41, y: 0, z: -9.6, yaw: 0 },

@@ -13,6 +13,7 @@ import { startCling } from './parkour';
 import { hideNear, enterHide, stepHidden } from './hide';
 import { checkWater, stepSwim } from './swim';
 import { tryZip, stepZip } from './zip';
+import { tryChimney, stepChimney } from './chimney';
 import { limits, type Limits } from './body';
 
 let L: Limits;
@@ -70,6 +71,7 @@ export function stepPlayer(state: SimState, world: World, input: InputFrame): vo
     case 'cling': stepCling(state, world, input); return;
     case 'wallrun': stepWallRun(state, world, input); return;
     case 'wallclimb': stepWallClimb(state, world, input); return;
+    case 'chimney': stepChimney(state, world, input); return;
     case 'hidden': stepHidden(state, world, input); return;
     case 'swim': stepSwim(state, world, input); return;
   }
@@ -248,6 +250,8 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
   if (world.water.length && checkWater(state, world)) return;
   if (!p.onGround) {
     if (p.wall.t < 0) p.wall.t = Math.min(0, p.wall.t + DT);
+    // In a narrow gap Space braces him across it (M3-78) before any wall move.
+    else if (!jumped && tryChimney(state, world, input)) return;
     else if (!airParkour(state, world, input) && (input.pressed & B.JUMP) && !jumped) airWall(state, world);
   }
 }

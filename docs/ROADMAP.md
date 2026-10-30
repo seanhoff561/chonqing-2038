@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 71 of 88 done
+## M3: 72 of 88 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -463,7 +463,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Vertical thin shafts (light wells, service and chimney shafts) and sloped passages (chutes, collapsed slabs, stair voids) between floors, narrow enough to chimney (M3-78)
   - Broken windows to climb in and out through; rooms with things to scavenge
   - Sim tests: rooms per building and per floor, windowless rooms, locked doors, squeezes and shafts present; draw calls and triangles within budget near a dense block (perf e2e)
-- [ ] **M3-78** Chimneying (U-043)
+- [x] **M3-78** Chimneying (U-043)
   - In a gap between two facing walls 0.6 to 1.2 m apart, vertical or sloped, he braces back and feet against them and works up or down it slowly, stopping anywhere; jumping or a wider gap ends it
   - Sloped passages (a chute, a duct, a collapsed slab against a wall) climbed and descended the same way
   - A gym station: a vertical shaft and a sloped one

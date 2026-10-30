@@ -86,3 +86,7 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 ## M3-77: buildings as warrens
 - Get into a few blocks (`?dev=1` teleports, or find a broken window or a burrow) and explore a warren floor: does the corridor-and-rooms structure feel like a real building to scavenge through, while still a maze (locked doors, rubble, rooms reached only through others, cracks to squeeze)? Too many rooms, too few, too samey?
 - Does the boot (world build, about 30 s in node) feel too long in your browser? And the frame rate inside, on your GPU?
+
+## M3-78: chimneying
+- `?scenario=gym`, teleport "chimneys": jump in the shaft and press Space at the top of the jump, then W looking up. Does bracing and working up read and feel right (speed, the scrape)? Out onto the deck at the top, back down, Space to let go. Up the 40-degree slot the same way.
+- In a warren (M3-77), find a shaft off a corridor (a low duct at floor level) and climb it to the floor above.
