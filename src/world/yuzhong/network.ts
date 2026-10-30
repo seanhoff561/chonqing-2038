@@ -11,7 +11,7 @@
 // against the routes (M4 walks them): street patrols, drone corridors over the routes by night, and one of each
 // over the start hideout's grate. And now and then a cache reached only one way, with a tool (U-037): a roof none of
 // its neighbours reach, no hold on its walls, a grappling hook's anchor on its edge toward a roof across the way.
-import { solid } from '../geom';
+import { solid, type SolidIndex } from '../geom';
 import { MAT } from '../mats';
 import { makeRng, hashString, rand, type Rng } from '../../sim/rng';
 import { ENVELOPE as E } from '../../data/envelope';
@@ -21,7 +21,7 @@ import type { Feature, Plot, Site, Route, Patrol, Gate, Inter, Prop } from '../w
 import { ROAD, type Street } from './ground';
 import { minRect, obbOverlap, type Obb } from './shapes';
 import { BARE } from '../city/climb';
-import { member, cord } from './crossings';
+import { member, cord, fitEnd } from './crossings';
 import type { Vertical } from './vertical';
 import type { Plan } from './lots';
 
@@ -78,7 +78,7 @@ interface Edge { a: number; b: number; w: number; kind: string; pa: V3; pb: V3 }
 const WINS = new Set(['win:open', 'win:glass']);
 
 /** The graph, the routes and the beats. `grate` is the start hideout's way out. */
-export function network(plots: Plot[], features: Feature[], sites: Site[], sts: Street[], g: Heightfield, anchors: V3[][], grate: V3, out: Vertical, gates: Gate[]): { routes: Route[]; patrols: Patrol[] } {
+export function network(plots: Plot[], features: Feature[], sites: Site[], sts: Street[], g: Heightfield, anchors: V3[][], grate: V3, out: Vertical, gates: Gate[], index: SolidIndex): { routes: Route[]; patrols: Patrol[] } {
   const r = makeRng(hashString('network'));
   const lots = plots.filter(p => !p.far), obb = lots.map(p => minRect(p.corners)), n = lots.length;
   const cells = new Map<string, number[]>(), key = (x: number, z: number) => `${Math.floor(x / 48)},${Math.floor(z / 48)}`;
@@ -191,6 +191,15 @@ export function network(plots: Plot[], features: Feature[], sites: Site[], sts: 
     const a = owner(fs[0].x, fs[0].z), b = owner(fs[1].x, fs[1].z);
     if (a >= 0 && b >= 0 && a !== b) link(a, b, 2, fs[0].kind === 'cord' || fs[0].kind === 'crossCord' ? 'line' : fs[0].kind, fs[0], fs[1]);
   }
+  // Out of a window along a plank laid across to a window (into that building) or a roof edge (onto it).
+  const planks = new Map<number, Feature[]>();
+  for (const f of features) if (f.kind === 'winPlank') (planks.get(f.group) ?? planks.set(f.group, []).get(f.group)!).push(f);
+  for (const [a, b] of planks.values()) {
+    const i = b ? owner(a.x - a.nx! * 0.5, a.z - a.nz! * 0.5, 0) : -1, j = b ? owner(b.x + a.nx! * 0.5, b.z + a.nz! * 0.5, 0) : -1;
+    if (i < 0 || j < 0 || i === j || inside[i] < 0) continue;
+    const to = Math.abs(b.y - lots[j].wall) < 1 ? j : inside[j];
+    if (to >= 0) link(inside[i], to, 3, 'winPlank', a, b);
+  }
   // Through a breach from one building's floor into the next's.
   const holes = new Map<number, Feature[]>();
   for (const f of features) if (f.kind === 'breach') (holes.get(f.group) ?? holes.set(f.group, []).get(f.group)!).push(f);
@@ -241,7 +250,11 @@ export function network(plots: Plot[], features: Feature[], sites: Site[], sts: 
   // use these at a cost; the ones they use are built.
   for (let i = 0; i < n; i++) for (const j of around(obb[i].cx, obb[i].cz)) {
     if (j <= i || sheer.has(i) || sheer.has(j) || !obbOverlap(obb[i], obb[j], 17.5) || obbOverlap(obb[i], obb[j], REACH.jump.across / 2)) continue;
-    const pi = edgeTo(obb[i], obb[j]), pj = edgeTo(obb[j], obb[i]), gap = Math.hypot(pj.x - pi.x, pj.z - pi.z), ya = lots[i].top, yb = lots[j].top;
+    const ei = edgeTo(obb[i], obb[j]), ej = edgeTo(obb[j], obb[i]), ya = lots[i].top, yb = lots[j].top;
+    // (Each end on its wall as built: on a tower's shaft set back over its podium, a stepped top's, M3-81.)
+    const fi = fitEnd(index, [ei.x, ya, ei.z], [ej.x, yb, ej.z]), fj = fi && fitEnd(index, [ej.x, yb, ej.z], [ei.x, ya, ei.z]);
+    if (!fi || !fj) continue;
+    const pi = { x: fi[0], z: fi[2] }, pj = { x: fj[0], z: fj[2] }, gap = Math.hypot(pj.x - pi.x, pj.z - pi.z);
     const gnd = Math.max(...[0.25, 0.5, 0.75].map(t => heightAt(g, pi.x + (pj.x - pi.x) * t, pi.z + (pj.z - pi.z) * t) ?? 0));
     // (A plank or a beam level-ish; a cable bundle may climb, a third of its length at most.)
     if (gap > REACH.span.across || Math.abs(ya - yb) > (gap > 14 ? Math.min(12, gap / 3) : Math.min(4, gap * 0.4)) || Math.min(ya, yb) - gnd < BARE + 1 + gap * 0.02) continue;
@@ -254,7 +267,8 @@ export function network(plots: Plot[], features: Feature[], sites: Site[], sts: 
     if (kind === 'crossPlank') out.solids.push(member(A3, B3, 0.7, 0.08, MAT.wood));
     else if (kind === 'crossBeam') { out.solids.push(member(A3, B3, 0.3, 0.04, MAT.metal)); out.decor.push(member([A3[0], A3[1] - 0.04, A3[2]], [B3[0], B3[1] - 0.04, B3[2]], 0.04, 0.28, MAT.metal)); }
     else cord(A3, B3, 0.25 + gap * 0.02, r, out, true);
-    out.features.push({ kind: 'routeLink', x: A3[0], y: A3[1], z: A3[2], group: out.features.length, nx: (B3[0] - A3[0]) / gap, nz: (B3[2] - A3[2]) / gap });
+    out.features.push({ kind: 'routeLink', x: A3[0], y: A3[1], z: A3[2], group: out.features.length, nx: (B3[0] - A3[0]) / gap, nz: (B3[2] - A3[2]) / gap },
+      { kind: 'routeLink', x: B3[0], y: B3[1], z: B3[2], group: out.features.length, nx: (A3[0] - B3[0]) / gap, nz: (A3[2] - B3[2]) / gap });
     // Built now: cheap for the paths after, both ways.
     for (const [x, y] of [[e.a, e.b], [e.b, e.a]]) for (const f of edges[x]) if (f.b === y && f.kind === 'build') { f.kind = kind; f.w = 2 + gap * REACH.cost.roof + 0.5 * (far(f.a, f.pa) + far(f.b, f.pb)); }
     return kind;

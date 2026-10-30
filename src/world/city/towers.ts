@@ -19,8 +19,9 @@ export function tower(l: Lot, r: Rng, out: Fabric) {
   const push = (s: ReturnType<typeof solid>, tint?: number, far = true) => { s.tint = tint; out.solids.push(s); if (far) out.far.push({ ...s }); };
   // The blocks it's built of, bottom up: each one's walls get their own holds.
   const blocks: Block[] = [];
-  // Podium: four to six tall commercial floors over the whole lot.
-  if (Math.min(x1 - x0, z1 - z0) >= 18 && rand(r) < 0.6) {
+  // Podium: four to six tall commercial floors over the whole lot. (Not where a connection meets its walls: those
+  // run straight up to the roof, M3-81.)
+  if (!l.edge && Math.min(x1 - x0, z1 - z0) >= 18 && rand(r) < 0.6) {
     const ph = base + (4 + randInt(r, 3)) * 4.5;
     blocks.push({ x0, z0, x1, z1, y0: base, y1: ph, top: ph + PARAPET });
     push(solid(x0, base, z0, x1, ph, z1, rand(r) < 0.5 ? MAT.facadeBand : MAT.glass), rand(r) < 0.5 ? stone : pick(GLASS, r));
@@ -32,7 +33,7 @@ export function tower(l: Lot, r: Rng, out: Fabric) {
   const shaftTint = grid ? stone : l.tint;
   let y = l.podium ?? base;
   // Setbacks on the tall ones.
-  if (wall - base > 80 && rand(r) < 0.5) {
+  if (!l.edge && wall - base > 80 && rand(r) < 0.5) {
     const k = y + (wall - y) * (0.6 + rand(r) * 0.2), inset = 1.5 + rand(r) * 2;
     push(solid(x0, y, z0, x1, k, z1, shaftMat), shaftTint);
     blocks.push({ x0, z0, x1, z1, y0: y, y1: k, top: k });

@@ -39,7 +39,8 @@ describe('sim core', () => {
     expect(va).not.toEqual(vb);
   });
   it('sim and world code never use Math.random, Date or browser APIs', () => {
-    const bad = /Math\.random|Date\.now|new Date|performance\.now|\bwindow\.|\bdocument\.|from 'three'/;
+    // (The browser's globals, not a property of the same name: REACH.window.across is data.)
+    const bad = /Math\.random|Date\.now|new Date|performance\.now|(?<![.\w])window\.|(?<![.\w])document\.|from 'three'/;
     for (const dir of ['src/sim', 'src/world']) {
       for (const f of fs.readdirSync(dir, { recursive: true }) as string[]) {
         if (!f.endsWith('.ts')) continue;

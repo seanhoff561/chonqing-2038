@@ -52,7 +52,32 @@ export function cord(a: V3, b: V3, sag: number, r: Rng, out: Vertical, junk: boo
   }
 }
 
-/** The connections before the lots are built (roofs may still be set to meet). */
+/** A connection's end `e` fitted to its building once that stands (M3-81, U-044): from a metre out along it (away
+ *  from its other end `o`), in toward the building just under its top, to the wall it meets. An end at or in the
+ *  wall stays; where the wall stands back from where the end was laid (a tower's shaft over its podium, a stepped
+ *  top) it runs on to 0.3 m past that face, `ext` at most; with no wall there, null. */
+export function fitEnd(index: SolidIndex, e: V3, o: V3, ext = 6): V3 | null {
+  const l = Math.hypot(e[0] - o[0], e[2] - o[2]), dx = (e[0] - o[0]) / l, dz = (e[2] - o[2]) / l, px = e[0] - dx, pz = e[2] - dz;
+  let t = Infinity;
+  for (const dy of [0.05, 0.25, 0.45]) { const h = raycast(index, px, e[1] - dy, pz, dx, 0, dz, 1 + ext); if (h) t = Math.min(t, h.t); }
+  if (t <= 1.02) return e;
+  return t < Infinity ? [px + dx * (t + 0.3), e[1], pz + dz * (t + 0.3)] : null;
+}
+
+/** A connection laid out before the buildings stand: its two ends, and how it's built between two. */
+export interface Link { a: V3; b: V3; make: (a: V3, b: V3) => void; /** b hangs free (a beam out over a gap): only a meets a wall, b moved with it */ free?: boolean }
+
+/** Build the connections now the buildings stand (M3-81, U-044): each end fitted to the wall it meets, run on to
+ *  it where the building stands back above (a tower's shaft, a stepped top), left out where there's no wall. */
+export function layLinks(out: Vertical, index: SolidIndex) {
+  for (const l of out.links ?? []) {
+    const a = fitEnd(index, l.a, l.b), b = a && (l.free ? ([l.b[0] + a[0] - l.a[0], l.b[1], l.b[2] + a[2] - l.a[2]] as V3) : fitEnd(index, l.b, l.a));
+    if (a && b) l.make(a, b);
+  }
+  out.links = [];
+}
+
+/** The connections before the lots are built (roofs may still be set to meet), laid out for layLinks. */
 export function crossings(plans: Plan[], g: Heightfield, sts: Street[], used: Set<Plan>): Vertical {
   const out: Vertical = { solids: [], decor: [], far: [], climbables: [], features: [] }, r = makeRng(hashString('crossings'));
   const yAt = (x: number, z: number) => g.y[Math.max(0, Math.min(g.h - 1, Math.round(z / g.cell))) * g.w + Math.max(0, Math.min(g.w - 1, Math.round(x / g.cell)))];
@@ -61,6 +86,8 @@ export function crossings(plans: Plan[], g: Heightfield, sts: Street[], used: Se
     out.features.push({ kind, x: a[0], y: a[1], z: a[2], group, nx: (b[0] - a[0]) / l, nz: (b[2] - a[2]) / l }, { kind, x: b[0], y: b[1], z: b[2], group, nx: (a[0] - b[0]) / l, nz: (a[2] - b[2]) / l });
   };
   const live = plans.filter(p => !p.far && !p.sheer && (p.kind === 'res' || p.kind === 'tower'));
+  // (Built once the buildings stand, layLinks: each end on the wall it meets.)
+  const links: Link[] = out.links = [], link = (a: V3, b: V3, make: Link['make']) => links.push({ a, b, make });
 
   // Across the streets: each street's rows, facing each other, a crossing one pair in three.
   const rows = new Map<string, Plan[]>();
@@ -79,14 +106,17 @@ export function crossings(plans: Plan[], g: Heightfield, sts: Street[], used: Se
       const ya = a.wall + PARAPET, yb = b.wall + PARAPET;
       if (Math.min(ya, yb) < ground + BARE + 2 + (gap > 14 ? 0.25 + gap * 0.02 : 0) || Math.abs(ya - yb) > gap * 0.6) continue;
       const [ax, az] = world(a, m, z0 - 0.4), [bx, bz] = world(a, m, z1 + 0.4), A: V3 = [ax, ya, az], Bp: V3 = [bx, yb, bz];
-      if (gap <= 7) { out.solids.push(member(A, Bp, 0.7, 0.08, MAT.wood)); feat('crossPlank', A, Bp); }
-      else if (gap <= 14) {
+      if (gap <= 7) link(A, Bp, (A, Bp) => { out.solids.push(member(A, Bp, 0.7, 0.08, MAT.wood)); feat('crossPlank', A, Bp); });
+      else if (gap <= 14) link(A, Bp, (A, Bp) => {
         // An I-beam: its top flange to walk, its web and foot below.
         out.solids.push(member(A, Bp, 0.3, 0.04, MAT.metal));
         out.decor.push(member([A[0], A[1] - 0.04, A[2]], [Bp[0], Bp[1] - 0.04, Bp[2]], 0.04, 0.28, MAT.metal), member([A[0], A[1] - 0.32, A[2]], [Bp[0], Bp[1] - 0.32, Bp[2]], 0.3, 0.04, MAT.metal));
         feat('crossBeam', A, Bp);
-      } else { cord(A, Bp, 0.25 + gap * 0.02, r, out, rand(r) < 0.5); feat('crossCord', A, Bp); }
+      });
+      else { const junk = rand(r) < 0.5; link(A, Bp, (A, Bp) => { cord(A, Bp, 0.25 + gap * 0.02, r, out, junk); feat('crossCord', A, Bp); }); }
       used.add(a); used.add(b);
+      // (Both built straight up to their roofs: no stepped top, no tower's shaft set back, M3-81.)
+      a.edge = b.edge = true;
     }
   }
 
@@ -107,12 +137,12 @@ export function crossings(plans: Plan[], g: Heightfield, sts: Street[], used: Se
     const lo = Math.min(a.wall, b.wall), at = (o: number, d: number, y: number): V3 => { const [x, z] = pt(o, d); return [x, y, z]; };
     const ground = Math.max(...[0.1, 0.3, 0.5, 0.7, 0.9].flatMap(t => [o0, (o0 + o1) / 2, o1].map(o => yAt(...pt(o, k * (ah + gap * t))))));
     if (lo - ground < BARE + 3) continue;
-    const x0 = k * ah, x1 = k * (ah + gap);
+    const x0 = k * ah, x1 = k * (ah + gap), n0 = links.length;
     // Bars across the narrow gaps (U-035), one or two, out of reach of the ground.
     if (gap <= 4 && rand(r) < 0.6) for (let n = 1 + randInt(r, 2); n > 0; n--) {
       const o = o0 + 0.8 + rand(r) * Math.max(0, o1 - o0 - 1.6), y = ground + BARE + 0.5 + rand(r) * Math.max(0, lo - ground - BARE - 2);
       const A = at(o, x0 - k * 0.15, y), Bp = at(o, x1 + k * 0.15, y);
-      out.solids.push(member(A, Bp, 0.06, 0.06, MAT.metal)); feat('gapBar', A, Bp);
+      link(A, Bp, (A, Bp) => { out.solids.push(member(A, Bp, 0.06, 0.06, MAT.metal)); feat('gapBar', A, Bp); });
     }
     // Cable bundles wall to wall, common (U-034): one, now and then two, between 7 m up and the lower roof.
     if (gap >= 3 && rand(r) < 0.4) for (let n = rand(r) < 0.3 ? 2 : 1; n > 0; n--) {
@@ -120,18 +150,25 @@ export function crossings(plans: Plan[], g: Heightfield, sts: Street[], used: Se
       const sag = 0.15 + gap * 0.04, floor = ground + BARE + 0.5 + sag, o = o0 + 0.6 + rand(r) * Math.max(0, o1 - o0 - 1.2), y0 = floor + rand(r) * Math.max(0, lo - floor - 1), y1 = Math.max(floor, Math.min(lo - 0.5, y0 + (rand(r) - 0.5) * 2));
       if (y0 > lo - 0.5) continue;
       const A = at(o, x0, y0), Bp = at(o + (rand(r) - 0.5) * 1.5, x1, y1);
-      cord(A, Bp, sag, r, out, rand(r) < 0.7); feat('cord', A, Bp);
+      const junk = rand(r) < 0.7;
+      link(A, Bp, (A, Bp) => { cord(A, Bp, sag, r, out, junk); feat('cord', A, Bp); });
     }
     // A steel walkway roof to roof, railed, where the roofs meet (or can).
-    if (gap >= 2 && gap <= 8 && rand(r) < 0.12 && (Math.abs(a.wall - b.wall) <= 1.2 || refloor(b, a.wall, 1.2))) {
-      const o = o0 + 1 + rand(r) * Math.max(0, o1 - o0 - 2), y = Math.min(a.wall, b.wall) + PARAPET, A = at(o, x0 - k * 0.3, y), Bp = at(o, x1 + k * 0.3, y);
-      out.solids.push(member(A, Bp, 1.2, 0.1, MAT.metal));
-      for (const s of [-0.58, 0.58]) {
-        const sa = at(o + s, x0, y + 1.0), sb = at(o + s, x1, y + 1.0);
-        out.decor.push(member(sa, sb, 0.04, 0.04, MAT.metal), member([sa[0], sa[1] - 0.5, sa[2]], [sb[0], sb[1] - 0.5, sb[2]], 0.03, 0.03, MAT.metal));
-      }
-      feat('walkway', A, Bp);
+    if (gap >= 2 && gap <= 8 && rand(r) < 0.12 && (Math.abs(a.wall - b.wall) <= 1.2 || (!used.has(b) && refloor(b, a.wall, 1.2)))) {
+      const o = o0 + 1 + rand(r) * Math.max(0, o1 - o0 - 2), y = Math.min(a.wall, b.wall) + PARAPET;
+      link(at(o, x0 - k * 0.3, y), at(o, x1 + k * 0.3, y), (A, Bp) => {
+        out.solids.push(member(A, Bp, 1.2, 0.1, MAT.metal));
+        // Its rails, a hand in from its edges, between the walls.
+        const l = Math.hypot(Bp[0] - A[0], Bp[2] - A[2]), ux = (Bp[0] - A[0]) / l, uz = (Bp[2] - A[2]) / l;
+        for (const s of [-0.58, 0.58]) {
+          const sa: V3 = [A[0] + ux * 0.3 - uz * s, y + 1.0, A[2] + uz * 0.3 + ux * s], sb: V3 = [Bp[0] - ux * 0.3 - uz * s, y + 1.0, Bp[2] - uz * 0.3 + ux * s];
+          out.decor.push(member(sa, sb, 0.04, 0.04, MAT.metal), member([sa[0], sa[1] - 0.5, sa[2]], [sb[0], sb[1] - 0.5, sb[2]], 0.03, 0.03, MAT.metal));
+        }
+        feat('walkway', A, Bp);
+      });
     }
+    // (Whatever joins them, both built straight up to their roofs, M3-81.)
+    if (links.length > n0) a.edge = b.edge = true;
   }
   return out;
 }
@@ -155,9 +192,10 @@ export function windowBridges(wins: Feature[], index: SolidIndex, out: Vertical)
     let top = NaN;
     if (!other) { const g = raycast(index, hx + nx * 0.5, y + 0.8, hz + nz * 0.5, 0, -1, 0, 3.2); if (g) top = y + 0.8 - g.t; }
     const end: V3 | null = other ? [other.x - nx * 0.1, other.y, other.z - nz * 0.1] : Number.isFinite(top) && top < y + 0.6 && top > y - 2.2 ? [hx + nx * 0.6, top, hz + nz * 0.6] : null;
-    if (!end) continue;
     const A: V3 = [w.x - nx * 0.15, y, w.z - nz * 0.15];
+    // (Both ends on a wall: under the sills, the roof's edge, M3-81.)
+    if (!end || !fitEnd(index, A, end, 0.8) || !fitEnd(index, end, A, 0.8)) continue;
     out.solids.push(member(A, end, 0.35, 0.06, MAT.wood));
-    out.features.push({ kind: 'winPlank', x: A[0], y, z: A[2], group: out.features.length, nx, nz });
+    out.features.push({ kind: 'winPlank', x: A[0], y, z: A[2], group: out.features.length, nx, nz }, { kind: 'winPlank', x: end[0], y: end[1], z: end[2], group: out.features.length, nx: -nx, nz: -nz });
   }
 }

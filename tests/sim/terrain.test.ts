@@ -34,7 +34,9 @@ describe('terrain and the Eighteen Stairs', () => {
   });
   it('the rivers hold water over their beds', () => {
     expect(w.water.length).toBeGreaterThan(0);
-    expect(w.water.every(b => b.y1 === WATER_Y)).toBe(true);
+    // (The rivers at the waterline; the sewers' flooded sumps, M3-73a, are water too, under the ground.)
+    expect(w.water.some(b => b.y1 === WATER_Y)).toBe(true);
+    expect(w.water.every(b => b.y1 === WATER_Y || b.y1 < (heightAt(g, (b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2) ?? Infinity))).toBe(true);
     let wet = 0;
     for (let j = 0; j < g.h; j += 10) for (let i = 0; i < g.w; i += 10) if (g.y[j * g.w + i] < WATER_Y - 1) wet++;
     expect(wet).toBeGreaterThan(100);

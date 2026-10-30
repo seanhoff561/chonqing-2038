@@ -19,7 +19,9 @@ describe('the route network (M3-37, M3-76)', () => {
     expect(main.length).toBeGreaterThanOrEqual(3);
     expect(branch.length).toBeGreaterThanOrEqual(10);
     const ways = new Set(w.routes.flatMap(r => r.ways));
-    for (const k of ['window', 'jump', 'drop']) expect(ways.has(k), k).toBe(true);
+    for (const k of ['jump', 'drop']) expect(ways.has(k), k).toBe(true);
+    // Out of windows now and then: across to the next one, onto a roof, along a plank laid out of one (M3-81).
+    expect(w.routes.flatMap(r => r.ways).filter(k => k === 'window' || k === 'winPlank').length, 'out of windows').toBeGreaterThanOrEqual(3);
     // The main routes start or end by the districts' centres.
     const L = GEO.landmarks, ends = main.flatMap(r => [r.pts[0], r.pts[r.pts.length - 1]]);
     const touched = ['jiefangbei', 'shibati', 'chaotianmen', 'hongyadong'].filter(k => ends.some(p => Math.hypot(p.x - L[k].x, p.z - L[k].z) < 200));
@@ -46,7 +48,7 @@ describe('the route network (M3-37, M3-76)', () => {
             : k === 'climb' ? dy <= R.climb.up + 0.05
               : k === 'grapple' ? dy <= R.grapple.rise && across <= R.grapple.across + 2
                 : k === 'line' ? across <= R.line.across
-                  : ['crossPlank', 'crossBeam', 'gapBar', 'walkway', 'skybridge'].includes(k) ? across <= R.span.across
+                  : ['crossPlank', 'crossBeam', 'gapBar', 'walkway', 'skybridge', 'winPlank'].includes(k) ? across <= R.span.across
                     : ['stairs', 'burrow', 'door', 'way', 'tunnel', 'street', 'breach', 'sewer', 'manhole'].includes(k);
       expect(ok, `${r.id} leg ${i} ${k}: ${across.toFixed(1)} across, ${dy.toFixed(1)} up`).toBe(true);
     });

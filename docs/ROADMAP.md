@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 77 of 93 done
+## M3: 78 of 93 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -486,7 +486,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Nothing to climb or crawl through stands open by default: every grate, vent, hatch and trapdoor has a cover he opens with F first (some bolted, jammed or locked)
   - The basements' hatches, the roof hatches, the warren shafts' ducts, the crawl vents between rooms, the street grates over the underground's ladder shafts
   - Sim tests: each kind of opening blocks until opened with F, then lets him through
-- [ ] **M3-81** Connections meet the walls (U-044)
+- [x] **M3-81** Connections meet the walls (U-044)
   - Every connection (planks, beams, cables, bars, walkways, bridges, window planks, the routes' crossings) reaches the wall it joins at its own height: where a building is narrower above (a tower over its podium, a stepped top) it's extended to the wall or not built
   - Sim test: every connection's two ends touch a building, none floating
 - [x] **M3-73a** Basements and the sewer maze (U-038, split from M3-73)

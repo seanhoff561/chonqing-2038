@@ -14,11 +14,14 @@ import type { Climbable, Feature } from '../world';
 import { ROAD, streetCells, type Street } from './ground';
 import { BARE } from '../city/climb';
 import type { Plan } from './lots';
+import { member, type Link } from './crossings';
 
 const FLOOR = 3, PARAPET = 0.6;
+type V3 = [number, number, number];
 /** A megastructure's columns: how much the roofs under one may differ, and how thick (U-034). */
 export const MEGA_DROP = 4, COLUMN = 1.6;
-export interface Vertical { solids: Solid[]; decor: Solid[]; far: Solid[]; climbables: Climbable[]; features: Feature[]; /** the lots it has joined across a street */ used?: Set<Plan> }
+export interface Vertical { solids: Solid[]; decor: Solid[]; far: Solid[]; climbables: Climbable[]; features: Feature[]; /** the lots it has joined across a street */ used?: Set<Plan>;
+  /** connections to build once the buildings stand (crossings.ts) */ links?: Link[] }
 
 /** A row lot's frame: u along its street, n out of its front (its own +z). */
 export const frame = (p: Plan) => { const c = Math.cos(p.obb.yaw), s = Math.sin(p.obb.yaw); return { ux: c, uz: s, nx: -s, nz: c }; };
@@ -40,7 +43,7 @@ export const refloor = (p: Plan, y: number, tol: number) => {
 export const parallel = (a: Plan, b: Plan, k: number) => Math.abs(Math.cos(a.obb.yaw - b.obb.yaw)) > k;
 
 export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vertical {
-  const out: Vertical = { solids: [], decor: [], far: [], climbables: [], features: [] }, r = makeRng(hashString('vertical')), used = new Set<Plan>();
+  const out: Vertical = { solids: [], decor: [], far: [], climbables: [], features: [], links: [] }, r = makeRng(hashString('vertical')), used = new Set<Plan>();
   const yAt = (x: number, z: number) => g.y[Math.max(0, Math.min(g.h - 1, Math.round(z / g.cell))) * g.w + Math.max(0, Math.min(g.w - 1, Math.round(x / g.cell)))];
   const feature = (kind: string, p: Plan, a: number, d: number, y: number, group = out.features.length) => { const [x, z] = world(p, a, d), f = frame(p); out.features.push({ kind, x, y, z, group, nx: f.nx, nz: f.nz }); };
   const rows = new Map<string, Plan[]>();
@@ -89,6 +92,8 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
         lanes++;
       }
       used.add(a); used.add(b);
+      // (Both built out to their edges at the top: nothing stepped back from the deck or the block, M3-81.)
+      a.edge = b.edge = true;
     }
   }
 
@@ -107,7 +112,7 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
     out.solids.push(turn([rampSolid(p.obb.cx - 1.6, Math.min(H, top) - 0.4, p.obb.cz + z0, p.obb.cx + 1.6, p.obb.cz + z1, Math.min(H, top), Math.max(H, top), H > top ? 4 : 3, MAT.concrete)], p.obb.yaw, p.obb.cx, p.obb.cz)[0]);
     for (const k of [-1, 1]) out.decor.push(box(p, k * 1.6 - 0.08, k * 1.6 + 0.08, z0 + 0.1, z0 + 0.26, Math.min(H, top), Math.max(H, top) + 1, MAT.metal));
     feature('roofStreet', p, 0, -p.obb.hd, top);
-    used.add(p);
+    used.add(p); p.edge = true;
   }
 
   // Megastructures over runs of three or more roofs side by side and of near one height (U-034: no column runs far
@@ -140,7 +145,7 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
       for (const p of run) {
         const [a] = local(M, p.obb.cx, p.obb.cz);
         for (const u of [a - p.obb.hw + 1.5, a + p.obb.hw - 1.5]) for (const d of [front - 1.5, front - D + 1.5]) out.solids.push(box(M, u - COLUMN / 2, u + COLUMN / 2, d - COLUMN / 2, d + COLUMN / 2, p.wall, y0, MAT.concrete));
-        used.add(p);
+        used.add(p); p.edge = true;
       }
       const [lx, lz] = world(M, 0.8, front - D), f = frame(M);
       out.solids.push(box(M, 0.8 - COLUMN / 2, 0.8 + COLUMN / 2, front - D + 0.05, front - D + 0.05 + COLUMN, M.wall, y0, MAT.concrete));
@@ -160,6 +165,7 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
     out.solids.push(box(a, Math.min(e0, e1), Math.max(e0, e1), z + 0.05, z + 0.35, lo, hi, MAT.metal));
     out.decor.push(box(a, Math.min(e0, e1) + 0.3, Math.max(e0, e1) - 0.3, z + 0.35, z + 0.38, lo + 0.4, hi - 0.4, MAT.screen));
     feature('billboard', a, (e0 + e1) / 2, z, Math.min(a.wall, b.wall));
+    a.edge = b.edge = true;
   }
   // The layers between the rows' buildings (U-032): vertical alleys (a slot of 1.2-3.2 m between two walls 20 m
   // and more, to kick or run up), plank bridges across the gaps between two tall ones, steel beams left sticking
@@ -174,9 +180,17 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
     if (gap >= 2 && gap <= 7 && lo - floor >= 15 && rand(r) < 0.25) {
       // A plank bridge with a handrail, somewhere between 8 m up and the lower roof, toward the front.
       const y = floor + 8 + rand(r) * Math.max(0, lo - floor - 11), d = a.obb.hd - 2 - rand(r) * Math.max(0, depth * 2 - 6);
-      out.solids.push(box(a, Math.min(e0, e1) - 0.4, Math.max(e0, e1) + 0.4, d - 0.5, d + 0.5, y - 0.12, y, MAT.wood));
-      out.decor.push(box(a, Math.min(e0, e1), Math.max(e0, e1), d + 0.46, d + 0.5, y, y + 1.0, MAT.metal));
-      feature('bridge', a, mid, d, y);
+      // (Laid once the walls stand, its ends on them, M3-81: the handrail between them, the ends marked where it
+      // meets them.)
+      const [ax, az] = world(a, e0 - k * 0.4, d), [bx, bz] = world(a, e1 + k * 0.4, d), f = frame(a);
+      out.links!.push({ a: [ax, y, az], b: [bx, y, bz], make: (A, B) => {
+        const l = Math.hypot(B[0] - A[0], B[2] - A[2]), ux = (B[0] - A[0]) / l, uz = (B[2] - A[2]) / l, on = (p: V3, t: number, o = 0, h = y): V3 => [p[0] + ux * t + f.nx * o, h, p[2] + uz * t + f.nz * o];
+        out.solids.push(member(A, B, 1.0, 0.12, MAT.wood));
+        out.decor.push(member(on(A, 0.4, 0.48, y + 1.0), on(B, -0.4, 0.48, y + 1.0), 0.04, 1.0, MAT.metal));
+        const p = on(A, 0.8), q = on(B, -0.8), g = out.features.length;
+        out.features.push({ kind: 'bridge', x: p[0], y, z: p[2], group: g, nx: f.nx, nz: f.nz }, { kind: 'bridge', x: q[0], y, z: q[2], group: g, nx: f.nx, nz: f.nz });
+      } });
+      a.edge = b.edge = true;
     }
     // (No climbing line up the taller one any more, U-044: its walls hold what any building's do.)
     const tall = a.wall >= b.wall ? a : b;
@@ -185,8 +199,13 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
       const y = tall.base + BARE + 1 + rand(r) * (tall.wall - tall.base - BARE - 4), d = (rand(r) - 0.5) * (tall.obb.hd * 2 - 3), reach = Math.min(gap - 0.6, 2 + rand(r) * 2);
       // (The row's buildings face the same way, so toward the other one is +k from a and -k from b.)
       const sd = tall === a ? k : -k, ua = sd * tall.obb.hw, ub = sd * (tall.obb.hw + reach);
-      out.solids.push(box(tall, Math.min(ua, ub), Math.max(ua, ub), d - 0.13, d + 0.13, y - 0.3, y, MAT.metal));
-      feature('beam', tall, (ua + ub) / 2, d, y);
+      // (Its root fitted to the wall once that stands, M3-81; the rest sticking out over the gap.)
+      const [ax, az] = world(tall, ua, d), [bx, bz] = world(tall, ub, d), f = frame(tall);
+      out.links!.push({ a: [ax, y, az], b: [bx, y, bz], free: true, make: (A, B) => {
+        out.solids.push(member(A, B, 0.26, 0.3, MAT.metal));
+        out.features.push({ kind: 'beam', x: (A[0] + B[0]) / 2, y, z: (A[2] + B[2]) / 2, group: out.features.length, nx: f.nx, nz: f.nz });
+      } });
+      tall.edge = true;
     }
   }
   // Scaffolding hung on one front in eight of the taller buildings, from 8-12 m up (out of reach of the street) to

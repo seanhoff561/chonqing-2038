@@ -30,7 +30,8 @@ export interface Lot {
   route?: { x: number; y: number; z: number }[];
   /** a tower's skyline: the highest roof round it (U-036); over it its walls hold more */
   sky?: number;
-  /** its roof runs out to its walls (a plank or a bridge meets its edge): no setback at the top */
+  /** its walls run straight up to its roof (a connection meets them): no setback at the top, no tower's shaft set
+   *  back from its podium (M3-81) */
   edge?: boolean;
   /** its roof kept clear (a rooftop route runs over it): no clutter */
   bare?: boolean;

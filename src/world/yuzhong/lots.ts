@@ -26,7 +26,8 @@ export interface Plan {
   /** a climbing line up one of its sides from a neighbour's roof (vertical.ts, U-032) */
   /** a tower's skyline: the highest roof within 25 m of it (U-036) */
   sky?: number;
-  /** its roof runs out to its walls (a plank meets its edge, vertical.ts) */
+  /** its walls run straight up to its roof (a connection meets them, vertical.ts, crossings.ts): no stepped top,
+   *  no tower's shaft set back from its podium (M3-81) */
   edge?: boolean;
   /** its roof kept clear, a rooftop route running over it (Shibati's terraces): nothing on it, never hollowed */
   bare?: boolean;

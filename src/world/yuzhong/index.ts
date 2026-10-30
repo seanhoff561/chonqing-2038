@@ -24,7 +24,7 @@ import { buildUnder } from './under';
 import { buildSite } from './site';
 import { podiumMask, buildFactory } from './factory';
 import { verticalCity } from './vertical';
-import { crossings, windowBridges } from './crossings';
+import { crossings, layLinks, windowBridges } from './crossings';
 import { pickGates, placeGates, network, isolated } from './network';
 import { buildLine2, stationEntrances, BEAM } from './line2';
 import { dressStreets } from './dressing';
@@ -73,18 +73,21 @@ export function buildYuzhong(): World {
     for (const q of plans) if (q !== p && !q.far && q.wall > p.sky && Math.hypot(q.obb.cx - p.obb.cx, q.obb.cz - p.obb.cz) < p.obb.hw + p.obb.hd + q.obb.hw + q.obb.hd + 25 && obbOverlap(p.obb, q.obb, 12.5)) p.sky = q.wall;
   }
   plans.forEach((p, n) => plots.push(buildPlan(p, n, out, g)));
-  // Planks out of windows across to a window or a roof, now the buildings stand.
-  windowBridges(out.features.filter(f => f.kind.startsWith('win:')), buildIndex(out.solids), cross);
   rowAlleys(plans, out, g);
   // Holes knocked through from one building into the next where their floors meet (M3-76).
   breaches(out);
+  // The connections between them, each end on its wall (M3-81); planks out of windows across to a window or a roof.
+  const built = buildIndex(out.solids);
+  layLinks(vert, built);
+  layLinks(cross, built);
+  windowBridges(out.features.filter(f => f.kind.startsWith('win:')), built, cross);
   // The sewer maze under the basements (M3-73a).
   const sew = sewers(out.features.filter(f => f.kind === 'sewer'), plots, g, under.route, tun.zones.map(z => z.box), under.solids, under.zones.map(z => z.box));
   // The caches, and the route network over everything that joins the roofs (M3-37).
   const gates = placeGates(gatePairs.filter(q => isolated(q, plans)), out), L0 = GEO.landmarks, lm = (k: string) => ({ x: L0[k].x, y: 0, z: L0[k].z });
   const net = network(plots, out.features.concat(vert.features, cross.features, under.features, sew.features), out.sites, sts, g,
     [['jiaochangkou', 'shibati', 'jiefangbei', 'cablewayNorth', 'xiaoshizi', 'chaotianmen'].map(lm), ['jiefangbei', 'xinhuaIntl', 'hongyadong', 'chaotianmen'].map(lm)],
-    { x: tun.at.grate.x, y: tun.at.grate.y, z: tun.at.grate.z }, cross, gates);
+    { x: tun.at.grate.x, y: tun.at.grate.y, z: tun.at.grate.z }, cross, gates, buildIndex(out.solids));
   // The streets as drawn, and paths from the doors set back from them to them (U-033).
   const drawn = drawnStreets(sts.filter(onGround), plots), doorWays = doorPaths(g, plots, drawn);
   const decor: Solid[] = [];
