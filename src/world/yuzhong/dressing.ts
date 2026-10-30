@@ -132,6 +132,9 @@ function road(s: Street, len: number, at: (t: number, off: number) => [number, n
     else if (q < 0.7) either(t, wall - 0.65, side, (x, z) => put('dumpster', x, z, -th));
     else if (q < 0.73) either(t, wall - 0.6, side, (x, z, sd) => put('dronedock', x, z, along + (sd > 0 ? Math.PI : 0)));
     else if (q < 0.76) either(t, wall + 0.2, side, (x, z, sd) => put('kiosk', x, z, along + (sd > 0 ? Math.PI : 0)));
+    // Rubbish bags piled against a wall where the collections stopped; bollards in twos at the kerb.
+    else if (q < 0.86) either(t, wall - 0.5, side, (x, z) => put('bags', x, z, rand(r) * 6.28));
+    else if (q < 0.93) for (const d of [-0.8, 0.8]) either(t + d, kerb + 0.3, side, (x, z) => put('bollard', x, z, along));
   }
   if (len > 30 && rand(r) < 0.05) {
     const [x, z] = at(len / 2, kerb + 0.4), [ex, ez] = at(len / 2 + 4, -(wall - 0.4));
@@ -153,8 +156,8 @@ function walkway(s: Street, len: number, at: (t: number, off: number) => [number
   // In loose groups of one to three a few metres apart (U-031): off the walkway's edge onto the ground beside it,
   // or where something stands there, just inside its edge; never in a row.
   for (let t = rand(r) * 6; t < len; t += 7 + rand(r) * 12) {
-    const side = rand(r) < 0.5 ? -1 : 1, cyber = districtAt(...at(t, 0)).cyber, q = rand(r), n = 1 + randInt(r, 3);
-    if (s.w < 3 && q >= 0.55) continue;
+    // (The narrow ones, between the buildings, only the small things.)
+    const side = rand(r) < 0.5 ? -1 : 1, cyber = districtAt(...at(t, 0)).cyber, q = rand(r) * (s.w < 3 ? 0.55 : 1), n = 1 + randInt(r, 3);
     for (let i = 0; i < n; i++) {
       const tt = t + (rand(r) - 0.5) * 4, face = Math.PI / 2 - th + (side > 0 ? 0 : Math.PI) + (rand(r) - 0.5) * 0.5;
       const off = [s.w / 2 + 0.7 + rand(r) * 1.2, Math.max(0.3, s.w / 2 - 0.9 - rand(r) * 0.4)];

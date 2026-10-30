@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 55 of 76 done
+## M3: 56 of 76 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -481,16 +481,16 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Every ladder has something behind it (a wall or its own frame) so he can climb it; a unit test climbs one of each kind
   - The red and blue plastic stools are gone
   - Interact and sleep are on F (E and Q free for leaning, M4-21); prompts and the help say so
-- [ ] **M3-66** The layered city, filled with buildings (U-032, U-033)
+- [x] **M3-66** The layered city, filled with buildings (U-032, U-033)
   - Everything purposeful (U-033): M3-60's grid-cell parks, plazas and parking lots replaced; the open ground filled with buildings (blocks, low layers, fillers) right up to each other and the streets; green only in the few real parks, laid inside their real outlines; what open ground is left is hardscape shaped to the buildings and streets round it (paving to the building lines, forecourts, steps, a parking court between buildings) with its walkways running from somewhere to somewhere (street to entrance, street to stair) like the roads; nothing on the cell grid, nothing jagged or repeated
   - Short and medium buildings about twice as tall; between them half-height layers (low blocks, decks, scaffolding, platforms) and short fillers as low as today's short ones, so the city stands in layers to be crossed by parkour; bridges between buildings, beams sticking out, vertical alleys (narrow slots between tall walls to climb or wall-run up)
-  - Layers step down off the street into the underground city in places, so ground level keeps going down
   - A unit test measures the layers (heights spread across bands) and the vertical alleys; screenshots
 - [ ] **M3-67** Climbing reworked (U-032)
   - No building can be climbed to its top by itself: its holds (vents, sills, short ladders, pipes, beams) are scarce and scattered, ground floors bare; reaching a roof takes crossing from other buildings and things beside them (climbable street poles, kiosks, walls, scaffolding) using the whole envelope (wall-runs, kicks, long jumps, items)
   - A unit test finds no building whose own holds chain from the ground to its roof, and a bot reaches three roofs over 20 m by crossing from others
 - [ ] **M3-68** The underground reworked (U-032)
   - Tunnels short and real: a metro tunnel (track bed, cable trays, cross passages, signals) and service tunnels with their own props, joined to the underground city's levels rather than long empty runs
+  - Layers step down off the street into the underground city in places, so ground level keeps going down (moved here from M3-66, where the underground is reworked)
   - A bot walk and screenshots
 - [ ] **M3-61** Ruins that look fallen (U-031)
   - The rough ground reads as collapse: boulders and broken slabs, fallen beams and columns, sections of facade lying where they fell from the building beside them (its material and colour), sediment and rubble filling the hollows organically

@@ -13,7 +13,6 @@ import { MAT } from '../world/mats';
 import { CHUNK } from './world-mesh';
 import { Buf } from './ground-mesh';
 import type { StreetLine } from '../world/world';
-import type { Marks } from '../world/yuzhong/marks';
 import { ROAD, KERB_W, PAVE } from '../world/yuzhong/ground';
 
 
@@ -23,7 +22,7 @@ const STEP = 2, UP: [number, number, number] = [0, 1, 0];
 
 interface Seg { ax: number; az: number; bx: number; bz: number; half: number; s: StreetLine }
 
-export function buildStreetMeshes(g: Heightfield, streets: StreetLine[], lod: Lod, cover?: Marks): THREE.Mesh[] {
+export function buildStreetMeshes(g: Heightfield, streets: StreetLine[], lod: Lod, lawns?: [number, number][][]): THREE.Mesh[] {
   const out: THREE.Mesh[] = [], mats = new Map<number, THREE.Material>();
   // Drawn a hair nearer than the ground they lie on, so far off the two never flicker through each other.
   const own = (mat: number) => {
@@ -35,7 +34,7 @@ export function buildStreetMeshes(g: Heightfield, streets: StreetLine[], lod: Lo
     }
     return m;
   };
-  for (const { k, mat, buf } of streetBuffers(g, streets, cover)) {
+  for (const { k, mat, buf } of streetBuffers(g, streets, lawns)) {
     const m = buf.mesh(own(mat));
     if (!m) continue;
     m.userData.chunk = { x: (Math.floor(k / 65536) + 0.5) * CHUNK, z: ((k % 65536) + 0.5) * CHUNK };
@@ -44,8 +43,8 @@ export function buildStreetMeshes(g: Heightfield, streets: StreetLine[], lod: Lo
   return out;
 }
 
-/** The streets' vertices per chunk (key) and material: asphalt, paving or (the open ground's lawns) grass. */
-export function streetBuffers(g: Heightfield, streets: StreetLine[], cover?: Marks): { k: number; mat: number; buf: Buf }[] {
+/** The streets' vertices per chunk (key) and material: asphalt, paving or (the parks' lawns) grass. */
+export function streetBuffers(g: Heightfield, streets: StreetLine[], lawns?: [number, number][][]): { k: number; mat: number; buf: Buf }[] {
   // Carriageways by 16 m cell, to leave kerbs, pavements and lines off other streets.
   const cells = new Map<number, Seg[]>(), key = (i: number, j: number) => i * 65536 + j;
   for (const s of streets) if (ROAD.has(s.kind) && !s.steps) for (let k = 0; k + 1 < s.pts.length; k++) {
@@ -145,21 +144,41 @@ export function streetBuffers(g: Heightfield, streets: StreetLine[], cover?: Mar
       for (const side of [-1, 1]) strip(side * h, side * (h + 0.18), KERB, 1, 0.8, undefined, false);
     }
   }
-  // The open ground's cover (M3-60): each cell's lawn, paving or asphalt laid over the ground on its own 2 m samples,
-  // so its edges are the cell's, clean.
-  if (cover) {
-    const grass = 1 / texScale(MAT.grass), lift = [0, 0.03, 0.04, 0.04];
-    for (let j = 0; j < cover.h; j++) for (let i = 0; i < cover.w; i++) {
-      const c = cover.m[j * cover.w + i];
-      if (!c) continue;
-      const x0 = i * cover.cell, z0 = j * cover.cell, buf = bufAt(x0 + 1, z0 + 1)[c === 1 ? 2 : c === 2 ? 1 : 0], sc = c === 1 ? grass : c === 2 ? pave : asph;
-      for (let b = 0; b < cover.cell; b += g.cell) for (let a = 0; a < cover.cell; a += g.cell) {
-        const v = [[a, b], [a, b + g.cell], [a + g.cell, b + g.cell], [a + g.cell, b]].map(([da, db]) => { const x = x0 + da, z = z0 + db; return [x, (heightAt(g, x, z) ?? 0) + lift[c], z]; });
-        for (const t of [v[0], v[1], v[2], v[0], v[2], v[3]]) buf.push(t, UP, [t[0] * sc, t[2] * sc], c === 3 ? 0.9 : 1);
+  // The parks' lawns (M3-60, U-033): each ground cell under one cut to the park's outline, laid over the ground on
+  // its triangles, so the edge is the park's own, clean.
+  const grass = 1 / texScale(MAT.grass);
+  for (const poly of lawns ?? []) {
+    const xs = poly.map(p => p[0]), zs = poly.map(p => p[1]);
+    for (let j = Math.floor(Math.min(...zs) / g.cell); j * g.cell < Math.max(...zs); j++) for (let i = Math.floor(Math.min(...xs) / g.cell); i * g.cell < Math.max(...xs); i++) {
+      const x0 = i * g.cell, z0 = j * g.cell, x1 = x0 + g.cell, z1 = z0 + g.cell, buf = bufAt(x0 + 1, z0 + 1)[2];
+      // The cell's two ground triangles, each clipped to the outline.
+      for (const tri of [[[x0, z0], [x0, z1], [x1, z1]], [[x0, z0], [x1, z1], [x1, z0]]] as [number, number][][]) {
+        const piece = clip(poly, tri);
+        for (let k = 1; k + 1 < piece.length; k++) for (const [x, z] of [piece[0], piece[k], piece[k + 1]]) buf.push([x, (heightAt(g, x, z) ?? 0) + 0.03, z], UP, [x * grass, z * grass], 1);
       }
     }
   }
   return [...chunks].flatMap(([k, [a, p, gr]]) => [{ k, mat: MAT.asphalt, buf: a }, { k, mat: MAT.stone, buf: p }, { k, mat: MAT.grass, buf: gr }]);
+}
+
+/** A convex piece (a ground triangle, wound like it) cut to a polygon: the polygon clipped by each of the piece's
+ *  edges in turn (Sutherland-Hodgman), so what's left is their overlap, wound like the piece. */
+function clip(poly: [number, number][], piece: [number, number][]): [number, number][] {
+  let out = poly;
+  const area = piece.reduce((a, p, i) => { const q = piece[(i + 1) % piece.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0), sgn = Math.sign(area);
+  for (let i = 0; i < piece.length && out.length; i++) {
+    const [ax, az] = piece[i], [bx, bz] = piece[(i + 1) % piece.length], side = (x: number, z: number) => sgn * ((bx - ax) * (z - az) - (bz - az) * (x - ax));
+    const next: [number, number][] = [];
+    for (let k = 0; k < out.length; k++) {
+      const p = out[k], q = out[(k + 1) % out.length], sp = side(...p), sq = side(...q);
+      if (sp >= 0) next.push(p);
+      if ((sp >= 0) !== (sq >= 0)) { const t = sp / (sp - sq); next.push([p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t]); }
+    }
+    out = next;
+  }
+  // Wound like the piece (facing up).
+  const a2 = out.reduce((a, p, i) => { const q = out[(i + 1) % out.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0);
+  return Math.sign(a2) === sgn ? out : out.slice().reverse();
 }
 
 /** A point along a street: where, how far along, its normal (left of travel) and the miter stretch there. */

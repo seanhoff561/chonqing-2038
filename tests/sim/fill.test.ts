@@ -4,6 +4,7 @@
 import { describe, it, expect } from 'vitest';
 import { getWorld } from '../../src/world/build';
 import { raycast } from '../../src/world/geom';
+import { heightAt } from '../../src/world/heightfield';
 import { MARK } from '../../src/world/yuzhong/marks';
 import { HUNG } from '../../src/data/props';
 import { ROAD } from '../../src/world/yuzhong/ground';
@@ -27,8 +28,8 @@ describe('nothing empty, everything in order (M3-56)', () => {
     const used = new Uint8Array(mk.m.length), mark = (x: number, z: number) => { const i = Math.floor(x / mk.cell), j = Math.floor(z / mk.cell); if (i >= 0 && j >= 0 && i < mk.w && j < mk.h) used[j * mk.w + i] = 1; };
     for (const p of w.props) mark(p.x, p.z);
     for (const s of w.solids) if (s.x1 - s.x0 < 40 && s.z1 - s.z0 < 40) for (let x = s.x0; x <= s.x1 + 1e-6; x += mk.cell / 2) for (let z = s.z0; z <= s.z1 + 1e-6; z += mk.cell / 2) mark(x, z);
-    // Ground laid out (M3-60) is a lawn, a path, a plaza or a parking lot: never bare.
-    w.cover!.m.forEach((c, k) => { if (c) used[k] = 1; });
+    // A park's ground (M3-60, U-033) is its lawn and paths: never bare.
+    mk.m.forEach((c, k) => { if (c === MARK.laid) used[k] = 1; });
     let bare = 0, windows = 0;
     for (let j = 0; j + 2 < mk.h; j++) for (let i = 0; i + 2 < mk.w; i++) {
       let open = true, any = false;
@@ -57,7 +58,8 @@ describe('nothing empty, everything in order (M3-56)', () => {
           // A stretch with room beside it: its pavement, either side, across its width not another road's
           // carriageway (a road laid against the next has none).
           const nx = -(bz - az) / l, nz = (bx - ax) / l, side = (k: number) => [0.6, 1.5, 2.2].every(o => !onRoad(x + nx * k * (s.w / 2 + o), z + nz * k * (s.w / 2 + o)));
-          if (!mine || !(side(1) || side(-1))) continue;
+          // (Off the edge of the map, a street runs on with no ground beside it to stand anything on.)
+          if (!mine || !(side(1) || side(-1)) || heightAt(w.ground!, x, z) === null) continue;
           stretches++;
           let found = false;
           for (let di = -1; di <= 1 && !found; di++) for (let dj = -1; dj <= 1 && !found; dj++)

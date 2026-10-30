@@ -64,8 +64,8 @@ export interface World {
   streets: StreetLine[];
   /** what the open ground should become, for filling it (M3-56a); real-map worlds only */
   marks?: Marks;
-  /** what's laid over the ground in each marks cell (M3-60, layout.ts COVER: lawn, paving, asphalt), drawn crisp */
-  cover?: Marks;
+  /** the parks' lawns, inside their real outlines (M3-60, U-033), drawn over the ground */
+  lawns?: [number, number][][];
   /** cables strung between buildings, to ride (M3-52) */
   lines: Line[];
   /** the machines' columns' ways out of the factory along the roads, at ground level (M3-57b) */
@@ -99,7 +99,7 @@ export interface WorldParts {
   plots?: Plot[];
   streets?: StreetLine[];
   marks?: Marks;
-  cover?: Marks;
+  lawns?: World['lawns'];
   lines?: Line[];
   convoys?: World['convoys'];
   features?: Feature[];
@@ -122,7 +122,7 @@ export function makeWorld(p: WorldParts): World {
     plots: p.plots ?? [],
     streets: p.streets ?? [],
     marks: p.marks,
-    cover: p.cover,
+    lawns: p.lawns,
     lines: p.lines ?? [],
     convoys: p.convoys,
     features: p.features ?? [],

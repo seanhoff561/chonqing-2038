@@ -11,7 +11,7 @@ import { points, rasterPoly } from './shapes';
 import { streetCells } from './ground';
 
 export const MARK_CELL = 4;
-/** laid: open or park ground given a use (layout.ts: a park, a parking lot, a plaza), drawn by its cover. */
+/** laid: a real park's ground, laid out (layout.ts). */
 export const MARK = { ruin: 1, wood: 2, park: 3, open: 4, laid: 5 } as const;
 export interface Marks { cell: number; w: number; h: number; m: Uint8Array }
 

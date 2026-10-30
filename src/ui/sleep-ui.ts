@@ -43,7 +43,7 @@ export class SleepUI {
     if (!on) return;
     this.el.innerHTML = `<div class="sl-title">${rough ? '睡在地上 SLEEP ROUGH (less rest)' : '睡觉 SLEEP'} · now ${clockText(this.game.state.time)}</div>` +
       TIMES.map((h, i) => `<button data-h="${h}">${i + 1}  until ${String(h).padStart(2, '0')}:00</button>`).join('') +
-      `<button class="stay">保持清醒 Stay awake (E, Tab or right-click)</button>`;
+      `<button class="stay">保持清醒 Stay awake (F, Tab or right-click)</button>`;
     this.el.querySelectorAll<HTMLButtonElement>('button[data-h]').forEach(b => { b.onclick = () => this.choose(Number(b.dataset.h)); });
     this.el.querySelector<HTMLButtonElement>('.stay')!.onclick = () => this.toggle(false);
   }

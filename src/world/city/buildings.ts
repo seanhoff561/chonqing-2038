@@ -50,8 +50,9 @@ function paint(l: Lot, r: Rng): number {
 
 function mass(l: Lot, r: Rng, out: Fabric) {
   const { x0, z0, x1, z1, base, wall } = l;
-  // Four in five blocks that fit a stair core can be entered (U-022, U-023, M3-55: more of the city opens up).
-  const open = canEnter(l) && rand(r) < 0.8;
+  // Nine in ten blocks that fit a stair core can be entered (U-022, U-023, M3-55: more of the city opens up; by
+  // 2038 most doors have been forced).
+  const open = canEnter(l) && rand(r) < 0.9;
   const look = open ? (l.mat === MAT.tile ? MAT.facadeTile : MAT.facade) : paint(l, r);
   // Some tall solid blocks step their top two floors back from the edge.
   const step = !open && l.kind === 'res' && wall - base >= 24 && rand(r) < 0.25 ? 1.6 : 0;

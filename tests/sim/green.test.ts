@@ -6,7 +6,7 @@ import { getWorld } from '../../src/world/build';
 import { heightAt } from '../../src/world/heightfield';
 import { raycast } from '../../src/world/geom';
 import { MARK, markAt, grassAt } from '../../src/world/yuzhong/marks';
-import { COVER } from '../../src/world/yuzhong/layout';
+import { polyArea } from '../../src/world/yuzhong/shapes';
 
 const w = getWorld('yuzhong'), mk = w.marks!, g = w.ground!;
 const area = (v: number) => mk.m.filter(x => x === v).length * mk.cell * mk.cell;
@@ -18,7 +18,7 @@ describe('the green city (M3-56b)', () => {
     expect(on(['shrub'], MARK.wood)).toBeGreaterThan(200);
   });
   it('keeps trees and shrubs in the parks', () => {
-    const lawn = w.cover!.m.filter(c => c === COVER.lawn).length * mk.cell * mk.cell;
+    const lawn = w.lawns!.reduce((a, p) => a + polyArea(p), 0);
     expect(on(['tree', 'figtree'], MARK.laid) / lawn).toBeGreaterThan(1 / 250);
     expect(on(['shrub'], MARK.laid)).toBeGreaterThan(100);
   });
@@ -27,8 +27,8 @@ describe('the green city (M3-56b)', () => {
     for (let j = 0; j < mk.h; j++) for (let i = 0; i < mk.w; i++) if (mk.m[j * mk.w + i] === MARK.wood) { wood++; if (grassAt(mk, (i + 0.5) * mk.cell, (j + 0.5) * mk.cell)) grass++; }
     expect(grass / wood).toBe(1);
     expect(grassAt(mk, -10, -10)).toBe(false);
-    // Lawns over at least 3 ha, nowhere wild grass on the open ground.
-    expect(w.cover!.m.filter(c => c === COVER.lawn).length * mk.cell * mk.cell).toBeGreaterThan(3e4);
+    // Lawns over the real parks (a hectare or more), nowhere wild grass on the open ground.
+    expect(w.lawns!.reduce((a, p) => a + polyArea(p), 0)).toBeGreaterThan(1e4);
     expect(on(['weeds'], MARK.open) + on(['weeds'], MARK.wood)).toBeGreaterThan(300);
   });
   it('stands every tree and shrub on the ground (or, a shrub, on whatever is under it)', () => {

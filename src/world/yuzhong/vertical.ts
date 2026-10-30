@@ -157,5 +157,45 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
     out.decor.push(box(a, Math.min(e0, e1) + 0.3, Math.max(e0, e1) - 0.3, z + 0.35, z + 0.38, lo + 0.4, hi - 0.4, MAT.screen));
     feature('billboard', a, (e0 + e1) / 2, z, Math.min(a.wall, b.wall));
   }
+  // The layers between the rows' buildings (U-032): vertical alleys (a slot of 1.2-3.2 m between two walls 20 m
+  // and more, to kick or run up), plank bridges across the gaps between two tall ones, steel beams left sticking
+  // out over the gaps, and scaffolding hung on the fronts from mid-height (its decks a mantle apart, its standards
+  // to climb), so the city stands in layers.
+  for (const row of rows.values()) for (let i = 0; i + 1 < row.length; i++) {
+    const a = row[i], b = row[i + 1];
+    if (!parallel(a, b, 0.99)) continue;
+    const [al] = local(a, b.obb.cx, b.obb.cz), gap = Math.abs(al) - a.obb.hw - b.obb.hw, k = Math.sign(al), lo = Math.min(a.wall, b.wall), floor = Math.max(a.base, b.base);
+    const e0 = k * a.obb.hw, e1 = al - k * b.obb.hw, mid = (e0 + e1) / 2, depth = Math.min(a.obb.hd, b.obb.hd);
+    if (gap >= 1.2 && gap <= 3.2 && lo - floor >= 20) feature('vAlley', a, mid, a.obb.hd - depth, lo);
+    if (gap >= 2 && gap <= 7 && lo - floor >= 15 && rand(r) < 0.25) {
+      // A plank bridge with a handrail, somewhere between 8 m up and the lower roof, toward the front.
+      const y = floor + 8 + rand(r) * Math.max(0, lo - floor - 11), d = a.obb.hd - 2 - rand(r) * Math.max(0, depth * 2 - 6);
+      out.solids.push(box(a, Math.min(e0, e1) - 0.4, Math.max(e0, e1) + 0.4, d - 0.5, d + 0.5, y - 0.12, y, MAT.wood));
+      out.decor.push(box(a, Math.min(e0, e1), Math.max(e0, e1), d + 0.46, d + 0.5, y, y + 1.0, MAT.metal));
+      feature('bridge', a, mid, d, y);
+    }
+    // Beams out of the taller one's side into the gap, at odd heights.
+    const tall = a.wall >= b.wall ? a : b;
+    if (gap >= 2.5 && tall.wall - tall.base >= 20 && rand(r) < 0.3) for (let n = 1 + randInt(r, 3); n > 0; n--) {
+      const y = tall.base + 6 + rand(r) * (tall.wall - tall.base - 9), d = (rand(r) - 0.5) * (tall.obb.hd * 2 - 3), reach = Math.min(gap - 0.6, 2 + rand(r) * 2);
+      // (The row's buildings face the same way, so toward the other one is +k from a and -k from b.)
+      const sd = tall === a ? k : -k, ua = sd * tall.obb.hw, ub = sd * (tall.obb.hw + reach);
+      out.solids.push(box(tall, Math.min(ua, ub), Math.max(ua, ub), d - 0.13, d + 0.13, y - 0.3, y, MAT.metal));
+      feature('beam', tall, (ua + ub) / 2, d, y);
+    }
+  }
+  // Scaffolding hung on one front in eight of the taller buildings, from 6-10 m up to half its height.
+  for (const p of plans) {
+    if (p.far || p.kind !== 'res' || p.wall - p.base < 20 || !p.row || rand(r) > 0.12) continue;
+    const w = Math.min(p.obb.hw * 2 - 2, 6 + rand(r) * 4), u0 = (rand(r) - 0.5) * (p.obb.hw * 2 - w - 1) - w / 2, u1 = u0 + w, f = p.obb.hd;
+    const y0 = p.base + 6 + rand(r) * 4, y1 = Math.max(y0 + 6, p.base + (p.wall - p.base) * 0.5);
+    for (let y = y0; y <= y1 + 0.01; y += 2) out.solids.push(box(p, u0, u1, f + 0.1, f + 1.2, y - 0.05, y, MAT.wood));
+    for (const u of [u0, u1]) for (const d of [f + 0.15, f + 1.15]) {
+      out.solids.push(box(p, u - 0.03, u + 0.03, d - 0.03, d + 0.03, y0 - 0.6, y1 + 1.1, MAT.metal));
+      if (d > f + 1) { const [x, z] = world(p, u, d + 0.04), fr = frame(p); out.climbables.push({ kind: 'pipe', x, z, y0: y0 - 0.6, y1: y1 + 1.1, nx: fr.nx, nz: fr.nz }); }
+    }
+    for (let y = y0 + 1; y <= y1; y += 2) out.decor.push(box(p, u0, u1, f + 1.17, f + 1.21, y - 0.03, y + 0.03, MAT.metal));
+    feature('scaffold', p, (u0 + u1) / 2, f + 0.6, y0);
+  }
   return out;
 }

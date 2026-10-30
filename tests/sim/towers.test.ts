@@ -22,6 +22,9 @@ function climb(fs: Feature[]): { ok: boolean; got: number; at: string } {
   s.flags.clear = true;
   teleport(p, f0.x + f0.nx! * 0.6, f0.y - 2.4 + 0.05, f0.z + f0.nz! * 0.6);
   run(s, w, 30);
+  // (Settled on whatever is at the line's foot first.)
+  for (let i = 0; i < 120 && !ground(s); i++) run(s, w, 1);
+  if (!ground(s)) return { ok: false, got: 0, at: `start ${p.mode} at ${p.pos.y.toFixed(1)}` };
   let hand = 0;
   const grab = (f: Feature, n = 50, extra = 0) => { for (let i = 0; i < n && !p.hands[hand].grip; i++) { aim(s, f.x - f.nx! * 0.01, f.y - 0.04, f.z - f.nz! * 0.01); run(s, w, 1, { buttons: bits[hand] | extra }); } return !!p.hands[hand].grip; };
   for (let k = 0; k < fs.length; k++) {

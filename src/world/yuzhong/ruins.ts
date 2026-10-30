@@ -49,7 +49,7 @@ export function ruins(index: SolidIndex, g: Heightfield, mk: Marks): { props: Pr
     for (const k of cells) {
       const i = k % mk.w, j = (k - i) / mk.w, x = (i + 0.2 + rand(r) * 0.6) * mk.cell, z = (j + 0.2 + rand(r) * 0.6) * mk.cell, q = rand(r), f = fall(i, j);
       if (q < 0.2) placed += +put('rubblepile', x, z, rand(r) * 6.3, { w: 1.5 + rand(r) * 2.5 });
-      else if (q < 0.28) placed += +put('slab', x, z, f.yaw + (rand(r) - 0.5) * 0.6);
+      else if (q < 0.3) placed += +put('slab', x, z, f.yaw + (rand(r) - 0.5) * 0.6);
       else if (q < 0.34) placed += +put('rebar', x, z, rand(r) * 6.3);
       else if (q < 0.44) placed += +put('debris', x, z, rand(r) * 6.3);
       else if (q < 0.48) placed += +put('halfwall', x, z, f.yaw + Math.PI / 2, { w: 2 + rand(r) * 2, h: 1 + rand(r) * 2 });

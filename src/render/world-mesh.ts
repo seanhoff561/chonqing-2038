@@ -139,7 +139,17 @@ export function buildSolidMeshes(solids: Solid[], lod: Lod = 'all', chunk = CHUN
   for (const g of groups.values()) {
     g.pos = new Float32Array(g.count * 3); g.nor = new Float32Array(g.count * 3); g.uv = new Float32Array(g.count * 2); g.col = new Float32Array(g.count * 3);
   }
-  for (const s of solids) if (s.mat < MAT.soft) pushSolid(s, group(s, s.mat), isFacade(s.mat) ? group(s, MAT.concrete) : undefined, idx ? occlusion(s, idx) : OPEN);
+  // Which vertices cast a shadow: those of the solids big enough to show in the shadow map (a sill, a bar or a
+  // frame doesn't), as ranges per group.
+  const casts = new Map<G, number[]>();
+  for (const s of solids) {
+    if (s.mat >= MAT.soft) continue;
+    const b = group(s, s.mat), roof = isFacade(s.mat) ? group(s, MAT.concrete) : undefined, from = [b.n, roof?.n ?? 0];
+    pushSolid(s, b, roof, idx ? occlusion(s, idx) : OPEN);
+    const e = s.rot ?? s;
+    if (Math.max(e.x1 - e.x0, e.z1 - e.z0) < 1.2 || Math.min(e.x1 - e.x0, e.z1 - e.z0, s.y1 - s.y0) < 0.12) continue;
+    for (const [g, a] of [[b, from[0]], [roof, from[1]]] as const) if (g) { const r = casts.get(g); if (r) r.push(a, g.n); else casts.set(g, [a, g.n]); }
+  }
   const root = new THREE.Group();
   for (const g of groups.values()) {
     const geo = new THREE.BufferGeometry();
@@ -158,9 +168,10 @@ export function buildSolidMeshes(solids: Solid[], lod: Lod = 'all', chunk = CHUN
     const byChunk = new Map<string, G[]>();
     for (const g of groups.values()) { const k = `${g.cx},${g.cz}`; byChunk.set(k, [...(byChunk.get(k) ?? []), g]); }
     for (const gs of byChunk.values()) {
-      const pos = new Float32Array(gs.reduce((a, g) => a + g.pos.length, 0));
+      const rs = gs.map(g => casts.get(g) ?? []), pos = new Float32Array(rs.reduce((a, r) => { for (let i = 0; i < r.length; i += 2) a += (r[i + 1] - r[i]) * 3; return a; }, 0));
+      if (!pos.length) continue;
       let o = 0;
-      for (const g of gs) { pos.set(g.pos, o); o += g.pos.length; }
+      gs.forEach((g, k) => { for (let i = 0; i < rs[k].length; i += 2) { pos.set(g.pos.subarray(rs[k][i] * 3, rs[k][i + 1] * 3), o); o += (rs[k][i + 1] - rs[k][i]) * 3; } });
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       geo.computeBoundingSphere();

@@ -10,7 +10,7 @@ import { buildLot, PARAPET, type Fabric, type Lot } from '../city/buildings';
 import { stepsFor } from '../steps';
 import { findMarks } from './marks';
 import { greenery } from './green';
-import { layout } from './layout';
+import { layout, doorPaths } from './layout';
 import { ruins } from './ruins';
 import { fill } from './fill';
 import { cables } from './cables';
@@ -59,6 +59,8 @@ export function buildYuzhong(): World {
   const vert = verticalCity(plans, g, sts);
   plans.forEach((p, n) => plots.push(buildPlan(p, n, out, g)));
   rowAlleys(plans, out, g);
+  // The streets as drawn, and paths from the doors set back from them to them (U-033).
+  const drawn = drawnStreets(sts.filter(onGround), plots), doorWays = doorPaths(g, plots, drawn);
   const decor: Solid[] = [];
   // Streets are drawn along their lines (render/streets.ts); stairs get their steps here, bridges their decks.
   for (const s of sts) if (onGround(s) && s.steps) surface(s, g, decor); else if (s.bridge && s.layer > 0) bridge(s, g, out.solids);
@@ -96,8 +98,8 @@ export function buildYuzhong(): World {
   const dress = dressStreets(buildIndex(solids, g), g, sts, land, inter, clear);
   solids.push(...dress.solids);
   // Then the green and the ruins on the marked open ground, round all that.
-  // The open ground's parcels laid out first (M3-60: parks, parking lots, plazas), the green and the ruins round them.
-  const marks = findMarks(g, land, plots, block), laid = layout(buildIndex(solids, g), g, marks);
+  // The parks laid out first (M3-60, U-033), the green and the ruins round them.
+  const marks = findMarks(g, land, plots, block), laid = layout(buildIndex(solids, g), g, marks, land);
   solids.push(...laid.solids);
   const idx = buildIndex(solids, g), green = greenery(idx, g, marks), rubble = ruins(idx, g, marks);
   solids.push(...green.solids, ...rubble.solids);
@@ -108,7 +110,7 @@ export function buildYuzhong(): World {
     name: 'yuzhong', solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? [], fac?.decor ?? [], vert.decor, under.decor, laid.decor, filled.decor),
     props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], fac?.props ?? [], under.props, laid.props, dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(line.climbables, site?.climbables ?? [], vert.climbables, under.climbables),
     hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones.concat(under.zones),
-    far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(fac?.features ?? [], vert.features, under.features, laid.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n }))), marks, cover: laid.cover, lines: strung.lines, convoys: fac?.convoys, streets: drawnStreets(sts.filter(onGround), plots), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
+    far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(fac?.features ?? [], vert.features, under.features, laid.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n }))), marks, lawns: laid.lawns, lines: strung.lines, convoys: fac?.convoys, streets: drawn.concat(laid.paths, doorWays), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
     teleports, spawn: hide,
   });
   // Nothing floats or sinks (M3-56): whatever stands on something above ground settles onto what's under it, or
