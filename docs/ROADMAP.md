@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 59 of 77 done
+## M3: 60 of 77 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -392,7 +392,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - No zipline spawns on its own (U-034; M5-33 makes them the player's)
   - Sim tests for each: a vent grabbed, a facade skin stood against, a bar mantled, a crouch stopped at a roof edge; the climbing and envelope tests still pass
   - U-036: the towers lose their stub lines; under the skyline round them the same holds as any other building, over it more (a wandering way, dead ends), not promised climbable
-- [ ] **M3-66** The layered city, filled with buildings, evened (U-032, U-033, U-034)
+- [x] **M3-66** The layered city, filled with buildings, evened (U-032, U-033, U-034)
   - Everything purposeful (U-033): M3-60's grid-cell parks, plazas and parking lots replaced; the open ground filled with buildings (blocks, low layers, fillers) right up to each other and the streets; green only in the few real parks, laid inside their real outlines; what open ground is left is hardscape shaped to the buildings and streets round it (paving to the building lines, forecourts, steps, a parking court between buildings) with its walkways running from somewhere to somewhere (street to entrance, street to stair) like the roads; nothing on the cell grid, nothing jagged or repeated
   - Short and medium buildings about twice as tall; between them half-height layers (low blocks, decks, scaffolding, platforms) and short fillers as low as today's short ones, so the city stands in layers to be crossed by parkour; bridges between buildings, beams sticking out, vertical alleys (narrow slots between tall walls to climb or wall-run up)
   - A unit test measures the layers (heights spread across bands) and the vertical alleys; screenshots

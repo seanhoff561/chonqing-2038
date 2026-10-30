@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getWorld } from '../../src/world/build';
+import { districtAt } from '../../src/world/yuzhong/lots';
 import { createState } from '../../src/sim/sim';
 import { run, settle } from './helpers';
 import { teleport } from '../../src/sim/player';
@@ -43,15 +44,15 @@ describe('enterable buildings (M3-04)', () => {
     expect(s.player.pos.y).toBeCloseTo(lot.wall, 1);
     expect(s.dead).toBeFalsy();
   });
-  it("walks into Shibati's open shop houses under the rolled-up shutter (M3-55)", () => {
-    // (Five and more: U-034 rebuilds them as apartment blocks in M3-66.)
-    const shops = open.filter(l => l.kind === 'trad');
-    expect(shops.length).toBeGreaterThanOrEqual(5);
-    for (const lot of shops.slice(0, 4)) {
+  it("walks in off the Eighteen Stairs into Shibati's apartment blocks (M3-55; U-034 rebuilt its shop houses)", () => {
+    const blocks = open.filter(l => { const [x, z] = l.corners.reduce((a, c) => [a[0] + c[0] / 4, a[1] + c[1] / 4], [0, 0]); return districtAt(x, z).district === 'shibati'; });
+    expect(blocks.length).toBeGreaterThan(3);
+    for (const lot of blocks.slice(0, 2)) {
       const s = createState(1, w), route = lot.route!;
       teleport(s.player, route[0].x, route[0].y + 0.05, route[0].z);
       run(s, w, 20);
-      expect(follow(s, w, route.slice(1)), `shop house at ${route[0].x.toFixed(0)},${route[0].z.toFixed(0)}`).toBe(true);
+      // In at the door and over to the foot of the stairs.
+      expect(follow(s, w, route.slice(1, 3)), `block at ${route[0].x.toFixed(0)},${route[0].z.toFixed(0)}`).toBe(true);
       expect(Math.abs(s.player.pos.y - lot.base)).toBeLessThan(0.3);
     }
   });

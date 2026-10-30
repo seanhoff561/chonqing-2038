@@ -36,7 +36,8 @@ describe('ruins of the fighting (M3-56c)', () => {
   it('heaps collapsed buildings on the big patches: broken walls standing, slabs against them', () => {
     const walls = w.props.filter(p => p.kind === 'halfwall' && markAt(mk, p.x, p.z) === MARK.ruin);
     expect(walls.filter(p => (p.h ?? 0) > 2.5).length).toBeGreaterThan(40);
-    expect(w.props.filter(p => p.kind === 'slab').length).toBeGreaterThan(200);
+    // (U-037's fillers build on some open ground, so fewer slabs than the 200 and more there were.)
+    expect(w.props.filter(p => p.kind === 'slab').length).toBeGreaterThan(150);
   });
   it('gives the debris collision on the ground it lies on', () => {
     const solid = w.props.filter(p => ['rubblepile', 'slab', 'halfwall'].includes(p.kind) && markAt(mk, p.x, p.z) === MARK.ruin).slice(0, 200);
