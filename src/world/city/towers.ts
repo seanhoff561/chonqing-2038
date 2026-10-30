@@ -7,9 +7,10 @@ import { rand, randInt, type Rng } from '../../sim/rng';
 import { pick, GLASS } from './palette';
 import { PARAPET, type Lot, type Fabric } from './buildings';
 import { lobby } from './fronts';
-import type { Block } from './routes';
 import { sides, facades, onFace, faceXZ, footOf, BARE } from './climb';
-import { skyward } from './skyward';
+
+/** A block of the tower: its footprint, the floor at its foot, its roof, and the top of its edge (a parapet). */
+interface Block { x0: number; z0: number; x1: number; z1: number; y0: number; y1: number; top: number }
 
 export function tower(l: Lot, r: Rng, out: Fabric) {
   const { base, wall } = l;
@@ -61,18 +62,17 @@ export function tower(l: Lot, r: Rng, out: Fabric) {
     solid(x0, wall, z0 + 0.2, x0 + 0.2, wall + PARAPET, z1 - 0.2, MAT.concrete), solid(x1 - 0.2, wall, z0 + 0.2, x1, wall + PARAPET, z1 - 0.2, MAT.concrete));
   l.top = wall + PARAPET;
   // Under the roofs round it, the same scattered holds as any other building's walls (U-036), block by block (over
-  // a podium or a setback the bare stretch counts from its roof); clear of them, more: a way up for whoever finds it.
+  // a podium or a setback the bare stretch counts from its roof); clear of them, nothing laid out as a way up (U-044).
   const from = Math.max((l.sky ?? base) + 1.5, Math.max(...sides(l).map(s => footOf(l, s))) + BARE + 0.5);
   for (const [i, b] of blocks.entries()) {
     if (b.y0 + BARE + 2.5 >= from) continue;
     facades({ ...l, ...b, base: i ? b.y0 : base, wall: b.y1, top: Math.min(b.top, from), street: i ? [false, false, false, false] : l.street.map((v, k) => v && k !== span.face) as Lot['street'], ground: i ? undefined : l.ground }, r, out);
   }
-  const held = skyward(l, blocks, from, r, out);
   // Over 80 m, most have a platform out from a wall halfway up, railed, to look down on the street from (M3-57a).
   const vy = base + Math.round(((wall - base) * (0.5 + rand(r) * 0.15)) / 3) * 3, b = blocks.find(k => k.y0 + 3 < vy && vy < k.y1 - 3), f0 = randInt(r, 4);
   if (wall - base > 80 && b && rand(r) < 0.8) for (let k = 0; k < 4; k++) {
     const s = sides({ ...l, ...b })[(f0 + k) % 4], u = s.a + 2 + rand(r) * (s.b - s.a - 8), c = faceXZ(s, u + 2, 1.3);
-    if (s.b - s.a < 8 || held.some(h => Math.hypot(h.x - c.x, h.z - c.z) < 5 && Math.abs(h.y - vy) < 4)) continue;
+    if (s.b - s.a < 8) continue;
     out.solids.push(onFace(s, u, u + 4, 0, 2.6, vy - 0.25, vy, MAT.concrete));
     // A railing of bars: posts, a mid rail and a top rail along its edge and both ends; a service door behind.
     for (const [a, c] of [[1.02, 1.06], [0.5, 0.54]]) out.decor.push(onFace(s, u, u + 4, 2.54, 2.6, vy + a, vy + c, MAT.metal), onFace(s, u, u + 0.06, 0, 2.6, vy + a, vy + c, MAT.metal), onFace(s, u + 3.94, u + 4, 0, 2.6, vy + a, vy + c, MAT.metal));

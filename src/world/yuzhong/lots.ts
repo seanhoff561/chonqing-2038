@@ -24,7 +24,6 @@ export interface Plan {
   /** a cache reached only with a tool (M3-37, U-037): no holds on it, nothing joining it */
   sheer?: boolean;
   /** a climbing line up one of its sides from a neighbour's roof (vertical.ts, U-032) */
-  climb?: { face: number; at: number; y0: number };
   /** a tower's skyline: the highest roof within 25 m of it (U-036) */
   sky?: number;
   /** its roof runs out to its walls (a plank meets its edge, vertical.ts) */

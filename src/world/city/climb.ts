@@ -54,7 +54,7 @@ export function pole(x: number, z: number, nx: number, nz: number, y0: number, y
 export function facades(l: Lot, r: Rng, out: Fabric) {
   // The roof edge he pulls over: its parapet.
   const top = l.top;
-  const door = l.route?.[0], line = l.climb && sides(l)[l.climb.face];
+  const door = l.route?.[0];
   // Now and then a ledge right round it at a floor line, out of reach of the street, to traverse on (U-035).
   if (l.kind === 'res' && rand(r) < 0.08) {
     const lo = Math.max(...sides(l).map(s => footOf(l, s))) + BARE + 0.5, y = l.base + Math.ceil((lo - l.base) / FLOOR) * FLOOR;
@@ -73,7 +73,6 @@ export function facades(l: Lot, r: Rng, out: Fabric) {
       const c = s.a + 0.8 + rand(r) * (s.b - s.a - 1.6), y0 = foot + BARE + rand(r) * (high - BARE - 2.5), x = rand(r);
       // (Clear of a door, and of a climbing line up this wall: routes.ts places every hold on that.)
       if (door && Math.hypot(door.x - faceXZ(s, c, 0).x, door.z - faceXZ(s, c, 0).z) < 2.5) continue;
-      if (line && s.f === line.f && s.nx === line.nx && Math.abs(c - l.climb!.at) < 5) continue;
       if (x < 0.25) {
         // A downpipe from the gutter, its lower length torn away: a hopper head under the edge, brackets down it.
         const p = faceXZ(s, c, 0.06);

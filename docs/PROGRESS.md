@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-82 No prebuilt climbing lines (U-044).
-Features done: 137 / 295 | Last done: M3-76
+**Status:** building M3. Next: M3-80 Urban rooftops, not green (U-044).
+Features done: 138 / 295 | Last done: M3-82
 <!-- /status -->
 
 ## Log
@@ -85,3 +85,4 @@ Features done: 137 / 295 | Last done: M3-76
 - M3-78 Chimneying (U-043): chimneying: braced across a 0.6-1.25 m gap, worked up or down the way he looks, upright or sloped; a gym station; warren shafts ducted from the corridors (U-043)
 - M3-73a Basements and the sewer maze (U-038, split from M3-73): basements under blocks with a stairwell (hatch, ladder, a manhole grate bolted from below in half), joined by a maze of sewers, crawlways and flooded sumps, now and then through a grate into the underground city (U-038)
 - M3-76 The anthill: routes through buildings, unmarked (U-043): the ant hill: routes mostly through buildings, breaches, basements, sewers and the underground, out only to cross; unmarked; every leg within a reach table (U-043)
+- M3-82 No prebuilt climbing lines (U-044): no prebuilt climbing lines: the stub lines up taller blocks and the holds over the towers' skylines removed (U-044)

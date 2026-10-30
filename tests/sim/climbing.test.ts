@@ -1,20 +1,18 @@
 // M3-67 (U-032): no building is climbed by itself. Its own holds (everything built on its walls, off the ground:
 // sills, AC units, balconies, pipes, ladders, beam ends, window openings, awnings, sign bars) never chain from the
-// street to its roof; its ground floors are bare; street poles start the climbs; and a bot gets onto three roofs
-// over 20 m by crossing from a lower neighbour's.
+// street to its roof; its ground floors are bare; street poles start the climbs. (No climbing lines any more, U-044:
+// the bot that climbed them went with them.)
 import { describe, it, expect } from 'vitest';
 import { getWorld } from '../../src/world/build';
-import { raycast } from '../../src/world/geom';
 import { heightAt } from '../../src/world/heightfield';
 import { createState } from '../../src/sim/sim';
 import { teleport } from '../../src/sim/player';
-import { B } from '../../src/sim/types';
 import { ENVELOPE as E } from '../../src/data/envelope';
 import { BARE } from '../../src/world/city/climb';
 import { free } from '../../src/sim/physics';
-import type { Feature, Plot } from '../../src/world/world';
-import { run, secs, settle } from './helpers';
-import { climbPole, climbHolds } from './climbbot';
+import type { Plot } from '../../src/world/world';
+import { run } from './helpers';
+import { climbPole } from './climbbot';
 
 const w = getWorld('yuzhong'), g = w.ground!, near = w.plots.filter(p => !p.far);
 /** From the street a lip this high is in reach (a wall kick); from a lip, the next this much higher (a jump and a
@@ -107,7 +105,7 @@ describe('climbing reworked (M3-67)', () => {
   });
 
   it('keeps the ground floors bare and the holds few: short runs, short ladders, scattered', () => {
-    const kinds = ['sill', 'ac', 'pipe', 'ladder', 'balcony', 'beamEnd', 'route', 'rest'];
+    const kinds = ['sill', 'ac', 'pipe', 'ladder', 'balcony', 'beamEnd'];
     let low = 0, counted = 0;
     const lows: string[] = [];
     for (const f of w.features) {
@@ -140,38 +138,5 @@ describe('climbing reworked (M3-67)', () => {
     run(s, w, 30);
     expect(climbPole(s, w, c)).toBe(true);
     expect(s.player.pos.y).toBeGreaterThan(c.y0 + 5);
-  });
-
-  it('a bot gets onto three roofs over 20 m by crossing from a lower neighbour', async () => {
-    await settle();
-    const lines = new Map<number, Feature[]>();
-    for (const f of w.features) if (['route', 'rest', 'routeTop', 'vantage'].includes(f.kind)) { const a = lines.get(f.group); if (a) a.push(f); else lines.set(f.group, [f]); }
-    const crossings = w.features.filter(f => f.kind === 'crossing');
-    expect(crossings.length).toBeGreaterThan(30);
-    const tried: string[] = [];
-    let ok = 0;
-    for (const c of crossings) {
-      // Its line: the one whose first stub is over the plank.
-      const fs = [...lines.values()].find(l => l[0].kind === 'route' && Math.hypot(l[0].x - c.x, l[0].z - c.z) < 1.2 && Math.abs(l[0].y - c.y - 2.4) < 0.1)?.filter(f => f.kind !== 'vantage');
-      if (!fs || fs[fs.length - 1].y - c.y < 12) continue;
-      const roof = fs[fs.length - 1].y, p = owner(c.x - c.nx! * 0.5, c.z - c.nz! * 0.5, 1)!;
-      if (roof - p.base < 20) continue;
-      // On the lower roof, a step back from its parapet, facing the plank across the gap.
-      const hit = raycast(w.index, c.x + c.nx! * 0.05, c.y - 0.3, c.z + c.nz! * 0.05, c.nx!, 0, c.nz!, 6), gap = (hit?.t ?? 2) + 0.05;
-      const s = createState(1, w), q = s.player, out = () => (q.pos.x - c.x) * c.nx! + (q.pos.z - c.z) * c.nz!;
-      s.flags.clear = true;
-      teleport(q, c.x + c.nx! * (gap + 1.4), c.y - 0.55, c.z + c.nz! * (gap + 1.4));
-      q.yaw = Math.atan2(c.nx!, c.nz!);
-      run(s, w, 30, { yaw: q.yaw });
-      // Up to its parapet, over it onto the plank (W and Space), along the plank.
-      for (let i = 0; i < secs(2) && out() > gap + 0.45; i++) run(s, w, 1, { my: 1, yaw: q.yaw });
-      run(s, w, secs(0.5), { my: 1, yaw: q.yaw, buttons: B.JUMP, pressed: B.JUMP });
-      run(s, w, secs(0.8), { my: 1, yaw: q.yaw });
-      const r = climbHolds(s, w, fs);
-      tried.push(`${r.ok ? 'ok' : r.at} (${r.got}/${fs.length})`);
-      if (r.ok && roof - p.base >= 20) ok++;
-      if (ok >= 3 || tried.length >= 8) break;
-    }
-    expect(ok, tried.join('; ')).toBeGreaterThanOrEqual(3);
   });
 });

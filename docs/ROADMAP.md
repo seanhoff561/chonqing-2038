@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 74 of 93 done
+## M3: 75 of 93 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -473,7 +473,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - The routes run mostly through buildings (room to room, floor to floor by doors, holes, vents, squeezes, shafts, stairs) and now and then out of them: out of a broken window, up or along a wall, along a building's side on ledges and sills, across into the next building, down into basements and the underground, only sometimes over a roof (roofs are dangerous, U-038)
   - Planned against what he can do: the unaided moves (jumps, drops, climbs) and, for the tool-gated legs, what his tools reach (the grappling hook's rise and the larger gaps crossed with rope and line); a data table of those reaches drives the plan
   - Sim tests: most of each route's length inside buildings or underground, little over roofs; every leg within the reach table for the moves or tools it needs; no route marks
-- [ ] **M3-82** No prebuilt climbing lines (U-044)
+- [x] **M3-82** No prebuilt climbing lines (U-044)
   - The prebuilt climbing lines are gone completely: no lines of stubs and broken floors up the taller blocks from a neighbour's roof (M3-57a), no wandering holds over the towers' skylines (U-036)
   - Towers and tall blocks hold what any building's walls do and nothing laid out as a way up
   - Sim tests: no 'route', 'rest' or 'routeTop' features; the climbing tests that measured the lines removed with them

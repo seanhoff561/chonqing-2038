@@ -1,8 +1,8 @@
-// M3-67 (U-032): a street pole by a building (step bolts up a concrete post) from the pavement, and a plank across
-// from a lower roof to a taller wall with its line of stubs going up, from the lower roof.
+// M3-67 (U-032): a street pole by a building (step bolts up a concrete post) from the pavement. (The plank across to
+// a line of stubs up a taller wall went with the lines, U-044.)
 export default async function ({ open, fail, screenshot }) {
   const page = await open('?scenario=shibati&seed=1', 'climbing');
-  for (const [kind, file] of [['pole', 'pole'], ['crossing', 'crossing']]) {
+  for (const [kind, file] of [['pole', 'pole']]) {
     const ok = await page.evaluate(`(() => {
       const g = window.__cq.game, fs = g.world.features.filter(f => f.kind === '${kind}'), f = fs[Math.min(fs.length - 1, 20)];
       if (!f) return false;

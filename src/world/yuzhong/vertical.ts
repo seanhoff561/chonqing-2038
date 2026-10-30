@@ -178,21 +178,8 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
       out.decor.push(box(a, Math.min(e0, e1), Math.max(e0, e1), d + 0.46, d + 0.5, y, y + 1.0, MAT.metal));
       feature('bridge', a, mid, d, y);
     }
-    // A way up the taller one from the lower one's roof (U-032): a plank from the top of its parapet across the gap
-    // to the taller wall, and a climbing line up that wall from it (built with the lot, routes.ts).
-    const tall = a.wall >= b.wall ? a : b, low = tall === a ? b : a, sd = tall === a ? k : -k, ld = local(tall, low.obb.cx, low.obb.cz)[1];
-    const o0 = Math.max(-tall.obb.hd, ld - low.obb.hd), o1 = Math.min(tall.obb.hd, ld + low.obb.hd), d = Math.max(-tall.obb.hd + 3.5, Math.min(tall.obb.hd - 3.5, (o0 + o1) / 2));
-    // (The plank out of reach of the ground in the gap: BARE over it, as every hold on the wall.)
-    const gapFoot = Math.max(...[-1, -0.5, 0, 0.5, 1].map(t => yAt(...world(tall, sd * (tall.obb.hw + 0.8), t * tall.obb.hd))));
-    // (Its wall 13 m long or more: over each broken floor the line steps 1.65 m aside, clear of the hole.)
-    if (gap >= 1.2 && gap <= 4 && low.kind === 'res' && !tall.climb && tall.obb.hd >= 6.5 && tall.wall - low.wall >= 12 && low.wall + PARAPET - gapFoot >= BARE && d > o0 + 0.8 && d < o1 - 0.8 && rand(r) < 0.35) {
-      const deck = low.wall + PARAPET, ua = sd * tall.obb.hw, ub = sd * (tall.obb.hw + gap), f = frame(tall), [x, z] = world(tall, ua, d);
-      out.solids.push(box(tall, Math.min(ua, ub), Math.max(ua, ub), d - 0.6, d + 0.6, deck - 0.15, deck, MAT.wood));
-      out.features.push({ kind: 'crossing', x, y: deck, z, group: out.features.length, nx: sd * f.ux, nz: sd * f.uz });
-      tall.climb = { face: sd > 0 ? 3 : 2, at: tall.obb.cz + d, y0: deck };
-      tall.noEnter = true; low.edge = true;
-      continue;
-    }
+    // (No climbing line up the taller one any more, U-044: its walls hold what any building's do.)
+    const tall = a.wall >= b.wall ? a : b;
     // Beams out of the taller one's side into the gap, at odd heights.
     if (gap >= 2.5 && tall.wall - tall.base >= 20 && rand(r) < 0.3) for (let n = 1 + randInt(r, 3); n > 0; n--) {
       const y = tall.base + BARE + 1 + rand(r) * (tall.wall - tall.base - BARE - 4), d = (rand(r) - 0.5) * (tall.obb.hd * 2 - 3), reach = Math.min(gap - 0.6, 2 + rand(r) * 2);
