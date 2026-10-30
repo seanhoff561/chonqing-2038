@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 75 of 93 done
+## M3: 76 of 93 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -477,7 +477,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - The prebuilt climbing lines are gone completely: no lines of stubs and broken floors up the taller blocks from a neighbour's roof (M3-57a), no wandering holds over the towers' skylines (U-036)
   - Towers and tall blocks hold what any building's walls do and nothing laid out as a way up
   - Sim tests: no 'route', 'rest' or 'routeTop' features; the climbing tests that measured the lines removed with them
-- [ ] **M3-80** Urban rooftops, not green (U-044)
+- [x] **M3-80** Urban rooftops, not green (U-044)
   - No roof gardens: no moss, shrubs or trees on the roofs
   - Rooftops cluttered with urban things instead (water tanks, AC condensers, crates and junk, solar heaters, aerials and dishes, sheds) on enterable blocks' roofs too, clear of their huts and hatches and of route roofs kept bare
   - Every so often a place to hide on a roof (a tank, a shed, a crate pile)

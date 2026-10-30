@@ -255,6 +255,8 @@ export function buildProps(props: Prop[]): THREE.Group {
     o.rotation.y = p.yaw;
     const merger = SMALL.has(p.kind) ? small : big;
     if (o.userData.tick) ticking.push(o.userData.tick);
+    // Grates that open and the bags over them (M3-72, M3-73a), hundreds of them in the basements: drawn near only.
+    if (p.kind === 'grate' || p.kind === 'cover') o.userData.chunk = o.userData.detail = true;
     if ((o as THREE.Mesh).isMesh && !o.userData.tick && o.children.length === 0) merger.add(o as THREE.Mesh);
     else if (!b && !o.userData.tick) { o.updateMatrixWorld(true); for (const c of [...o.children]) merger.add(c as THREE.Mesh); }
     else g.add(o);

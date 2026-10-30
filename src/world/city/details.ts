@@ -1,5 +1,6 @@
 // The lived-in, abandoned detail of the reference look (M3-22, U-009): balcony bands with solid parapets on
-// some fronts, AC units, roof gardens gone wild, laundry left on the lines, and cables sagging across streets.
+// some fronts, AC units, laundry left on the lines, and cables sagging across streets. (No roof gardens: the roofs
+// are urban clutter, buildings.ts, U-044.)
 // Balconies and AC units are solid (their edges and parapets are holds); the rest is render-only decor.
 import { solid } from '../geom';
 import { MAT } from '../mats';
@@ -40,23 +41,6 @@ export function details(l: Lot, r: Rng, out: Fabric, roof: number) {
     // Solid, a hold (U-035), so none low enough to start a climb from the street (U-032).
     if (y + 0.5 > roof - 1 || y + 0.5 < footOf(l, s) + BARE) continue;
     out.solids.push(onFace(s, c - 0.4, c + 0.4, 0, 0.42, y, y + 0.5, MAT.metal));
-  }
-  // A roof gone wild: moss, shrubs, now and then a small tree.
-  if (rand(r) < 0.28) {
-    const { x0, z0, x1, z1 } = l;
-    out.decor.push(solid(x0 + 0.3, roof, z0 + 0.3, x1 - 0.3, roof + 0.05, z1 - 0.3, MAT.moss));
-    for (let i = 0, k = 3 + randInt(r, 5); i < k; i++) {
-      const cx = x0 + 1 + rand(r) * (x1 - x0 - 2), cz = z0 + 1 + rand(r) * (z1 - z0 - 2), w = 0.4 + rand(r) * 0.8;
-      out.decor.push(solid(cx - w, roof, cz - w, cx + w, roof + 0.4 + rand(r) * 1.1, cz + w, rand(r) < 0.35 ? MAT.leaves : MAT.moss));
-    }
-    if (rand(r) < 0.3) {
-      const cx = (x0 + x1) / 2 + (rand(r) - 0.5) * 3, cz = (z0 + z1) / 2 + (rand(r) - 0.5) * 3;
-      out.decor.push(solid(cx - 0.1, roof, cz - 0.1, cx + 0.1, roof + 2.2, cz + 0.1, MAT.wood));
-      for (let i = 0; i < 6; i++) {
-        const w = 0.5 + rand(r) * 0.6, x = cx + (rand(r) - 0.5) * 2, z = cz + (rand(r) - 0.5) * 2;
-        out.decor.push(solid(x - w, roof + 1.8 + rand(r) * 0.8, z - w, x + w, roof + 2.6 + rand(r) * 0.8, z + w, rand(r) < 0.2 ? MAT.blossom : MAT.leaves));
-      }
-    }
   }
   dress(l, all, roof, out);
   // Cables sag across the street to the block opposite.

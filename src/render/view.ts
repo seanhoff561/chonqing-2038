@@ -110,10 +110,13 @@ export class View {
       far.traverse(o => { o.castShadow = false; });
       this.world.add(far);
     }
+    // (A small pool, a flooded sump down in the sewers, is drawn near only, as the rooms are.)
+    const pools: THREE.Mesh[] = [];
     for (const b of w.water) {
       const m = new THREE.Mesh(new THREE.PlaneGeometry(b.x1 - b.x0, b.z1 - b.z0), material(MAT.water));
       m.rotation.x = -Math.PI / 2;
       m.position.set((b.x0 + b.x1) / 2, b.y1, (b.z0 + b.z1) / 2);
+      if (b.x1 - b.x0 < 100 && b.z1 - b.z0 < 100) { m.userData.detail = m.userData.inner = true; pools.push(m); }
       this.world.add(m);
     }
     // The cables over the streets (M3-52).
@@ -132,12 +135,13 @@ export class View {
     }
     const climb = merger.build(mergeGeometries);
     if (climb.length) this.world.add(...climb);
-    this.chunks = [...(meshes.children as THREE.Mesh[]), ...climb, ...(props.children.filter(o => o.userData.chunk) as THREE.Mesh[])];
+    this.chunks = [...(meshes.children as THREE.Mesh[]), ...climb, ...(props.children.filter(o => o.userData.chunk) as THREE.Mesh[]), ...pools];
     // Cull each chunk mesh by its real footprint: a long road or beam is filed under the chunk of its centre.
     for (const m of this.chunks) {
-      m.updateWorldMatrix(true, false);
-      if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
-      const b = m.geometry.boundingBox!.clone().applyMatrix4(m.matrixWorld);
+      m.updateWorldMatrix(true, !m.geometry);
+      // (A prop that moves, a grate on its hinges, is a group: its box from what's in it.)
+      if (m.geometry && !m.geometry.boundingBox) m.geometry.computeBoundingBox();
+      const b = m.geometry ? m.geometry.boundingBox!.clone().applyMatrix4(m.matrixWorld) : new THREE.Box3().setFromObject(m);
       m.userData.rect = [b.min.x, b.min.z, b.max.x, b.max.z];
     }
     // Chunks gather into 256 m cells (their meshes carry world positions, so they move groups as they are), so a

@@ -28,9 +28,11 @@ export function basement(l: Lot, r: Rng, out: Fabric, f: Frame) {
     B(u0 - T, ya, v0 - T, gap[0], yb, v1 + T, MAT.concrete), B(gap[2], ya, v0 - T, u1 + T, yb, v1 + T, MAT.concrete),
     B(gap[0], ya, v0 - T, gap[2], yb, gap[1], MAT.concrete), B(gap[0], ya, gap[3], gap[2], yb, v1 + T, MAT.concrete),
   ];
-  out.solids.push(...slab(y1, base, hatch), ...slab(y0 - T, y0, hole),
-    B(u0 - T, y0, v0 - T, u0, y1, v1 + T, MAT.concrete), B(u1, y0, v0 - T, u1 + T, y1, v1 + T, MAT.concrete),
-    B(u0, y0, v0 - T, u1, y1, v0, MAT.concrete), B(u0, y0, v1, u1, y1, v1 + T, MAT.concrete));
+  // (Drawn near only, as rooms are, but its ceiling: that's the lobby's floor.)
+  const lined = [...slab(y0 - T, y0, hole), B(u0 - T, y0, v0 - T, u0, y1, v1 + T, MAT.concrete), B(u1, y0, v0 - T, u1 + T, y1, v1 + T, MAT.concrete),
+    B(u0, y0, v0 - T, u1, y1, v0, MAT.concrete), B(u0, y0, v1, u1, y1, v1 + T, MAT.concrete)];
+  for (const q of lined) q.inner = true;
+  out.solids.push(...slab(y1, base, hatch), ...lined);
   // The ladder up through the hatch, against its side away from the stairwell; a rim round the manhole.
   const [lx, lz] = f.at(hu - 0.5, hv), [nx, nz] = f.alongZ ? [0, 1] : [1, 0];
   out.climbables.push({ kind: 'ladder', x: lx, z: lz, y0, y1: base + 1, nx, nz });

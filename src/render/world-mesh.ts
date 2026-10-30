@@ -132,15 +132,16 @@ function occlusion(s: Solid, idx: SolidIndex): number[] {
 }
 
 export function buildSolidMeshes(solids: Solid[], lod: Lod = 'all', chunk = CHUNK, idx?: SolidIndex): THREE.Group {
-  type G = Buf & { mat: number; cx: number; cz: number; count: number };
+  // (A block's inside faces go to groups of their own, drawn near only, M3-77: no draw calls for them far off.)
+  type G = Buf & { mat: number; cx: number; cz: number; count: number; inner?: boolean };
   const groups = new Map<string, G>();
-  const keyOf = (s: Solid, mat: number) => `${Math.floor((s.x0 + s.x1) / 2 / chunk)},${Math.floor((s.z0 + s.z1) / 2 / chunk)},${mat}`;
-  const group = (s: Solid, mat: number) => {
-    const key = keyOf(s, mat);
+  const keyOf = (s: Solid, mat: number, inner: boolean) => `${Math.floor((s.x0 + s.x1) / 2 / chunk)},${Math.floor((s.z0 + s.z1) / 2 / chunk)},${mat}${inner ? ':in' : ''}`;
+  const group = (s: Solid, mat: number, inner = false) => {
+    const key = keyOf(s, mat, inner);
     let g = groups.get(key);
     if (!g) {
       const e = new Float32Array(0);
-      groups.set(key, (g = { pos: e, nor: e, uv: e, col: e, n: 0, count: 0, mat, cx: Math.floor((s.x0 + s.x1) / 2 / chunk), cz: Math.floor((s.z0 + s.z1) / 2 / chunk) }));
+      groups.set(key, (g = { pos: e, nor: e, uv: e, col: e, n: 0, count: 0, mat, inner, cx: Math.floor((s.x0 + s.x1) / 2 / chunk), cz: Math.floor((s.z0 + s.z1) / 2 / chunk) }));
     }
     return g;
   };
@@ -150,7 +151,7 @@ export function buildSolidMeshes(solids: Solid[], lod: Lod = 'all', chunk = CHUN
     const f = isFacade(s.mat), n = inward(s).filter(Boolean).length;
     group(s, s.mat).count += f ? 24 - 6 * n : 36;
     if (f) group(s, MAT.concrete).count += 12;
-    if (n) group(s, interiorMat(s)).count += 6 * n;
+    if (n) group(s, interiorMat(s), true).count += 6 * n;
   }
   for (const g of groups.values()) {
     g.pos = new Float32Array(g.count * 3); g.nor = new Float32Array(g.count * 3); g.uv = new Float32Array(g.count * 2); g.col = new Float32Array(g.count * 3);
@@ -161,7 +162,7 @@ export function buildSolidMeshes(solids: Solid[], lod: Lod = 'all', chunk = CHUN
   for (const s of solids) {
     if (s.mat >= MAT.soft) continue;
     const b = group(s, s.mat), roof = isFacade(s.mat) ? group(s, MAT.concrete) : undefined, from = [b.n, roof?.n ?? 0];
-    pushSolid(s, b, roof, idx ? occlusion(s, idx) : OPEN, inward(s).some(Boolean) ? group(s, interiorMat(s)) : b);
+    pushSolid(s, b, roof, idx ? occlusion(s, idx) : OPEN, inward(s).some(Boolean) ? group(s, interiorMat(s), true) : b);
     const e = s.rot ?? s;
     if (Math.max(e.x1 - e.x0, e.z1 - e.z0) < 1.2 || Math.min(e.x1 - e.x0, e.z1 - e.z0, s.y1 - s.y0) < 0.12) continue;
     for (const [g, a] of [[b, from[0]], [roof, from[1]]] as const) if (g) { const r = casts.get(g); if (r) r.push(a, g.n); else casts.set(g, [a, g.n]); }
@@ -177,6 +178,7 @@ export function buildSolidMeshes(solids: Solid[], lod: Lod = 'all', chunk = CHUN
     const mesh = new THREE.Mesh(geo, material(g.mat, true, lod));
     mesh.receiveShadow = true;
     mesh.userData.chunk = { x: (g.cx + 0.5) * chunk, z: (g.cz + 0.5) * chunk };
+    if (g.inner) mesh.userData.detail = mesh.userData.inner = true;
     root.add(mesh);
   }
   // One shadow caster per chunk, whatever its materials.

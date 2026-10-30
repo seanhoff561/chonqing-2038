@@ -80,7 +80,7 @@ export function sewers(manholes: Feature[], plots: Plot[], g: Heightfield, walks
     }
     if (kind === 'crawl') out.features.push({ kind: 'crawlway', x: (ls[0][0].x + ls[0][1].x) / 2, y, z: ls[0][0].z, group: out.features.length });
     // A gutter down the middle of a sewer.
-    if (kind !== 'crawl') for (const [p, q] of ls) out.decor.push(solid(Math.min(p.x, q.x) - 0.15, y, Math.min(p.z, q.z) - 0.15, Math.max(p.x, q.x) + 0.15, y + 0.02, Math.max(p.z, q.z) + 0.15, MAT.water));
+    if (kind !== 'crawl') for (const [p, q] of ls) out.decor.push({ ...solid(Math.min(p.x, q.x) - 0.15, y, Math.min(p.z, q.z) - 0.15, Math.max(p.x, q.x) + 0.15, y + 0.02, Math.max(p.z, q.z) + 0.15, MAT.water), inner: true });
     deepest[i] = Math.min(deepest[i], y);
     return true;
   };
@@ -126,6 +126,8 @@ export function sewers(manholes: Feature[], plots: Plot[], g: Heightfield, walks
     out.climbables.push({ kind: 'ladder', x: a.x - SHAFT, z: a.z, y0: deepest[i], y1: a.y + 1, nx: 1, nz: 0 });
   });
   // Every bore cuts every lining, and the underground's walls it runs into.
+  // (Underground, drawn near only.)
+  for (const q of lining) q.inner = true;
   let lin = lining;
   for (const b of bores.concat(spaces.filter(q => bores.some(b => b.x0 < q.x1 && b.x1 > q.x0 && b.y0 < q.y1 && b.y1 > q.y0 && b.z0 < q.z1 && b.z1 > q.z0)))) lin = carve(lin, b);
   out.solids.push(...lin);

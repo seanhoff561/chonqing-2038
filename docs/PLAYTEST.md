@@ -97,3 +97,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 ## M3-76: the ant hill
 - With `?dev=1`, follow a main route's points if you can (the routes aren't marked: find your own way between two districts). Does the city feel like an ant hill you can mostly get through inside buildings, sewers and the underground, coming out only to cross?
 - Nothing should mark the way on the roofs any more (no square trail, no rags).
+
+## M3-80: urban rooftops
+- From a roof, look round the others: do they read as a lived-in city's roofs (tanks, drums, condensers, sheds, crates, heaters, aerials) rather than gardens? Hide in a tank, a drum or a shed's corner once.

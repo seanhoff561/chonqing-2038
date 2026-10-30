@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-80 Urban rooftops, not green (U-044).
-Features done: 138 / 295 | Last done: M3-82
+**Status:** building M3. Next: M3-83 Every grate, vent and trapdoor opens with F (U-044).
+Features done: 139 / 295 | Last done: M3-80
 <!-- /status -->
 
 ## Log
@@ -86,3 +86,4 @@ Features done: 138 / 295 | Last done: M3-82
 - M3-73a Basements and the sewer maze (U-038, split from M3-73): basements under blocks with a stairwell (hatch, ladder, a manhole grate bolted from below in half), joined by a maze of sewers, crawlways and flooded sumps, now and then through a grate into the underground city (U-038)
 - M3-76 The anthill: routes through buildings, unmarked (U-043): the ant hill: routes mostly through buildings, breaches, basements, sewers and the underground, out only to cross; unmarked; every leg within a reach table (U-043)
 - M3-82 No prebuilt climbing lines (U-044): no prebuilt climbing lines: the stub lines up taller blocks and the holds over the towers' skylines removed (U-044)
+- M3-80 Urban rooftops, not green (U-044): urban rooftops: tanks, drums, condensers, sheds, crates and heaters instead of gardens, hiding places among them; opening props, pools and inside faces drawn near only (U-044)
