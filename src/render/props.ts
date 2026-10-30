@@ -140,8 +140,14 @@ function patrolDecor(): THREE.Object3D {
   return g;
 }
 
+/** The factory (M3-57b): a stack's red warning light; a floodlight's beam from its mast down onto a gate. */
+const BEACON = new THREE.MeshBasicMaterial({ color: 0xff2414 });
+const FLOOD = new THREE.MeshBasicMaterial({ color: 0xdfeaff, transparent: true, opacity: 0.08, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false });
+
 const builders: Record<string, Builder> = {
   arches,
+  beacon: () => new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 6), BEACON),
+  floodlight: () => new THREE.Mesh(new THREE.ConeGeometry(4.5, 15, 16, 1, true).translate(0, -7.5, 0).rotateX(-0.63), FLOOD),
   lamp,
   neon,
   searchlight,

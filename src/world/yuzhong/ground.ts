@@ -2,7 +2,7 @@
 // under the water line inside the OSM river polygons, streets levelled across their width and eased along it.
 import { heightfield, type Heightfield } from '../heightfield';
 import { GEO, groundAt } from '../geo';
-import { points, rasterPoly, type P2 } from './shapes';
+import { points, rasterPoly, inside, type P2 } from './shapes';
 
 /** Game y is elevation less this (the rivers near y 12, Jiefangbei near 120). */
 export const Y0 = 150;
@@ -12,7 +12,11 @@ export const CELL = 2;
 
 export interface Street { kind: string; w: number; steps: boolean; bridge: boolean; tunnel: boolean; layer: number; name: string; pts: P2[] }
 
-export const streets = (): Street[] => GEO.streets.map(([kind, w, f, layer, name, p]) => ({ kind, w: w / 10, steps: !!(f & 1), bridge: !!(f & 2), tunnel: !!(f & 4), layer, name, pts: points(p, 0.1) }));
+/** Raffles City's podium, the machines' factory now (M3-57b): its walkways are built over. */
+export const PODIUM: P2[] = points(GEO.buildings.find(b => b[3] === '重庆来福士广场')?.[4] ?? [], 0.1);
+
+export const streets = (): Street[] => GEO.streets.map(([kind, w, f, layer, name, p]) => ({ kind, w: w / 10, steps: !!(f & 1), bridge: !!(f & 2), tunnel: !!(f & 4), layer, name, pts: points(p, 0.1) }))
+  .filter(s => ROAD.has(s.kind) || !onGround(s) || s.pts.filter(([x, z]) => inside(PODIUM, x, z)).length * 2 <= s.pts.length);
 /** Streets on the ground: not bridges, not tunnels or underground levels. */
 export const onGround = (s: Street) => !s.bridge && !s.tunnel && s.layer >= 0;
 

@@ -21,6 +21,7 @@ import { corners, rasterPoly, type Obb } from './shapes';
 import { alleys } from '../city/climb';
 import { buildTunnels } from './tunnels';
 import { buildSite } from './site';
+import { podiumMask, buildFactory } from './factory';
 import { buildLine2, stationEntrances, BEAM } from './line2';
 import { shopfronts } from './shopfront';
 import { dressStreets } from './dressing';
@@ -38,9 +39,15 @@ export function buildYuzhong(): World {
     mark(corners({ cx: (ax + bx) / 2, cz: (az + bz) / 2, hw: Math.hypot(bx - ax, bz - az) / 2 + 1, hd: BEAM.w / 2 + 3, yaw: Math.atan2(bz - az, bx - ax) }));
   }
   if (site) { const m = new Uint8Array(g.y.length); mark(site.poly, m); dilate(g, m, KEEP); for (let k = 0; k < m.length; k++) block[k] |= m[k]; }
+  // The factory covers Raffles City's podium round its towers (M3-57b).
+  const pod = podiumMask(g, block), unblocked = block.slice();
+  for (let k = 0; k < pod.length; k++) block[k] |= pod[k];
   const plans = planLots(g, sts, land, block);
   levelLots(g, plans);
   markEnterable(g, plans);
+  const fac = buildFactory(g, pod, sts);
+  // What its halls leave of the podium is open ground like any other, to fill.
+  if (fac) for (let k = 0; k < pod.length; k++) block[k] = unblocked[k] | fac.under[k];
   const out = empty(), plots: Plot[] = [];
   plans.forEach((p, n) => plots.push(buildPlan(p, n, out, g)));
   rowAlleys(plans, out, g);
@@ -55,18 +62,20 @@ export function buildYuzhong(): World {
     { name: 'Grand Tunnel entrance', x: tun.at.entrance.x, y: tun.at.entrance.y + 0.05, z: tun.at.entrance.z, yaw: Math.PI / 2 - tun.frame.yaw },
     { name: 'Grand Tunnel exit', x: tun.at.exit.x, y: tun.at.exit.y + 0.05, z: tun.at.exit.z, yaw: 0 },
     { name: 'Line 2 stalled train', x: line.train.x, y: line.train.top + 0.45, z: line.train.z, yaw: Math.PI / 2 - line.train.yaw },
+    ...(fac?.gates ?? []).map((q, n) => ({ name: `Factory gate ${n + 1}`, x: q.x + q.nx * 16, y: q.y + 1.5, z: q.z + q.nz * 16, yaw: Math.atan2(q.nx, q.nz) })),
   ], metro.at.map(m => ({ name: `Metro ${m.name}`, x: m.x, y: hAt(g, m.x, m.z) + 1.5, z: m.z, yaw: 0 })),
   // Vantage ledges high on the towers (M3-57a), looking out.
   out.features.filter(f => f.kind === 'vantage').map((f, n) => ({ name: `Vantage ${n + 1}`, x: f.x, y: f.y + 1.6, z: f.z, yaw: Math.atan2(-f.nx!, -f.nz!) })), site ? [
     { name: 'Construction site', x: site.frame.x, y: site.base + 0.05, z: site.frame.z, yaw: 0 },
     { name: 'Construction site crane', x: site.crane.x, y: site.crane.top + 2.55, z: site.crane.z, yaw: 0 },
   ] : []);
-  const solids = out.solids.concat(line.solids, metro.solids, site?.solids ?? [], tun.solids), inter = out.inter.concat(tun.inter, line.inter);
+  const solids = out.solids.concat(line.solids, metro.solids, site?.solids ?? [], fac?.solids ?? [], tun.solids), inter = out.inter.concat(tun.inter, line.inter);
   // The tunnel gate's door switches its own collision solid, the tunnels' last.
   tun.inter.find(i => i.id === 'shibati-gate')!.data!.solid = solids.length - 1;
   // Street dressing goes last, round everything else (its solids append, so the gate's index holds).
   const clear = [tun.at.entrance, tun.at.exit, tun.at.grate, ...metro.at].map(q => ({ x: q.x, z: q.z, r: 9 })).concat(site ? [{ x: site.frame.x, z: site.frame.z, r: 50 }] : [],
-    plots.filter(p => p.route).map(p => ({ x: p.route![0].x, z: p.route![0].z, r: 2.5 })));
+    plots.filter(p => p.route).map(p => ({ x: p.route![0].x, z: p.route![0].z, r: 2.5 })),
+    (fac?.gates ?? []).map(q => ({ x: q.x + q.nx * 8, z: q.z + q.nz * 8, r: 13 })));
   const dress = dressStreets(buildIndex(solids, g), g, sts, land, inter, clear);
   solids.push(...dress.solids);
   // Then the green and the ruins on the marked open ground, round all that.
@@ -76,10 +85,10 @@ export function buildYuzhong(): World {
   const filled = fill(buildIndex(solids, g), g, marks, plots), strung = cables(plans, buildIndex(solids, g));
   solids.push(...filled.solids, ...strung.masts);
   const world = makeWorld({
-    name: 'yuzhong', solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? [], filled.decor),
-    props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(line.climbables, site?.climbables ?? []),
+    name: 'yuzhong', solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? [], fac?.decor ?? [], filled.decor),
+    props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], fac?.props ?? [], dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(line.climbables, site?.climbables ?? []),
     hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones,
-    far: out.far, ground: g, plots, features: out.features, marks, lines: strung.lines, streets: sts.filter(onGround).map(s => ({ kind: s.kind, w: s.w, steps: s.steps, pts: s.pts })), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
+    far: out.far.concat(fac?.far ?? []), ground: g, plots, features: out.features.concat(fac?.features ?? []), marks, lines: strung.lines, convoys: fac?.convoys, streets: sts.filter(onGround).map(s => ({ kind: s.kind, w: s.w, steps: s.steps, pts: s.pts })), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
     teleports, spawn: hide,
   });
   // Nothing floats or sinks (M3-56): whatever stands on something above ground settles onto what's under it, or

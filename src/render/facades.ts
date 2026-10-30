@@ -16,6 +16,8 @@ interface Style {
   bands?: boolean;
   /** share of bays with no window; floors between floor bands */
   blank?: number; bandEvery?: number;
+  /** the machines' works (M3-57b): ribbed steel cladding, a band of glazing every 6 m, all of it lit at night */
+  works?: boolean;
 }
 
 const STYLES: Record<number, Style> = {
@@ -25,7 +27,29 @@ const STYLES: Record<number, Style> = {
   [MAT.facadeBrick]: { seed: 23, wall: '#dcd4c6', band: '#cfc6b6', win: [0.9, 1.15], sill: 1.0, brick: true, lattice: true, blank: 0.4 },
   [MAT.facadeOpen]: { seed: 24, wall: '#a89a8a', band: '#b4a896', win: [2.2, 1.9], sill: 0.75, open: true },
   [MAT.facadeBand]: { seed: 25, wall: '#eeece6', band: '#f6f5f1', win: [2.4, 1.6], sill: 1.05, bands: true },
+  [MAT.facadeWorks]: { seed: 26, wall: '#7b8187', band: '#5a5f64', win: [0, 1.5], sill: 3.2, works: true },
 };
+
+/** The works' ribbon windows: a band 1.5 m high, 3.2 m up each 6 m storey. */
+const ribbons = (st: Style, px: number) => [0, 1].map(f => FACADE_M * px - (f * 6 + st.sill) * px - st.win[1] * px);
+
+/** Ribbed steel cladding streaked with rust under the glazing bands, mullions every 1.5 m. */
+function drawWorks(st: Style, g: CanvasRenderingContext2D, S: number, px: number) {
+  noise(g, S, S, st.wall, 0.08, st.seed);
+  for (let x = 0; x < S; x += px * 0.25) { g.fillStyle = 'rgba(0,0,0,0.22)'; g.fillRect(x, 0, px * 0.05, S); g.fillStyle = 'rgba(255,255,255,0.07)'; g.fillRect(x + px * 0.06, 0, px * 0.03, S); }
+  blotches(g, S, S, st.seed + 1, 20, '40,42,44', 0.12, px * 0.5, px * 2);
+  for (const y of ribbons(st, px)) {
+    const h = st.win[1] * px;
+    g.fillStyle = st.band; g.fillRect(0, y - px * 0.2, S, h + px * 0.4);
+    const grd = g.createLinearGradient(0, y, 0, y + h);
+    grd.addColorStop(0, '#26303a'); grd.addColorStop(1, '#3c4a56');
+    g.fillStyle = grd; g.fillRect(0, y, S, h);
+    g.fillStyle = 'rgba(200,215,225,0.18)'; g.fillRect(0, y + h * 0.15, S, h * 0.12);
+    g.fillStyle = '#4a4e52';
+    for (let x = 0; x < S; x += px * 1.5) g.fillRect(x, y, px * 0.08, h);
+    streaks(g, 0, S, y + h + px * 0.2, st.seed + Math.floor(y), 40, [px * 0.3, px * 2.4], '110,70,40', 0.22);
+  }
+}
 
 export const isFacade = (id: number) => id in STYLES;
 
@@ -46,6 +70,7 @@ function layout(st: Style, px: number): Window[] {
 
 export function drawFacade(id: number, g: CanvasRenderingContext2D, S: number) {
   const st = STYLES[id], px = S / FACADE_M, r = mulberry(st.seed + 100);
+  if (st.works) { drawWorks(st, g, S, px); return; }
   // Wall: base, large damp and bleached patches, fine speckle.
   // Months after the takeover, not decades (U-020): weathered, not ruined.
   noise(g, S, S, st.wall, 0.1, st.seed);
@@ -172,6 +197,14 @@ export function drawFacade(id: number, g: CanvasRenderingContext2D, S: number) {
 export function drawFacadeLights(id: number, g: CanvasRenderingContext2D, S: number) {
   const st = STYLES[id], px = S / FACADE_M;
   g.fillStyle = '#000'; g.fillRect(0, 0, S, S);
+  if (st.works) {
+    // Every band lit, the machines' cold white, the mullions dark against it.
+    for (const y of ribbons(st, px)) {
+      g.fillStyle = '#d6e8ff'; g.fillRect(0, y + 2, S, st.win[1] * px - 4);
+      g.fillStyle = '#000'; for (let x = 0; x < S; x += px * 1.5) g.fillRect(x, y, px * 0.08, st.win[1] * px);
+    }
+    return;
+  }
   for (const w of layout(st, px)) {
     if (!w.lit) continue;
     const grd = g.createLinearGradient(0, w.y, 0, w.y + w.h);

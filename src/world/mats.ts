@@ -13,6 +13,8 @@ export const MAT = {
   grass: 25,
   /** broken concrete and brick over the rough ground (M3-56c) */
   rubble: 26,
+  /** the machines' works (M3-57b): steel cladding with ribbon windows, every one lit at night; their cold working light */
+  facadeWorks: 27, glare: 28,
   /** collision only and soft (a prop draws it): bags, bins, cardboard; landing on it breaks a fall (U-024) */
   soft: 98,
   /** collision only: a prop draws it */

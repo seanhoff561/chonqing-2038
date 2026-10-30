@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-57b The factory at Chaotianmen (U-030).
-Features done: 112 / 266 | Last done: M3-57a
+**Status:** building M3. Next: M3-57 The vertical city: packed, stacked and bridged (U-023, U-024).
+Features done: 113 / 266 | Last done: M3-57b
 <!-- /status -->
 
 ## Log
@@ -130,3 +130,4 @@ Features done: 112 / 266 | Last done: M3-57a
 - M3-49 Real skies (U-021): a painted sky dome: clouds that follow the weather, dawn and dusk glow, stars, the city's glow on night cloud
 - M3-50 The movement envelope (U-021, U-023): the movement envelope measured from the sim, read by the generators; soft cardboard and tarps
 - M3-57a Climbing the towers (U-023): tower climbing lines: stubs a dyno apart, broken floors, vantage platforms
+- M3-57b The factory at Chaotianmen (U-030): the factory in Raffles City's podium, lit, guarded, columns marching out

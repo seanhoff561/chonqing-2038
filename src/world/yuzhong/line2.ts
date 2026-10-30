@@ -131,7 +131,7 @@ export function stationEntrances(g: Heightfield, sts: { pts: P2[]; w: number }[]
       const x = ax + vx * t, z = az + vz * t, d = Math.hypot(px - x, pz - z), l = Math.sqrt(l2);
       if (!best || d < best.d) best = { d, x, z, ux: vx / l, uz: vz / l, w: s.w };
     }
-    if (!best || best.d > 40) continue;
+    if (!best || best.d > 45) continue;
     const side = (px - best.x) * -best.uz + (pz - best.z) * best.ux >= 0 ? 1 : -1, nx = -best.uz * side, nz = best.ux * side;
     const cx = best.x + nx * (best.w / 2 + 4.5), cz = best.z + nz * (best.w / 2 + 4.5), y = hAt(g, cx, cz), yaw = Math.atan2(nz, nx);
     // In its own frame: x away from the street (0 at the front), z along it.

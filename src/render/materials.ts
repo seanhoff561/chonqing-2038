@@ -152,8 +152,9 @@ export function material(id: number, vc = false, lod: Lod = 'all'): THREE.MeshPh
   const key = `${id}:${vc}:${lod}`;
   let m = mats.get(key);
   if (m) return m;
-  if (id === MAT.lamp) {
-    m = new THREE.MeshPhongMaterial({ color: 0xfff1c0, emissive: 0xffd890, emissiveIntensity: 1.2, vertexColors: vc });
+  if (id === MAT.lamp || id === MAT.glare) {
+    const cold = id === MAT.glare;
+    m = new THREE.MeshPhongMaterial({ color: cold ? 0xe8f2ff : 0xfff1c0, emissive: cold ? 0xc4ddff : 0xffd890, emissiveIntensity: 1.2, vertexColors: vc });
     lodCut(m, lod);
   } else if (isFacade(id)) {
     const map = canvasTexture(`facade${id}`, 1024, 1024, (g, w) => drawFacade(id, g, w));

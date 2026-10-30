@@ -65,6 +65,8 @@ export interface World {
   marks?: Marks;
   /** cables strung between buildings, to ride (M3-52) */
   lines: Line[];
+  /** the machines' columns' ways out of the factory along the roads, at ground level (M3-57b) */
+  convoys?: { x: number; y: number; z: number }[][];
   /** holds, hide spots and alley pieces as built (Yuzhong), for tests and tools */
   features: Feature[];
   index: SolidIndex;
@@ -95,6 +97,7 @@ export interface WorldParts {
   streets?: StreetLine[];
   marks?: Marks;
   lines?: Line[];
+  convoys?: World['convoys'];
   features?: Feature[];
   spawn: World['spawn'];
 }
@@ -109,6 +112,7 @@ export function makeWorld(p: WorldParts): World {
     streets: p.streets ?? [],
     marks: p.marks,
     lines: p.lines ?? [],
+    convoys: p.convoys,
     features: p.features ?? [],
     index: buildIndex(p.solids, p.ground),
     water: p.water ?? [],
