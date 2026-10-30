@@ -47,3 +47,14 @@ export function glaze(id: string, box: Solid, c: [number, number], dir: [number,
   for (let u = -w / 2 + 0.06; u < w / 2; u += 0.13) bar(u, 0.012, box.y0, box.y1);
   for (const y of [box.y0 + 0.05, box.y1 - 0.08]) bar(0, w / 2, y, y + 0.03);
 }
+
+/** A cover over a hole to climb through (M3-73a, M3-83, U-044): a grate's bars or a trapdoor's plate, `box` its
+ *  collision (made hidden), opened with F like the start hideout's grate (sim/grate.ts): from below, bolted ones
+ *  take drawing the bolts; from above a bolted one won't lift. `c` its middle, `w` its width (square). Its
+ *  interactable is a 'grate' with no bags (a manhole's kind). */
+export function cover(id: string, box: Solid, c: [number, number], w: number, kind: 'grate' | 'hatch', loose: boolean, out: Pick<Fabric, 'solids' | 'props' | 'inter'>, label: [string, string]) {
+  box.mat = MAT.hidden; box.part = id;
+  out.solids.push(box);
+  out.props.push({ kind, x: c[0], y: (box.y0 + box.y1) / 2, z: c[1], yaw: 0, w, text: id });
+  out.inter.push({ id, kind: 'grate', x: c[0], y: (box.y0 + box.y1) / 2, z: c[1], r: Math.max(0.8, w * 0.6), zh: label[0], en: label[1], data: { part: id, manhole: true, half: w / 2, ...(loose ? { loose: true } : {}) } });
+}

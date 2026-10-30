@@ -34,13 +34,17 @@ function act(s: SimState, it: Inter): Act {
   if (below(s, it)) return isOpen(s, it) ? 'shut' : bolted(s, it) ? 'unbolt' : 'lift';
   return isOpen(s, it) ? 'lower' : bagsOff(s, it) ? 'cover' : 'lift';
 }
-const LABEL: Record<Act, [string, string]> = {
-  unbolt: ['拔开插销 顶开铁栅', 'Draw the bolts, push the grate up'],
-  lift: ['掀开铁栅', 'Lift the grate'],
-  shut: ['拉上铁栅 插上插销', 'Pull the grate shut and bolt it'],
-  lower: ['放下铁栅', 'Lower the grate'],
-  cover: ['把垃圾袋拖回去', 'Drag the bags back over it'],
-};
+/** What it says, naming what it is (a grate, a trapdoor, a roof hatch: M3-83). */
+function label(s: SimState, it: Inter): [string, string] {
+  const zh = it.zh, en = it.en.toLowerCase(), loose = !!it.data?.loose;
+  switch (act(s, it)) {
+    case 'unbolt': return [`拔开插销 顶开${zh}`, `Draw the bolts, push the ${en} up`];
+    case 'lift': return [`掀开${zh}`, `Lift the ${en}`];
+    case 'shut': return loose ? [`拉上${zh}`, `Pull the ${en} shut`] : [`拉上${zh} 插上插销`, `Pull the ${en} shut and bolt it`];
+    case 'lower': return [`放下${zh}`, `Lower the ${en}`];
+    default: return ['把垃圾袋拖回去', 'Drag the bags back over it'];
+  }
+}
 
 /** Would the shut grate close on him (his body through the opening)? From below he ducks a little under it as it
  *  comes down, if there's room. */
@@ -61,12 +65,13 @@ function sound(s: SimState, it: Inter, id: string, r: number) {
 
 onInteract('grate', {
   grip: true,
-  label: (s, it) => LABEL[act(s, it)],
+  label,
   can: (s, it) => {
     const a = act(s, it);
     if (a === 'lift' && !below(s, it) && bolted(s, it)) return 'bolted from below';
     // Standing on it, he can't lift it.
-    if (a === 'lift' && !below(s, it) && Math.abs(s.player.pos.x - it.x) < 1.8 && Math.abs(s.player.pos.z - it.z) < 1.8 && Math.abs(s.player.pos.y - it.y) < 0.3) return 'step off it';
+    const on = ((it.data?.half as number | undefined) ?? 1.2) + 0.6;
+    if (a === 'lift' && !below(s, it) && Math.abs(s.player.pos.x - it.x) < on && Math.abs(s.player.pos.z - it.z) < on && Math.abs(s.player.pos.y - it.y) < 0.3) return 'step off it';
     return null;
   },
   dur: (s, it) => GRATE[act(s, it)],

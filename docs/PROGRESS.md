@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-83 Every grate, vent and trapdoor opens with F (U-044).
-Features done: 139 / 295 | Last done: M3-80
+**Status:** building M3. Next: M3-81 Connections meet the walls (U-044).
+Features done: 140 / 295 | Last done: M3-83
 <!-- /status -->
 
 ## Log
@@ -87,3 +87,4 @@ Features done: 139 / 295 | Last done: M3-80
 - M3-76 The anthill: routes through buildings, unmarked (U-043): the ant hill: routes mostly through buildings, breaches, basements, sewers and the underground, out only to cross; unmarked; every leg within a reach table (U-043)
 - M3-82 No prebuilt climbing lines (U-044): no prebuilt climbing lines: the stub lines up taller blocks and the holds over the towers' skylines removed (U-044)
 - M3-80 Urban rooftops, not green (U-044): urban rooftops: tanks, drums, condensers, sheds, crates and heaters instead of gardens, hiding places among them; opening props, pools and inside faces drawn near only (U-044)
+- M3-83 Every grate, vent and trapdoor opens with F (U-044): Every grate, vent, trapdoor and hatch starts shut and opens with F

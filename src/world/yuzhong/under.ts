@@ -10,7 +10,8 @@ import { MAT } from '../mats';
 import { GEO } from '../geo';
 import { makeRng, hashString, rand } from '../../sim/rng';
 import type { Heightfield } from '../heightfield';
-import type { Climbable, Feature, Prop, Zone } from '../world';
+import type { Climbable, Feature, Inter, Prop, Zone } from '../world';
+import { cover } from '../city/access';
 import { stair } from '../steps';
 import { streetCells } from './ground';
 import { districtAt } from './lots';
@@ -19,7 +20,7 @@ import { run, fit, room, tubes, station, descent, TUBE, type Dig } from './under
 
 type V3 = { x: number; y: number; z: number };
 export interface Under {
-  solids: Solid[]; decor: Solid[]; props: Prop[]; climbables: Climbable[]; zones: Zone[]; features: Feature[];
+  solids: Solid[]; decor: Solid[]; props: Prop[]; climbables: Climbable[]; zones: Zone[]; features: Feature[]; inter: Inter[];
   /** what the lots keep clear of: the open cuts of stairways and culverts, the grates */
   keep: Obb[];
   /** a walk from the Grand Tunnel under Jiaochangkou through both levels of the city to Xiaoshizi */
@@ -40,8 +41,8 @@ const TW = 3.6, TH = 3.4;
 /** gt: the Grand Tunnel's floor, the end of its passage north (the junction), its ways in, and a walk along it
  *  from under Jiaochangkou into the passage. */
 export function buildUnder(g: Heightfield, gt: { floor: number; junction: V3; ways: V3[]; walk: V3[] }): Under {
-  const u: Under = { solids: [], decor: [], props: [], climbables: [], zones: [], features: [], keep: [], route: [], descents: [], at: {} };
-  const lining: Solid[] = [], bores: Box[] = [], kept: Solid[] = [], r = makeRng(hashString('under'));
+  const u: Under = { solids: [], decor: [], props: [], climbables: [], zones: [], features: [], inter: [], keep: [], route: [], descents: [], at: {} };
+  const lining: Solid[] = [], bores: Box[] = [], kept: Solid[] = [], r = makeRng(hashString('under')), lr = makeRng(hashString('under-grates'));
   const k = (x: number, z: number) => Math.max(0, Math.min(g.h - 1, Math.round(z / g.cell))) * g.w + Math.max(0, Math.min(g.w - 1, Math.round(x / g.cell)));
   const gy = (x: number, z: number) => g.y[k(x, z)], street = (x: number, z: number) => streetCells[k(x, z)] !== 0;
   const way = (kind: string, x: number, y: number, z: number, nx = 0, nz = 0) => u.features.push({ kind: `way:${kind}`, x, y, z, group: u.features.length, nx, nz });
@@ -112,7 +113,7 @@ export function buildUnder(g: Heightfield, gt: { floor: number; junction: V3; wa
   const wall = ([x0, z0, x1, z1]: [number, number, number, number], y0: number, y1: number): [number, number, number, number, number, number, number] => [x0, y0, z0, x1, y1, z1, MAT.concrete];
 
   /** A grate beside the pavement over a ladder shaft down to a tunnel's floor at y: the shaft lined, the ground holed
-   *  over it and paved round the opening. */
+   *  over it and paved round the opening, a grate shut over it. */
   const grate = (x: number, z: number, y: number) => {
     const top = gy(x, z), h = 0.8;
     space(x - h, z - h, x + h, z + h, y, top - 0.5, MAT.concrete, true);
@@ -120,6 +121,8 @@ export function buildUnder(g: Heightfield, gt: { floor: number; junction: V3; wa
     u.climbables.push({ kind: 'ladder', x, z: z - h, y0: y + 2, y1: top + 0.3, nx: 0, nz: 1 });
     holeRect(x - 2, z - 2, x + 2, z + 2);
     for (const [x0, z0, x1, z1] of [[x - 3, z - 3, x + 3, z - h], [x - 3, z + h, x + 3, z + 3], [x - 3, z - h, x - h, z + h], [x + h, z - h, x + 3, z + h]]) kept.push(solid(x0, top - 0.5, z0, x1, top + 0.03, z1, MAT.metal));
+    // Shut over it, to lift with F: most of them loose, the rest rusted down to pry (M3-83).
+    cover(`under-grate${u.inter.length}`, solid(x - h, top - 0.04, z - h, x + h, top + 0.03, z + h, MAT.metal), [x, z], 2 * h, 'grate', rand(lr) < 0.7, { solids: kept, props: u.props, inter: u.inter }, ['铁栅', 'Grate']);
     keep(x - 3, z - 3, x + 3, z + 3);
     way('grate', x, top, z);
   };

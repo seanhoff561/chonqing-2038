@@ -100,3 +100,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M3-80: urban rooftops
 - From a roof, look round the others: do they read as a lived-in city's roofs (tanks, drums, condensers, sheds, crates, heaters, aerials) rather than gardens? Hide in a tank, a drum or a shed's corner once.
+
+## M3-83: covers on every opening
+- In a basement, at a roof hatch, at a warren shaft's foot, over a street grate down to the tunnels: is each one shut until you open it with F, and does lifting, prying or forcing it feel right (and the bolted ones plainly bolted)?

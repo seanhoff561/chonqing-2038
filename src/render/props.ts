@@ -214,6 +214,17 @@ const builders: Record<string, Builder> = {
     g.userData.tick = (_t: number, open: Record<string, boolean>) => { const want = open[p.text!] ? 1.75 : 0; hinge.rotation.z += (want - hinge.rotation.z) * 0.12; };
     return g;
   },
+  // A steel trapdoor or roof hatch (M3-83): a plate with a lip, swinging up on its -x edge as its interactable opens.
+  hatch: p => {
+    const w = p.w!, plate = mergeGeometries([new THREE.BoxGeometry(w, 0.04, w), new THREE.BoxGeometry(0.06, 0.04, 0.16).translate(w * 0.42, 0.04, 0)]);
+    const g = new THREE.Group(), hinge = new THREE.Group(), m = new THREE.Mesh(plate, lam(0x3a3836));
+    hinge.position.x = -w / 2;
+    m.position.x = w / 2;
+    hinge.add(m);
+    g.add(hinge);
+    g.userData.tick = (_t: number, open: Record<string, boolean>) => { const want = open[p.text!] ? 1.75 : 0; hinge.rotation.z += (want - hinge.rotation.z) * 0.12; };
+    return g;
+  },
   // Rubbish bags heaped over the start hideout's grate (M3-72): shoved off to its +x side while it's open.
   cover: p => {
     const g = new THREE.Group(), heap = libProp({ ...p, kind: 'bags' })!;
@@ -255,8 +266,8 @@ export function buildProps(props: Prop[]): THREE.Group {
     o.rotation.y = p.yaw;
     const merger = SMALL.has(p.kind) ? small : big;
     if (o.userData.tick) ticking.push(o.userData.tick);
-    // Grates that open and the bags over them (M3-72, M3-73a), hundreds of them in the basements: drawn near only.
-    if (p.kind === 'grate' || p.kind === 'cover') o.userData.chunk = o.userData.detail = true;
+    // Grates and hatches that open and the bags over them (M3-72, M3-73a, M3-83), hundreds of them in the basements: drawn near only.
+    if (p.kind === 'grate' || p.kind === 'cover' || p.kind === 'hatch') o.userData.chunk = o.userData.detail = true;
     if ((o as THREE.Mesh).isMesh && !o.userData.tick && o.children.length === 0) merger.add(o as THREE.Mesh);
     else if (!b && !o.userData.tick) { o.updateMatrixWorld(true); for (const c of [...o.children]) merger.add(c as THREE.Mesh); }
     else g.add(o);

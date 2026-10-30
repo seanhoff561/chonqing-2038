@@ -6,6 +6,7 @@ import type { Solid } from '../geom';
 import { MAT } from '../mats';
 import { rand, type Rng } from '../../sim/rng';
 import { FLOOR, furnish, type Floor, type Rect } from './rooms';
+import { cover } from './access';
 import type { Lot, Fabric } from './buildings';
 
 /** How far in from the outer walls it stops (the ground's shell is holed over it in 2 m cells, which must stay under
@@ -39,11 +40,12 @@ export function basement(l: Lot, r: Rng, out: Fabric, f: Frame) {
   for (const q of [[hole[0] - 0.1, hole[1] - 0.1, hole[2] + 0.1, hole[1]], [hole[0] - 0.1, hole[3], hole[2] + 0.1, hole[3] + 0.1]] as Rect[]) out.decor.push(B(q[0], y0, q[1], q[2], y0 + 0.08, q[3], MAT.metal));
   // Over the manhole a grate: bolted from below in half of them (up from the sewers it's pried open, from here it
   // won't lift), loose in the rest.
-  const [mx, mz] = f.at((hole[0] + hole[2]) / 2, (hole[1] + hole[3]) / 2), id = f.nid('mh');
-  out.solids.push({ ...B(hole[0], y0 - 0.08, hole[1], hole[2], y0, hole[3], MAT.hidden), part: id });
-  out.props.push({ kind: 'grate', x: mx, y: y0 - 0.04, z: mz, yaw: f.alongZ ? Math.PI / 2 : 0, w: hole[2] - hole[0], text: id });
-  out.inter.push({ id, kind: 'grate', x: mx, y: y0 - 0.04, z: mz, r: 1, zh: '下水道铁栅', en: 'Drain grate', data: { part: id, manhole: true, ...(rand(r) < 0.5 ? { loose: true } : {}) } });
+  const [mx, mz] = f.at((hole[0] + hole[2]) / 2, (hole[1] + hole[3]) / 2);
+  cover(f.nid('mh'), B(hole[0], y0 - 0.08, hole[1], hole[2], y0, hole[3], 0), [mx, mz], hole[2] - hole[0], 'grate', rand(r) < 0.5, out, ['下水道铁栅', 'Drain grate']);
   out.features.push({ kind: 'sewer', x: mx, y: y0, z: mz, group: out.features.length });
+  // And a trapdoor over the hatch, loose: lifted from the lobby, pushed up from the ladder (M3-83).
+  const [tx, tz] = f.at(hu, hv);
+  cover(f.nid('hatch'), B(hatch[0], base - 0.06, hatch[1], hatch[2], base, hatch[3], 0), [tx, tz], 1, 'hatch', true, out, ['活板门', 'Trapdoor']);
   furnish({ l, y: y0, k: -1, alongZ: f.alongZ, B, at: f.at, decay: f.decay, nid: f.nid }, [u0, v0, u1, v1], 'store', [[hu - 1.2, hv - 1.2, hu + 1.2, hv + 1.2], [hole[0] - 1, hole[1] - 1, u1, hole[3] + 1]], false, r, out,
     { id: '', kind: 'flat', x: 0, y: 0, z: 0, bed: null, table: null, containers: [], exits: 1, windows: 0, streetSides: 0 });
 }

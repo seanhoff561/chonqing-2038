@@ -119,7 +119,7 @@ export function buildYuzhong(): World {
     { name: 'Construction site', x: site.frame.x, y: site.base + 0.05, z: site.frame.z, yaw: 0 },
     { name: 'Construction site crane', x: site.crane.x, y: site.crane.top + 2.55, z: site.crane.z, yaw: 0 },
   ] : []);
-  const solids = out.solids.concat(line.solids, metro.solids, site?.solids ?? [], fac?.solids ?? [], vert.solids, cross.solids, under.solids, sew.solids, tun.solids), inter = out.inter.concat(sew.inter, tun.inter, line.inter);
+  const solids = out.solids.concat(line.solids, metro.solids, site?.solids ?? [], fac?.solids ?? [], vert.solids, cross.solids, under.solids, sew.solids, tun.solids), inter = out.inter.concat(sew.inter, tun.inter, line.inter, under.inter);
   // The tunnel gate's door switches its own collision solid, the tunnels' last.
   tun.inter.find(i => i.id === 'shibati-gate')!.data!.solid = solids.length - 1;
   // Street dressing goes last, round everything else (its solids append, so the gate's index holds).
@@ -286,8 +286,8 @@ function place(f: Fabric, o: Obb, prefix: string, out: Fabric): (x: number, z: n
   out.solids.push(...turn(f.solids, o.yaw, o.cx, o.cz));
   out.decor.push(...turn(f.decor, o.yaw, o.cx, o.cz));
   out.far.push(...turn(f.far, o.yaw, o.cx, o.cz));
-  // (A door's, window's or grate's prop names its interactable, prefixed as the interactables are.)
-  out.props.push(...f.props.map((q): Prop => { const [x, z] = pt(q.x, q.z); return { ...q, x, z, yaw: q.yaw - o.yaw, ...(q.kind === 'door' || q.kind === 'pane' || (q.kind === 'grate' && q.text) ? { text: `${prefix}-${q.text}` } : {}) }; }));
+  // (A door's, window's, grate's or hatch's prop names its interactable, prefixed as the interactables are.)
+  out.props.push(...f.props.map((q): Prop => { const [x, z] = pt(q.x, q.z); return { ...q, x, z, yaw: q.yaw - o.yaw, ...(q.kind === 'door' || q.kind === 'pane' || ((q.kind === 'grate' || q.kind === 'hatch') && q.text) ? { text: `${prefix}-${q.text}` } : {}) }; }));
   out.inter.push(...f.inter.map((q): Inter => { const [x, z] = pt(q.x, q.z); return { ...q, id: `${prefix}-${q.id}`, x, z }; }));
   out.climbables.push(...f.climbables.map((q): Climbable => { const [x, z] = pt(q.x, q.z); return { ...q, x, z, nx: c * q.nx - s * q.nz, nz: s * q.nx + c * q.nz }; }));
   // A hiding place keeps its size, moved and turned with the rest (M3-47).

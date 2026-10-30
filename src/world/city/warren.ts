@@ -154,6 +154,11 @@ function vertical(K: Kit, floors: number[], facade: Map<number, Room[]>, corrido
     K.out.features.push({ kind: 'shaft', x, y: y0, z, group: K.out.features.length }, { kind: 'shafthead', x, y: y1, z, group: K.out.features.length + 1 });
     // In at its foot and out at its head through its end, a duct the shaft's width from the corridor: the walls he
     // braces between run on through it.
-    for (const y of [y0, y1]) K.cut(box(rect(1, u, u + SHAFT, d - 0.31, north + GAP + 0.01), y, y + 1.2));
+    // Each behind a vent cover on the corridor wall, shut or rusted fast (M3-83).
+    for (const y of [y0, y1]) {
+      K.cut(box(rect(1, u, u + SHAFT, d - 0.31, north + GAP + 0.01), y, y + 1.2));
+      const v = north + GAP - 0.05, lock: Lock = rand(r) < 0.5 ? 'jammed' : 'shut';
+      K.later(() => door(K.nid('v'), box(rect(1, u, u + SHAFT, v - 0.03, v + 0.03), y, y + 1.2), K.at(u, K.V - v), K.unit(1, 0), SHAFT, lock, K.out, ['通风口', 'Vent cover']));
+    }
   }
 }

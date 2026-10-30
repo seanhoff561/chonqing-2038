@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 76 of 93 done
+## M3: 77 of 93 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -482,7 +482,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Rooftops cluttered with urban things instead (water tanks, AC condensers, crates and junk, solar heaters, aerials and dishes, sheds) on enterable blocks' roofs too, clear of their huts and hatches and of route roofs kept bare
   - Every so often a place to hide on a roof (a tank, a shed, a crate pile)
   - Screenshots from above; sim test: no moss or leaves on roofs, hiding spots on roofs
-- [ ] **M3-83** Every grate, vent and trapdoor opens with F (U-044)
+- [x] **M3-83** Every grate, vent and trapdoor opens with F (U-044)
   - Nothing to climb or crawl through stands open by default: every grate, vent, hatch and trapdoor has a cover he opens with F first (some bolted, jammed or locked)
   - The basements' hatches, the roof hatches, the warren shafts' ducts, the crawl vents between rooms, the street grates over the underground's ladder shafts
   - Sim tests: each kind of opening blocks until opened with F, then lets him through

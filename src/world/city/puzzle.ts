@@ -12,7 +12,7 @@ import { rand, randInt, type Rng } from '../../sim/rng';
 import { FLOOR, WALL, SLAB, DOOR, DOOR_H, CORE, CORE_W, furnish, over, type Floor, type Kind, type Rect } from './rooms';
 
 const CORE_NEAR = CORE.near;
-import { door, glaze, roll, type Glazing } from './access';
+import { door, glaze, roll, cover, type Glazing } from './access';
 import type { Lot, Fabric } from './buildings';
 import type { Site } from '../world';
 import { warren } from './warren';
@@ -206,6 +206,9 @@ export function puzzle(fr: Frame, from: number, r: Rng, out: Fabric) {
       const a1 = m.a1 - 0.3, q = rect(m.face, a1 - 1.3, a1, 0, 1.3), c0 = (a1 - 0.65), p = rect(m.face, c0, c0, 0.2, 0.2), [x, z] = at(p[0], p[1]), [nx, nz] = inDir(m.face);
       cuts.push(box(q, wall - SLAB - 0.01, wall + 0.01));
       out.climbables.push({ kind: 'ladder', x, z, y0: yOf(m.k), y1: wall + 1.0, nx, nz });
+      // A trapdoor over it, bolted from below in half (M3-83).
+      const [hx, hz] = at((q[0] + q[2]) / 2, (q[1] + q[3]) / 2);
+      later.push(() => cover(fr.nid('hatch'), box(q, wall - 0.06, wall), [hx, hz], 1.3, 'hatch', rand(r) < 0.5, out, ['屋顶活板门', 'Roof hatch']));
       m.keep.push(rect(m.face, a1 - 1.6, a1 + 0.3, 0, 1.2));
     } else if (recipe.burrow) {
       // A hole broken through the wall at its foot, crawl-high, rubble round it outside.
