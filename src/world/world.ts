@@ -50,7 +50,9 @@ export interface Teleport { name: string; x: number; y: number; z: number; yaw: 
 
 /** A way across the city off the streets (M3-37): its points (roof to roof, along connections) and how each step
  *  is taken ('jump', 'drop', or the connection's kind). */
-export interface Route { id: string; kind: 'main' | 'branch'; pts: { x: number; y: number; z: number }[]; ways: string[] }
+/** An off-street route (M3-37, M3-76): its points, where each stretch between two is (in a building, on a roof,
+ *  underground, on the ground, or across a gap), and the ways taken between nodes, in order. */
+export interface Route { id: string; kind: 'main' | 'branch'; pts: { x: number; y: number; z: number }[]; on: ('inside' | 'roof' | 'under' | 'ground' | 'gap')[]; ways: string[] }
 /** A machine's beat (M3-37, laid for M4): along streets or over the roofs, between the hours it keeps. */
 export interface Patrol { kind: 'street' | 'drone'; pts: { x: number; y: number; z: number }[]; hours: [number, number] }
 /** A place reached only one way, with a tool (U-037): where, what it takes, and where that's used from. */

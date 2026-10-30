@@ -71,7 +71,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 - Pick a few enterable blocks (`?dev=1`, the teleport list) and try to get in and through them: windows to break or find broken, doors locked, jammed or chained, vents to pry, holes and ladders between floors. Does each feel like its own puzzle? Too easy, too hard?
 - Do the rooms look real enough close up (furniture, wallpaper, clutter, ceiling lights, decay)? What looks worst?
 - Cross a street on a plank, a beam and a cable; walk a cable bundle between close buildings; swing the bars across a narrow gap. Do they read, and do the cables sway?
-- (The route marks on roofs go in M3-76, U-043: the routes move into the buildings, unmarked.)
 - Find a grappling cache (a bare block with a crate and a post on its roof): is there really no other way up?
 
 ## M3-72: the start hideout under the alley
@@ -94,3 +93,7 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 ## M3-73a: basements and the sewer maze
 - Find a block with a stairwell, get into its lobby and down the hatch to the basement (headlamp on). Open the manhole grate (some are bolted from below), climb down and follow the sewers: do they read as sewers, crawlways and a flooded sump to swim? Is getting lost in them fun or tedious?
 - Find a grate into the underground city and force it.
+
+## M3-76: the ant hill
+- With `?dev=1`, follow a main route's points if you can (the routes aren't marked: find your own way between two districts). Does the city feel like an ant hill you can mostly get through inside buildings, sewers and the underground, coming out only to cross?
+- Nothing should mark the way on the roofs any more (no square trail, no rags).

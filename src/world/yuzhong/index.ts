@@ -29,6 +29,7 @@ import { pickGates, placeGates, network, isolated } from './network';
 import { buildLine2, stationEntrances, BEAM } from './line2';
 import { dressStreets } from './dressing';
 import { sewers } from './sewers';
+import { breaches } from './breach';
 
 const empty = (): Fabric => ({ solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [], sites: [], far: [] });
 
@@ -75,11 +76,13 @@ export function buildYuzhong(): World {
   // Planks out of windows across to a window or a roof, now the buildings stand.
   windowBridges(out.features.filter(f => f.kind.startsWith('win:')), buildIndex(out.solids), cross);
   rowAlleys(plans, out, g);
+  // Holes knocked through from one building into the next where their floors meet (M3-76).
+  breaches(out);
   // The sewer maze under the basements (M3-73a).
   const sew = sewers(out.features.filter(f => f.kind === 'sewer'), plots, g, under.route, tun.zones.map(z => z.box), under.solids, under.zones.map(z => z.box));
   // The caches, and the route network over everything that joins the roofs (M3-37).
   const gates = placeGates(gatePairs.filter(q => isolated(q, plans)), out), L0 = GEO.landmarks, lm = (k: string) => ({ x: L0[k].x, y: 0, z: L0[k].z });
-  const net = network(plots, out.features.concat(vert.features, cross.features), out.sites, sts, g,
+  const net = network(plots, out.features.concat(vert.features, cross.features, under.features, sew.features), out.sites, sts, g,
     [['jiaochangkou', 'shibati', 'jiefangbei', 'cablewayNorth', 'xiaoshizi', 'chaotianmen'].map(lm), ['jiefangbei', 'xinhuaIntl', 'hongyadong', 'chaotianmen'].map(lm)],
     { x: tun.at.grate.x, y: tun.at.grate.y, z: tun.at.grate.z }, cross, gates);
   // The streets as drawn, and paths from the doors set back from them to them (U-033).

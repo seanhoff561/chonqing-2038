@@ -8,7 +8,7 @@
 import { rampSolid, type Solid } from '../geom';
 import { MAT } from '../mats';
 import { rand, randInt, type Rng } from '../../sim/rng';
-import { FLOOR, SLAB, DOOR, DOOR_H, CORE, CORE_L, CORE_W, type Kind, type Rect } from './rooms';
+import { FLOOR, SLAB, WALL, DOOR, DOOR_H, CORE, CORE_L, CORE_W, type Kind, type Rect } from './rooms';
 import { door, roll, type Glazing, type Lock } from './access';
 import { GAP, SIZE, type Room } from './puzzle';
 import type { Fabric } from './buildings';
@@ -114,6 +114,12 @@ export function warren(K: Kit): number[] {
       if (row[i + 1].a0 - row[i].a1 > GAP + 0.01) continue;
       if (q < 0.3) K.between(row[i], row[i + 1], q < 0.12 ? 'squeeze' : q < 0.2 ? 'vent' : 'door');
     }
+    // Where the floor meets its neighbours' (M3-76): the corridor's two ends and the facade rooms, at their outer
+    // faces, for a breach through to a building close by (yuzhong/breach.ts).
+    const party = (u: number, v: number, du: number, dv: number) => { const [x, z] = K.at(u, v), [nx, nz] = K.unit(du, dv); K.out.features.push({ kind: 'party', x, y, z, group: K.out.features.length, nx, nz }); };
+    party(-WALL, (cv0 + cv1) / 2, -1, 0); party(U + WALL, (cv0 + cv1) / 2, 1, 0);
+    for (const m of rows[0]) party((m.a0 + m.a1) / 2, -WALL, 0, -1);
+    for (const m of rows[1]) party((m.a0 + m.a1) / 2, V + WALL, 0, 1);
     K.site(made);
   }
   if (floors.length > 1) vertical(K, floors, facade, corridors, slots, shaftAt, backD || north, north);

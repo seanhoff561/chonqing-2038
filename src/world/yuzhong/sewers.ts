@@ -20,7 +20,7 @@ export interface Sewers { solids: Solid[]; decor: Solid[]; climbables: Climbable
 
 /** A sewer's and a crawlway's width and height; the lining; the shaft's half width; how far a run reaches; how deep
  *  a sump dips. */
-const SEWER = { w: 1.6, h: 2 }, CRAWL = { w: 0.9, h: 0.9 }, T = 0.3, SHAFT = 0.6, REACH = 140, DIP = 2.4;
+const SEWER = { w: 1.6, h: 2 }, CRAWL = { w: 0.9, h: 0.9 }, T = 0.3, SHAFT = 0.6, REACH = 180, DIP = 2.4;
 
 /** manholes: the basements' 'sewer' features; walks: the underground city's walk to join now and then; avoid: the
  *  old tunnels' spaces; under: the underground's solids (cut where a run meets them) and its spaces (no run's lining
@@ -34,11 +34,12 @@ export function sewers(manholes: Feature[], plots: Plot[], g: Heightfield, walks
   for (const p of plots) { if (p.far) continue; const xs = p.corners.map(c => c[0]), zs = p.corners.map(c => c[1]); for (let x = Math.min(...xs); x <= Math.max(...xs) + 32; x += 32) for (let z = Math.min(...zs); z <= Math.max(...zs) + 32; z += 32) { const k = key(x, z); (cells.get(k) ?? cells.set(k, []).get(k)!).push(p); } }
   /** The highest a run's floor may be at a point: under the ground's shell, any foundation and any basement. */
   const ceil = (x: number, z: number) => {
-    // (Where the ground is holed, a basement's or a stairway's, nothing of it to keep under.)
+    // (Where the ground is holed under a building, a basement's, the building's foundation is what to keep under;
+    // holed anywhere else, a stairway's or a culvert's mouth, it's open air: no run there.)
     const h = heightAt(g, x, z);
-    let y = h === null ? Infinity : h - g.thick - SEWER.h - 1;
-    for (const p of cells.get(key(x, z)) ?? []) if (inside(p.corners, x, z)) y = Math.min(y, p.found - SEWER.h - 1, p.base - 7);
-    return y;
+    let y = h === null ? Infinity : h - g.thick - SEWER.h - 1, under = false;
+    for (const p of cells.get(key(x, z)) ?? []) if (inside(p.corners, x, z)) { y = Math.min(y, p.found - SEWER.h - 1, p.base - 7); under = true; }
+    return h === null && !under ? -Infinity : y;
   };
   /** A run's two legs square to the map: along x from a, then along z to b. */
   const legs = (a: V3, b: V3): [V3, V3][] => { const m = { x: b.x, y: a.y, z: a.z }; return [[a, m], [m, b]]; };
@@ -83,10 +84,10 @@ export function sewers(manholes: Feature[], plots: Plot[], g: Heightfield, walks
     deepest[i] = Math.min(deepest[i], y);
     return true;
   };
-  // Each manhole to its two nearest within reach, once each way.
+  // Each manhole to its three nearest within reach, once each way.
   const done = new Set<string>();
   nodes.forEach((a, i) => {
-    const near = nodes.map((b, j) => [j, Math.hypot(b.x - a.x, b.z - a.z)] as const).filter(([j, d]) => j !== i && d < REACH).sort((p, q) => p[1] - q[1]).slice(0, 2);
+    const near = nodes.map((b, j) => [j, Math.hypot(b.x - a.x, b.z - a.z)] as const).filter(([j, d]) => j !== i && d < REACH).sort((p, q) => p[1] - q[1]).slice(0, 3);
     for (const [j] of near) {
       const k = i < j ? `${i},${j}` : `${j},${i}`;
       if (done.has(k)) continue;

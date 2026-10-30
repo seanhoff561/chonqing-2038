@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 73 of 89 done
+## M3: 74 of 93 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -468,11 +468,27 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Sloped passages (a chute, a duct, a collapsed slab against a wall) climbed and descended the same way
   - A gym station: a vertical shaft and a sloped one
   - Sim tests: up and down a 6 m shaft 0.8 m wide, up a 40-degree sloped passage, none in a 1.6 m gap
-- [ ] **M3-76** The anthill: routes through buildings, unmarked (U-043)
+- [x] **M3-76** The anthill: routes through buildings, unmarked (U-043)
   - Nothing marks the way: the worn paths and rags on the roofs are gone; the player finds the way himself
   - The routes run mostly through buildings (room to room, floor to floor by doors, holes, vents, squeezes, shafts, stairs) and now and then out of them: out of a broken window, up or along a wall, along a building's side on ledges and sills, across into the next building, down into basements and the underground, only sometimes over a roof (roofs are dangerous, U-038)
   - Planned against what he can do: the unaided moves (jumps, drops, climbs) and, for the tool-gated legs, what his tools reach (the grappling hook's rise and the larger gaps crossed with rope and line); a data table of those reaches drives the plan
   - Sim tests: most of each route's length inside buildings or underground, little over roofs; every leg within the reach table for the moves or tools it needs; no route marks
+- [ ] **M3-82** No prebuilt climbing lines (U-044)
+  - The prebuilt climbing lines are gone completely: no lines of stubs and broken floors up the taller blocks from a neighbour's roof (M3-57a), no wandering holds over the towers' skylines (U-036)
+  - Towers and tall blocks hold what any building's walls do and nothing laid out as a way up
+  - Sim tests: no 'route', 'rest' or 'routeTop' features; the climbing tests that measured the lines removed with them
+- [ ] **M3-80** Urban rooftops, not green (U-044)
+  - No roof gardens: no moss, shrubs or trees on the roofs
+  - Rooftops cluttered with urban things instead (water tanks, AC condensers, crates and junk, solar heaters, aerials and dishes, sheds) on enterable blocks' roofs too, clear of their huts and hatches and of route roofs kept bare
+  - Every so often a place to hide on a roof (a tank, a shed, a crate pile)
+  - Screenshots from above; sim test: no moss or leaves on roofs, hiding spots on roofs
+- [ ] **M3-83** Every grate, vent and trapdoor opens with F (U-044)
+  - Nothing to climb or crawl through stands open by default: every grate, vent, hatch and trapdoor has a cover he opens with F first (some bolted, jammed or locked)
+  - The basements' hatches, the roof hatches, the warren shafts' ducts, the crawl vents between rooms, the street grates over the underground's ladder shafts
+  - Sim tests: each kind of opening blocks until opened with F, then lets him through
+- [ ] **M3-81** Connections meet the walls (U-044)
+  - Every connection (planks, beams, cables, bars, walkways, bridges, window planks, the routes' crossings) reaches the wall it joins at its own height: where a building is narrower above (a tower over its podium, a stepped top) it's extended to the wall or not built
+  - Sim test: every connection's two ends touch a building, none floating
 - [x] **M3-73a** Basements and the sewer maze (U-038, split from M3-73)
   - Some buildings have basements, joined to the underground layer by grates, vents and broken walls
   - Under the city an ant hill of sewers, vents and tunnels, some only crawl-high, some flooded to swim through fully under water; vents to pry open into buildings; grates up into basements
