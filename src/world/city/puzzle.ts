@@ -78,6 +78,9 @@ export function puzzle(fr: Frame, from: number, r: Rng, out: Fabric) {
     }
     const q = rect(m.face, c - WIN.w / 2, c + WIN.w / 2, -WALL / 2 - 0.02, -WALL / 2 + 0.02), [cu, cv] = [(q[0] + q[2]) / 2, (q[1] + q[3]) / 2];
     later.push(() => glaze(fr.nid('w'), box(q, o0, o1), at(cu, cv), alongDir(m.face), WIN.w, state, out));
+    // Where it is from outside, for planks across to it (M3-37a): its sill, facing out.
+    const s = rect(m.face, c, c, -WALL - 0.02, -WALL - 0.02), [sx, sz] = at(s[0], s[1]), [ix, iz] = inDir(m.face);
+    out.features.push({ kind: `win:${state}`, x: sx, y: o0, z: sz, group: out.features.length, nx: -ix, nz: -iz });
   };
   const winState = (k: number): Glazing => { const q = rand(r); return k === 0 ? (q < 0.6 ? 'barred' : q < 0.9 ? 'glass' : 'open') : q < 0.25 ? 'open' : q < 0.75 ? 'glass' : 'barred'; };
   /** A doorway (or a vent, low and narrow) through the mass between two rooms side by side along a face. */

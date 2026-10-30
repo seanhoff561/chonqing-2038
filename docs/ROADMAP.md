@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 65 of 83 done
+## M3: 66 of 84 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -427,16 +427,19 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Room surfaces that read as real: skirting, tiles, wallpaper or paint peeling, ceiling lights, doors with frames, window frames with glass
   - Decay detailed to match: broken furniture, scattered papers and clothes, dust, stains
   - Within the triangle and draw-call budgets (rooms drawn near only); screenshots of five rooms close up
+- [x] **M3-37a** The connections: street crossings, cables, bars, walkways (U-034, U-035)
+  - U-034 street crossings: the streets are where the city stops for parkour, so that's where the crossings are: makeshift bridges and planks, beams, cables to hang from, blocks built over the street; generated ziplines gone (M5-33 makes them the player's)
+  - U-034 thick electrical cords: cable bundles thick enough to walk across, sagging between buildings close together (relatively common), a balance walk along their curve; they hold his weight (their sway: M3-37)
+  - U-035: the cords dressed to look dystopian, junk hanging off them (cables, rags, shoes, lamps, signs); bars across the gap wherever two buildings stand close together
+  - Moved from M3-36 (it needs the neighbours): from some windows a makeshift beam bridge to a building nearby; walkways joining buildings to cross over (U-034)
+  - Sim tests: counts of each, something underfoot along each, none in reach of the street, a bot walks a cable and a plank end to end; screenshots
 - [ ] **M3-37** The ant-hill route network (U-014, U-021, U-023)
   - Hand-designed main routes like highways across the district over roofs, through buildings, along beams and through tunnels, carrying the sites and key supplies needed to finish the game; branching neighbourhood routes off them; streets are the dangerous shortcut; organic, the whole map playing like a skatepark, the ways made of rooms, windows and insides rather than added holds (U-037)
   - Every gap, height and reach on a route is within the movement envelope (M3-50) and near its top (U-023): main routes demand the full movement set (chained wall kicks, a back-jump to a grab, wall-runs, swings and laches, item tricks), risky branches sit at the maximum; nothing on a route is a walk
   - A readable visual language: planks, open windows, broken railings and worn paths mark the way; dead ends read as dead ends
   - Route and patrol data: the routes as graphs, patrols laid against them; a patrol route and a drone corridor pass over the start hideout's vent grate at night (U-018)
   - U-037 metroidvania: some key places and buildings reached only by one designed way that needs a tool (the grappling hook, M5-20, and others), the holds round them taken away so no other method gets there; routes are not tested for being possible (the director plays them), a PLAYTEST request instead
-  - U-034 street crossings: the streets are where the city stops for parkour, so that's where the crossings are: makeshift bridges and planks, beams, cables to hang from, blocks built over the street; generated ziplines gone (M5-33 makes them the player's)
-  - U-034 thick electrical cords: cable bundles thick enough to walk across, sagging between buildings close together (relatively common), a balance walk along their curve; they sway and can hold his weight
-  - U-035: the cords dressed to look dystopian, junk hanging off them (cables, rags, shoes, lamps, signs); bars across the gap wherever two buildings stand close together
-  - Moved from M3-36 (it needs the neighbours): from some windows a makeshift beam bridge to a building nearby; walkways joining buildings to cross over (U-034)
+  - From M3-37a: the cable bundles sway (they hold his weight already)
 - [ ] **M3-71** Tight ways at ground level (U-038)
   - Between buildings, through large areas of collapsed buildings and structures and through building insides: maze-like gaps, holes, crawlspaces and squeezes to find a way through, dark enough to need the headlamp, joined seamlessly to the rooftop routes (a hole down from a roof, a squeeze up into a building)
   - Every street a dangerous gap to cross, not a way to walk: the ways across are over (buildings, crossings), under (basements, the underground) or a quick dash between cover

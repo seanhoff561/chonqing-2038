@@ -18,26 +18,26 @@ import type { Plan } from './lots';
 const FLOOR = 3, PARAPET = 0.6;
 /** A megastructure's columns: how much the roofs under one may differ, and how thick (U-034). */
 export const MEGA_DROP = 4, COLUMN = 1.6;
-export interface Vertical { solids: Solid[]; decor: Solid[]; far: Solid[]; climbables: Climbable[]; features: Feature[] }
+export interface Vertical { solids: Solid[]; decor: Solid[]; far: Solid[]; climbables: Climbable[]; features: Feature[]; /** the lots it has joined across a street */ used?: Set<Plan> }
 
 /** A row lot's frame: u along its street, n out of its front (its own +z). */
-const frame = (p: Plan) => { const c = Math.cos(p.obb.yaw), s = Math.sin(p.obb.yaw); return { ux: c, uz: s, nx: -s, nz: c }; };
+export const frame = (p: Plan) => { const c = Math.cos(p.obb.yaw), s = Math.sin(p.obb.yaw); return { ux: c, uz: s, nx: -s, nz: c }; };
 /** A world point in p's frame: [along, out]. */
-const local = (p: Plan, x: number, z: number): [number, number] => { const f = frame(p), dx = x - p.obb.cx, dz = z - p.obb.cz; return [dx * f.ux + dz * f.uz, dx * f.nx + dz * f.nz]; };
+export const local = (p: Plan, x: number, z: number): [number, number] => { const f = frame(p), dx = x - p.obb.cx, dz = z - p.obb.cz; return [dx * f.ux + dz * f.uz, dx * f.nx + dz * f.nz]; };
 /** p's frame to the map. */
-const world = (p: Plan, a: number, d: number): [number, number] => { const f = frame(p); return [p.obb.cx + a * f.ux + d * f.nx, p.obb.cz + a * f.uz + d * f.nz]; };
+export const world = (p: Plan, a: number, d: number): [number, number] => { const f = frame(p); return [p.obb.cx + a * f.ux + d * f.nx, p.obb.cz + a * f.uz + d * f.nz]; };
 /** A box in p's frame (along a0..a1, out d0..d1), turned into place. */
-const box = (p: Plan, a0: number, a1: number, d0: number, d1: number, y0: number, y1: number, mat: number): Solid =>
+export const box = (p: Plan, a0: number, a1: number, d0: number, d1: number, y0: number, y1: number, mat: number): Solid =>
   turn([solid(p.obb.cx + a0, y0, p.obb.cz + d0, p.obb.cx + a1, y1, p.obb.cz + d1, mat)], p.obb.yaw, p.obb.cx, p.obb.cz)[0];
 /** Set a flexible lot's roof to the floor nearest y within its range; false if it can't come within tol of y. */
-const refloor = (p: Plan, y: number, tol: number) => {
+export const refloor = (p: Plan, y: number, tol: number) => {
   if (!p.flex) return false;
   const n = Math.max(p.flex[0], Math.min(p.flex[1], Math.round((y - p.base) / FLOOR))), w = p.base + n * FLOOR;
   if (Math.abs(w - y) > tol) return false;
   p.wall = w;
   return true;
 };
-const parallel = (a: Plan, b: Plan, k: number) => Math.abs(Math.cos(a.obb.yaw - b.obb.yaw)) > k;
+export const parallel = (a: Plan, b: Plan, k: number) => Math.abs(Math.cos(a.obb.yaw - b.obb.yaw)) > k;
 
 export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vertical {
   const out: Vertical = { solids: [], decor: [], far: [], climbables: [], features: [] }, r = makeRng(hashString('vertical')), used = new Set<Plan>();
@@ -216,5 +216,6 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
     for (let y = y0 + 1; y <= y1; y += 2) out.decor.push(box(p, u0, u1, f + 1.17, f + 1.21, y - 0.03, y + 0.03, MAT.metal));
     feature('scaffold', p, (u0 + u1) / 2, f + 0.6, y0);
   }
+  out.used = used;
   return out;
 }
