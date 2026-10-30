@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 47 of 64 done
+## M3: 48 of 64 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -447,7 +447,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
 - [x] **M3-48** Underwater (U-021)
   - Under the surface the view turns murky green-brown with short sight, dim wavering light and drifting particles; the surface seen from below; sound muffles
   - Back above it, it clears at once; e2e screenshots under and over
-- [ ] **M3-50** The movement envelope (U-021, U-023)
+- [x] **M3-50** The movement envelope (U-021, U-023)
   - src/data/envelope.ts: measured from the sim, the gaps and heights of standing and running jumps, mantles, hand reaches, wall kicks and wall-runs, slide distances (flat and downhill), safe drops, swing and lache distances, and the chained moves (a jump then two wall kicks, a jump up then a back-jump to a grab, a wall-run into a kick, the same with an item in hand), each with a comfortable and a maximum value
   - Soft landings (U-024): bins, bags, cardboard, awnings and tarps cut fall damage; the envelope lists the safe drop onto each; a sim test lands a fall onto each kind
   - Unit tests regenerate each number from the sim and fail when movement changes it; DESIGN section 3 shows the table; generators and hand layouts read it

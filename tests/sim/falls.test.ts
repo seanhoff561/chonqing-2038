@@ -4,6 +4,7 @@ import { solid } from '../../src/world/geom';
 import { B, type SimEvent } from '../../src/sim/types';
 import { fallOutcome } from '../../src/sim/move';
 import { MAT } from '../../src/world/mats';
+import { propBoxes } from '../../src/world/yuzhong/dressing';
 
 /** Walk off a ledge of height h onto the floor; optionally press crouch just before landing. */
 function drop(h: number, roll: boolean) {
@@ -71,5 +72,13 @@ describe('soft landings (U-024)', () => {
     expect(awning.h).toBeCloseTo(hard.h / 2, 1);
     expect(hard.outcome.damage).toBeGreaterThan(0);
     expect(soft.outcome.damage).toBe(0);
+  });
+  it('every soft kind of prop lands soft: bags, bins, cardboard and tarps', () => {
+    for (const kind of ['bags', 'bin', 'boxes', 'tarp']) {
+      const boxes = propBoxes({ kind, x: 0, y: 0, z: -4, yaw: 0 });
+      expect(boxes.length, kind).toBeGreaterThan(0);
+      for (const b of boxes) expect(b.mat, kind).toBe(MAT.soft);
+    }
+    expect(onto(8.5, MAT.soft).outcome.damage).toBe(0);
   });
 });

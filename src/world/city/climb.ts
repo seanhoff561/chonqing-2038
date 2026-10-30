@@ -6,6 +6,7 @@ import { solid, carve } from '../geom';
 import { MAT } from '../mats';
 import { rand, randInt, makeRng, hashString, type Rng } from '../../sim/rng';
 import type { Lot, Fabric } from './buildings';
+import { ENVELOPE as E } from '../../data/envelope';
 
 const FLOOR = 3;
 
@@ -71,7 +72,9 @@ export function facades(l: Lot, r: Rng, out: Fabric) {
           out.decor.push(onFace(s, c - 0.4, c + 0.4, 0, 0.02, y, y + h, MAT.glass));
           if (y < l.base + 8) for (const b of [c - 0.14, c + 0.14]) out.decor.push(onFace(s, b - 0.015, b + 0.015, 0.08, 0.11, y, y + h, MAT.metal));
         }
-        y += rand(r) < 0.15 ? 2.3 + rand(r) * 0.3 : 1.4 + rand(r) * 0.5;
+        // Holds within a hand's reach of each other (under a standing mantle, M3-50), now and then one past it
+        // that takes a push-off.
+        y += rand(r) < 0.15 ? E.mantleStanding.max + 0.1 + rand(r) * 0.3 : 1.4 + rand(r) * (E.mantleStanding.comfortable - 1.5);
       }
       // The units drain down a pipe beside the stack.
       out.decor.push(onFace(s, c + 0.55, c + 0.6, 0.02, 0.07, l.base, top - 0.3, MAT.metal));

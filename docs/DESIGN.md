@@ -70,6 +70,28 @@ Parkour with the legs, climbing with the hands (U-002 to U-005). Player collisio
 
 **Building for the movement set.** The city gives every move a place (U-005): facades with sills 1.4-2.0 m apart that need push-offs, pipes for hand-over-hand climbs, bars, scaffolds and sign frames for swings and laches, cling walls beside gaps, run-up walls with lips at 3-3.8 m, glass and smooth render where nothing holds.
 
+### The movement envelope (M3-50)
+
+Measured from the sim (metres); generators and hand layouts read `src/data/envelope.ts`, which says how each is measured, and `tests/sim/envelope.test.ts` re-measures it. Max is ideal input with Space held through jumps (he hops onto a far edge from up to 1 m low); comfortable takes off 0.4 m early, presses each timed Space or release 3 ticks late and aims grabs 0.1 m low, or is 90% of max where that changes nothing.
+
+| Move | Comfortable | Max |
+|---|---|---|
+| Standing jump (gap) | 2.35 | 2.75 |
+| Running jump (gap) | 6.05 | 6.55 |
+| Standing / running jump height (feet) | 0.55 / 0.55 | 0.61 / 0.61 |
+| Hop onto a ledge, no hands | 1.35 | 1.5 |
+| Mantle from standing / after a jump (lip) | 1.98 / 2.52 | 2.2 / 2.8 |
+| Run-up wall kick and grab (wall top) | 3.8 | 3.85 |
+| Wall-run (gap) | 12.7 | 13.3 |
+| Slide on the flat / down a 0.2 grade (from about 0.36 a slide never slows) | 5.97 / 13.36 | 6.63 / 14.84 |
+| Safe drop / with a roll | 3.6 / 6.3 | 4 / 7 |
+| Safe drop onto bags, bins, cardboard / awnings, tarps | 7.2 / 7.2 | 8 / 8 |
+| Lache (bar spacing) | 6.05 | 6.2 |
+| Jump and two wall kicks in a 2 m chimney (lip) | 5.85 | 5.95 |
+| Jump up a wall, kick back to a 3 m lip (distance) | 8.6 | 8.65 |
+| Wall-run into a kick off the wall (gap) | 18.05 | 18.15 |
+| Running jump / wall-run holding an item (gap) | 6.05 / 12.7 | 6.55 / 13.3 |
+
 ## 4. Survival, health and time
 
 **Clock.** One game day lasts 36 real minutes (1 game hour = 90 s; time scale 40x). A run starts on day 1 at 06:00. Dawn 05:30-06:30, day to 18:30, dusk to 19:30, night until 05:30. Weather follows a seeded schedule: morning fog is common, rain comes in spells of 1-4 hours, clear spells between.

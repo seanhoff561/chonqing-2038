@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-50 The movement envelope (U-021, U-023).
-Features done: 110 / 264 | Last done: M3-49
+**Status:** building M3. Next: M3-57 The vertical city (U-023).
+Features done: 111 / 264 | Last done: M3-50
 <!-- /status -->
 
 ## Log
@@ -128,3 +128,4 @@ Features done: 110 / 264 | Last done: M3-49
 - M3-48 Underwater (U-021): under water: murky green-brown, short sight, wavering dim light, drifting silt, the surface from below, muffled sound; clears at once above
 - M3-52 Ziplines (U-021): ziplines: rig rope lines between anchors, ride cables strung across streets, live lines shock; small props drawn near only
 - M3-49 Real skies (U-021): a painted sky dome: clouds that follow the weather, dawn and dusk glow, stars, the city's glow on night cloud
+- M3-50 The movement envelope (U-021, U-023): the movement envelope measured from the sim, read by the generators; soft cardboard and tarps

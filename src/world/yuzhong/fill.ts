@@ -11,6 +11,7 @@ import { makeRng, hashString, rand, type Rng } from '../../sim/rng';
 import { stair } from '../steps';
 import type { Prop, Plot } from '../world';
 import { propBoxes } from './dressing';
+import { ENVELOPE as E } from '../../data/envelope';
 import { MARK, markAt, grassAt, type Marks } from './marks';
 
 interface Wall { d: number; px: number; pz: number; ux: number; uz: number; nx: number; nz: number }
@@ -97,7 +98,8 @@ export function fill(index: SolidIndex, g: Heightfield, mk: Marks, plots: Plot[]
     const t = (rand(r) - 0.5) * 2, at = (s: number, o: number): [number, number] => [w.px + w.ux * s + w.nx * o, w.pz + w.uz * s + w.nz * o];
     if (q < 0.22) {
       // A lean-to against the wall: a tin-roofed shed, the roof sloping off the wall: run up it to the building.
-      const W = 3 + rand(r) * 2, D = 2 + rand(r), H = 2.2 + rand(r) * 0.6;
+      // Its eave in reach of a jump and a grab (M3-50).
+      const W = 3 + rand(r) * 2, D = 2 + rand(r), H = E.mantleStanding.comfortable + rand(r) * (E.mantleJump.comfortable - E.mantleStanding.comfortable);
       return build(w, [solid(t - W / 2, y - 1, 0.05, t + W / 2, y + H, D, rand(r) < 0.5 ? MAT.brick : MAT.metal), rampSolid(t - W / 2 - 0.1, y + H - 0.1, 0.05, t + W / 2 + 0.1, D + 0.4, y + H - 0.1, y + H + 0.6, 4, MAT.metal)],
         [solid(t - 0.5, y, D - 0.02, t + 0.5, y + 2, D, MAT.tealMetal)]);
     }
@@ -117,7 +119,8 @@ export function fill(index: SolidIndex, g: Heightfield, mk: Marks, plots: Plot[]
     if (q < 0.66) return put(rand(r) < 0.2 ? 'van' : 'car', ...at(t, 1.6), along(w) + (rand(r) < 0.5 ? 0 : Math.PI) + (rand(r) - 0.5) * 0.1);
     if (q < 0.82) {
       // A yard wall out from the building, a gate standing open in it: the open ground becomes courtyards.
-      const L = 4 + rand(r) * 4, H = 1.8 + rand(r) * 0.8, g0 = 1 + rand(r) * (L - 2.6), mat = rand(r) < 0.5 ? MAT.brick : MAT.plaster;
+      // Over a hop, under a jump and a grab: he has to use his hands to get over it (M3-50).
+      const L = 4 + rand(r) * 4, H = E.hop.max + 0.2 + rand(r) * (E.mantleJump.comfortable - E.hop.max - 0.4), g0 = 1 + rand(r) * (L - 2.6), mat = rand(r) < 0.5 ? MAT.brick : MAT.plaster;
       return build(w, [solid(t - 0.12, y - 0.5, 0.05, t + 0.12, y + H, g0, mat), solid(t - 0.12, y - 0.5, g0 + 1.4, t + 0.12, y + H, L, mat), solid(t - 0.2, y - 0.5, L, t + 0.2, y + H + 0.3, L + 0.4, MAT.concrete)],
         [solid(t - 0.15, y + H, 0.05, t + 0.15, y + H + 0.08, L, MAT.concrete), solid(t + 0.05, y, g0 + 0.05, t + 0.75, y + 1.9, g0 + 0.1, MAT.metal)]);
     }
