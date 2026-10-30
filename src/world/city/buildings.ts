@@ -1,6 +1,6 @@
 // The ordinary city fabric: one lot's building by kind (walk-ups, slabs, towers, Shibati's traditional houses),
 // parapets, pitched roofs, roof clutter, facade climbing and interiors.
-import { solid, rampSolid, type Solid } from '../geom';
+import { solid, type Solid } from '../geom';
 import { MAT } from '../mats';
 import { makeRng, rand, randInt, hashString, type Rng } from '../../sim/rng';
 import type { Prop, Inter, Climbable, HideSpot, Site, Feature } from '../world';
@@ -8,11 +8,11 @@ import { canEnter, hollow } from './interiors';
 import { facades } from './climb';
 import { climbLine } from './routes';
 import { details } from './details';
-import { fronts, shopHouse } from './fronts';
+import { fronts } from './fronts';
 import { tower } from './towers';
 import { tintFor, PAINTED } from './palette';
 
-export type LotKind = 'res' | 'tower' | 'trad';
+export type LotKind = 'res' | 'tower';
 export interface Lot {
   id: number; x0: number; z0: number; x1: number; z1: number; base: number; top: number; wall: number; kind: LotKind; mat: number;
   /** facing a street on its north, south, west and east sides */
@@ -31,6 +31,8 @@ export interface Lot {
   climb?: { face: number; at: number; y0: number };
   /** its roof runs out to its walls (a plank or a bridge meets its edge): no setback at the top */
   edge?: boolean;
+  /** its roof kept clear (a rooftop route runs over it): no clutter */
+  bare?: boolean;
   /** the ground height at a point of its own frame (Yuzhong, where the ground round a lot may rise over its base) */
   ground?: (x: number, z: number) => number;
 }
@@ -64,31 +66,11 @@ function mass(l: Lot, r: Rng, out: Fabric) {
   const look = open ? (l.mat === MAT.tile ? MAT.facadeTile : MAT.facade) : paint(l, r);
   // Some tall solid blocks step their top two floors back from the edge.
   const step = !open && !l.climb && !l.edge && l.kind === 'res' && wall - base >= 24 && rand(r) < 0.25 ? 1.6 : 0;
-  // Half of Shibati's shop houses on flat ground stand open (M3-55).
-  const shop = l.kind === 'trad' && !l.noEnter && wall - base >= 5 && Math.min(x1 - x0, z1 - z0) >= 3.5 && rand(r) < 0.5 ? l.street.findIndex(Boolean) : -1;
   if (open) hollow(l, r, out);
-  else if (shop >= 0) shopHouse(l, shop, look, out);
   else if (step) out.solids.push(solid(x0, base, z0, x1, wall - 2 * FLOOR, z1, look), solid(x0 + step, wall - 2 * FLOOR, z0 + step, x1 - step, wall, z1 - step, look));
   else out.solids.push(solid(x0, base, z0, x1, wall, z1, look));
   // The far view's stand-in: the whole block in its painted facade, parapet included.
-  if (l.kind !== 'trad') out.far.push(solid(x0, base, z0, x1, wall + PARAPET, z1, look));
-  if (l.kind === 'trad') {
-    // Pitched tiled roof: ridges run along the street it fronts, so a row of houses lines up into a rooftop
-    // route; eaves overhang as decor.
-    const rise = 2;
-    if (l.street[0] || l.street[1] || (!l.street[2] && !l.street[3] && x1 - x0 >= (z1 - z0) * 0.7)) {
-      const zm = (z0 + z1) / 2;
-      out.solids.push(rampSolid(x0, wall, z0, x1, zm, wall, wall + rise, 3, MAT.roofTile), rampSolid(x0, wall, zm, x1, z1, wall, wall + rise, 4, MAT.roofTile));
-    } else {
-      const xm = (x0 + x1) / 2;
-      out.solids.push(rampSolid(x0, wall, z0, xm, z1, wall, wall + rise, 1, MAT.roofTile), rampSolid(xm, wall, z0, x1, z1, wall, wall + rise, 2, MAT.roofTile));
-    }
-    out.far.push(solid(x0, base, z0, x1, wall, z1, l.mat), ...out.solids.slice(-2));
-    // The eave plate is solid all round: its edge is the lip he pulls over onto the tiles.
-    out.solids.push(solid(x0 - 0.4, wall - 0.12, z0 - 0.4, x1 + 0.4, wall, z1 + 0.4, MAT.wood));
-    l.top = wall + rise;
-    return;
-  }
+  out.far.push(solid(x0, base, z0, x1, wall + PARAPET, z1, look));
   // Parapet: a lip to grab from the facade and a low wall on the roof (round the top part of a stepped block).
   const p = PARAPET, w = 0.2;
   if (step) {
@@ -103,7 +85,7 @@ function mass(l: Lot, r: Rng, out: Fabric) {
   );
   l.top = wall + p;
   // Roof clutter: water tanks on stilts, AC condensers, sometimes a stairwell hut (enterable roofs have a real one).
-  const n = open ? 0 : 1 + randInt(r, 3);
+  const n = open || l.bare ? 0 : 1 + randInt(r, 3);
   for (let i = 0; i < n; i++) {
     const cx = px0 + 1.5 + rand(r) * Math.max(0.1, px1 - px0 - 3), cz = pz0 + 1.5 + rand(r) * Math.max(0.1, pz1 - pz0 - 3);
     const k = randInt(r, 3);

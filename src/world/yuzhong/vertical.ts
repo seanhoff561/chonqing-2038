@@ -16,6 +16,8 @@ import { BARE } from '../city/climb';
 import type { Plan } from './lots';
 
 const FLOOR = 3, PARAPET = 0.6;
+/** A megastructure's columns: how much the roofs under one may differ, and how thick (U-034). */
+export const MEGA_DROP = 4, COLUMN = 1.6;
 export interface Vertical { solids: Solid[]; decor: Solid[]; far: Solid[]; climbables: Climbable[]; features: Feature[] }
 
 /** A row lot's frame: u along its street, n out of its front (its own +z). */
@@ -59,8 +61,8 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
       if (o1 - o0 < 6 || z1 - z0 < 3 || z1 - z0 > 40) continue;
       const ground = Math.max(...[0.15, 0.5, 0.85].flatMap(t => [m - 2, m + 2].map(u => yAt(...world(a, u, z0 + (z1 - z0) * t)))));
       if (road) {
-        // A skybridge, one pair in two up to 40: the deck at the lower roof, the higher roof's edge a mantle up.
-        if (bridges >= 40 || rand(r) > 0.5) continue;
+        // A skybridge, three pairs in four up to 40: the deck at the lower roof, the higher roof's edge a mantle up.
+        if (bridges >= 40 || rand(r) > 0.75) continue;
         if (Math.abs(a.wall - b.wall) > 1.6 && !refloor(b, a.wall, 1.6) && !refloor(a, b.wall, 1.6)) continue;
         const y = Math.min(a.wall, b.wall);
         if (y < ground + 9) continue;
@@ -108,13 +110,14 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
     used.add(p);
   }
 
-  // Megastructures over runs of three or more roofs side by side (one run in three, up to 20): 4 to 8 floors
-  // stacked on columns 4 m over the highest roof, out 3 m over the street.
+  // Megastructures over runs of three or more roofs side by side and of near one height (U-034: no column runs far
+  // down to a low roof; one run in two, up to 20): 4 to 8 floors stacked on thick columns 4 m over the highest
+  // roof, out 3 m over the street.
   let megas = 0;
   for (const row of rows.values()) {
     for (let i = 0; i < row.length && megas < 20; ) {
       let j = i;
-      const ok = (p: Plan) => !used.has(p) && p.wall - p.base >= 6;
+      const ok = (p: Plan) => !used.has(p) && p.wall - p.base >= 6 && Math.abs(p.wall - row[i].wall) <= MEGA_DROP;
       while (j + 1 < row.length && ok(row[j]) && ok(row[j + 1]) && parallel(row[i], row[j + 1], 0.995)) {
         const [al] = local(row[j], row[j + 1].obb.cx, row[j + 1].obb.cz);
         if (Math.abs(al) - row[j].obb.hw - row[j + 1].obb.hw > 3.5) break;
@@ -122,7 +125,7 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
       }
       const run = row.slice(i, j + 1);
       i = j + 1;
-      if (run.length < 3 || rand(r) > 0.35) continue;
+      if (run.length < 3 || Math.max(...run.map(p => p.wall)) - Math.min(...run.map(p => p.wall)) > MEGA_DROP || rand(r) > 0.5) continue;
       const M = run[run.length >> 1], spans = run.map(p => { const [a] = local(M, p.obb.cx, p.obb.cz); return [a - p.obb.hw, a + p.obb.hw]; });
       const s0 = Math.min(...spans.map(s => s[0])), s1 = Math.max(...spans.map(s => s[1])), D = Math.min(18, ...run.map(p => 2 * p.obb.hd));
       if (s1 - s0 < 30 || s1 - s0 > 90) continue;
@@ -136,11 +139,11 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
       out.decor.push(box(M, sm - sw / 2, sm + sw / 2, front + 3, front + 3.04, y0 + 1.5, y0 + 1.5 + Math.min(7, y1 - y0 - 3), MAT.screen));
       for (const p of run) {
         const [a] = local(M, p.obb.cx, p.obb.cz);
-        for (const u of [a - p.obb.hw + 1.2, a + p.obb.hw - 1.2]) for (const d of [front - 1.2, front - D + 1.2]) out.solids.push(box(M, u - 0.45, u + 0.45, d - 0.45, d + 0.45, p.wall, y0, MAT.concrete));
+        for (const u of [a - p.obb.hw + 1.5, a + p.obb.hw - 1.5]) for (const d of [front - 1.5, front - D + 1.5]) out.solids.push(box(M, u - COLUMN / 2, u + COLUMN / 2, d - COLUMN / 2, d + COLUMN / 2, p.wall, y0, MAT.concrete));
         used.add(p);
       }
       const [lx, lz] = world(M, 0.8, front - D), f = frame(M);
-      out.solids.push(box(M, 0.4, 1.2, front - D + 0.05, front - D + 0.65, M.wall, y0, MAT.concrete));
+      out.solids.push(box(M, 0.8 - COLUMN / 2, 0.8 + COLUMN / 2, front - D + 0.05, front - D + 0.05 + COLUMN, M.wall, y0, MAT.concrete));
       out.climbables.push({ kind: 'ladder', x: lx, z: lz, y0: M.wall, y1: y1 + 1, nx: -f.nx, nz: -f.nz });
       feature('mega', M, sm, front - D / 2, y0);
       megas++;

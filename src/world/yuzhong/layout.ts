@@ -1,4 +1,4 @@
-// The parks (M3-60, U-031, U-033): green only in the city's few real parks, laid inside their real outlines. A
+// The parks (M3-60, U-031, U-033, U-034): green only in the city's few big real parks, laid inside their real outlines. A
 // lawn edged all round with a kerb; paths across it from side to side through its middle (drawn and kerbed like
 // the other walkways); trees along its edge and its paths, benches and lamps by the paths. The rest of the open
 // ground is buildings (lots.ts fills it) or what fill makes of the yards left between them.
@@ -9,7 +9,7 @@ import { makeRng, hashString, rand } from '../../sim/rng';
 import { GEO } from '../geo';
 import type { Feature, Plot, Prop, StreetLine } from '../world';
 import { propBoxes } from './dressing';
-import { MARK, type Marks } from './marks';
+import { MARK, keptPark, type Marks } from './marks';
 import { streetCells } from './ground';
 import { minRect, points, inside, polyArea, type P2 } from './shapes';
 
@@ -46,10 +46,10 @@ export function layout(index: SolidIndex, g: Heightfield, mk: Marks, land: Uint8
   };
 
   for (const [kind, , flat] of GEO.areas) {
-    if (kind !== 'park' && kind !== 'pitch') continue;
+    if (!keptPark(kind, flat)) continue;
     const poly = points(flat, 0.1), area = polyArea(poly), o = minRect(poly);
     const k = Math.round(o.cz / g.cell) * g.w + Math.round(o.cx / g.cell);
-    if (area < 400 || land[k] !== 1) continue;
+    if (land[k] !== 1) continue;
     const r = makeRng(hashString(`park${Math.round(o.cx)},${Math.round(o.cz)}`)), at = (x: number, z: number) => inside(poly, x, z);
     out.lawns.push(poly);
     out.features.push({ kind: 'park', x: o.cx, y: yAt(o.cx, o.cz), z: o.cz, group: Math.round(area), nx: 0, nz: 0 });

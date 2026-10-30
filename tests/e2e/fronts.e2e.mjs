@@ -1,5 +1,6 @@
 // M3-55 (U-022, U-024): five kinds of building from the street, to set beside docs/reference/places (old-housing-1
-// and -2 for the walk-up and the open block, jiefangbei-2 for the slab and the tower, shibati-1 for the shop house).
+// and -2 for the walk-up and the open block, jiefangbei-2 for the slab and the tower, shibati-1 for the Eighteen
+// Stairs' blocks, apartments since U-034).
 // Each is the one of its kind nearest Jiefangbei (the walk-up, Jiaochangkou), seen from the street in front of it.
 export default async function ({ open, fail, screenshot }) {
   const page = await open('?scenario=shibati&seed=1', 'fronts');
@@ -8,7 +9,7 @@ export default async function ({ open, fail, screenshot }) {
     ['slab', "p.kind === 'res' && !p.route && p.wall - p.base >= 30"],
     ['tower', "p.kind === 'tower'"],
     ['open', "p.kind === 'res' && !!p.route"],
-    ['shophouse', "p.kind === 'trad' && !!p.route"],
+    ['shibati', "p.kind === 'res' && p.wall - p.base <= 24", 'shibati'],
   ];
   for (const [name, test, near = 'jiefangbei'] of kinds) {
     const r = await page.evaluate(`(() => {

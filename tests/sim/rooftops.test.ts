@@ -41,7 +41,7 @@ describe('buildings and rooftops (M3-03)', () => {
   });
   it('runs a rooftop route across four buildings in Shibati', { timeout: 60000 }, () => {
     // Flat roofs a running jump apart (a 3.2 m gap at most, level or up to 3.5 m down), nearest Shibati first.
-    const roofs = low.filter(p => p.kind === 'res' || p.kind === 'trad');
+    const roofs = low.filter(p => p.kind === 'res');
     // From the back of one roof straight at the middle of the next, nothing in his way (knee and chest high, his
     // width either side) but the parapets.
     const extent = (a: Obb, ux: number, uz: number) => a.hw * Math.abs(ux * Math.cos(a.yaw) + uz * Math.sin(a.yaw)) + a.hd * Math.abs(-ux * Math.sin(a.yaw) + uz * Math.cos(a.yaw));
@@ -53,8 +53,6 @@ describe('buildings and rooftops (M3-03)', () => {
       const oa = obb.get(a)!, ob = obb.get(b)!, [x, z] = backOf(oa, ob), dx = ob.cx - x, dz = ob.cz - z, l = Math.hypot(dx, dz), ux = dx / l, uz = dz / l;
       // Knee high up to just short of his own parapet, chest high all the way.
       const ray = (h: number, o: number, len: number) => !raycast(w.index, x - uz * o, a.wall + h, z + ux * o, ux, 0, uz, len);
-      // Over a pitched roof, clear above its ridge.
-      if (a.kind === 'trad') return [-0.4, 0, 0.4].every(o => ray(a.top - a.wall + 0.6, o, l));
       return [-0.4, 0, 0.4].every(o => ray(0.35, o, 2 * extent(oa, ux, uz) - 1.6) && ray(1.2, o, l));
     };
     const hop = (a: Plot, b: Plot) => near(a, b, 3.2) && !near(a, b, 1.5) && a.top - b.top >= -0.3 && a.top - b.top <= 3.5 && clear(a, b);

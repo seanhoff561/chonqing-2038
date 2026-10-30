@@ -2,15 +2,18 @@
 // land off the streets, the buildings and the set pieces, sorted by the ground and the real map. Rough ground
 // (steep or broken: the embankments and slopes between lots and streets) near the buildings is where the city's
 // war left its debris: ruins. Land away from the buildings (river banks, hillsides) has gone back to woods and
-// grass. The real map's parks, grass, woods and scrub are parks. What's left is flat open ground among the
+// grass. The real map's big parks are parks. What's left is flat open ground among the
 // buildings, to fill with what belongs there.
 import { GEO } from '../geo';
 import type { Heightfield } from '../heightfield';
 import type { Plot } from '../world';
-import { points, rasterPoly } from './shapes';
+import { points, rasterPoly, polyArea } from './shapes';
 import { streetCells } from './ground';
 
 export const MARK_CELL = 4;
+/** The real parks big enough to stay green (U-033, U-034): the map's smaller parks and pitches are built over. */
+export const PARK_MIN = 6000;
+export const keptPark = (kind: string, pts: number[]) => (kind === 'park' || kind === 'pitch') && polyArea(points(pts, 0.1)) >= PARK_MIN;
 /** laid: a real park's ground, laid out (layout.ts). */
 export const MARK = { ruin: 1, wood: 2, park: 3, open: 4, laid: 5 } as const;
 export interface Marks { cell: number; w: number; h: number; m: Uint8Array }
@@ -24,7 +27,7 @@ export function findMarks(g: Heightfield, land: Uint8Array, plots: Plot[], block
   const ground = (mask: Uint8Array, poly: [number, number][]) => rasterPoly(poly, 0, 0, g.cell, g.w, g.h, (i0, i1, j) => mask.fill(1, j * g.w + i0, j * g.w + i1 + 1));
   const foot = new Uint8Array(g.y.length), park = new Uint8Array(g.y.length);
   for (const p of plots) if (!p.far) ground(foot, p.corners);
-  for (const [kind, , pts] of GEO.areas) if (kind === 'park' || kind === 'pitch') ground(park, points(pts, 0.1));
+  for (const [kind, , pts] of GEO.areas) if (keptPark(kind, pts)) ground(park, points(pts, 0.1));
   // Mark cells with a building in them, grown by RUIN_REACH (a max filter along rows, then columns).
   const built = new Uint8Array(w * h), n = Math.ceil(RUIN_REACH / MARK_CELL);
   /** Whether fn holds at a ground sample in mark cell (i, j), or within pad samples round it. */

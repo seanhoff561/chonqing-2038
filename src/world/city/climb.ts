@@ -53,8 +53,8 @@ export function pole(x: number, z: number, nx: number, nz: number, y0: number, y
  *  roof, a pole, scaffolding, a wall-run. Balconies start on the third floor; a shop sign's bar hangs low. */
 export function facades(l: Lot, r: Rng, out: Fabric) {
   if (l.kind === 'tower') return;
-  // The roof edge he pulls over: a parapet, or the eave plate of a tiled roof.
-  const top = l.kind === 'trad' ? l.wall : l.top;
+  // The roof edge he pulls over: its parapet.
+  const top = l.top;
   const door = l.route?.[0];
   for (const s of sides(l)) {
     if (s.b - s.a < 3) continue;
@@ -81,10 +81,10 @@ export function facades(l: Lot, r: Rng, out: Fabric) {
         const group = out.features.length;
         let y = y0, cc = c;
         for (let m = 2 + randInt(r, 4); m > 0 && top - y > 1.2; m--) {
-          const ac = rand(r) < (l.kind === 'trad' ? 0.3 : 0.45);
+          const ac = rand(r) < 0.45;
           out.solids.push(ac
             ? onFace(s, cc - 0.375, cc + 0.375, 0, 0.4, y - 0.5, y, MAT.metal)
-            : onFace(s, cc - 0.5, cc + 0.5, 0, 0.14, y - 0.1, y, l.kind === 'trad' ? MAT.wood : MAT.concrete));
+            : onFace(s, cc - 0.5, cc + 0.5, 0, 0.14, y - 0.1, y, MAT.concrete));
           out.features.push({ kind: ac ? 'ac' : 'sill', ...faceXZ(s, cc, 0), y, group });
           // What the hold is (U-022): an AC unit with its grille, or a stairwell window on its sill.
           if (ac) out.decor.push(onFace(s, cc - 0.28, cc + 0.12, 0.4, 0.42, y - 0.44, y - 0.06, MAT.tealMetal));
@@ -116,7 +116,7 @@ export function facades(l: Lot, r: Rng, out: Fabric) {
     // A shop sign's frame over the street: a bar 0.6 m out from the wall to swing from, low (from it a first-floor
     // window sill is past a dyno).
     const m = (s.a + s.b) / 2, mid = faceXZ(s, m, 0);
-    if (rand(r) < 0.3 && s.street && l.kind !== 'trad' && !(door && Math.hypot(door.x - mid.x, door.z - mid.z) < 2)) {
+    if (rand(r) < 0.3 && s.street && !(door && Math.hypot(door.x - mid.x, door.z - mid.z) < 2)) {
       const under = faceXZ(s, m, 0.8), y = Math.max(l.base, l.ground?.(under.x, under.z) ?? l.base) + 3.25 + rand(r) * 0.2;
       out.solids.push(onFace(s, m - 1.25, m + 1.25, 0.57, 0.63, y - 0.06, y, MAT.metal));
       out.decor.push(onFace(s, m - 1.25, m - 1.2, 0, 0.6, y - 0.05, y, MAT.metal), onFace(s, m + 1.2, m + 1.25, 0, 0.6, y - 0.05, y, MAT.metal),
