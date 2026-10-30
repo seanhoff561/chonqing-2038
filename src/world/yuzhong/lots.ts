@@ -9,8 +9,7 @@ import { ENVELOPE as E } from '../../data/envelope';
 import { MAT } from '../mats';
 import type { LotKind } from '../city/buildings';
 import { onGround, WATER_Y, streetCells, type Street } from './ground';
-import { minRect, obbOverlap, segNearObb, segDist, points, polyArea, corners, rasterPoly, type Obb, type P2 } from './shapes';
-import { keptPark } from './marks';
+import { minRect, obbOverlap, segNearObb, segDist, points, polyArea, corners, rasterPoly, inside, type Obb, type P2 } from './shapes';
 
 export interface Plan {
   obb: Obb; base: number; wall: number; kind: LotKind; mat: number; seed: string;
@@ -26,8 +25,6 @@ export interface Plan {
   climb?: { face: number; at: number; y0: number };
   /** its roof runs out to its walls (a plank meets its edge, vertical.ts) */
   edge?: boolean;
-  /** its roof kept clear, a rooftop route running over it (Shibati's terraces): nothing on it, never hollowed */
-  bare?: boolean;
   /** the district it stands in, and whether that was a crowded centre now gone cyberpunk (U-011, U-020) */
   district: string; cyber: boolean;
   /** infill: the row along one side of one street segment it stands in, in order along the street */
@@ -97,9 +94,9 @@ export function planLots(g: Heightfield, sts: Street[], land: Uint8Array, block 
       segs.add(Math.min(ax, bx) - half, Math.min(az, bz) - half, Math.max(ax, bx) + half, Math.max(az, bz) + half, seg);
     }
   }
-  // The big parks and the piers stay open (U-034: the small parks and pitches are built over).
+  // Parks, pitches and plazas stay open.
   const open = new Uint8Array(g.y.length);
-  for (const [kind, , p] of GEO.areas) if (kind === 'pier' || keptPark(kind, p)) rasterPoly(points(p, 0.1), 0, 0, g.cell, g.w, g.h, (i0, i1, j) => open.fill(1, j * g.w + i0, j * g.w + i1 + 1));
+  for (const [kind, , p] of GEO.areas) if (kind === 'park' || kind === 'pitch' || kind === 'pier') rasterPoly(points(p, 0.1), 0, 0, g.cell, g.w, g.h, (i0, i1, j) => open.fill(1, j * g.w + i0, j * g.w + i1 + 1));
   const cellAt = (x: number, z: number) => Math.max(0, Math.min(g.h - 1, Math.round(z / g.cell))) * g.w + Math.max(0, Math.min(g.w - 1, Math.round(x / g.cell)));
   const hAt = (x: number, z: number) => g.y[cellAt(x, z)];
   const [W, H] = [(g.w - 1) * g.cell, (g.h - 1) * g.cell];
@@ -131,6 +128,8 @@ export function planLots(g: Heightfield, sts: Street[], land: Uint8Array, block 
     const mids: P2[] = [[0, -o.hd - 3], [0, o.hd + 3], [-o.hw - 3, 0], [o.hw + 3, 0]].map(([u, v]) => [o.cx + c * u - s * v, o.cz + s * u + c * v]);
     return mids.map(([x, z]) => { for (const sg of segs.near(x - 10, z - 10, x + 10, z + 10)) if (segDist(x, z, sg.ax, sg.az, sg.bx, sg.bz) < sg.half + 3) return true; return false; }) as Plan['street'];
   };
+  const shibati = GEO.areas.find(a => a[1] === '重庆十八梯传统风貌区');
+  const inShibati = (x: number, z: number) => !!shibati && inside(points(shibati[2], 0.1), x, z);
 
   // OSM buildings first, at their real heights.
   // Biggest first; a footprint overlapping one already placed by more than a metre is a part of it or a duplicate.
@@ -147,6 +146,7 @@ export function planLots(g: Heightfield, sts: Street[], land: Uint8Array, block 
     const r = makeRng(hashString(`osm${n}`)), far = land[k] === 2;
     // Unknown heights: the 2038 city stands about twice as tall as today's (U-032).
     const floors = levels || (hdm ? Math.max(1, Math.round(hdm / 10 / 3.2)) : area > 1500 ? 12 + randInt(r, 25) : area > 400 ? 10 + randInt(r, 16) : 5 + randInt(r, 9));
+    const trad = !far && inShibati(o.cx, o.cz) && floors <= 3;
     // By type: towers over 20 floors; offices, hotels, shops and malls in gridded stone or glass; homes in tile
     // and render; old houses in brick.
     const business = ['commercial', 'retail', 'office', 'hotel', 'theatre', 'transportation'].includes(kind);
@@ -154,17 +154,16 @@ export function planLots(g: Heightfield, sts: Street[], land: Uint8Array, block 
     const street = sideStreets(o);
     const front = street.findIndex(Boolean);
     const base = front >= 0 ? edgeHeight(o, front, hAt) : Math.min(...[...corners(o), [o.cx, o.cz] as P2].map(([x, z]) => hAt(x, z)));
-    const mat = tower ? MAT.glass : business ? MAT.facadeBand : kind === 'historic' || kind === 'temple' ? MAT.brick : [MAT.tile, MAT.plaster, MAT.concrete, MAT.tile][randInt(r, 4)];
+    const mat = tower ? MAT.glass : trad ? MAT.brick : business ? MAT.facadeBand : kind === 'historic' || kind === 'temple' ? MAT.brick : [MAT.tile, MAT.plaster, MAT.concrete, MAT.tile][randInt(r, 4)];
     // Unknown heights meet a neighbour's roof; known ones may give or take a floor to (the 1:1 map is a base to
     // edit for play, U-020).
-    const fl = tower || business ? floors : known ? fit(o, base, floors, Math.max(1, floors - 1), floors + 1, r) : fit(o, base, floors, 2, 20, r);
-    add({ obb: o, base, wall: base + fl * (tower ? 3.3 : business ? 4 : FLOOR), flex: tower || business ? undefined : known ? [Math.max(1, floors - 1), floors + 1] : [2, 20], kind: tower ? 'tower' : 'res', mat, seed: `osm${n}`, street, across: [0, 0, 0, 0], osm: true, name, far, noEnter: business, ...districtAt(o.cx, o.cz) });
+    const fl = tower || business ? floors : known ? fit(o, base, floors, Math.max(1, floors - 1), floors + 1, r) : fit(o, base, floors, 2, trad ? 3 : 20, r);
+    add({ obb: o, base, wall: base + fl * (tower ? 3.3 : business ? 4 : FLOOR), flex: tower || business ? undefined : known ? [Math.max(1, floors - 1), floors + 1] : [2, trad ? 3 : 20], kind: trad ? 'trad' : tower ? 'tower' : 'res', mat, seed: `osm${n}`, street, across: [0, 0, 0, 0], osm: true, name, far, noEnter: business, ...districtAt(o.cx, o.cz) });
   });
 
-  // The Eighteen Stairs (U-018, M3-41c, U-034): both flights and the lane below lined with terraces of apartment
-  // blocks (the old shop houses rebuilt) fronting the steps, 6-9 m wide with 1.6-2.4 m alleys between them (the old
-  // footpaths through the quarter run in those alleys), each roof stepping down the hill from the one above within
-  // a running jump.
+  // The Eighteen Stairs (U-018, M3-41c): both flights and the lane below lined with terraces of shop houses
+  // fronting the steps, 6-9 m wide with 1.6-2.4 m alleys between them (the old footpaths through the quarter run
+  // in those alleys), each roof stepping down the hill from the one above within a running jump.
   for (const [si, s] of sts.entries()) {
     if (!onGround(s) || s.name !== '十八梯' || s.pts.length < 2) continue;
     const r = makeRng(hashString(`shibati${si}`)), half = s.w / 2 + 0.4, lane = (x: Street) => x !== s && !x.steps && !MAIN.has(x.kind);
@@ -192,11 +191,10 @@ export function planLots(g: Heightfield, sts: Street[], land: Uint8Array, block 
         }
         if (!ok) { prev = null; t += f + 1.6; continue; }
         const n = plans.length, base = edgeHeight(ok, 1, hAt);
-        // Four to seven floors; more where the hill drops away below the block above.
-        let fl = 4 + randInt(r, 4);
-        if (prev) { const want = Math.floor((prev.wall - base + 0.3) / FLOOR - rand(r) * 0.4); if (want >= 3 && want <= 10) fl = want; }
-        // (Their heights and clear roofs are the route down the hill: not evened, nor moved to meet another roof.)
-        const p: Plan = { obb: ok, base, wall: base + fl * FLOOR, row: `shibati${si}:${side}`, bare: true, noEnter: true, kind: 'res', mat: [MAT.tile, MAT.plaster, MAT.concrete][randInt(r, 3)], seed: `lot${n}`, street: [false, true, false, false], across: [0, s.w + 3, 0, 0], osm: false, name: '', far: false, ...districtAt(ok.cx, ok.cz) };
+        // Two or three floors; four where the hill drops away below the house above.
+        let fl = 2 + randInt(r, 2);
+        if (prev) { const want = Math.floor((prev.wall - base + 0.3) / FLOOR - rand(r) * 0.4); if (want >= 2 && want <= 4) fl = want; }
+        const p: Plan = { obb: ok, base, wall: base + fl * FLOOR, flex: [2, 4], row: `shibati${si}:${side}`, kind: 'trad', mat: MAT.brick, seed: `lot${n}`, street: [false, true, false, false], across: [0, s.w + 3, 0, 0], osm: false, name: '', far: false, ...districtAt(ok.cx, ok.cz) };
         add(p);
         prev = p;
         t += f + 1.6 + rand(r) * 0.8;
@@ -207,7 +205,9 @@ export function planLots(g: Heightfield, sts: Street[], land: Uint8Array, block 
   // Infill: rows along every street, main streets first, fronting the street, alleys between.
   const order = sts.filter(s => onGround(s) && s.pts.length > 1).sort((a, b) => Number(MAIN.has(b.kind)) - Number(MAIN.has(a.kind)));
   order.forEach((s, si) => {
-    const r = makeRng(hashString(`row${si}`)), half = s.w / 2 + (MAIN.has(s.kind) ? 1.5 : 0.4);
+    const r = makeRng(hashString(`row${si}`)), half = s.w / 2 + (MAIN.has(s.kind) ? 1.5 : 0.4), tr = makeRng(hashString(`trad${si}`));
+    // Shibati's rows share a height a side, so their ridges line up into rooftop routes.
+    const tradFloors = [2 + randInt(tr, 2), 2 + randInt(tr, 2)];
     // Along the whole street, round its bends: each lot squares up to the chord under its frontage.
     const cum = [0];
     for (let k = 1; k < s.pts.length; k++) cum.push(cum[k - 1] + Math.hypot(s.pts[k][0] - s.pts[k - 1][0], s.pts[k][1] - s.pts[k - 1][1]));
@@ -241,17 +241,17 @@ export function planLots(g: Heightfield, sts: Street[], land: Uint8Array, block 
           // elsewhere walk-ups and slabs.
           // Twice today's heights (U-032), a low filler one in five among them; towers of 21 floors and more.
           const floors = tower && rand(rr) < 0.7 ? tower - (rand(rr) < 0.4 ? 1 : 0) : rand(rr) < 0.2 ? 2 + randInt(rr, 3) : MAIN.has(s.kind) ? 9 + randInt(rr, 10) + (rand(rr) < (dist.cyber ? 0.4 : 0.2) ? 12 + randInt(rr, 20) : 0) : 6 + randInt(rr, 10);
-          const shop = dist.cyber && MAIN.has(s.kind) && rand(rr) < 0.4;
-          const own = floors, fl = own < 21 ? fit(ok, base, own, 2, 20, rr) : own;
+          const trad = !far && inShibati(ok.cx, ok.cz), shop = dist.cyber && MAIN.has(s.kind) && rand(rr) < 0.4;
+          const own = trad ? tradFloors[side > 0 ? 0 : 1] : floors, fl = own < 21 ? fit(ok, base, own, 2, trad ? 3 : 20, rr) : own;
           tower = own >= 21 ? own : 0;
-          add({ obb: ok, base, wall: base + fl * FLOOR, flex: own < 21 ? [2, 20] : undefined, row: `${si}:${side}`, kind: 'res', mat: shop ? MAT.facadeBand : [MAT.tile, MAT.plaster, MAT.tile, MAT.concrete][randInt(rr, 4)], seed: `lot${n}`, street: [false, true, false, false], across: [0, s.w + 3, 0, 0], osm: false, name: '', far, noEnter: shop || undefined, ...dist });
+          add({ obb: ok, base, wall: base + fl * FLOOR, flex: own < 21 ? [2, trad ? 3 : 20] : undefined, row: `${si}:${side}`, kind: trad ? 'trad' : 'res', mat: trad ? MAT.brick : shop ? MAT.facadeBand : [MAT.tile, MAT.plaster, MAT.tile, MAT.concrete][randInt(rr, 4)], seed: `lot${n}`, street: [false, true, false, false], across: [0, s.w + 3, 0, 0], osm: false, name: '', far, noEnter: shop || undefined, ...dist });
         }
         t += f + rowGap(r);
       }
     }
   });
   // The open ground among the buildings filled with more of them (U-032, U-033): wherever a block still fits on
-  // land that's no street, big park, set piece or steep bank, near the buildings already there (the
+  // land that's no street, park, set piece, steep bank or Shibati's terraces, near the buildings already there (the
   // land beyond them stays wild), one squared to its nearest neighbour, in the layers' heights: low fillers,
   // mid-height blocks, now and then a tall one. One with no street to front is a back building, entered from the
   // yard or alley its door end opens onto (D-030), if it does.
@@ -262,7 +262,7 @@ export function planLots(g: Heightfield, sts: Street[], land: Uint8Array, block 
   for (const [off, sizes] of [[0, [[12, 9], [9, 7], [7, 5.5], [5.5, 4]]], [4, [[7, 5.5], [5.5, 4], [4.5, 3.5, 1.5]]]] as const)
   for (let z = LEVEL + 8 + off; z < H - LEVEL - 8; z += 8) for (let x = LEVEL + 8 + off; x < W - LEVEL - 8; x += 8) {
     const k = cellAt(x, z);
-    if (land[k] !== 1 || open[k] || block[k] || streetCells[k]) continue;
+    if (land[k] !== 1 || open[k] || block[k] || streetCells[k] || inShibati(x, z)) continue;
     const nb = nearest(x, z);
     if (!nb) continue;
     let ok: Obb | null = null;
@@ -276,35 +276,6 @@ export function planLots(g: Heightfield, sts: Street[], land: Uint8Array, block 
     const floors = q < 0.35 ? 1 + randInt(rr, 3) : q < 0.75 ? 4 + randInt(rr, 7) : 11 + randInt(rr, 12);
     add({ obb: ok, base, wall: base + floors * FLOOR, flex: [1, 20], kind: 'res', mat: [MAT.tile, MAT.plaster, MAT.concrete, MAT.brick][randInt(rr, 4)], seed: `back${n}`, street, across: [0, 0, 0, 0], osm: false, name: '', far: false, ...districtAt(ok.cx, ok.cz) });
   }
-  // Evened (U-034): a building beside a much taller one (within 12 m) rises to 60-80% of its height, so none
-  // stands far over those round it; by the heights as they were, so it doesn't spread on from those raised.
-  const was = new Map(plans.map(p => [p, p.wall - p.base]));
-  for (const n of plans) {
-    if (n.far || !n.flex) continue;
-    const [x0, z0, x1, z1] = bounds(n.obb, 14);
-    let h = 0;
-    for (const t of placed.near(x0, z0, x1, z1)) if (t !== n && !t.far && obbOverlap(n.obb, t.obb, 12)) h = Math.max(h, was.get(t)!);
-    if (was.get(n)! >= 0.6 * h) continue;
-    const f = Math.round((h * (0.6 + rand(makeRng(hashString(`even${n.seed}`))) * 0.2)) / FLOOR);
-    n.wall = n.base + f * FLOOR;
-    n.flex = [Math.max(1, f - 3), Math.max(n.flex[1], f + 2)];
-  }
-  // Then low fillers of one to three floors in what open ground is left, on the flat, round them (U-034).
-  for (const [ox, oz] of [[2, 2], [6, 6], [2, 6], [6, 2]]) for (let z = LEVEL + 8 + oz; z < H - LEVEL - 8; z += 8) for (let x = LEVEL + 8 + ox; x < W - LEVEL - 8; x += 8) {
-    const k = cellAt(x, z);
-    if (land[k] !== 1 || open[k] || block[k] || streetCells[k]) continue;
-    const nb = nearest(x, z);
-    if (!nb) continue;
-    let ok: Obb | null = null;
-    for (const [hw, hd] of [[5.5, 4], [4.5, 3.5], [3.5, 3]]) {
-      const o = { cx: x, cz: z, hw, hd, yaw: nb.obb.yaw };
-      if (onLand(o) && flat(o, 1.5) && !blocked(o) && !hitsStreet(o, 0.4) && !hitsLot(o, APRON)) { ok = o; break; }
-    }
-    if (!ok) continue;
-    const n = plans.length, rr = makeRng(hashString(`back${n}`)), street = sideStreets(ok), front = street.findIndex(Boolean);
-    const base = front >= 0 ? edgeHeight(ok, front, hAt) : Math.min(...[...corners(ok), [ok.cx, ok.cz] as P2].map(([px, pz]) => hAt(px, pz)));
-    add({ obb: ok, base, wall: base + (1 + randInt(rr, 3)) * FLOOR, flex: [1, 3], kind: 'res', mat: [MAT.tile, MAT.plaster, MAT.concrete, MAT.brick][randInt(rr, 4)], seed: `back${n}`, street, across: [0, 0, 0, 0], osm: false, name: '', far: false, ...districtAt(ok.cx, ok.cz) });
-  }
   // A back building's door (the middle of its far end, hollow() in interiors.ts) needs 3 m clear in front of it.
   for (const p of plans) if (p.seed.startsWith('back') && !p.street.some(Boolean)) {
     const o = p.obb, c = Math.cos(o.yaw), s = Math.sin(o.yaw), [u, v, hw, hd] = o.hd >= o.hw ? [1.3, o.hd + 1.6, 1, 1.5] : [o.hw + 1.6, 1.3, 1.5, 1];
@@ -314,9 +285,10 @@ export function planLots(g: Heightfield, sts: Street[], land: Uint8Array, block 
   // A second pass with every neighbour known: a flexible building with no neighbour's roof in jumping range from
   // its own (a running jump across, a safe drop down) moves to a neighbour's roof it can meet (level, or up
   // to a floor above it), the one nearest its own height (U-032: the low fillers don't pull the tall ones down).
-  const top = (p: Plan) => p.wall + 0.6, reach = (a: Plan, b: Plan) => top(a) - top(b) >= -0.5 && top(a) - top(b) <= E.safeDrop.max;
+  const top = (p: Plan) => p.wall + (p.kind === 'trad' ? 2 : 0.6), reach = (a: Plan, b: Plan) => top(a) - top(b) >= -0.5 && top(a) - top(b) <= E.safeDrop.max;
+  // (Shibati's terraces keep the height they share a side.)
   for (let pass = 0; pass < 3; pass++) for (const a of plans) {
-    if (!a.flex || a.far) continue;
+    if (!a.flex || a.far || a.kind === 'trad') continue;
     const [x0, z0, x1, z1] = bounds(a.obb, 7), nbs = [...placed.near(x0, z0, x1, z1)].filter(b => b !== a && !b.far && b.kind !== 'tower' && obbOverlap(a.obb, b.obb, E.runningJump.comfortable / 2) && !obbOverlap(a.obb, b.obb, 0.25));
     if (!nbs.length || nbs.some(b => reach(a, b))) continue;
     for (const b of nbs.sort((p, q) => Math.abs(top(p) - top(a)) - Math.abs(top(q) - top(a)))) {

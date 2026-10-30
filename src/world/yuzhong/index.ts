@@ -26,6 +26,7 @@ import { buildSite } from './site';
 import { podiumMask, buildFactory } from './factory';
 import { verticalCity } from './vertical';
 import { buildLine2, stationEntrances, BEAM } from './line2';
+import { shopfronts } from './shopfront';
 import { dressStreets } from './dressing';
 
 const empty = (): Fabric => ({ solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [], sites: [], far: [] });
@@ -212,7 +213,7 @@ function landMask(g: Heightfield): Uint8Array {
 
 /** Build one lot in its own frame and turn everything it made into place. */
 function buildPlan(p: Plan, n: number, out: Fabric, g: Heightfield): Plot {
-  const o = p.obb, l: Lot = { id: n, x0: o.cx - o.hw, z0: o.cz - o.hd, x1: o.cx + o.hw, z1: o.cz + o.hd, base: p.base, wall: p.wall, top: p.wall, kind: p.kind, mat: p.mat, street: p.street, across: p.across, noEnter: p.noEnter, climb: p.climb, edge: p.edge, bare: p.bare,
+  const o = p.obb, l: Lot = { id: n, x0: o.cx - o.hw, z0: o.cz - o.hd, x1: o.cx + o.hw, z1: o.cz + o.hd, base: p.base, wall: p.wall, top: p.wall, kind: p.kind, mat: p.mat, street: p.street, across: p.across, noEnter: p.noEnter, climb: p.climb, edge: p.edge,
     ground: (x, z) => { const c = Math.cos(o.yaw), s = Math.sin(o.yaw); return heightAt(g, o.cx + c * (x - o.cx) - s * (z - o.cz), o.cz + s * (x - o.cx) + c * (z - o.cz)) ?? p.base; } };
   const f = empty(), r = makeRng(hashString(p.seed));
   if (p.far) {
@@ -223,6 +224,7 @@ function buildPlan(p: Plan, n: number, out: Fabric, g: Heightfield): Plot {
   } else {
     buildLot(l, r, f);
     if (p.cyber) cyber(l, p, r, f);
+    if (l.kind === 'trad') shopfronts(l, r, f);
   }
   // A foundation down to the lowest ground round it: where a neighbour's lower base dips the ground at a shared
   // wall, or the slope falls away, no gap shows under the walls.

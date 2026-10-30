@@ -5,7 +5,7 @@
 // corner, the style's sill height). Some old blocks wear a new skin: metal panels with ribbon windows over
 // their upper floors; some carry their top floors cantilevered out over the street. Decor, from its own stream,
 // except the overhang, which stands in the way.
-import { solid } from '../geom';
+import { solid, carve } from '../geom';
 import { MAT } from '../mats';
 import { rand, randInt, makeRng, hashString } from '../../sim/rng';
 import { sides } from './climb';
@@ -95,6 +95,21 @@ function cage(s: Side, c: number, y: number, w: number, h: number, out: Fabric) 
   const x0 = c - w / 2 - 0.05, x1 = c + w / 2 + 0.05, top = y + h + 0.05, D = 0.42;
   out.decor.push(onFace(s, x0, x1, 0, D, y - 0.06, y, MAT.metal), onFace(s, x0, x1, 0, D, top, top + 0.05, MAT.metal));
   for (const t of [0, 1 / 3, 2 / 3, 1]) { const x = x0 + (x1 - x0) * t; out.decor.push(onFace(s, x - 0.015, x + 0.015, D - 0.03, D, y, top, MAT.metal)); }
+}
+
+/** Shibati's looted shop houses (M3-55): behind the shopfront (yuzhong/shopfront.ts, whose middle bay's shutter is
+ *  rolled up over the door) the ground floor stands open, a lamp still lit; the floors above stay shut. */
+export function shopHouse(l: Lot, side: number, look: number, out: Fabric) {
+  const { x0, z0, x1, z1, base, wall } = l, H = 3.2, T = 0.25;
+  const alongX = side < 2, u0 = alongX ? x0 : z0, u1 = alongX ? x1 : z1, f = [z0, z1, x0, x1][side], n = side % 2 ? 1 : -1;
+  const bays = Math.max(2, Math.round((u1 - u0) / 2.2)), bay = (u1 - u0) / bays, d0 = u0 + (bays >> 1) * bay + 0.09, d1 = d0 + bay - 0.18, dm = (d0 + d1) / 2;
+  const walls = [solid(x0, base, z0, x1, base + H, z0 + T, look), solid(x0, base, z1 - T, x1, base + H, z1, look), solid(x0, base, z0 + T, x0 + T, base + H, z1 - T, look), solid(x1 - T, base, z0 + T, x1, base + H, z1 - T, look)];
+  const door = alongX ? solid(d0, base - 1, f - 1, d1, base + 2.3, f + 1, 0) : solid(f - 1, base - 1, d0, f + 1, base + 2.3, d1, 0);
+  out.solids.push(...walls.filter((_, i) => i !== side), ...carve([walls[side]], door), solid(x0, base + H, z0, x1, wall, z1, look), solid(x0 + T, base - 0.2, z0 + T, x1 - T, base + 0.03, z1 - T, MAT.wood));
+  const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  out.decor.push(solid(cx - 0.3, base + H - 0.1, cz - 0.3, cx + 0.3, base + H, cz + 0.3, MAT.lamp));
+  const at = (d: number) => (alongX ? { x: dm, z: f + n * d } : { x: f + n * d, z: dm });
+  l.route = [{ ...at(0.8), y: base }, { ...at(-1.2), y: base }, { x: cx, y: base, z: cz }];
 }
 
 /** A tower's way in (M3-55): a two-storey glass lobby under a deep canopy with a lit soffit and the building's

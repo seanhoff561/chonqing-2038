@@ -10,7 +10,7 @@ import type { Plan } from './lots';
 
 export function cables(plans: Plan[], index: SolidIndex): { lines: Line[]; masts: Solid[] } {
   const lines: Line[] = [], masts: Solid[] = [], rows = new Map<string, Plan[]>();
-  for (const p of plans) if (p.row && !p.far && !p.bare) { const a = rows.get(p.row); if (a) a.push(p); else rows.set(p.row, [p]); }
+  for (const p of plans) if (p.row && !p.far) { const a = rows.get(p.row); if (a) a.push(p); else rows.set(p.row, [p]); }
   /** A mast at the middle of a lot's street face, just in from the edge of its roof: its foot, and how high. */
   const edge = (p: Plan, up = 1.2) => { const o = p.obb, c = Math.cos(o.yaw), s = Math.sin(o.yaw), d = o.hd - 0.4; return { x: o.cx - s * d, y: p.wall + up, z: o.cz + c * d }; };
   for (const [row, ps] of rows) {
