@@ -304,7 +304,7 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
     for (let i = 0; i < 2; i++) k.add(new THREE.TorusGeometry(0.25 + r() * 0.2, 0.02, 4, 10, Math.PI).rotateZ(Math.PI).translate(-0.3 + i * 0.5, 2 + r() * (h - 3), 0.12), 0x1e1e1e);
     return group([{ geo: k.geometry(), mat: PROP_MAT }]);
   },
-  // Roof clutter: a satellite dish, a mast of aerials, plastic stools left from summer nights.
+  // Roof clutter: a satellite dish, a mast of aerials.
   dish: p => {
     const k = new Kit(seedOf(p)).use('metal');
     k.cyl(0.04, 0.04, 0.8, 0x6a6a6a, 0, 0, 0, 5).add(new THREE.SphereGeometry(0.45, 10, 4, 0, Math.PI * 2, 0, 0.7).scale(1, 0.4, 1).rotateX(-1.1).translate(0, 0.95, 0.1), 0xc8c4bc);
@@ -316,14 +316,7 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
     for (let y = h * 0.5; y < h; y += 0.45) k.box(0.9 - (y / h) * 0.4, 0.025, 0.025, 0x5a5a5a, 0, y, 0, r() * 0.3);
     return group([{ geo: k.geometry(), mat: PROP_MAT }]);
   },
-  stools: p => {
-    const k = new Kit(seedOf(p)).use('plastic'), r = k.r;
-    for (let i = 0; i < 2 + Math.floor(r() * 3); i++) {
-      const c = [0xb8302a, 0x2a5a9a, 0x3a8a4a][Math.floor(r() * 3)], x = (r() - 0.5) * 1.6, z = (r() - 0.5) * 1.6;
-      if (r() < 0.3) k.cyl(0.16, 0.14, 0.42, c, x, 0.16, z, 8, 'x', r() * 3); else k.cyl(0.16, 0.13, 0.42, c, x, 0, z, 8);
-    }
-    return group([{ geo: k.geometry(), mat: PROP_MAT }]);
-  },
+
   // A Line 2 straddle monorail train (after monorail-line2 photos): white with the line's green band, a car
   // wrapping the beam, window band with some panes gone, bench seats and poles inside. Length along z. w cars; with
   // d, only car d of them, centred, pitched by h (radians, its front up) to sit on the beam's grade.

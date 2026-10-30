@@ -1,4 +1,4 @@
-// Interactions: what he's looking at within reach, E to act, hold-E timed actions that break if interrupted.
+// Interactions: what he's looking at within reach, F to act (U-032), hold-F timed actions that break if interrupted.
 import { B, DT, type InputFrame, type SimState } from './types';
 import type { World, Inter } from '../world/world';
 import { movement as M } from '../data/movement';

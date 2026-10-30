@@ -5,9 +5,9 @@ export default async function ({ open, fail, screenshot }) {
   const target = await page.evaluate('window.__cq.game.state.target');
   if (target !== 'stash') fail('stash', `looking at ${target}`);
   await page.evaluate(`window.__cq.game.state.inv.pack.items.length = 0; window.__cq.give('crowbar')`);
-  await page.keyboard.down('KeyE');
+  await page.keyboard.down('KeyF');
   await page.evaluate('window.__cq.runFrames(3)');
-  await page.keyboard.up('KeyE');
+  await page.keyboard.up('KeyF');
   await page.evaluate('window.__cq.runFrames(2)');
   const panels = await page.$$('#inv .inv-panel');
   if (panels.length !== 2) { fail('stash', `${panels.length} panels`); await page.close(); return; }

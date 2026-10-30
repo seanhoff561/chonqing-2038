@@ -231,7 +231,7 @@ export function tickProps(t: number, open: Record<string, boolean> = {}) {
 }
 
 /** Small things, a few pixels from further off: merged apart and drawn only near the camera (view.ts DETAIL). */
-const SMALL = new Set(['weeds', 'trash', 'debris', 'boxes', 'bags', 'pot', 'stools', 'scooter', 'bike', 'sign', 'bin', 'rebar', 'shrub', 'garden', 'bench', 'mahjong', 'drum', 'stall',
+const SMALL = new Set(['weeds', 'trash', 'debris', 'boxes', 'bags', 'pot', 'scooter', 'bike', 'sign', 'bin', 'rebar', 'shrub', 'garden', 'bench', 'mahjong', 'drum', 'stall',
   'cablebundle', 'dish', 'antenna', 'stilts', 'laundry', 'dronewreck', 'bangbang']);
 
 /** Props: animated ones stay separate; static meshes (and the parts of static library props) merge per chunk, the

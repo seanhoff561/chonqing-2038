@@ -72,7 +72,7 @@ export function details(l: Lot, r: Rng, out: Fabric, roof: number) {
 }
 
 /** Render-only dressing, drawn from its own stream so the holds above never move: cable bundles and vines on
- *  the walls; aerials, dishes, stools and pots near the roof edge. */
+ *  the walls; aerials, dishes and pots near the roof edge. */
 function dress(l: Lot, all: Side[], roof: number, out: Fabric) {
   const r = makeRng(hashString(`dress:${l.x0}:${l.z0}`));
   const onWall = (s: Side, c: number) => ({ x: s.nz !== 0 ? c : s.f, z: s.nz !== 0 ? s.f : c, yaw: Math.atan2(s.nx, s.nz) });
@@ -85,5 +85,5 @@ function dress(l: Lot, all: Side[], roof: number, out: Fabric) {
     const s = all[randInt(r, 4)], c = s.a + 1 + rand(r) * Math.max(0.1, s.b - s.a - 2), d = -(0.6 + rand(r) * 0.6);
     return { x: s.nz !== 0 ? c : s.f + s.nx * d, z: s.nz !== 0 ? s.f + s.nz * d : c };
   };
-  for (const kind of ['antenna', 'dish', 'stools', 'pot', 'pot']) if (rand(r) < (kind === 'pot' ? 0.4 : 0.3)) out.props.push({ kind, ...edge(), y: roof, yaw: rand(r) * Math.PI * 2 });
+  for (const kind of ['antenna', 'dish', 'pot', 'pot']) if (rand(r) < (kind === 'pot' ? 0.4 : 0.3)) out.props.push({ kind, ...edge(), y: roof, yaw: rand(r) * Math.PI * 2 });
 }

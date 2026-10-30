@@ -2,7 +2,7 @@
 // by side), each given a use by its size, its streets and its district. Parks: lawns in beds edged with kerbs, a
 // cross of paved paths, trees along them, benches and lamps, a hedge round the edge. Parking lots off the roads:
 // asphalt, bays painted in rows facing their aisles, cars parked in them, a booth, lamps. Plazas in the centres:
-// paving, trees in planters, a row of food stalls with stools, benches, a kiosk. What's too small for any of that
+// paving, trees in planters, a row of food stalls with a bench, more benches, a kiosk. What's too small for any of that
 // (the spaces between buildings) is left for fill's sheds, lean-tos and yards. Every lawn ends at a kerb; the
 // lawns, paving and asphalt are drawn over the ground cell by cell (cover), so their edges are clean.
 import { solid, rampSolid, overlaps, type Solid, type SolidIndex } from '../geom';
@@ -131,7 +131,7 @@ export function layout(index: SolidIndex, g: Heightfield, mk: Marks): Layout {
       if (edge !== undefined) { const [x, z] = mid(edge); put('kiosk', x, z, rand(r) * 4 > 2 ? 0 : Math.PI / 2); }
       for (let u = u0 + 8; u < u1 - 4; u += 16) { const [x, z] = P(u, v0 + BAY_D + AISLE / 2); if (inLot(u, v0 + BAY_D + AISLE / 2)) put('lamppost', x, z, 0); }
     } else {
-      // A plaza: paving; trees in kerbed planters on a grid; a row of food stalls with stools out front near the
+      // A plaza: paving; trees in kerbed planters on a grid; a row of food stalls with benches out front near the
       // middle; benches by the planters; a kiosk and bins.
       for (const k of cells) cover.m[k] = COVER.paving;
       const off = (k: number) => { const [x, z] = mid(k); return Math.hypot(x - cx, z - cz); }, centre = cells.reduce((a, k) => (off(k) < off(a) ? k : a));
@@ -142,12 +142,12 @@ export function layout(index: SolidIndex, g: Heightfield, mk: Marks): Layout {
           for (const [ax, az, bx, bz] of [[x - 1, z - 1, x + 1, z - 1], [x - 1, z + 1, x + 1, z + 1], [x - 1, z - 1, x - 1, z + 1], [x + 1, z - 1, x + 1, z + 1]]) kerb(ax, az, bx, bz);
           put(rand(r) < 0.3 ? 'figtree' : 'tree', x, z, rand(r) * 6.28);
           if (rand(r) < 0.6) put('bench', x + 1.8, z, Math.PI / 2);
-        } else if (rand(r) < 0.15) put(['bin', 'pot', 'pot', 'bench', 'stools'][randInt(r, 5)], x + (rand(r) - 0.5) * 2, z + (rand(r) - 0.5) * 2, randInt(r, 4) * Math.PI / 2);
+        } else if (rand(r) < 0.15) put(['bin', 'pot', 'pot', 'bench', 'bench'][randInt(r, 5)], x + (rand(r) - 0.5) * 2, z + (rand(r) - 0.5) * 2, randInt(r, 4) * Math.PI / 2);
       }
       const [x, z] = mid(centre), yaw = randInt(r, 4) * Math.PI / 2, ux = Math.cos(yaw), uz = -Math.sin(yaw);
       for (let s = -1; s <= 1; s++) {
         put('stall', x + ux * s * 2, z + uz * s * 2, yaw);
-        put('stools', x + ux * s * 2 + Math.sin(yaw) * 1.6, z + uz * s * 2 + Math.cos(yaw) * 1.6, rand(r) * 6.28);
+        if (s === 0) put('bench', x + Math.sin(yaw) * 1.8, z + Math.cos(yaw) * 1.8, yaw);
       }
       put('kiosk', x + Math.sin(yaw) * 5, z + Math.cos(yaw) * 5, yaw + Math.PI);
     }

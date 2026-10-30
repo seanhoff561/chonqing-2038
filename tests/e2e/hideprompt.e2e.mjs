@@ -6,11 +6,11 @@ export default async function ({ open, fail }) {
   if (!/Hide/.test(text)) fail('hideprompt', `no hide prompt by the gym's box: "${text}"`);
   // Hold E on open floor until the rough-sleep menu opens, then a key repeat of E must not close it.
   await page.evaluate(`(() => { const g = window.__cq.game; Object.assign(g.state.player.pos, { x: 0, y: 0.05, z: 0 }); g.input.pitch = -1.2; window.__cq.runFrames(10); })()`);
-  await page.keyboard.down('KeyE');
+  await page.keyboard.down('KeyF');
   for (let i = 0; i < 12; i++) await page.evaluate('window.__cq.runFrames(10)');
-  await page.evaluate(`dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE', repeat: true }))`);
+  await page.evaluate(`dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyF', repeat: true }))`);
   const stillOpen = await page.evaluate(`getComputedStyle(document.getElementById('sleep')).display !== 'none'`);
-  if (!stillOpen) fail('hideprompt', 'a held E closed the sleep menu');
-  await page.keyboard.up('KeyE');
+  if (!stillOpen) fail('hideprompt', 'a held F closed the sleep menu');
+  await page.keyboard.up('KeyF');
   await page.close();
 }

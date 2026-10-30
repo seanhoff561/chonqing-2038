@@ -113,7 +113,8 @@ export function buildUnder(g: Heightfield, gt: { floor: number; junction: V3; wa
   const grate = (x: number, z: number, y: number) => {
     const top = gy(x, z), h = 0.8;
     space(x - h, z - h, x + h, z + h, y, top - 0.5, MAT.concrete, true);
-    u.climbables.push({ kind: 'ladder', x, z: z - h, y0: y, y1: top + 0.3, nx: 0, nz: 1 });
+    // From 2 m up (a standing grab off the tunnel floor), so it doesn't stand in the tunnel's way.
+    u.climbables.push({ kind: 'ladder', x, z: z - h, y0: y + 2, y1: top + 0.3, nx: 0, nz: 1 });
     holeRect(x - 2, z - 2, x + 2, z + 2);
     for (const [x0, z0, x1, z1] of [[x - 3, z - 3, x + 3, z - h], [x - 3, z + h, x + 3, z + 3], [x - 3, z - h, x - h, z + h], [x + h, z - h, x + 3, z + h]]) kept.push(solid(x0, top - 0.5, z0, x1, top + 0.03, z1, MAT.metal));
     keep(x - 3, z - 3, x + 3, z + 3);

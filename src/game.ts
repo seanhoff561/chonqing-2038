@@ -226,7 +226,7 @@ export class Game {
     const hk = hide >= 0 ? HIDE_NAMES[this.world.hides[hide].kind] ?? ['躲进去', 'Hide'] : null;
     // A line to ride in reach of empty hands (M3-52).
     const line = !it && !hk && s.inv.held === 0 && (s.player.mode === 'ground' || s.player.mode === 'air') && lineInReach(s, this.world).line >= 0;
-    this.hud.setPrompt(this.input.uiOpen ? '' : it ? `E  ${it.zh}  ${it.en}` : hk ? `E  ${hk[0]}  ${hk[1]}` : line ? 'LMB  抓住缆绳  Take the line' : '');
+    this.hud.setPrompt(this.input.uiOpen ? '' : it ? `F  ${it.zh}  ${it.en}` : hk ? `F  ${hk[0]}  ${hk[1]}` : line ? 'LMB  抓住缆绳  Take the line' : '');
   }
 
   private updateHands(dt: number) {

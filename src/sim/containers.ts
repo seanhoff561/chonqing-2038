@@ -1,4 +1,4 @@
-// Searchable containers and the stash: hold E to search (time and noise by type), then they open beside the backpack.
+// Searchable containers and the stash: hold F to search (time and noise by type), then they open beside the backpack.
 import type { SimState } from './types';
 import type { Inter } from '../world/world';
 import { onInteract } from './interact';

@@ -48,7 +48,7 @@ export function hideoutParts(ox: number, oy: number, oz: number, o: { shaftTop?:
       { kind: 'lamp', x: ox + 8.4, y: oy + 0.9, z: oz + 1.7, yaw: 0 },
     ] : [
       { kind: 'boxes', x: ox + 15.5, y: oy, z: oz + 1.3, yaw: 0.4 },
-      { kind: 'stools', x: ox + 6.5, y: oy, z: oz + 0.8, yaw: 0 },
+      { kind: 'boxes', x: ox + 6.5, y: oy, z: oz + 0.8, yaw: 1.1 },
     ]),
     { kind: 'rubble', x: ox + 4.25, y: oy, z: oz - 2.6, yaw: 0, w: 1.4, h: 2.2 },
     { kind: 'grate', x: ox + H.shaftX, y: oy + H.shaftTop - 0.04, z: oz, yaw: 0, w: 3 },

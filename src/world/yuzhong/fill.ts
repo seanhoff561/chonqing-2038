@@ -151,9 +151,9 @@ export function fill(index: SolidIndex, g: Heightfield, mk: Marks, plots: Plot[]
       if (build({ ...f, px: x - f.nx * f.d, pz: z - f.nz * f.d }, local, [solid(-0.5, y, s + D / 2, 0.5, y + 2.1, s + D / 2 + 0.05, MAT.wood)])) return true;
     }
     if (q < 0.42) {
-      // An abandoned market: a stall or two, stools, boxes.
+      // An abandoned market: a stall or two, a bench, boxes.
       let n = +put(rand(r) < 0.3 ? 'kiosk' : 'stall', x, z, turnTo);
-      n += +put('stools', x + Math.cos(yaw) * 2, z - Math.sin(yaw) * 2, turnTo);
+      n += +put('bench', x + Math.cos(yaw) * 2, z - Math.sin(yaw) * 2, turnTo);
       n += +put('boxes', x - Math.cos(yaw) * 2, z + Math.sin(yaw) * 2, rand(r) * 6.3);
       return n > 0;
     }

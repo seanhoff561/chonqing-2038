@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-65 Quick fixes from U-032.
-Features done: 117 / 277 | Last done: M3-60
+**Status:** building M3. Next: M3-66 The layered city, filled with buildings (U-032, U-033).
+Features done: 118 / 277 | Last done: M3-65
 <!-- /status -->
 
 ## Log
@@ -135,3 +135,4 @@ Features done: 117 / 277 | Last done: M3-60
 - M3-58 The underground city (U-023, U-024): the underground city: a network off the Grand Tunnel to a two-level city under Jiefangbei and on to Xiaoshizi, 40+ ways in
 - M3-59 Props that make sense (U-031): props that make sense: anchored laundry, fallen bikes, varied signs where they belong, the train on its beam, beams only at night
 - M3-60 Open ground with structure (U-031): open ground laid out: parks with kerbed lawns and paths, parking lots with bays, plazas with stalls, kerbed walkways
+- M3-65 Quick fixes from U-032: every ladder on a frame, the plastic stools gone, interact and sleep on F

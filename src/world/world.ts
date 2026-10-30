@@ -1,7 +1,8 @@
 // The static world: collision index plus the entity lists the sim needs. Identical every run.
 import type { Marks } from './yuzhong/marks';
 import type { Heightfield } from './heightfield';
-import { buildIndex, type Box, type Solid, type SolidIndex } from './geom';
+import { buildIndex, solid, turn, type Box, type Solid, type SolidIndex } from './geom';
+import { MAT } from './mats';
 
 /** Vertical climbable. (nx, nz) points from the wall out toward where the climber hangs. */
 export interface Climbable { kind: 'pipe' | 'ladder'; x: number; z: number; y0: number; y1: number; nx: number; nz: number }
@@ -105,11 +106,18 @@ export interface WorldParts {
   spawn: World['spawn'];
 }
 
+/** A ladder's own frame (U-032): a plate behind its rungs, standing 3 cm off whatever's there, so his feet find
+ *  something to push on (with nothing behind it he'd only swing). */
+function ladderBack(c: Climbable): Solid {
+  return turn([solid(c.x - 0.3, c.y0, c.z, c.x + 0.3, c.y1, c.z + 0.03, MAT.metal)], Math.atan2(-c.nx, c.nz), c.x, c.z)[0];
+}
+
 export function makeWorld(p: WorldParts): World {
+  const solids = p.solids.concat((p.climbables ?? []).filter(c => c.kind === 'ladder').map(ladderBack));
   return {
     name: p.name,
     decor: p.decor ?? [],
-    solids: p.solids,
+    solids,
     ground: p.ground,
     plots: p.plots ?? [],
     streets: p.streets ?? [],
@@ -118,7 +126,7 @@ export function makeWorld(p: WorldParts): World {
     lines: p.lines ?? [],
     convoys: p.convoys,
     features: p.features ?? [],
-    index: buildIndex(p.solids, p.ground),
+    index: buildIndex(solids, p.ground),
     water: p.water ?? [],
     climbables: p.climbables ?? [],
     hides: p.hides ?? [],

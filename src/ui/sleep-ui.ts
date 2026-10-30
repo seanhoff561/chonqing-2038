@@ -8,6 +8,8 @@ export class SleepUI {
   readonly el: HTMLDivElement;
   open = false;
   private eReleased = true;
+  /** F is held down right now. */
+  private fDown = false;
 
   constructor(private game: Game) {
     this.el = document.createElement('div');
@@ -15,14 +17,15 @@ export class SleepUI {
     this.el.style.display = 'none';
     document.body.appendChild(this.el);
     // Capture phase, so the key that closes the menu doesn't also reach the game (U-014: no Esc).
-    // E closes it only once the E that opened it (held for a rough sleep) has been let go (U-021).
-    addEventListener('keyup', e => { if (e.code === 'KeyE') this.eReleased = true; }, true);
+    // F closes it only once the F that opened it (held for a rough sleep) has been let go (U-021; on F since U-032).
+    addEventListener('keyup', e => { if (e.code === 'KeyF') { this.eReleased = true; this.fDown = false; } }, true);
     addEventListener('keydown', e => {
+      if (e.code === 'KeyF' && !this.open) this.fDown = true;
       if (!this.open) return;
       const m = /^Digit([1-8])$/.exec(e.code);
       if (m) this.choose(TIMES[Number(m[1]) - 1]);
-      else if (e.code === 'KeyE' && (e.repeat || !this.eReleased)) { /* still the opening press */ }
-      else if (e.code === 'KeyE' || e.code === 'Tab') this.toggle(false);
+      else if (e.code === 'KeyF' && (e.repeat || !this.eReleased)) { /* still the opening press */ }
+      else if (e.code === 'KeyF' || e.code === 'Tab') this.toggle(false);
       else return;
       e.preventDefault();
       e.stopImmediatePropagation();
@@ -31,7 +34,8 @@ export class SleepUI {
   }
 
   toggle(on: boolean, rough = false) {
-    if (on && !this.open) this.eReleased = false;
+    // Opened by holding F: that press doesn't close it. Opened otherwise, the next F does.
+    if (on && !this.open) this.eReleased = !this.fDown;
     this.open = on;
     this.game.input.uiOpen = on;
     if (on) document.exitPointerLock?.();

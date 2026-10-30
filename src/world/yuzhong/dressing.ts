@@ -143,7 +143,7 @@ function road(s: Street, len: number, at: (t: number, off: number) => [number, n
 function stairs(s: Street, len: number, at: (t: number, off: number) => [number, number], th: number, r: Rng, put: Put) {
   for (let t = rand(r) * 4; t < len; t += 3 + rand(r) * 5) {
     const side = rand(r) < 0.5 ? -1 : 1, [x, z] = at(t, side * (s.w / 2 + 0.5)), q = rand(r);
-    put(q < 0.55 ? 'pot' : q < 0.7 ? 'bangbang' : q < 0.82 ? 'laundry' : q < 0.9 ? 'stall' : 'stools', x, z, Math.PI / 2 - th + (side > 0 ? 0 : Math.PI));
+    put(q < 0.55 ? 'pot' : q < 0.7 ? 'bangbang' : q < 0.82 ? 'laundry' : q < 0.9 ? 'stall' : 'boxes', x, z, Math.PI / 2 - th + (side > 0 ? 0 : Math.PI));
   }
 }
 
@@ -168,7 +168,7 @@ function walkway(s: Street, len: number, at: (t: number, off: number) => [number
       else if (q < (cyber ? 0.78 : 0.68)) place('stall', face);
       else if (q < (cyber ? 0.84 : 0.72)) place('mahjong', face);
       else if (q < (cyber ? 0.88 : 0.75)) place('kiosk', face);
-      else if (q < 0.8) place(cyber ? 'stools' : 'dronewreck', rand(r) * 6);
+      else if (q < 0.8) place(cyber ? 'boxes' : 'dronewreck', rand(r) * 6);
       else if (q < 0.83 && !cyber) place('edict', face);
     }
   }
