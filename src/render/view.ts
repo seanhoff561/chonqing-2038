@@ -12,6 +12,7 @@ import { material, lodRadius } from './materials';
 import { MAT } from '../world/mats';
 import { FPCamera } from './fpcamera';
 import { buildProps, tickProps } from './props';
+import { RoomProps } from './roomprops';
 
 /** Half-size of the sun's shadow area around the camera, metres. */
 export const SHADOW_R = 70;
@@ -28,6 +29,8 @@ export class View {
   readonly hemi = new THREE.HemisphereLight(0xc8d4e0, 0x4a4438, 1.2);
   readonly world = new THREE.Group();
   private chunks: THREE.Mesh[] = [];
+  /** The rooms' furniture and clutter, built near only (M3-74). */
+  private rooms: RoomProps | null = null;
   private cells: THREE.Group[] = [];
   private hasFar = false;
   private shadowKey = '';
@@ -97,7 +100,9 @@ export class View {
     if (detail.length) meshes.add(...detail);
     if (rooms.length) meshes.add(...rooms);
     if (w.ground) meshes.add(...buildGroundMeshes(w.ground, this.hasFar ? 'near' : 'all', w.marks), ...buildStreetMeshes(w.ground, w.streets, this.hasFar ? 'near' : 'all', w.lawns));
-    const props = buildProps(w.props);
+    const props = buildProps(w.props.filter(p => !p.kind.startsWith('f:')));
+    this.rooms?.dispose();
+    this.rooms = new RoomProps(w.props.filter(p => p.kind.startsWith('f:')));
     this.world.add(meshes, buildLabels(w.labels), props);
     if (this.hasFar) {
       const far = buildSolidMeshes(w.far, 'far', 1e6);
@@ -181,6 +186,7 @@ export class View {
       for (const cell of this.cells) if ((cell.visible = within(cell))) for (const m of cell.children) m.visible = within(m);
     }
     tickProps(t, open);
+    if (this.rooms) { this.rooms.update(c); if (this.rooms.group.parent !== this.scene) this.scene.add(this.rooms.group); }
     this.convoys?.update(t, c);
     for (const o of this.scene.children) if (o === this.world) liveWalk(o, false); else o.updateMatrixWorld();
     const r = this.renderer;

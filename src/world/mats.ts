@@ -17,6 +17,8 @@ export const MAT = {
   facadeWorks: 27, glare: 28,
   /** a lit advertising screen (M3-57): glowing panels and characters, day and night */
   screen: 29,
+  /** a room's papered walls (M3-74): a faded pattern, water-stained, peeling off the plaster */
+  wallpaper: 30,
   /** collision only and soft (a prop draws it): bags, bins, cardboard; landing on it breaks a fall (U-024) */
   soft: 98,
   /** collision only: a prop draws it */

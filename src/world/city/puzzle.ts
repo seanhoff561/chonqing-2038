@@ -72,6 +72,10 @@ export function puzzle(fr: Frame, from: number, r: Rng, out: Fabric) {
     // A frame round it outside: sill, lintel, jambs.
     for (const [a0, a1, y0, y1] of [[c - WIN.w / 2 - 0.1, c + WIN.w / 2 + 0.1, o0 - 0.08, o0], [c - WIN.w / 2 - 0.1, c + WIN.w / 2 + 0.1, o1, o1 + 0.12], [c - WIN.w / 2 - 0.1, c - WIN.w / 2, o0, o1], [c + WIN.w / 2, c + WIN.w / 2 + 0.1, o0, o1]])
       out.decor.push(box(rect(m.face, a0, a1, -WALL - 0.1, -WALL + 0.02), y0, y1, MAT.concrete));
+    // And inside: a sill deep enough to sit on, a frame (M3-74).
+    for (const [a0, a1, d0, d1, y0, y1] of [[c - WIN.w / 2 - 0.06, c + WIN.w / 2 + 0.06, -WALL / 2, 0.14, o0 - 0.04, o0], [c - WIN.w / 2 - 0.06, c - WIN.w / 2, -0.01, 0.03, o0, o1], [c + WIN.w / 2, c + WIN.w / 2 + 0.06, -0.01, 0.03, o0, o1], [c - WIN.w / 2 - 0.06, c + WIN.w / 2 + 0.06, -0.01, 0.03, o1, o1 + 0.06]]) {
+      const fr = box(rect(m.face, a0, a1, d0, d1), y0, y1, MAT.wood); fr.inner = true; out.decor.push(fr);
+    }
     const q = rect(m.face, c - WIN.w / 2, c + WIN.w / 2, -WALL / 2 - 0.02, -WALL / 2 + 0.02), [cu, cv] = [(q[0] + q[2]) / 2, (q[1] + q[3]) / 2];
     later.push(() => glaze(fr.nid('w'), box(q, o0, o1), at(cu, cv), alongDir(m.face), WIN.w, state, out));
   };
@@ -88,6 +92,12 @@ export function puzzle(fr: Frame, from: number, r: Rng, out: Fabric) {
       later.push(() => out.solids.push(box(q, y, y + 1.6, MAT.rubble)));
       hi.fallen = true;
       return;
+    }
+    // A frame round a doorway, both sides (M3-74).
+    if (kind === 'door') for (const [a0, a1] of [[lo.a1 - 0.03, lo.a1], [hi.a0, hi.a0 + 0.03]]) {
+      for (const [d0, d1, y0, y1] of [[dc - w / 2 - 0.07, dc - w / 2, y, y + h + 0.07], [dc + w / 2, dc + w / 2 + 0.07, y, y + h + 0.07], [dc - w / 2 - 0.07, dc + w / 2 + 0.07, y + h, y + h + 0.07]]) {
+        const fr = box(rect(a.face, a0, a1, d0, d1), y0, y1, MAT.wood); fr.inner = true; out.decor.push(fr);
+      }
     }
     // In the middle of the mass, a door or a vent cover hinged at one side.
     const mid = (lo.a1 + hi.a0) / 2, q = rect(a.face, mid - 0.03, mid + 0.03, dc - w / 2, dc + w / 2), [hu, hv] = a.face < 2 ? [mid, rect(a.face, 0, 0, dc - w / 2, dc - w / 2)[1]] : [rect(a.face, 0, 0, dc - w / 2, dc - w / 2)[0], mid];
@@ -223,11 +233,15 @@ export function puzzle(fr: Frame, from: number, r: Rng, out: Fabric) {
   for (const m of rooms) {
     const y = yOf(m.k), q = roomRect(m);
     out.solids.splice(from, out.solids.length - from, ...carve(out.solids.slice(from), box(q, y, y + FLOOR - SLAB)));
-    // Plaster on its walls and ceiling, cut for the openings below.
-    const t = 0.02;
-    lining.push(box([q[0], q[1], q[2], q[1] + t], y, y + FLOOR - SLAB, MAT.plaster), box([q[0], q[3] - t, q[2], q[3]], y, y + FLOOR - SLAB, MAT.plaster),
-      box([q[0], q[1], q[0] + t, q[3]], y, y + FLOOR - SLAB, MAT.plaster), box([q[2] - t, q[1], q[2], q[3]], y, y + FLOOR - SLAB, MAT.plaster),
-      box(q, y + FLOOR - SLAB - t, y + FLOOR - SLAB, MAT.plaster));
+    // Its walls lined (cut for the openings below): papered in homes and offices most of the time (M3-74), tiled to
+    // shoulder height in kitchens, else plaster; plaster on the ceiling.
+    const t = 0.02, top = y + FLOOR - SLAB, home = ['living', 'bedroom', 'office'].includes(m.kind), kitchen = m.kind === 'kitchen' || m.kind === 'restaurant';
+    const wallMat = home && rand(r) < 0.65 ? MAT.wallpaper : MAT.plaster;
+    for (const w of [[q[0], q[1], q[2], q[1] + t], [q[0], q[3] - t, q[2], q[3]], [q[0], q[1], q[0] + t, q[3]], [q[2] - t, q[1], q[2], q[3]]] as Rect[]) {
+      if (kitchen) lining.push(box(w, y, y + 1.4, MAT.tile), box(w, y + 1.4, top, MAT.plaster));
+      else lining.push(box(w, y, top, wallMat));
+    }
+    lining.push(box(q, top - t, top, MAT.plaster));
   }
   for (const c of cuts) out.solids.splice(from, out.solids.length - from, ...carve(out.solids.slice(from), c));
   let lin = lining.concat(fr.lining);

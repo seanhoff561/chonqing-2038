@@ -97,6 +97,18 @@ const draws: Record<number, [Draw, number]> = {
     streaks(g, 0, w, 0, 83, 50, [h * 0.1, h * 0.8], '55,52,45', 0.22); cracks(g, w, h, 84, 5);
     const grd = g.createLinearGradient(0, 0, 0, h); grd.addColorStop(0, 'rgba(0,0,0,0)'); grd.addColorStop(1, 'rgba(40,50,30,0.25)'); g.fillStyle = grd; g.fillRect(0, 0, w, h);
   }, 4],
+  [MAT.wallpaper]: [(g, w, h) => {
+    // A faded print (stripes and a small diamond motif), then water running down it, damp at its foot and patches
+    // peeled back to the plaster with a curl of shadow at their edge.
+    noise(g, w, h, '#d6ccb2', 0.08, 101);
+    for (let x = 0; x < w; x += w / 16) { g.fillStyle = 'rgba(150,120,90,0.16)'; g.fillRect(x, 0, w / 64, h); }
+    g.fillStyle = 'rgba(120,90,70,0.22)';
+    for (let y = w / 32; y < h; y += w / 16) for (let x = (Math.round(y / (w / 16)) % 2) * (w / 32); x < w; x += w / 16) { g.beginPath(); g.moveTo(x, y - 5); g.lineTo(x + 4, y); g.lineTo(x, y + 5); g.lineTo(x - 4, y); g.fill(); }
+    streaks(g, 0, w, 0, 102, 30, [h * 0.2, h * 0.9], '90,70,40', 0.18);
+    blotches(g, w, h, 103, 12, '110,90,50', 0.14, 20, 70);
+    blotches(g, w, h, 104, 7, '196,190,176', 0.9, 14, 50); blotches(g, w, h, 104, 7, '60,50,40', 0.18, 16, 54);
+    const grd = g.createLinearGradient(0, 0, 0, h); grd.addColorStop(0.6, 'rgba(0,0,0,0)'); grd.addColorStop(1, 'rgba(60,50,30,0.3)'); g.fillStyle = grd; g.fillRect(0, 0, w, h);
+  }, 2.5],
   [MAT.asphalt]: [(g, w, h) => { noise(g, w, h, '#4c4d4e', 0.18, 9); blotches(g, w, h, 91, 20, '0,0,0', 0.2, 20, 80); cracks(g, w, h, 92, 6); }, 4],
   [MAT.glass]: [(g, w, h) => {
     // Neutral grey glass: each tower's colour (M3-46) tints it.

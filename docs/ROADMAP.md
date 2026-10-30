@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 64 of 83 done
+## M3: 65 of 83 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -422,7 +422,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Shadow maps redrawn only when the sun has moved enough or the world changed (r187: shadows render only when flagged), measured as less frame CPU on the perf views
   - Clustered lighting tried for the many small lights (street lamps, neon, the headlamp): used where it holds the draw-call and frame budgets, else noted with numbers in DECISIONS
   - Light-probe grids tried for indirect light inside rooms (for M3-74): used if they read better within budget, else noted
-- [ ] **M3-74** Detailed, realistic rooms and props (U-040)
+- [x] **M3-74** Detailed, realistic rooms and props (U-040)
   - Furniture and clutter modelled in detail, not boxes: beds with frames, mattresses, pillows and sheets; tables and chairs on legs; cabinets, drawers and wardrobes with doors, drawers and handles; fridges, stoves, sinks and counters; sofas with cushions; shelves with books and things on them; shop racks with goods, restaurant fittings, office desks and screens, workshop benches and tools
   - Room surfaces that read as real: skirting, tiles, wallpaper or paint peeling, ceiling lights, doors with frames, window frames with glass
   - Decay detailed to match: broken furniture, scattered papers and clothes, dust, stains
