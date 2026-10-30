@@ -8,7 +8,7 @@ import { heightAt } from '../../src/world/heightfield';
 import { buildGround } from '../../src/world/yuzhong/ground';
 import { buildSite } from '../../src/world/yuzhong/site';
 import { inside } from '../../src/world/yuzhong/shapes';
-import { run } from './helpers';
+import { run, settle } from './helpers';
 
 const w = getWorld('yuzhong'), site = buildSite(buildGround())!;
 
@@ -25,7 +25,8 @@ describe('the construction site (M3-41c)', () => {
     expect(site.crane.top - site.base).toBeGreaterThan(70);
     expect(site.frame.top - site.base).toBeCloseTo(14 * 3.6, 1);
   });
-  it('climbs the stair core from the ground to the top slab', { timeout: 60000 }, () => {
+  it('climbs the stair core from the ground to the top slab', async () => {
+    await settle();
     const s = createState(1, w), r = site.route;
     teleport(s.player, r[0].x, r[0].y + 0.05, r[0].z);
     run(s, w, 20);

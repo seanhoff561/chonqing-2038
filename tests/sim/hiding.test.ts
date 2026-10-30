@@ -36,7 +36,7 @@ describe('places to hide (M3-47)', () => {
     for (const k of KINDS) expect(n(k), k).toBeGreaterThan(k === 'kiosk' || k === 'van' ? 10 : 40);
     expect(w.hides.length).toBeGreaterThan(2000);
   });
-  it('lets him into each kind', { timeout: 120000 }, () => {
+  it('lets him into each kind', () => {
     for (const k of KINDS) {
       const ids = w.hides.map((h, i) => (h.kind === k ? i : -1)).filter(i => i >= 0).slice(0, 12);
       expect(ids.some(hideIn), k).toBe(true);

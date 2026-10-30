@@ -13,7 +13,7 @@ import { B } from '../../src/sim/types';
 import { ENVELOPE as E } from '../../src/data/envelope';
 import { BARE } from '../../src/world/city/climb';
 import type { Feature, Plot } from '../../src/world/world';
-import { run, secs } from './helpers';
+import { run, secs, settle } from './helpers';
 import { climbPole, climbHolds } from './climbbot';
 
 const w = getWorld('yuzhong'), g = w.ground!, near = w.plots.filter(p => !p.far);
@@ -74,7 +74,7 @@ function holds(p: Plot): { x: number; z: number; y: number }[] {
 }
 
 describe('climbing reworked (M3-67)', () => {
-  it("climbs no building of three floors or more to its roof on its own holds from the street", { timeout: 240000 }, () => {
+  it("climbs no building of three floors or more to its roof on its own holds from the street", () => {
     let n = 0;
     const climbed: string[] = [];
     for (const p of near) {
@@ -138,7 +138,8 @@ describe('climbing reworked (M3-67)', () => {
     expect(s.player.pos.y).toBeGreaterThan(c.y0 + 5);
   });
 
-  it('a bot gets onto three roofs over 20 m by crossing from a lower neighbour', { timeout: 240000 }, () => {
+  it('a bot gets onto three roofs over 20 m by crossing from a lower neighbour', async () => {
+    await settle();
     const lines = new Map<number, Feature[]>();
     for (const f of w.features) if (['route', 'rest', 'routeTop', 'vantage'].includes(f.kind)) { const a = lines.get(f.group); if (a) a.push(f); else lines.set(f.group, [f]); }
     const crossings = w.features.filter(f => f.kind === 'crossing');

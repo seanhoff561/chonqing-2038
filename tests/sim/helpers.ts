@@ -63,3 +63,8 @@ export function aim(state: SimState, x: number, y: number, z: number) {
 }
 
 export const LMB = B.USE, RMB = B.AIM;
+
+/** Await at the start of a long test (one that runs the sim for many seconds): it lets the test runner's last
+ *  message to this worker come back first. A test that holds the worker longer than a minute while one is still
+ *  out fails the run with "Timeout calling onTaskUpdate" (vitest's 60 s limit), as on the slower CI machines. */
+export const settle = () => new Promise<void>(r => setTimeout(r, 250));

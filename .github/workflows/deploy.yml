@@ -11,6 +11,8 @@ concurrency:
   group: pages
   cancel-in-progress: true
 jobs:
+  # The playable build goes up whenever it typechecks and builds; the tests run beside it and show red on their own
+  # (a slow test on the runner must never hold back the build the director plays).
   build:
     runs-on: ubuntu-latest
     env:
@@ -23,7 +25,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx tsc --noEmit -p .
-      - run: npx vitest run --reporter=dot
       - run: npx vite build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
@@ -38,3 +39,15 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+  test:
+    runs-on: ubuntu-latest
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run --reporter=dot

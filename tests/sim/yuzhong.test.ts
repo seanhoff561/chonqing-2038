@@ -8,7 +8,7 @@ import { teleport } from '../../src/sim/player';
 import { streets, onGround } from '../../src/world/yuzhong/ground';
 import { segNearObb, minRect } from '../../src/world/yuzhong/shapes';
 import { districtAt } from '../../src/world/yuzhong/lots';
-import { run } from './helpers';
+import { run, settle } from './helpers';
 import { B } from '../../src/sim/types';
 
 const w = getWorld('yuzhong'), g = w.ground!;
@@ -52,7 +52,7 @@ describe('Yuzhong at 1:1 (M3-41b)', () => {
     const buried = doors.filter(d => Math.abs((heightAt(g, d.x, d.z) ?? -99) - d.y) > 0.5);
     expect(buried.length / doors.length).toBeLessThan(0.02);
   });
-  it('keeps roadways clear of buildings', { timeout: 60000 }, () => {
+  it('keeps roadways clear of buildings', () => {
     const roads = streets().filter(s => onGround(s) && ['primary', 'secondary', 'tertiary', 'residential'].includes(s.kind));
     const segs = roads.flatMap(s => s.pts.slice(1).map((b, k) => ({ a: s.pts[k], b, r: s.w / 2 - 0.6 })));
     let hits = 0;
@@ -65,7 +65,8 @@ describe('Yuzhong at 1:1 (M3-41b)', () => {
     }
     expect(hits).toBe(0);
   });
-  it('walks real streets and stairs end to end', { timeout: 120000 }, () => {
+  it('walks real streets and stairs end to end', async () => {
+    await settle();
     // On the peninsula: within 1.3 km of Jiefangbei, not across a river.
     const jf = w.teleports.find(t => t.name === 'jiefangbei')!;
     const picks = streets().filter(s => onGround(s) && s.pts.length >= 3 && s.pts.every(([x, z]) => Math.hypot(x - jf.x, z - jf.z) < 1300)).sort((a, b) => len(b) - len(a));

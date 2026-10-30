@@ -13,7 +13,7 @@ import { B } from '../../src/sim/types';
 const w = getWorld('yuzhong'), g = w.ground!;
 
 describe('terrain and the Eighteen Stairs', () => {
-  it('walks up the longest flight of the Shibati stairs from its foot to its top without a fall', { timeout: 60000 }, () => {
+  it('walks up the longest flight of the Shibati stairs from its foot to its top without a fall', () => {
     const len = (p: [number, number][]) => p.slice(1).reduce((a, q, i) => a + Math.hypot(q[0] - p[i][0], q[1] - p[i][1]), 0);
     const flights = streets().filter(s => onGround(s) && s.steps && s.pts.every(([x, z]) => districtAt(x, z).district === 'shibati')).sort((a, b) => len(b.pts) - len(a.pts));
     const f = flights[0], pts = heightAt(g, ...f.pts[0])! < heightAt(g, ...f.pts[f.pts.length - 1])! ? f.pts : [...f.pts].reverse();

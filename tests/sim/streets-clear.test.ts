@@ -2,6 +2,7 @@
 // solids don't stand in a carriageway, and no prop does either: the machines keep the roads clear for their
 // convoys, wrecks shoved onto the pavements.
 import { describe, it, expect } from 'vitest';
+import { settle } from './helpers';
 import { getWorld } from '../../src/world/build';
 import { streetBuffers } from '../../src/render/streets';
 import { heightAt } from '../../src/world/heightfield';
@@ -24,7 +25,8 @@ const onRoad = (x: number, z: number) => roads.some(s => s.pts.slice(1).some(([b
 }));
 
 describe('clear, smooth streets (M3-56a)', () => {
-  it('lays every street surface over the ground, never under it', { timeout: 120000 }, () => {
+  it('lays every street surface over the ground, never under it', async () => {
+    await settle();
     let n = 0, under = 0;
     for (const { buf } of streetBuffers(g, w.streets)) {
       const p = buf.pos;
@@ -41,7 +43,7 @@ describe('clear, smooth streets (M3-56a)', () => {
     expect(n).toBeGreaterThan(1e6);
     expect(under / n).toBeLessThan(0.0005);
   });
-  it('draws nearly all of every carriageway, at the height of the ground under it', { timeout: 120000 }, () => {
+  it('draws nearly all of every carriageway, at the height of the ground under it', () => {
     let n = 0, drawn = 0;
     const cover = new Set<number>();
     for (const { buf } of streetBuffers(g, roads)) for (let i = 0; i < buf.pos.length; i += 3) cover.add(Math.round(buf.pos[i + 2]) * 8192 + Math.round(buf.pos[i]));
@@ -52,7 +54,7 @@ describe('clear, smooth streets (M3-56a)', () => {
     });
     expect(drawn / n).toBeGreaterThan(0.99);
   });
-  it('keeps solids out of the carriageways, but for the monorail piers', { timeout: 120000 }, () => {
+  it('keeps solids out of the carriageways, but for the monorail piers', () => {
     let n = 0, blocked = 0;
     for (const s of roads) across(s, (x, z) => {
       const h = heightAt(g, x, z);
@@ -63,7 +65,8 @@ describe('clear, smooth streets (M3-56a)', () => {
     });
     expect(blocked / n).toBeLessThan(0.004);
   });
-  it('puts no prop on a carriageway: wrecks are pushed onto the pavements (U-030)', { timeout: 60000 }, () => {
+  it('puts no prop on a carriageway: wrecks are pushed onto the pavements (U-030)', async () => {
+    await settle();
     // Standing on the road: overhead signs and laundry, greenery on walls and set pieces underground don't count.
     const bad = w.props.filter(p => { const h = heightAt(g, p.x, p.z); return h !== null && Math.abs(p.y - h) < 0.5 && p.kind !== 'vine' && p.kind !== 'figroots' && onRoad(p.x, p.z); });
     expect(bad.map(p => `${p.kind} ${p.x.toFixed(0)},${p.z.toFixed(0)}`).slice(0, 12)).toEqual([]);
