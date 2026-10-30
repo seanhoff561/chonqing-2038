@@ -179,7 +179,14 @@ export function alleys(lots: Lot[], r: Rng, out: Fabric, pick?: number, square =
         out.solids.push(B(w0, q - 0.03, w1, q + 0.03, hy - 0.05, hy, MAT.metal));
         out.features.push({ kind: 'bar', ...at((w0 + w1) / 2, q), y: hy, group: out.features.length });
       }
-    } else if (x < 0.92) {
+    } else if (x < 0.86) {
+      // A squeeze (M3-71, U-038): a stretch roofed over with a sheet, dark under it, choked by debris both ends
+      // but for a crawl hole low down.
+      const q0 = l0 + 1 + rand(r) * Math.max(0, l1 - l0 - 7), q1 = Math.min(l1 - 0.5, q0 + 4 + rand(r) * 3), wm = w0 + 0.45 + rand(r) * Math.max(0, w1 - w0 - 0.9);
+      out.solids.push(B(w0, q0, w1, q1, y + 2.4, y + 2.45, MAT.metal));
+      for (const q of [q0, q1 - 0.7]) out.solids.push(...carve([B(w0, q, w1, q + 0.7, y, y + 1.7, MAT.rubble)], B(wm - 0.4, q - 1, wm + 0.4, q + 2, y - 1, y + 0.62, 0)));
+      out.features.push({ kind: 'squeeze', ...at(wm, (q0 + q1) / 2), y, group: out.features.length });
+    } else if (x < 0.95) {
       // A fence across the alley: climb its 2.4 m top or crawl through the gap under it.
       const q = (l0 + l1) / 2, wm = (w0 + w1) / 2;
       out.solids.push(...carve([B(w0, q - 0.05, w1, q + 0.05, y, y + 2.4, MAT.metal)], B(wm - 0.4, q - 1, wm + 0.4, q + 1, y - 1, y + 0.65, 0)));

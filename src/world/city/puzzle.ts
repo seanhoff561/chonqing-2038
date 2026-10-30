@@ -30,9 +30,11 @@ export interface Frame {
 interface Room { face: number; a0: number; a1: number; d: number; k: number; kind: Kind; fallen: boolean; keep: Rect[] }
 type Step = 'door' | 'vent' | 'rubble' | 'over' | 'stair' | 'escape';
 /** The templates: a cluster's first room, then its steps. */
-const RECIPES: Record<string, { steps: Step[]; top?: boolean; ground?: boolean }> = {
+const RECIPES: Record<string, { steps: Step[]; top?: boolean; ground?: boolean; burrow?: boolean }> = {
   flat: { steps: ['door', 'door'] }, tower: { steps: ['over', 'over'] }, split: { steps: ['vent'] }, climb: { steps: ['stair', 'door'] },
   escape: { steps: ['escape', 'door'] }, loft: { steps: ['over'], top: true }, blocked: { steps: ['door', 'rubble'] }, shop: { steps: ['door', 'stair'], ground: true },
+  // In from the alley through a hole broken low in the wall, a crawl (M3-71, U-038), then a flight up.
+  burrow: { steps: ['stair', 'door'], ground: true, burrow: true },
 };
 
 /** Carve the building's rooms and their ways through; furnish them. Returns the sites (one a cluster). */
@@ -175,7 +177,7 @@ export function puzzle(fr: Frame, from: number, r: Rng, out: Fabric) {
     let m: Room | null = null;
     for (let t = 0; t < 14 && !m; t++) {
       const face = randInt(r, 4), w = size(SIZE.w[0], SIZE.w[1]), k = recipe.ground ? 0 : recipe.top ? n - 1 : 1 + randInt(r, Math.max(1, n - 1));
-      m = add(face, size(0, Math.max(0, len(face) - w)), w, size(SIZE.d[0], SIZE.d[1]), k, recipe.ground ? (['shop', 'restaurant', 'workshop'] as const)[randInt(r, 3)] : flatKind());
+      m = add(face, size(0, Math.max(0, len(face) - w)), w, size(SIZE.d[0], SIZE.d[1]), k, recipe.burrow ? 'store' : recipe.ground ? (['shop', 'restaurant', 'workshop'] as const)[randInt(r, 3)] : flatKind());
     }
     if (!m) continue;
     // Its way in: a window (or the roof hatch, the shop's shutter).
@@ -184,6 +186,14 @@ export function puzzle(fr: Frame, from: number, r: Rng, out: Fabric) {
       cuts.push(box(q, wall - SLAB - 0.01, wall + 0.01));
       out.climbables.push({ kind: 'ladder', x, z, y0: yOf(m.k), y1: wall + 1.0, nx, nz });
       m.keep.push(rect(m.face, a1 - 1.6, a1 + 0.3, 0, 1.2));
+    } else if (recipe.burrow) {
+      // A hole broken through the wall at its foot, crawl-high, rubble round it outside.
+      const c = (m.a0 + m.a1) / 2, y = yOf(0), h = rect(m.face, c - 0.4, c + 0.4, -WALL - 0.05, 0.05);
+      cuts.push(box(h, y, y + 0.65));
+      m.keep.push(rect(m.face, c - 0.6, c + 0.6, 0, 1.2));
+      for (const k of [-1, 1]) out.decor.push(box(rect(m.face, c + k * 0.55 - 0.25, c + k * 0.55 + 0.25, -WALL - 0.5, -WALL), y, y + 0.2 + rand(r) * 0.3, MAT.rubble));
+      const [hx, hz] = at((h[0] + h[2]) / 2, (h[1] + h[3]) / 2), [ix, iz] = inDir(m.face);
+      out.features.push({ kind: 'burrow', x: hx, y, z: hz, group: out.features.length, nx: -ix, nz: -iz });
     } else window(m, recipe.ground ? (rand(r) < 0.5 ? 'glass' : 'open') : winState(m.k) === 'barred' ? 'glass' : winState(m.k));
     let at0: Room = m;
     for (const step of recipe.steps) {

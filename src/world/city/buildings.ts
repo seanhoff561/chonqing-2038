@@ -1,6 +1,6 @@
 // The ordinary city fabric: one lot's building by kind (walk-ups, slabs, towers, Shibati's traditional houses),
 // parapets, pitched roofs, roof clutter, facade climbing and interiors.
-import { solid, type Solid } from '../geom';
+import { solid, carve, type Solid } from '../geom';
 import { MAT } from '../mats';
 import { makeRng, rand, randInt, hashString, type Rng } from '../../sim/rng';
 import type { Prop, Inter, Climbable, HideSpot, Site, Feature } from '../world';
@@ -62,6 +62,25 @@ function paint(l: Lot, r: Rng): number {
   return l.mat === MAT.tile ? MAT.facadeTile : MAT.facade;
 }
 
+/** Nooks in a solid block's ground floor (M3-71, U-038): a recess a body wide in a wall on a street or a yard, to
+ *  press into out of a passing patrol's sight; one or two a block, three blocks in five, clear of its corners. */
+function nooks(l: Lot, m0: number, r: Rng, out: Fabric) {
+  if (rand(r) > 0.6 || l.wall - l.base < 4) return;
+  for (const s of out.solids.slice(m0)) s.orig ??= { x0: s.x0, y0: s.y0, z0: s.z0, x1: s.x1, z1: s.z1 };
+  const sideOf = [[l.x0, l.x1, l.z0, 0, -1], [l.x0, l.x1, l.z1, 0, 1], [l.z0, l.z1, l.x0, -1, 0], [l.z0, l.z1, l.x1, 1, 0]] as const;
+  for (let k = 0, n = 1 + randInt(r, 2); k < n; k++) {
+    const [a, b, f, nx, nz] = sideOf[randInt(r, 4)], len = b - a;
+    if (len < 4) continue;
+    const c = a + 1.2 + rand(r) * (len - 2.4), y = l.ground?.(nx ? f + nx : c, nz ? f + nz : c) ?? l.base;
+    if (y < l.base - 0.1 || y > l.base + 0.4) continue;
+    // 1.0 wide, 0.95 deep into the wall, 1.9 high.
+    const nook = nz ? solid(c - 0.5, y, nz < 0 ? f : f - 0.95, c + 0.5, y + 1.9, nz < 0 ? f + 0.95 : f, 0) : solid(nx < 0 ? f : f - 0.95, y, c - 0.5, nx < 0 ? f + 0.95 : f, y + 1.9, c + 0.5, 0);
+    out.solids.splice(m0, out.solids.length - m0, ...carve(out.solids.slice(m0), nook));
+    out.hides.push({ id: out.hides.length, kind: 'nook', inner: { x0: nook.x0 + 0.05, y0: y, z0: nook.z0 + 0.05, x1: nook.x1 - 0.05, y1: y + 1.85, z1: nook.z1 - 0.05 }, yaw: Math.atan2(-nx, -nz) });
+    out.features.push({ kind: 'nook', x: (nook.x0 + nook.x1) / 2, y, z: (nook.z0 + nook.z1) / 2, group: out.features.length, nx, nz });
+  }
+}
+
 function mass(l: Lot, r: Rng, out: Fabric) {
   const { x0, z0, x1, z1, base, wall } = l;
   // Nine in ten blocks that fit a stair core can be entered (U-022, U-023, M3-55: more of the city opens up; by
@@ -70,9 +89,11 @@ function mass(l: Lot, r: Rng, out: Fabric) {
   const look = open ? (l.mat === MAT.tile ? MAT.facadeTile : MAT.facade) : paint(l, r);
   // Some tall solid blocks step their top two floors back from the edge.
   const step = !open && !l.climb && !l.edge && l.kind === 'res' && wall - base >= 24 && rand(r) < 0.25 ? 1.6 : 0;
+  const m0 = out.solids.length;
   if (open) hollow(l, r, out, look);
   else if (step) out.solids.push(solid(x0, base, z0, x1, wall - 2 * FLOOR, z1, look), solid(x0 + step, wall - 2 * FLOOR, z0 + step, x1 - step, wall, z1 - step, look));
   else out.solids.push(solid(x0, base, z0, x1, wall, z1, look));
+  if (!open && !l.sheer) nooks(l, m0, r, out);
   // The far view's stand-in: the whole block in its painted facade, parapet included.
   out.far.push(solid(x0, base, z0, x1, wall + PARAPET, z1, look));
   // Parapet: a lip to grab from the facade and a low wall on the roof (round the top part of a stepped block).

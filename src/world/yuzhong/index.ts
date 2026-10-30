@@ -132,7 +132,7 @@ export function buildYuzhong(): World {
     name: 'yuzhong', routes: net.routes, patrols: net.patrols, gates, solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? [], fac?.decor ?? [], vert.decor, cross.decor, under.decor, laid.decor, filled.decor),
     props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], fac?.props ?? [], under.props, laid.props, dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(line.climbables, site?.climbables ?? [], vert.climbables, under.climbables, dress.climbables),
     hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones.concat(under.zones),
-    far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(fac?.features ?? [], vert.features, cross.features, under.features, laid.features, dress.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n })), under.descents.flatMap((d, i) => d.map((q, n) => ({ kind: 'descentRoute', ...q, group: i * 100 + n })))), marks, lawns: laid.lawns, convoys: fac?.convoys, streets: drawn.concat(laid.paths, doorWays), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
+    far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(fac?.features ?? [], vert.features, cross.features, rubble.features, under.features, laid.features, dress.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n })), under.descents.flatMap((d, i) => d.map((q, n) => ({ kind: 'descentRoute', ...q, group: i * 100 + n })))), marks, lawns: laid.lawns, convoys: fac?.convoys, streets: drawn.concat(laid.paths, doorWays), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
     teleports, spawn: hide,
   });
   // Nothing floats or sinks (M3-56): whatever stands on something above ground settles onto what's under it, or
@@ -285,7 +285,7 @@ function place(f: Fabric, o: Obb, prefix: string, out: Fabric): (x: number, z: n
  *  laid out in the first one's frame. */
 function rowAlleys(plans: Plan[], out: Fabric, g: Heightfield) {
   // Along each row the alleys take turns, the first one first: something to hide in, bars to swing from, a fence
-  // to get over, a hide again.
+  // to get over, a hide again, a squeeze to crawl (M3-71).
   const turn = new Map<string, number>();
   for (let n = 0; n + 1 < plans.length; n++) {
     const a = plans[n], b = plans[n + 1];
@@ -300,7 +300,7 @@ function rowAlleys(plans: Plan[], out: Fabric, g: Heightfield) {
     // Seeded by where it is, so what's in it doesn't change when lots elsewhere come or go.
     const k = turn.get(a.row) ?? 0;
     turn.set(a.row, k + 1);
-    alleys([lot(o.cx, o.cz, o.hw, o.hd, y, a.wall), lot(bx, bz, b.obb.hw, b.obb.hd, y, b.wall)], makeRng(hashString(`alley${Math.round(o.cx)},${Math.round(o.cz)}`)), f, [0.1, 0.5, 0.8, 0.3][k % 4], Math.abs(Math.sin(a.obb.yaw - b.obb.yaw)) < 0.01);
+    alleys([lot(o.cx, o.cz, o.hw, o.hd, y, a.wall), lot(bx, bz, b.obb.hw, b.obb.hd, y, b.wall)], makeRng(hashString(`alley${Math.round(o.cx)},${Math.round(o.cz)}`)), f, [0.1, 0.5, 0.9, 0.3, 0.8][k % 5], Math.abs(Math.sin(a.obb.yaw - b.obb.yaw)) < 0.01);
     place(f, o, `${a.seed}a`, out);
   }
 }

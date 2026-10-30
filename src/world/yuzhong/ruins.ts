@@ -3,7 +3,9 @@
 // heaps, tipped slabs, rebar and broken walls, at least one piece however small; the big ones a collapsed
 // building (a broken corner of wall, slabs piled against it, rubble round it); the steepest banks are retaining
 // walls with fig roots hanging over them. Debris has collision, so it is cover and something to climb.
-import { overlaps, type Solid, type SolidIndex } from '../geom';
+import { overlaps, solid, turn, type Solid, type SolidIndex } from '../geom';
+import { MAT } from '../mats';
+import type { Feature } from '../world';
 import { heightAt, type Heightfield } from '../heightfield';
 import { makeRng, hashString, rand, type Rng } from '../../sim/rng';
 import type { Prop } from '../world';
@@ -13,8 +15,8 @@ import { MARK, type Marks } from './marks';
 /** Patches this many cells and up hold a collapsed building. */
 const BIG = 10;
 
-export function ruins(index: SolidIndex, g: Heightfield, mk: Marks): { props: Prop[]; solids: Solid[] } {
-  const props: Prop[] = [], solids: Solid[] = [];
+export function ruins(index: SolidIndex, g: Heightfield, mk: Marks): { props: Prop[]; solids: Solid[]; features: Feature[] } {
+  const props: Prop[] = [], solids: Solid[] = [], features: Feature[] = [];
   const put = (kind: string, x: number, z: number, yaw: number, extra: Partial<Prop> = {}) => {
     const y = heightAt(g, x, z);
     if (y === null) return false;
@@ -46,6 +48,8 @@ export function ruins(index: SolidIndex, g: Heightfield, mk: Marks): { props: Pr
     const r = makeRng(hashString(`ruin${k0}`));
     let placed = 0;
     if (cells.length >= BIG) placed += collapse(cells[cells.length >> 1], r);
+    // In the big heaps, floors come down onto their rubble with a crawl space under (M3-71, U-038): one or two.
+    for (let m = 0, n = cells.length >= 3 * BIG ? 2 : cells.length >= BIG ? 1 : cells.length >= 4 && rand(r) < 0.5 ? 1 : 0; m < n; m++) { const k = cells[Math.floor(rand(r) * cells.length)], i = k % mk.w, j = (k - i) / mk.w; crawl((i + 0.5) * mk.cell, (j + 0.5) * mk.cell, rand(r) * 6.3, r); }
     for (const k of cells) {
       const i = k % mk.w, j = (k - i) / mk.w, x = (i + 0.2 + rand(r) * 0.6) * mk.cell, z = (j + 0.2 + rand(r) * 0.6) * mk.cell, q = rand(r), f = fall(i, j);
       if (q < 0.2) placed += +put('rubblepile', x, z, rand(r) * 6.3, { w: 1.5 + rand(r) * 2.5 });
@@ -63,7 +67,19 @@ export function ruins(index: SolidIndex, g: Heightfield, mk: Marks): { props: Pr
       for (const [kind, extra] of [['debris', {}], ['rubblepile', { w: 1.5 }], ['rebar', {}]] as const) if (put(kind, (i + 0.5) * mk.cell, (j + 0.5) * mk.cell, rand(r) * 6.3, extra)) { placed++; break; }
     }
   }
-  return { props, solids };
+  return { props, solids, features };
+
+  /** A floor slab come down on its rubble: a crawl space under it 0.6-0.8 m high, open at both ends, 3-5 m long. */
+  function crawl(x: number, z: number, yaw: number, r: Rng) {
+    const y = heightAt(g, x, z);
+    if (y === null) return;
+    const L = 3 + rand(r) * 2, h = 0.62 + rand(r) * 0.18;
+    const parts = turn([solid(x - L / 2, y + h, z - 1.1, x + L / 2, y + h + 0.25, z + 1.1, MAT.concrete), solid(x - L / 2, y - 0.3, z - 1.1, x + L / 2, y + h, z - 0.6, MAT.rubble),
+      solid(x - L / 2, y - 0.3, z + 0.6, x + L / 2, y + h, z + 1.1, MAT.rubble)], yaw, x, z);
+    if (parts.some(b => overlaps(index, { ...b, y0: b.y0 + 0.6 }) || solids.some(o => o.x0 < b.x1 && b.x0 < o.x1 && o.z0 < b.z1 && b.z0 < o.z1 && Math.abs(o.y0 - b.y0) < 2))) return;
+    solids.push(...parts);
+    features.push({ kind: 'crawlspace', x, y, z, group: features.length, nx: Math.cos(yaw), nz: Math.sin(yaw) });
+  }
 
   /** A collapsed building at cell k: a broken corner of wall, slabs piled against it, rubble round it. */
   function collapse(k: number, r: Rng): number {

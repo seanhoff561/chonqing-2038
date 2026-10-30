@@ -81,6 +81,8 @@ function shell(kind: string, w: number, h: number, d: number): THREE.Group {
       const lid = new THREE.Mesh(new THREE.CircleGeometry(r * 1.05, 20), mat(c)); lid.rotation.x = Math.PI / 2; lid.position.set(r * 0.25, h + 0.02, 0); g.add(lid);
       break;
     }
+    // A nook in a wall: the wall itself is all round him.
+    case 'nook': break;
     default: {
       // A kiosk or a cabinet: walls all round, its shutter down to a hand's breadth off the counter.
       walls(0x2a3a32, true, h * 0.45);

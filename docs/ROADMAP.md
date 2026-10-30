@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 67 of 84 done
+## M3: 68 of 84 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -440,7 +440,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Route and patrol data: the routes as graphs, patrols laid against them; a patrol route and a drone corridor pass over the start hideout's vent grate at night (U-018)
   - U-037 metroidvania: some key places and buildings reached only by one designed way that needs a tool (the grappling hook, M5-20, and others), the holds round them taken away so no other method gets there; routes are not tested for being possible (the director plays them), a PLAYTEST request instead
   - From M3-37a: the cable bundles sway (they hold his weight already)
-- [ ] **M3-71** Tight ways at ground level (U-038)
+- [x] **M3-71** Tight ways at ground level (U-038)
   - Between buildings, through large areas of collapsed buildings and structures and through building insides: maze-like gaps, holes, crawlspaces and squeezes to find a way through, dark enough to need the headlamp, joined seamlessly to the rooftop routes (a hole down from a roof, a squeeze up into a building)
   - Every street a dangerous gap to cross, not a way to walk: the ways across are over (buildings, crossings), under (basements, the underground) or a quick dash between cover
   - Nooks on the sides of buildings to hide in from a passing patrol
