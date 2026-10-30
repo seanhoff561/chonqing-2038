@@ -105,8 +105,9 @@ export function facades(l: Lot, r: Rng, out: Fabric) {
 }
 
 /** The alley between neighbouring buildings in one frame, on the lower one's floor. */
-/** pick: which kind of alley (0..1 as the roll below), when the caller deals them out in turn. */
-export function alleys(lots: Lot[], r: Rng, out: Fabric, pick?: number) {
+/** pick: which kind of alley (0..1 as the roll below), when the caller deals them out in turn; square: whether the
+ *  two walls are square to each other, so a line can be strung across. */
+export function alleys(lots: Lot[], r: Rng, out: Fabric, pick?: number, square = true) {
   for (let i = 0; i < lots.length; i++) for (let j = i + 1; j < lots.length; j++) {
     const a = lots[i], b = lots[j];
     const gx = Math.max(a.x0, b.x0) - Math.min(a.x1, b.x1), gz = Math.max(a.z0, b.z0) - Math.min(a.z1, b.z1);
@@ -115,7 +116,8 @@ export function alleys(lots: Lot[], r: Rng, out: Fabric, pick?: number) {
     const alongZ = gx > 0;
     const w0 = alongZ ? Math.min(a.x1, b.x1) : Math.min(a.z1, b.z1), w1 = w0 + (alongZ ? gx : gz);
     const l0 = alongZ ? Math.max(a.z0, b.z0) : Math.max(a.x0, b.x0), l1 = alongZ ? Math.min(a.z1, b.z1) : Math.min(a.x1, b.x1);
-    if (l1 - l0 < 5) continue;
+    // An alley is a lane between two walls; a wider gap is a yard or a jump, not furnished as one (U-031).
+    if (l1 - l0 < 5 || w1 - w0 > 7) continue;
     const y = Math.min(a.base, b.base);
     const B = (p0: number, q0: number, p1: number, q1: number, y0: number, y1: number, mat: number) =>
       alongZ ? solid(p0, y0, q0, p1, y1, q1, mat) : solid(q0, y0, p0, q1, y1, p1, mat);
@@ -157,6 +159,8 @@ export function alleys(lots: Lot[], r: Rng, out: Fabric, pick?: number) {
     for (let i = 0, n = 1 + randInt(d, 3); i < n; i++) wall('weeds');
     if (rand(d) < 0.4) wall('boxes');
     if (rand(d) < 0.25) wall('bike');
-    if (rand(d) < 0.3) out.props.push({ kind: 'laundry', ...at((w0 + w1) / 2, l0 + 1 + rand(d) * (l1 - l0 - 2)), y: y + 2.4 + rand(d) * 3, yaw: along, w: w1 - w0 });
+    // Laundry strung from wall to wall (U-031): only between square walls, under both roofs.
+    const hang = Math.min(a.wall, b.wall) - 0.8 - (y + 2.4);
+    if (rand(d) < 0.3 && square && hang > 0.3) out.props.push({ kind: 'laundry', ...at((w0 + w1) / 2, l0 + 1 + rand(d) * (l1 - l0 - 2)), y: y + 2.4 + rand(d) * Math.min(3, hang), yaw: along, w: w1 - w0 + 0.1 });
   }
 }

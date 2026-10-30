@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-59 Props that make sense (U-031).
-Features done: 115 / 272 | Last done: M3-58
+**Status:** building M3. Next: M3-60 Open ground with structure (U-031).
+Features done: 116 / 272 | Last done: M3-59
 <!-- /status -->
 
 ## Log
@@ -133,3 +133,4 @@ Features done: 115 / 272 | Last done: M3-58
 - M3-57b The factory at Chaotianmen (U-030): the factory in Raffles City's podium, lit, guarded, columns marching out
 - M3-57 The vertical city: packed, stacked and bridged (U-023, U-024): the vertical city: skybridges, blocks over lanes, roof streets, megastructures, clustered towers, envelope-sized gaps
 - M3-58 The underground city (U-023, U-024): the underground city: a network off the Grand Tunnel to a two-level city under Jiefangbei and on to Xiaoshizi, 40+ ways in
+- M3-59 Props that make sense (U-031): props that make sense: anchored laundry, fallen bikes, varied signs where they belong, the train on its beam, beams only at night

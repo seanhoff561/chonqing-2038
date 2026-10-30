@@ -76,28 +76,41 @@ export function buildLine2(g: Heightfield): Line2 {
       if (i % 4 === 2) L.solids.push(...turn([solid(cx - 0.6, ground[i] - 1, cz - 1.1, cx + 0.6, lo - BEAM.depth - 0.6, cz + 1.1, MAT.concrete), solid(cx - 0.9, lo - BEAM.depth - 0.6, cz - 1.4, cx + 0.9, lo - BEAM.depth, cz + 1.4, MAT.concrete)], yaw, cx, cz));
     }
   }
-  // The stalled train on the longer beam, TRAIN.at metres from the portal end, and its collision.
+  // The stalled train on the longer beam, TRAIN.at metres from the portal end, each car sitting on the beam where it
+  // stands: along its curve, tilted with its grade (U-031). Their collision in each car's own frame.
   const b = L.beams[0];
   if (b) {
-    const k = Math.min(b.pts.length - 2, Math.round(TRAIN.at / 6)), [ax, az] = b.pts[k], [bx, bz] = b.pts[k + 6] ?? b.pts[b.pts.length - 1];
-    const yaw = Math.atan2(bz - az, bx - ax), top = Math.max(b.top[k], b.top[Math.min(b.top.length - 1, k + 6)]), total = TRAIN.cars * (TRAIN.len + TRAIN.gap) - TRAIN.gap;
-    const cx = (ax + bx) / 2, cz = (az + bz) / 2, hw = TRAIN.w / 2, H = MAT.hidden, local: Solid[] = [];
+    const cum = [0];
+    for (let i = 1; i < b.pts.length; i++) cum.push(cum[i - 1] + Math.hypot(b.pts[i][0] - b.pts[i - 1][0], b.pts[i][1] - b.pts[i - 1][1]));
+    /** The beam's top at s metres along it. */
+    const on = (s: number) => {
+      let i = 1;
+      while (i < cum.length - 1 && cum[i] < s) i++;
+      const f = Math.max(0, Math.min(1, (s - cum[i - 1]) / (cum[i] - cum[i - 1] || 1))), [ax, az] = b.pts[i - 1], [bx, bz] = b.pts[i];
+      return { x: ax + (bx - ax) * f, z: az + (bz - az) * f, y: b.top[i - 1] + (b.top[i] - b.top[i - 1]) * f };
+    };
+    const hw = TRAIN.w / 2, H = MAT.hidden, s0 = Math.min(TRAIN.at, cum[cum.length - 1] - TRAIN.cars * (TRAIN.len + TRAIN.gap) - 8);
+    const mid = { x: 0, z: 0, top: 0 };
     for (let c = 0; c < TRAIN.cars; c++) {
-      const x0 = cx - total / 2 + c * (TRAIN.len + TRAIN.gap), x1 = x0 + TRAIN.len;
-      local.push(solid(x0, top + 0.25, cz - hw + 0.08, x1, top + 0.4, cz + hw - 0.08, H));
-      for (const z of [cz - hw, cz + hw - 0.08]) local.push(solid(x0, top - 1.2, z, x1, top + 2.95, z + 0.08, H));
-      local.push(solid(x0, top + 2.7, cz - hw, x1, top + 2.95, cz + hw, H));
-      for (const x of [x0, x1 - 0.08]) local.push(solid(x, top + 0.4, cz - hw + 0.08, x + 0.08, top + 2.7, cz - 0.45, H), solid(x, top + 0.4, cz + 0.45, x + 0.08, top + 2.7, cz + hw - 0.08, H), solid(x, top + 2.3, cz - 0.45, x + 0.08, top + 2.7, cz + 0.45, H));
+      const A = on(s0 + c * (TRAIN.len + TRAIN.gap)), B = on(s0 + c * (TRAIN.len + TRAIN.gap) + TRAIN.len);
+      const cx = (A.x + B.x) / 2, cz = (A.z + B.z) / 2, top = (A.y + B.y) / 2, yaw = Math.atan2(B.z - A.z, B.x - A.x), x0 = cx - TRAIN.len / 2, x1 = cx + TRAIN.len / 2;
+      const lo = Math.min(A.y, B.y), hi = Math.max(A.y, B.y);
+      // Its floor on the grade (a ramp), the roof over the higher end; each end wall at its own end's height.
+      const local: Solid[] = [hi - lo < 0.02 ? solid(x0, top + 0.25, cz - hw + 0.08, x1, top + 0.4, cz + hw - 0.08, H) : rampSolid(x0, lo + 0.25, cz - hw + 0.08, x1, cz + hw - 0.08, lo + 0.4, hi + 0.4, B.y > A.y ? 1 : 2, H), solid(x0, hi + 2.7, cz - hw, x1, hi + 2.95, cz + hw, H)];
+      for (const z of [cz - hw, cz + hw - 0.08]) local.push(solid(x0, lo - 1.2, z, x1, hi + 2.95, z + 0.08, H));
+      for (const [x, y] of [[x0, A.y], [x1 - 0.08, B.y]]) local.push(solid(x, y + 0.4, cz - hw + 0.08, x + 0.08, hi + 2.7, cz - 0.45, H), solid(x, y + 0.4, cz + 0.45, x + 0.08, hi + 2.7, cz + hw - 0.08, H), solid(x, y + 2.3, cz - 0.45, x + 0.08, hi + 2.7, cz + 0.45, H));
+      L.solids.push(...turn(local, yaw, cx, cz));
       const [ix, iz] = rot(cx, cz, yaw, x0 + 4 + c * 5, cz + 1.0);
       L.inter.push({ id: `train${c}`, kind: 'container', x: ix, y: top + 0.9, z: iz, r: 1.0, zh: '包', en: 'Bag', data: { type: 'bag', loot: 'car' } });
+      L.props.push({ kind: 'train', x: cx, y: top, z: cz, yaw: Math.PI / 2 - yaw, w: TRAIN.cars, d: c, h: Math.atan2(B.y - A.y, TRAIN.len) });
+      mid.x += cx / TRAIN.cars; mid.z += cz / TRAIN.cars; mid.top += top / TRAIN.cars;
     }
-    L.solids.push(...turn(local, yaw, cx, cz));
-    L.props.push({ kind: 'train', x: cx, y: top, z: cz, yaw: Math.PI / 2 - yaw, w: TRAIN.cars });
-    L.train = { x: cx, z: cz, yaw, top };
+    const ends = [on(s0), on(s0 + TRAIN.cars * (TRAIN.len + TRAIN.gap) - TRAIN.gap)];
+    L.train = { ...mid, yaw: Math.atan2(ends[1].z - ends[0].z, ends[1].x - ends[0].x) };
     // Maintenance ladders up the piers either side of the train.
-    for (const s of [-1, 1]) {
-      const [lx, lz] = rot(cx, cz, yaw, cx + s * (total / 2 + 6), cz - 1.3);
-      L.climbables.push({ kind: 'ladder', x: lx, z: lz, y0: hAt(g, lx, lz), y1: top + 0.3, nx: Math.sin(yaw), nz: -Math.cos(yaw) });
+    for (const s of [s0 - 6, s0 + TRAIN.cars * (TRAIN.len + TRAIN.gap) + 6]) {
+      const p = on(s), q = on(s + 1), yaw = Math.atan2(q.z - p.z, q.x - p.x), nx = Math.sin(yaw), nz = -Math.cos(yaw), lx = p.x - nx * 1.3, lz = p.z - nz * 1.3;
+      L.climbables.push({ kind: 'ladder', x: lx, z: lz, y0: hAt(g, lx, lz), y1: p.y + 0.3, nx, nz });
     }
   }
   // The portal where the beams dive under the ridge toward Jiaochangkou: a cut in the hillside up to a concrete

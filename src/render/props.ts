@@ -1,7 +1,7 @@
 // Set dressing built from code by prop kind.
 import * as THREE from 'three';
 import type { Prop } from '../world/world';
-import { material } from './materials';
+import { material, night } from './materials';
 import { MAT } from '../world/mats';
 import { textTexture } from './textures';
 import { mergeGeometries } from './view';
@@ -108,7 +108,8 @@ function searchlight(p: Prop): THREE.Object3D {
   g.add(pivot);
   g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 0.5, 10), lam(0x333333, 0x666666)));
   const phase = p.x * 0.13;
-  g.userData.tick = (t: number) => { pivot.rotation.y = Math.sin(t * 0.25 + phase) * 1.2; pivot.rotation.x = 0.7 + Math.sin(t * 0.17 + phase) * 0.25; };
+  // Its beam burns only after dark (U-031).
+  g.userData.tick = (t: number) => { pivot.visible = night.k > 0.2; pivot.rotation.y = Math.sin(t * 0.25 + phase) * 1.2; pivot.rotation.x = 0.7 + Math.sin(t * 0.17 + phase) * 0.25; };
   return g;
 }
 
@@ -223,7 +224,11 @@ const builders: Record<string, Builder> = {
 type Tick = (t: number, open: Record<string, boolean>) => void;
 const ticking: Tick[] = [];
 /** Animate props that move (searchlights, scripted patrols, doors following the world state). */
-export function tickProps(t: number, open: Record<string, boolean> = {}) { for (const f of ticking) f(t, open); }
+export function tickProps(t: number, open: Record<string, boolean> = {}) {
+  // Floodlit beams show after dark only (U-031).
+  FLOOD.opacity = 0.08 * night.k;
+  for (const f of ticking) f(t, open);
+}
 
 /** Small things, a few pixels from further off: merged apart and drawn only near the camera (view.ts DETAIL). */
 const SMALL = new Set(['weeds', 'trash', 'debris', 'boxes', 'bags', 'pot', 'stools', 'scooter', 'bike', 'sign', 'bin', 'rebar', 'shrub', 'garden', 'bench', 'mahjong', 'drum', 'stall',

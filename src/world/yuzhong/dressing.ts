@@ -86,7 +86,7 @@ export function dressStreets(index: SolidIndex, g: Heightfield, sts: Street[], l
       // Litter, weeds and debris along the edges, more where nobody sweeps.
       const edge = ROAD.has(s.kind) ? s.w / 2 + KERB_W + 0.2 : s.steps ? s.w / 2 + 0.3 : Math.max(0.3, s.w / 2 - 0.9);
       for (let t = rand(r) * 6; t < len; t += 5 + rand(r) * 8) {
-        const side = rand(r) < 0.5 ? -1 : 1, o = edge + rand(r) * 0.7, [x, z] = at(t, side * o), cyber = districtAt(x, z).cyber, q = rand(r), yaw = rand(r) * 6.28;
+        const side = rand(r) < 0.5 ? -1 : 1, o = edge + 0.3 + rand(r) * 1.5, [x, z] = at(t, side * o), cyber = districtAt(x, z).cyber, q = rand(r), yaw = rand(r) * 6.28;
         const kind = q < 0.35 ? 'weeds' : q < 0.6 ? 'trash' : q < 0.75 ? 'debris' : q < 0.85 ? 'boxes' : q < 0.92 ? 'sign' : cyber ? 'trash' : 'rubblepile', extra = q >= 0.92 && !cyber ? { w: 1.5 + rand(r) * 2 } : {};
         put(kind, x, z, yaw, extra) || put(kind, ...at(t, -side * o), yaw, extra);
       }
@@ -110,8 +110,9 @@ function road(s: Street, len: number, at: (t: number, off: number) => [number, n
     const side = rand(r) < 0.5 ? -1 : 1, cyber = districtAt(...at(t, 0)).cyber;
     // On the pavement, or where a building stands on it, shoved further off into whatever space is beside the road.
     if (rand(r) < (cyber ? 0.35 : 0.55)) for (let i = 0, n = 1 + randInt(r, 3); i < n; i++) {
-      const kind = rand(r) < 0.15 ? 'van' : 'car', yaw = along + (rand(r) < 0.5 ? 0 : Math.PI) + (rand(r) - 0.5) * 0.25;
-      for (const o of [1.05, 2.6, 4.2, -1.05, -2.6, -4.2]) { const [x, z] = at(t + i * 4.8, side * Math.sign(o) * (kerb + Math.abs(o))); if (put(kind, x, z, yaw)) break; }
+      // Shoved, so askew and not evenly spaced.
+      const kind = rand(r) < 0.15 ? 'van' : 'car', yaw = along + (rand(r) < 0.5 ? 0 : Math.PI) + (rand(r) - 0.5) * 0.7, tt = t + i * (4.6 + rand(r) * 2);
+      for (const o of [1.05, 2.6, 4.2, -1.05, -2.6, -4.2]) { const [x, z] = at(tt, side * Math.sign(o) * (kerb + Math.abs(o) + rand(r) * 0.4)); if (put(kind, x, z, yaw)) break; }
     }
   }
   // Lampposts down alternate sides, closer on the arterials; railings along a pavement whose edge drops away.
@@ -124,7 +125,8 @@ function road(s: Street, len: number, at: (t: number, off: number) => [number, n
   }
   for (let t = rand(r) * 30; t < len; t += 25 + rand(r) * 30) {
     const side = rand(r) < 0.5 ? -1 : 1, q = rand(r);
-    if (q < 0.35) for (let i = 0, n = 2 + randInt(r, 3); i < n; i++) { const yaw = along + Math.PI / 2 + (rand(r) - 0.5) * 0.6; either(t + i * 1.2, wall - 0.5, side, (x, z) => put('scooter', x, z, yaw)); }
+    // Scooters fallen in a heap against the buildings, not parked in a row.
+    if (q < 0.35) for (let i = 0, n = 2 + randInt(r, 3); i < n; i++) { const yaw = rand(r) * 6.28; either(t + i * (0.8 + rand(r) * 1.2), wall - 0.4 - rand(r) * 0.9, side, (x, z) => put('scooter', x, z, yaw)); }
     else if (q < 0.6) { const yaw = rand(r) * 6; either(t, kerb + 0.6, side, (x, z) => put('tree', x, z, yaw)); }
     else if (q < 0.66) either(t, wall - 0.5, side, (x, z, sd) => put('bin', x, z, along + (sd > 0 ? Math.PI : 0)));
     else if (q < 0.7) either(t, wall - 0.65, side, (x, z) => put('dumpster', x, z, -th));
@@ -148,21 +150,27 @@ function stairs(s: Street, len: number, at: (t: number, off: number) => [number,
 /** Walkways, lanes and squares: bikes and scooters, benches, bins, trees, stalls, mahjong, kiosks, notices along
  *  their edges (the narrow ones only small things). */
 function walkway(s: Street, len: number, at: (t: number, off: number) => [number, number], th: number, r: Rng, put: Put) {
-  for (let t = rand(r) * 6; t < len; t += 5 + rand(r) * 9) {
-    // Along either edge, facing the way: the middle stays clear to walk.
-    const side = rand(r) < 0.5 ? -1 : 1, [x, z] = at(t, side * Math.max(0.3, s.w / 2 - 0.7)), cyber = districtAt(x, z).cyber, q = rand(r), yaw = Math.PI / 2 - th + (side > 0 ? 0 : Math.PI);
+  // In loose groups of one to three a few metres apart (U-031): off the walkway's edge onto the ground beside it,
+  // or where something stands there, just inside its edge; never in a row.
+  for (let t = rand(r) * 6; t < len; t += 7 + rand(r) * 12) {
+    const side = rand(r) < 0.5 ? -1 : 1, cyber = districtAt(...at(t, 0)).cyber, q = rand(r), n = 1 + randInt(r, 3);
     if (s.w < 3 && q >= 0.55) continue;
-    if (q < 0.18) put('bike', x, z, yaw + (rand(r) - 0.5) * 0.5);
-    else if (q < 0.3) put('scooter', x, z, yaw + rand(r) * 6);
-    else if (q < 0.38) put('bench', x, z, yaw);
-    else if (q < 0.45) put('bin', x, z, yaw);
-    else if (q < 0.55) put('pot', x, z, yaw);
-    else if (q < 0.62) put('tree', x, z, rand(r) * 6);
-    else if (q < (cyber ? 0.78 : 0.68)) put('stall', x, z, yaw);
-    else if (q < (cyber ? 0.84 : 0.72)) put('mahjong', x, z, yaw);
-    else if (q < (cyber ? 0.88 : 0.75)) put('kiosk', x, z, yaw);
-    else if (q < 0.8) put(cyber ? 'stools' : 'dronewreck', x, z, rand(r) * 6);
-    else if (q < 0.83 && !cyber) put('edict', x, z, yaw);
+    for (let i = 0; i < n; i++) {
+      const tt = t + (rand(r) - 0.5) * 4, face = Math.PI / 2 - th + (side > 0 ? 0 : Math.PI) + (rand(r) - 0.5) * 0.5;
+      const off = [s.w / 2 + 0.7 + rand(r) * 1.2, Math.max(0.3, s.w / 2 - 0.9 - rand(r) * 0.4)];
+      const place = (kind: string, yaw: number) => off.some(o => put(kind, ...at(tt, side * o), yaw));
+      if (q < 0.18) place('bike', face + rand(r) * 6);
+      else if (q < 0.3) place('scooter', face + rand(r) * 6);
+      else if (q < 0.38) place('bench', face);
+      else if (q < 0.45) place('bin', face);
+      else if (q < 0.55) place('pot', rand(r) * 6);
+      else if (q < 0.62) place('tree', rand(r) * 6);
+      else if (q < (cyber ? 0.78 : 0.68)) place('stall', face);
+      else if (q < (cyber ? 0.84 : 0.72)) place('mahjong', face);
+      else if (q < (cyber ? 0.88 : 0.75)) place('kiosk', face);
+      else if (q < 0.8) place(cyber ? 'stools' : 'dronewreck', rand(r) * 6);
+      else if (q < 0.83 && !cyber) place('edict', face);
+    }
   }
 }
 

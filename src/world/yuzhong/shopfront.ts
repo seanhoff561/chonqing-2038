@@ -34,7 +34,7 @@ export function shopfronts(l: Lot, r: Rng, out: Fabric) {
       out.decor.push(B(ua, ub, q < 0.7 ? base + 0.1 : door ? base + 2.4 : base + 2.1, base + SHOP - 0.35, -0.02, 0.05, MAT.wood));
       if (l.wall - base > SHOP + 1.5 && i % 2 === 0) out.decor.push(B(ua + bay * 0.2, ub - bay * 0.2, base + SHOP + 0.8, base + SHOP + 2, -0.02, 0.06, MAT.wood));
       if (rand(r) < 0.25 && !door) out.props.push(rand(r) < 0.5
-        ? { kind: 'neonblade', x: fc.alongX ? (ua + ub) / 2 : fc.f + fc.n * 0.05, y: base + SHOP + 0.4, z: fc.alongX ? fc.f + fc.n * 0.05 : (ua + ub) / 2, yaw: fc.alongX ? (fc.n > 0 ? 0 : Math.PI) : (fc.n > 0 ? Math.PI / 2 : -Math.PI / 2), h: 1.6 }
+        ? { kind: 'neonblade', x: fc.alongX ? (ua + ub) / 2 : fc.f + fc.n * 0.05, y: base + SHOP + 0.4, z: fc.alongX ? fc.f + fc.n * 0.05 : (ua + ub) / 2, yaw: fc.alongX ? (fc.n > 0 ? 0 : Math.PI) : (fc.n > 0 ? Math.PI / 2 : -Math.PI / 2), h: 1.6, text: `${rand(r) < 0.5 ? 'banner' : 'lantern'}:${Math.floor(rand(r) * 10)}` }
         : { kind: 'stall', x: fc.alongX ? (ua + ub) / 2 : fc.f + fc.n * 0.8, y: base, z: fc.alongX ? fc.f + fc.n * 0.8 : (ua + ub) / 2, yaw: fc.alongX ? 0 : Math.PI / 2 });
     }
   }

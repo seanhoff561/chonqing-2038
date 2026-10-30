@@ -32,7 +32,9 @@ describe('Line 2 on the real map (M3-07, M3-41c)', () => {
   it('stands the beam on piers about 9 m over the ground, with ladders up to it', () => {
     const b = line.beams[0];
     expect(b.pts.length).toBeGreaterThan(40);
-    expect(w.climbables.filter(c => c.kind === 'ladder' && Math.hypot(c.x - line.train.x, c.z - line.train.z) < 30 && c.y1 > line.train.top).length).toBeGreaterThanOrEqual(2);
+    // Up to the beam's top where each ladder stands (the beam has a grade under the train).
+    const beamTop = (x: number, z: number) => b.top[b.pts.reduce((m, q, i) => (Math.hypot(q[0] - x, q[1] - z) < Math.hypot(b.pts[m][0] - x, b.pts[m][1] - z) ? i : m), 0)];
+    expect(w.climbables.filter(c => c.kind === 'ladder' && Math.hypot(c.x - line.train.x, c.z - line.train.z) < 30 && c.y1 > beamTop(c.x, c.z) - 0.3).length).toBeGreaterThanOrEqual(2);
     expect(line.climbables.length).toBeGreaterThanOrEqual(4);
     expect(BEAM.w).toBeLessThan(1);
   });

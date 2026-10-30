@@ -37,7 +37,8 @@ export function cables(plans: Plan[], index: SolidIndex): { lines: Line[]; masts
         for (let t = 3; t < len - 1 && !blocked; t += 1) { const x = a.x + d.x * t, y = a.y + d.y * t, z = a.z + d.z * t; blocked = overlaps(index, { x0: x - 0.3, y0: y - 2.05, z0: z - 0.3, x1: x + 0.3, y1: y - 0.2, z1: z + 0.3 }); }
         if (blocked) continue;
         lines.push({ a, b, live: rand(r) < 0.2 });
-        for (const [e, w] of [[a, hi.wall], [b, lo.wall]] as const) masts.push(solid(e.x - 0.06, w, e.z - 0.06, e.x + 0.06, e.y + 0.15, e.z + 0.06, MAT.metal));
+        // Steel masts on the roofs, a crossarm at the top to string the line from, a foot plate bolted down.
+        for (const [e, w] of [[a, hi.wall], [b, lo.wall]] as const) masts.push(solid(e.x - 0.09, w, e.z - 0.09, e.x + 0.09, e.y + 0.15, e.z + 0.09, MAT.metal), solid(e.x - 0.35, e.y + 0.05, e.z - 0.05, e.x + 0.35, e.y + 0.15, e.z + 0.05, MAT.metal), solid(e.x - 0.3, w, e.z - 0.3, e.x + 0.3, w + 0.06, e.z + 0.3, MAT.metal));
         break;
       }
     }

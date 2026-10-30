@@ -242,7 +242,9 @@ export function setWet(k: number, day = 1) {
 let wetR = 0;
 
 /** 0 by day to 1 at night: lit windows glow. */
-export function setNight(k: number) { for (const m of glowing) m.emissiveIntensity = k * 0.9; }
+export function setNight(k: number) { night.k = k; for (const m of glowing) m.emissiveIntensity = k * 0.9; }
+/** 0 by day to 1 at night, for lights that only burn after dark (searchlights, floodlit beams). */
+export const night = { k: 0 };
 
 /** Metres covered by one texture repeat. */
 export const texScale = (id: number) => (isFacade(id) ? FACADE_M : (draws[id] ?? draws[MAT.concrete])[1]);

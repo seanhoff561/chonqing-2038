@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 52 of 72 done
+## M3: 53 of 72 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -465,7 +465,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Several levels under the peninsula: air-raid tunnels, basements, storm culverts and the metro joined into a network, and in places a whole underground layer of streets, shops and buildings with shafts, stairs and drops between its levels, futuristic like the city above
   - Many ways in (building basements, stairs, grates, culvert mouths, metro entrances), some only by a climb or a squeeze; patrols walk it (M4-01)
   - A bot walks underground between three districts and between two levels; a unit test counts at least 30 ways in
-- [ ] **M3-59** Props that make sense (U-031)
+- [x] **M3-59** Props that make sense (U-031)
   - Hanging cords and lines (laundry, bunting, cable bundles) run only between two real anchors at heights the buildings have; none float or end in the air; a unit test checks every one
   - Bicycles and scooters lie fallen; signs never pass through balconies (moved in front, hung from the rail, or the balcony goes); no plain untextured boxes where the real thing has detail
   - Shopfronts in many styles, colours and patterns, and only on faces open to a street with nothing in front; a unit test checks the variety and the placement

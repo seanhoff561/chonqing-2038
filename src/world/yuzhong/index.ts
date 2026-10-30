@@ -15,7 +15,7 @@ import { fill } from './fill';
 import { cables } from './cables';
 import { GEO } from '../geo';
 import { heightAt, type Heightfield } from '../heightfield';
-import { buildGround, streets, onGround, WATER_Y, type Street } from './ground';
+import { buildGround, streets, onGround, WATER_Y, streetCells, type Street } from './ground';
 import { planLots, levelLots, markEnterable, type Plan } from './lots';
 import { corners, rasterPoly, type Obb } from './shapes';
 import { alleys } from '../city/climb';
@@ -116,6 +116,22 @@ export function buildYuzhong(): World {
     const from = Math.max(p.y, heightAt(g, p.x, p.z) ?? p.y) + 0.5, hit = raycast(world.index, p.x, from, p.z, 0, -1, 0, 30);
     if (hit && hit.t > 0.01) p.y = from - hit.t;
   }
+  // Signs and screens only where they face a street with nothing in front of them; laundry only where both ends of
+  // its cord meet a wall (U-031).
+  const SIGNS = new Set(['neonblade', 'ledscreen']);
+  world.props = world.props.filter(p => {
+    if (p.kind === 'laundry' && p.w) {
+      const ux = Math.cos(p.yaw), uz = -Math.sin(p.yaw), half = p.w / 2;
+      return [-1, 1].every(s => { const h = raycast(world.index, p.x, p.y + 2.3, p.z, ux * s, 0, uz * s, half + 0.4); return !!h && h.t > half - 0.6; });
+    }
+    if (!SIGNS.has(p.kind)) return true;
+    const dx = Math.sin(p.yaw), dz = Math.cos(p.yaw), y = p.y + 0.5;
+    for (let d = 1.5; d <= 14; d += 1) {
+      const x = p.x + dx * d, z = p.z + dz * d, k = Math.round(z / g.cell) * g.w + Math.round(x / g.cell);
+      if (streetCells[k]) return !raycast(world.index, p.x + dx * 1.2, y, p.z + dz * 1.2, dx, 0, dz, d - 1.2);
+    }
+    return false;
+  });
   // Dumpsters, drums, kiosks, car boots and the backs of vans are places to hide (M3-47).
   for (const p of world.props) {
     const h = PROP_HIDE[p.kind];
@@ -215,17 +231,20 @@ function rowAlleys(plans: Plan[], out: Fabric, g: Heightfield) {
     if (!a.row || a.row !== b.row || a.far || Math.abs(Math.sin(a.obb.yaw - b.obb.yaw)) > 0.06) continue;
     const o = a.obb, c = Math.cos(o.yaw), s = Math.sin(o.yaw), dx = b.obb.cx - o.cx, dz = b.obb.cz - o.cz;
     const bx = o.cx + c * dx + s * dz, bz = o.cz - s * dx + c * dz;
-    const lot = (cx: number, cz: number, hw: number, hd: number, base: number): Lot => ({ id: -1, x0: cx - hw, z0: cz - hd, x1: cx + hw, z1: cz + hd, base, wall: base, top: base, kind: 'res', mat: 0, street: [false, true, false, false], across: [0, 0, 0, 0] });
+    const lot = (cx: number, cz: number, hw: number, hd: number, base: number, wall: number): Lot => ({ id: -1, x0: cx - hw, z0: cz - hd, x1: cx + hw, z1: cz + hd, base, wall, top: wall, kind: 'res', mat: 0, street: [false, true, false, false], across: [0, 0, 0, 0] });
     const f = empty();
     // Its floor: the ground between them (a lane may keep it higher than either, a slope lower).
     const y = heightAt(g, (o.cx + b.obb.cx) / 2, (o.cz + b.obb.cz) / 2) ?? Math.min(a.base, b.base);
     // Seeded by where it is, so what's in it doesn't change when lots elsewhere come or go.
     const k = turn.get(a.row) ?? 0;
     turn.set(a.row, k + 1);
-    alleys([lot(o.cx, o.cz, o.hw, o.hd, y), lot(bx, bz, b.obb.hw, b.obb.hd, y)], makeRng(hashString(`alley${Math.round(o.cx)},${Math.round(o.cz)}`)), f, [0.1, 0.5, 0.8, 0.3][k % 4]);
+    alleys([lot(o.cx, o.cz, o.hw, o.hd, y, a.wall), lot(bx, bz, b.obb.hw, b.obb.hd, y, b.wall)], makeRng(hashString(`alley${Math.round(o.cx)},${Math.round(o.cz)}`)), f, [0.1, 0.5, 0.8, 0.3][k % 4], Math.abs(Math.sin(a.obb.yaw - b.obb.yaw)) < 0.01);
     place(f, o, `${a.seed}a`, out);
   }
 }
+
+/** Shop sign styles (render/props-lib.ts neonblade), the light box and the fascia board twice as often. */
+const SIGN_STYLES = ['box', 'box', 'tube', 'banner', 'lantern', 'square', 'fascia', 'fascia'];
 
 /** The crowded centres gone cyberpunk (U-011, U-020): LED screens on the street faces of towers, malls and
  *  offices; blade signs on the shop fronts below everything else. Props in the lot's own frame. */
@@ -237,15 +256,24 @@ function cyber(l: Lot, p: Plan, r: Rng, f: Fabric) {
     { on: p.street[3], c: (l.z0 + l.z1) / 2, f: l.x1, len: l.z1 - l.z0, yaw: Math.PI / 2, at: (u: number, d: number) => [l.x1 + d, u] },
   ].filter(x => x.on && x.len > 6);
   const big = l.kind === 'tower' || l.mat === MAT.facadeBand;
+  // Its shops share a look (U-031): one style of sign and one colour scheme, each building its own.
+  const style = SIGN_STYLES[randInt(r, SIGN_STYLES.length)], text = `${style}:${randInt(r, 10)}`;
   for (const fc of faces) {
     if (big && rand(r) < 0.8) {
       const w = Math.min(fc.len * 0.6, 8 + rand(r) * 12), h = 4 + rand(r) * 8, y = l.base + Math.min((l.podium ?? l.wall) - l.base - h - 1, 6 + rand(r) * 10);
       const [x, z] = fc.at(fc.c + (rand(r) - 0.5) * (fc.len - w) * 0.5, 0.2);
       if (y > l.base + 3) f.props.push({ kind: 'ledscreen', x, y, z, yaw: fc.yaw, w, h });
     }
-    for (let i = 0, n = big ? 1 : 1 + randInt(r, 3); i < n; i++) {
-      const [x, z] = fc.at(fc.c + (rand(r) - 0.5) * (fc.len - 2), 0.05);
-      f.props.push({ kind: 'neonblade', x, y: l.base + 3.2 + rand(r) * 3, z, yaw: fc.yaw, h: 2 + rand(r) * 2.5 });
+    // One or two signs, where each clears everything on the facade (balconies, cages, AC units, awnings).
+    for (let i = 0, n = big ? 1 : 1 + randInt(r, 2); i < n; i++) for (let tries = 0; tries < 6; tries++) {
+      const u = fc.c + (rand(r) - 0.5) * (fc.len - 2), flat = style === 'fascia', w = flat ? Math.min(fc.len - 1, 3 + rand(r) * 3) : 0.5;
+      const y = flat ? l.base + 3.15 : l.base + 3.2 + rand(r) * 2.5, h = flat ? 0.9 : 2 + rand(r) * 2.5;
+      const [ax, az] = fc.at(u - (flat ? w / 2 : 0.2), 0.15), [bx, bz] = fc.at(u + (flat ? w / 2 : 0.2), flat ? 0.3 : 1.1);
+      const box = { x0: Math.min(ax, bx), y0: y, z0: Math.min(az, bz), x1: Math.max(ax, bx), y1: y + h, z1: Math.max(az, bz) };
+      if (f.solids.concat(f.decor).some(q => q.x0 < box.x1 && q.x1 > box.x0 && q.y0 < box.y1 && q.y1 > box.y0 && q.z0 < box.z1 && q.z1 > box.z0)) continue;
+      const [x, z] = fc.at(u, 0.05);
+      f.props.push({ kind: 'neonblade', x, y, z, yaw: fc.yaw, h, w, text });
+      break;
     }
   }
 }

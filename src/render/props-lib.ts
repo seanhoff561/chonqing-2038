@@ -18,6 +18,11 @@ type Part = { geo: THREE.BufferGeometry; mat: THREE.Material };
 const group = (parts: Part[]) => { const g = new THREE.Group(); for (const p of parts) g.add(new THREE.Mesh(p.geo, p.mat)); return g; };
 
 const PAINT = [0xd8d6d0, 0x9a9da0, 0x2a2c2e, 0x7a2a24, 0x2e4a66, 0x5a6a52, 0xb8a888];
+/** Shop sign colour schemes (U-031): face, characters, neon tube. */
+export const SCHEMES: [number, number, number][] = [
+  [0xfff4e0, 0xc01414, 0xff3040], [0xd81c1c, 0xfff0d0, 0xffd040], [0xffd040, 0xb01414, 0xff3040], [0x1a4a9a, 0xffffff, 0x60e0ff], [0x1f7a4a, 0xffffff, 0x80ff90],
+  [0x15161a, 0xffc040, 0xffb040], [0xf4f8ff, 0x1a3a7a, 0x60e0ff], [0x7a2a8a, 0xffffff, 0xff4fa0], [0xff7a20, 0xffffff, 0xffd040], [0x2a2c30, 0x60e0ff, 0x60e0ff],
+];
 const TIRE = 0x1b1b1b, RUST = 0x6a4a32, BURNT = 0x2b2725;
 
 /** A road vehicle from its side profile: body and cabin in one prism, glass set into the cabin, wheels in the
@@ -102,7 +107,8 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
     k.box(0.35, 0.35, 1.2, c, 0, 0.25).box(0.3, 0.12, 0.55, 0x222222, 0, 0.62, -0.15).box(0.08, 0.6, 0.1, c, 0, 0.5, 0.55).box(0.6, 0.04, 0.05, 0x333333, 0, 1.1, 0.55);
     for (const z of [-0.55, 0.6]) k.cyl(0.2, 0.2, 0.08, TIRE, 0, 0.2, z, 10, 'x');
     const g = k.geometry();
-    if (k.r() < 0.6) g.rotateZ(Math.PI / 2 * 0.92).translate(0.15, 0.02, 0);
+    // Fallen on its side, as nothing left in the city stands on its own (U-031).
+    g.rotateZ(Math.PI / 2 * 0.92 * (k.r() < 0.5 ? 1 : -1)).translate(0, 0.17, 0);
     return group([{ geo: g, mat: PROP_MAT }]);
   },
   bike: p => {
@@ -110,7 +116,7 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
     for (const z of [-0.55, 0.55]) k.add(new THREE.TorusGeometry(0.32, 0.03, 5, 14).rotateY(Math.PI / 2).translate(0, 0.33, z), TIRE);
     k.box(0.05, 0.05, 1.0, c, 0, 0.55).box(0.05, 0.5, 0.05, c, 0, 0.35, -0.15).box(0.05, 0.55, 0.05, c, 0, 0.45, 0.45).box(0.5, 0.04, 0.04, 0x333333, 0, 1.0, 0.45).box(0.18, 0.06, 0.25, 0x222222, 0, 0.85, -0.2);
     const g = k.geometry();
-    if (k.r() < 0.5) g.rotateZ(Math.PI / 2 * 0.95).translate(0.1, 0.03, 0);
+    g.rotateZ(Math.PI / 2 * 0.95 * (k.r() < 0.5 ? 1 : -1)).translate(0, 0.03, 0);
     return group([{ geo: g, mat: PROP_MAT }]);
   },
   jersey: p => { const k = new Kit(seedOf(p)).use('concrete'); k.box(0.62, 0.3, 2, 0xa8a49a).box(0.3, 0.52, 2, 0xa8a49a, 0, 0.3); k.box(0.31, 0.12, 2.02, 0xc89a2a, 0, 0.55); return group([{ geo: k.geometry(), mat: PROP_MAT }]); },
@@ -227,7 +233,20 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
   bin: p => { const k = new Kit(seedOf(p)).use('paint'); k.cyl(0.3, 0.32, 0.9, 0x2e5a3e, 0, 0, 0, 10).cyl(0.34, 0.34, 0.06, 0x2a4a34, 0, 0.9, 0, 10); return group([{ geo: k.geometry(), mat: PROP_MAT }]); },
   bollard: p => group([{ geo: new Kit(seedOf(p)).use('paint').cyl(0.12, 0.1, 0.9, 0x5a5c5e, 0, 0, 0, 8).cyl(0.13, 0.13, 0.06, 0xc8a020, 0, 0.7, 0, 8).geometry(), mat: PROP_MAT }]),
   railing: p => { const k = new Kit(seedOf(p)).use('metal'), w = p.w ?? 3; for (let x = -w / 2; x <= w / 2 + 0.01; x += w / 3) k.box(0.05, 1.05, 0.05, 0x5a5e5a, x, 0); k.box(w, 0.05, 0.05, 0x5a5e5a, 0, 1.0).box(w, 0.04, 0.04, 0x5a5e5a, 0, 0.5); return group([{ geo: k.geometry(), mat: PROP_MAT }]); },
-  kiosk: p => { const k = new Kit(seedOf(p)).use('paint'); k.box(2.4, 2.4, 2.0, 0x3a5a4a).box(2.8, 0.12, 2.4, 0x2a3a32, 0, 2.4).box(2.0, 1.4, 0.04, 0x8a8a86, 0, 0.8, 1.02); return group([{ geo: k.geometry(), mat: PROP_MAT }]); },
+  // A street kiosk (U-031: not a bare box): a counter, corner posts, back and side panels pasted with posters, the
+  // front's shutter rolled half down over empty shelves, a sign band under the roof's overhang.
+  kiosk: p => {
+    const k = new Kit(seedOf(p)).use('paint'), r = k.r, col = [0x3a5a4a, 0x7a2a24, 0x2e4a66, 0xb8a888][Math.floor(r() * 4)], [band, ink] = SCHEMES[Math.floor(r() * SCHEMES.length)];
+    k.box(2.4, 1.0, 2.0, col).box(2.5, 0.06, 2.1, 0x8a8278, 0, 1.0);
+    for (const [x, z] of [[-1.15, -0.95], [1.15, -0.95], [-1.15, 0.95], [1.15, 0.95]]) k.box(0.1, 1.4, 0.1, 0x3a3c3e, x, 1.0, z);
+    k.box(2.4, 1.4, 0.06, col, 0, 1.0, -0.97).box(0.06, 1.4, 1.9, col, -1.17, 1.0, 0).box(0.06, 1.4, 1.9, col, 1.17, 1.0, 0);
+    k.use('metal').box(2.2, 0.55 + r() * 0.4, 0.05, 0x8a8a86, 0, 1.85 - r() * 0.2, 0.97);
+    for (const y of [1.2, 1.6]) k.use('wood').box(2.1, 0.04, 0.4, 0x6a5a40, 0, y, -0.7);
+    k.use('paint').box(2.8, 0.12, 2.4, 0x2a3a32, 0, 2.4).box(2.6, 0.3, 0.05, band, 0, 2.1, 1.02);
+    for (let x = -0.9; x < 0.9; x += 0.32 + r() * 0.2) k.box(0.14, 0.18, 0.02, ink, x, 2.16, 1.05);
+    for (let i = 0; i < 3; i++) k.use('plain').box(0.02, 0.5 + r() * 0.3, 0.4, PAINT[Math.floor(r() * PAINT.length)], 1.21, 0.3 + r() * 0.6, -0.6 + i * 0.5);
+    return group([{ geo: k.geometry(), mat: PROP_MAT }]);
+  },
   stall: p => {
     const k = new Kit(seedOf(p)).use('metal'), r = k.r;
     k.box(1.6, 0.85, 0.8, 0x8a8278).box(1.7, 0.05, 0.9, 0x5a5a5a, 0, 0.85);
@@ -238,7 +257,9 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
     return group([{ geo: k.geometry(), mat: PROP_MAT }]);
   },
   mahjong: p => { const k = new Kit(seedOf(p)).use('wood'), r = k.r; k.box(0.9, 0.04, 0.9, 0x2a6a4a, 0, 0.72).box(0.08, 0.72, 0.08, 0x3a3a3a, 0, 0); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + r() * 0.5; k.box(0.35, 0.42, 0.35, 0x8a3a2a, Math.cos(a) * 0.75, 0, Math.sin(a) * 0.75); } for (let i = 0; i < 12; i++) k.box(0.03, 0.04, 0.02, 0xe8e0c8, (r() - 0.5) * 0.7, 0.76, (r() - 0.5) * 0.7, r() * 3); return group([{ geo: k.geometry(), mat: PROP_MAT }]); },
-  laundry: p => { const k = new Kit(seedOf(p)).use('fabric'), r = k.r, w = p.w ?? 3; k.cyl(0.02, 0.02, w, 0x6a6a6a, 0, 2.3, 0, 4, 'x'); for (let x = -w / 2 + 0.3; x < w / 2; x += 0.45 + r() * 0.3) k.box(0.4 + r() * 0.2, 0.5 + r() * 0.4, 0.02, [0x8a2a22, 0x3c5a7a, 0xc9b98a, 0x6a6f4a, 0xd8d4c8][Math.floor(r() * 5)], x, 1.4 + r() * 0.3); return group([{ geo: k.geometry(), mat: PROP_MAT }]); },
+  laundry: p => { const k = new Kit(seedOf(p)).use('fabric'), r = k.r, w = p.w ?? 3; k.cyl(0.02, 0.02, w, 0x6a6a6a, 0, 2.3, 0, 4, 'x');
+    // Strung between walls it needs nothing else (w given); standing on its own, a bamboo pole at each end.
+    if (p.w === undefined) for (const x of [-w / 2, w / 2]) k.use('wood').cyl(0.035, 0.03, 2.45, 0x8a7a50, x, 0, 0, 5).use('fabric'); for (let x = -w / 2 + 0.3; x < w / 2; x += 0.45 + r() * 0.3) k.box(0.4 + r() * 0.2, 0.5 + r() * 0.4, 0.02, [0x8a2a22, 0x3c5a7a, 0xc9b98a, 0x6a6f4a, 0xd8d4c8][Math.floor(r() * 5)], x, 1.4 + r() * 0.3); return group([{ geo: k.geometry(), mat: PROP_MAT }]); },
   bangbang: p => { const k = new Kit(seedOf(p)).use('wood'); k.cyl(0.03, 0.03, 1.8, 0x8a7a4a, 0, 0, 0, 5).cyl(0.01, 0.01, 0.9, 0x6a5a3a, 0.05, 0.8, 0.02, 3); const g = k.geometry().rotateX(-0.25); return group([{ geo: g, mat: PROP_MAT }]); },
   pot: p => { const k = new Kit(seedOf(p)).use('concrete'), r = k.r; k.cyl(0.18, 0.24, 0.35, 0x8a4a32, 0, 0, 0, 8); const cards = Array.from({ length: 4 }, () => ({ x: (r() - 0.5) * 0.3, y: 0.55, z: (r() - 0.5) * 0.3, s: 0.45 + r() * 0.2, ry: r() * 3 })); return group([{ geo: k.geometry(), mat: PROP_MAT }, { geo: leafCards(cards, 0x8a9a60), mat: leaves() }]); },
   weeds: p => { const k = new Kit(seedOf(p)), r = k.r; const cards = Array.from({ length: 6 }, () => ({ x: (r() - 0.5) * 1.2, y: 0.15, z: (r() - 0.5) * 1.2, s: 0.25 + r() * 0.3, ry: r() * 3 })); return group([{ geo: leafCards(cards, 0xa0a868), mat: leaves() }]); },
@@ -304,11 +325,12 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
     return group([{ geo: k.geometry(), mat: PROP_MAT }]);
   },
   // A Line 2 straddle monorail train (after monorail-line2 photos): white with the line's green band, a car
-  // wrapping the beam, window band with some panes gone, bench seats and poles inside. Length along z.
+  // wrapping the beam, window band with some panes gone, bench seats and poles inside. Length along z. w cars; with
+  // d, only car d of them, centred, pitched by h (radians, its front up) to sit on the beam's grade.
   train: p => {
-    const k = new Kit(seedOf(p)), r = k.r, n = p.w ?? 2, L = 14.8, G = 0.4, hw = 1.45, total = n * L + (n - 1) * G;
-    for (let c = 0; c < n; c++) {
-      const z0 = -total / 2 + c * (L + G), z1 = z0 + L, zc = (z0 + z1) / 2;
+    const k = new Kit(seedOf(p)), r = k.r, n = p.w ?? 2, L = 14.8, G = 0.4, hw = 1.45, one = p.d !== undefined, total = one ? L : n * L + (n - 1) * G;
+    for (const c of one ? [p.d!] : Array.from({ length: n }, (_, i) => i)) {
+      const z0 = one ? -L / 2 : -total / 2 + c * (L + G), z1 = z0 + L, zc = (z0 + z1) / 2;
       k.use('paint');
       for (const sx of [-1, 1]) {
         const x = sx * (hw - 0.04);
@@ -341,7 +363,7 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
       for (const z of [z0 + 2.8, z1 - 2.8]) for (const sx of [-1, 1]) k.box(0.3, 1.1, 2.6, 0x3a3c3e, sx * 0.62, -1.15, z);
       if (c < n - 1) k.use('rubber').box(2.2, 2.3, G + 0.1, 0x2a2a2a, 0, 0.4, z1 + G / 2);
     }
-    return group([{ geo: k.geometry(), mat: PROP_MAT }]);
+    return group([{ geo: k.geometry().rotateX(-(p.h ?? 0)), mat: PROP_MAT }]);
   },
   // A shop's neon sign on a gantry (old commercial neon, not the occupier's cyan): a box sign of glowing glyphs
   // on both faces with a lit strip under it, on two thin posts; length w along x, h the height of its bottom.
@@ -359,27 +381,79 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
   ledscreen: p => {
     const k = new Kit(seedOf(p)).use('metal'), r = k.r, w = p.w ?? 10, h = p.h ?? 6;
     k.box(w + 0.4, h + 0.4, 0.3, 0x18191b, 0, -0.2, -0.15);
-    const glow = new Kit(seedOf(p) + 3), pal = [0xff3a6a, 0x3ae0ff, 0xffd03a, 0xffffff, 0xff7a20, 0x9a5aff, 0x40ff9a];
-    // A dark field with bright content, as screens read at a distance.
-    const bg = [0x0c1424, 0x1c0810, 0x08180e, 0x14101c, 0x201408][Math.floor(r() * 5)];
+    // Each screen its own campaign (U-031): one of a few looks, in its own two or three colours, not every colour.
+    const glow = new Kit(seedOf(p) + 3), fams = [[0xff3a6a, 0xffffff, 0x2a0a1a], [0x3ae0ff, 0xffffff, 0x06223a], [0xffd03a, 0xff3a2a, 0x2a1a06], [0x40ff9a, 0xe8fff0, 0x062a16], [0x9a5aff, 0xff7ad0, 0x14082a], [0xffffff, 0xd81c1c, 0x101010]];
+    const [hi, lo, bg] = fams[Math.floor(r() * fams.length)], look = r();
     glow.box(w, h, 0.02, bg, 0, 0, 0.02);
-    for (let i = 0; i < 6 + Math.floor(r() * 8); i++) { const bw = w * (0.1 + r() * 0.4), bh = h * (0.08 + r() * 0.3); glow.box(bw, bh, 0.02, pal[Math.floor(r() * pal.length)], (r() - 0.5) * (w - bw), (h - bh) * r(), 0.04); }
+    if (look < 0.35) {
+      // A face or product: a big bright shape and a slogan bar.
+      glow.cyl(Math.min(w, h) * 0.32, Math.min(w, h) * 0.32, 0.02, hi, -w * 0.18, h * 0.5, 0.05, 20, 'z').box(w * 0.45, h * 0.14, 0.02, lo, w * 0.22, h * 0.15, 0.05).box(w * 0.4, h * 0.08, 0.02, hi, w * 0.22, h * 0.4, 0.05);
+    } else if (look < 0.7) {
+      // Lines of big text in one colour.
+      for (let y = h * 0.12; y < h * 0.85; y += h * 0.24) for (let x = -w / 2 + w * 0.08; x < w / 2 - w * 0.12;) { const cw = Math.min(h * 0.18, w * 0.12); glow.box(cw, h * 0.16, 0.02, r() < 0.8 ? hi : lo, x + cw / 2, y, 0.05); x += cw * (1.1 + r() * 0.4); }
+    } else {
+      // A two-tone split with a logo.
+      glow.box(w * 0.5, h, 0.02, lo, -w * 0.25, 0, 0.04).cyl(h * 0.25, h * 0.25, 0.02, hi, w * 0.25, h * 0.5, 0.06, 20, 'z');
+    }
     return group([{ geo: k.geometry(), mat: PROP_MAT }, { geo: glow.geometry(), mat: GLOW_MAT }]);
   },
-  // A blade sign over a shop front (its +z out of the wall) as Chongqing's are (U-028): mostly a tall light box,
-  // big characters down both faces in red or white, a neon tube round the edge; else a dark board with the
-  // characters themselves in neon tube.
+  // A shop's sign (U-028, U-031), in the style and colours its building's shops share (text 'style:scheme'), its
+  // +z out of the wall. Blade light boxes with big characters down both faces; dark boards with the characters in
+  // neon tube; cloth banners on a pole; red lanterns over a plaque; small square light boxes with a pictogram;
+  // flat fascia boards along the front (w long).
   neonblade: p => {
-    const k = new Kit(seedOf(p)).use('metal'), r = k.r, h = p.h ?? 3, glow = new Kit(seedOf(p) + 4), lit = r() < 0.65;
-    const tube = [0xff3040, 0xff4fa0, 0x60e0ff, 0xffb040, 0x80ff90][Math.floor(r() * 5)];
-    const face = lit ? [0xfff4e0, 0xffd040, 0xd81c1c, 0xf4f8ff][Math.floor(r() * 4)] : 0x15161a, ink = face === 0xd81c1c ? 0xfff0d0 : 0xb01414;
-    k.box(0.08, 0.08, 1.0, 0x3a3a3a, 0, h - 0.2, 0.5).box(0.08, 0.08, 1.0, 0x3a3a3a, 0, 0.2, 0.5);
-    (lit ? glow : k).box(0.24, h, 0.8, face, 0, 0, 0.6);
-    const s = 0.52, t = lit ? 0.07 : 0.035, pen = lit ? k : glow;
-    // Each stroke one box through the blade, showing on both faces.
-    for (let y = h - 0.22 - s; y > 0.15; y -= s + 0.1) for (const [z0, y0, z1, y1] of glyph(r))
-      pen.box(0.28, Math.max(t, (y1 - y0) * s), Math.max(t, (z1 - z0) * s), lit ? ink : tube, 0, y + y0 * s - (y1 === y0 ? t / 2 : 0), 0.6 + ((z0 + z1) / 2 - 0.5) * s);
-    for (const x of [-0.13, 0.13]) glow.box(0.02, 0.03, 0.8, tube, x, h - 0.05, 0.6).box(0.02, 0.03, 0.8, tube, x, 0.02, 0.6).box(0.02, h - 0.04, 0.03, tube, x, 0.02, 0.215).box(0.02, h - 0.04, 0.03, tube, x, 0.02, 0.985);
+    const k = new Kit(seedOf(p)).use('metal'), r = k.r, h = p.h ?? 3, glow = new Kit(seedOf(p) + 4);
+    const [style, si] = (p.text ?? 'box:' + Math.floor(r() * SCHEMES.length)).split(':'), [face, ink, tube] = SCHEMES[+si % SCHEMES.length];
+    /** Characters down a vertical face (or along a horizontal one) of cells s across, as boxes through x from x0 to x1. */
+    const chars = (pen: Kit, n: number, cell: number, y0: number, z0: number, color: number, t: number, across = false, x0 = 0, x1 = 0.28) => {
+      for (let c = 0; c < n; c++) for (const [a0, b0, a1, b1] of glyph(r)) {
+        const ya = across ? y0 + b0 * cell : y0 + (n - 1 - c) * (cell + 0.1) + b0 * cell, yb = across ? y0 + b1 * cell : y0 + (n - 1 - c) * (cell + 0.1) + b1 * cell;
+        const za = across ? z0 + c * (cell + 0.1) + a0 * cell : z0 + a0 * cell, zb = across ? z0 + c * (cell + 0.1) + a1 * cell : z0 + a1 * cell;
+        if (across) pen.box(Math.max(t, zb - za), Math.max(t, yb - ya), x1 - x0, color, (za + zb) / 2, ya - (yb === ya ? t / 2 : 0), (x0 + x1) / 2);
+        else pen.box(x1 - x0, Math.max(t, yb - ya), Math.max(t, zb - za), color, (x0 + x1) / 2, ya - (yb === ya ? t / 2 : 0), (za + zb) / 2);
+      }
+    };
+    if (style === 'fascia') {
+      // Flat on the wall over the shop front: a board, its characters along it, a lamp strip under it.
+      const w = p.w ?? 3, cell = 0.55, n = Math.max(2, Math.floor((w - 0.4) / (cell + 0.1)));
+      (r() < 0.5 ? glow : k.use('paint')).box(w, 0.8, 0.12, face, 0, 0, 0.08);
+      chars(k, n, cell, 0.12, -(n * (cell + 0.1)) / 2 + 0.05, ink, 0.07, true, 0.14, 0.18);
+      glow.box(w - 0.2, 0.04, 0.05, tube, 0, -0.06, 0.12);
+    } else if (style === 'banner') {
+      // Cloth on a pole out from the wall, hanging a little crooked.
+      const n = Math.max(2, Math.floor((h - 0.3) / 0.6)), lean = (r() - 0.5) * 0.06;
+      k.cyl(0.03, 0.03, 1.0, 0x3a3a3a, 0, h, 0.5, 5, 'z');
+      const cloth = new Kit(seedOf(p) + 7).use('fabric');
+      cloth.box(0.03, h - 0.1, 0.62, face, 0, 0.05, 0.6, 0, 0, lean);
+      chars(cloth, n, 0.42, 0.25, 0.39, ink, 0.06, false, -0.03, 0.03);
+      return group([{ geo: k.geometry(), mat: PROP_MAT }, { geo: cloth.geometry(), mat: PROP_MAT }]);
+    } else if (style === 'lantern') {
+      // Red lanterns on a bracket over a lit plaque.
+      k.box(0.06, 0.06, 1.1, 0x3a3a3a, 0, h, 0.55);
+      for (const z of [0.45, 0.95]) { k.cyl(0.01, 0.01, 0.3, 0x2a2a2a, 0, h - 0.3, z, 4); glow.blob(0.26, 0xff2a1a, 0, h - 0.55, z, 1.25); glow.box(0.3, 0.06, 0.3, 0xffc040, 0, h - 0.92, z); }
+      glow.box(0.08, 1.2, 0.5, face, 0, 0, 0.35);
+      chars(k, 2, 0.4, 0.15, 0.15, ink, 0.05, false, -0.06, 0.06);
+    } else if (style === 'square') {
+      // A small square light box out on an arm, a pictogram on both faces.
+      const y = h - 1.0;
+      k.box(0.08, 0.08, 1.0, 0x3a3a3a, 0, y + 0.95, 0.5);
+      glow.box(0.22, 0.9, 0.9, face, 0, y, 0.6);
+      const ring = r() < 0.5;
+      if (ring) k.add(new THREE.TorusGeometry(0.28, 0.06, 6, 16).rotateY(Math.PI / 2).translate(0, y + 0.45, 0.6), ink, 0);
+      else chars(k, 1, 0.6, y + 0.15, 0.3, ink, 0.08, false, -0.13, 0.13);
+    } else if (style === 'tube') {
+      // A dark board, the characters in neon tube on both faces.
+      const n = Math.max(2, Math.floor((h - 0.3) / 0.62));
+      k.box(0.08, 0.08, 1.0, 0x3a3a3a, 0, h - 0.2, 0.5).box(0.08, 0.08, 1.0, 0x3a3a3a, 0, 0.2, 0.5).box(0.12, h, 0.8, 0x15161a, 0, 0, 0.6);
+      chars(glow, n, 0.52, 0.2, 0.34, tube, 0.04, false, -0.09, 0.09);
+    } else {
+      // The light box blade (the default).
+      const n = Math.max(2, Math.floor((h - 0.3) / 0.62));
+      k.box(0.08, 0.08, 1.0, 0x3a3a3a, 0, h - 0.2, 0.5).box(0.08, 0.08, 1.0, 0x3a3a3a, 0, 0.2, 0.5);
+      glow.box(0.24, h, 0.8, face, 0, 0, 0.6);
+      chars(k, n, 0.52, 0.2, 0.34, ink, 0.07);
+      if (r() < 0.4) for (const x of [-0.13, 0.13]) glow.box(0.02, 0.03, 0.8, tube, x, h - 0.05, 0.6).box(0.02, 0.03, 0.8, tube, x, 0.02, 0.6).box(0.02, h - 0.04, 0.03, tube, x, 0.02, 0.215).box(0.02, h - 0.04, 0.03, tube, x, 0.02, 0.985);
+    }
     return group([{ geo: k.geometry(), mat: PROP_MAT }, { geo: glow.geometry(), mat: GLOW_MAT }]);
   },
   dronewreck: p => {
