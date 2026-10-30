@@ -55,7 +55,7 @@ export function pushSolid(s: Solid, b: Buf, roof: Buf = b, ao: number[] = OPEN) 
   const bay = FACADE_BAY;
   const ou = facade ? Math.floor(h * 4) * bay : 0, ov = facade ? Math.floor(h2 * 4) * bay : 0;
   // Per-building tint: brightness and a slight warm or cool cast, times the building's colour (M3-46).
-  const tone = 0.86 + h * 0.2, warm = (h2 - 0.5) * 0.08, tc = tintOf(s.tint);
+  const tone = 0.86 + h * 0.2, warm = (h2 - 0.5) * 0.02, tc = tintOf(s.tint);
   const tall = s.y1 - s.y0 > 2.5;
   const yt = (x: number, z: number) => (s.ramp ? topAt(s, x, z) : s.y1);
   const colour = (o: Buf, y: number, side: boolean, shade: number) => {

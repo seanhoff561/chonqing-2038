@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 69 of 88 done
+## M3: 70 of 88 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -451,7 +451,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Left open, or a trace left (a dropped item, the bags moved off it), it's found: he is killed in his sleep there
   - The intro screenplay (M8-25) and the intro cutscene's feature (M8-05) rewritten to match
   - Sim tests: the grate's open and close times and noise; sleeping with it open, or a trace, kills him; shut and clean, he wakes
-- [ ] **M3-79** Monotone buildings (U-043)
+- [x] **M3-79** Monotone buildings (U-043)
   - Building facades muted to near monotone like the rest of the visual overhaul: paint faded to greys, off-whites and dirty concrete, colour left only as faint tints and stains; tile, brick and render read by texture and grime, not hue
   - The colour in the city is its light: neon, screens, lamps and the machines' lights stand out against the buildings
   - Screenshots of the same street views by day and night before and after

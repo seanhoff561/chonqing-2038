@@ -79,3 +79,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 - Up in the alley at night: does it read as a back alley (neon, bags over the grate, bins, washing)? Is the grate hard enough to spot under the bags?
 - Go back down and shut it from below (it bolts and drags the bags back). Then try sleeping once with it open: found in your sleep. Fair warning from the intro's chalked rule?
 - Drag something out of the backpack to drop it, and pick it back up with F.
+
+## M3-79: monotone buildings
+- By day from a roof over the slopes and over Jiefangbei: do the buildings read as one weathered, near-monotone city now, with the colour left to the neon, screens and lights? Too grey or not grey enough?
