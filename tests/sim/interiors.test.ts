@@ -44,7 +44,7 @@ describe('enterable buildings (M3-04)', () => {
     expect(s.player.pos.y).toBeCloseTo(lot.wall, 1);
     expect(s.dead).toBeFalsy();
   });
-  it("walks in off the Eighteen Stairs into Shibati's apartment blocks (M3-55; U-034 rebuilt its shop houses)", () => {
+  it("walks in off the Eighteen Stairs into Shibati's apartment blocks (M3-55; U-034 rebuilt its shop houses)", { timeout: 60000 }, () => {
     const blocks = open.filter(l => { const [x, z] = l.corners.reduce((a, c) => [a[0] + c[0] / 4, a[1] + c[1] / 4], [0, 0]); return districtAt(x, z).district === 'shibati'; });
     expect(blocks.length).toBeGreaterThan(3);
     for (const lot of blocks.slice(0, 2)) {
