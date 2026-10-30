@@ -7,7 +7,9 @@ import { buildIndex, type Box, type Solid, type SolidIndex } from './geom';
 export interface Climbable { kind: 'pipe' | 'ladder'; x: number; z: number; y0: number; y1: number; nx: number; nz: number }
 
 /** A box he can curl up in. The interior box is what must fit him. */
-export interface HideSpot { id: number; inner: Box; kind: string }
+/** A place to curl up in: inner is its space, centred where it is with its own width (x) and depth (z) before
+ *  it's turned by yaw (as a prop's: three's rotation.y). */
+export interface HideSpot { id: number; inner: Box; kind: string; yaw?: number }
 
 export interface Label { text: string; x: number; y: number; z: number; face: 'n' | 's' | 'e' | 'w' | 'up' }
 

@@ -45,7 +45,8 @@ export const movement = {
   },
   /** soft: the share of a drop that counts landing on something soft (bags, bins, an awning; U-024) */
   falls: { safe: 4, rollSafe: 7, rollWindow: 0.3, lethal: 12, fractureFrom: 7, rollMax: 10, dmgPerM: 8, dmgPerMHigh: 10, sprainChance: 0.4, armChance: 0.2, soft: 0.5 },
-  hide: { enterTime: 0.6, exitTime: 0.5, minInner: 0.8, reach: 1.6 },
+  /** minInner: the smallest space he fits curled up in (a car boot, lying down, is lower: minBoot) */
+  hide: { enterTime: 0.6, exitTime: 0.5, minInner: 0.8, minBoot: 0.5, reach: 1.6 },
   swim: { float: 1.45, speed: 1.4, sprint: 2.2, dive: 1.2, breath: 40, drownDps: 8, wetMinutes: 120, climbOut: 0.6, floatDepth: 1.2 },
   /** grip endurance (U-003: no running stamina) */
   endurance: { max: 100, regen: 30, recover: 25 },

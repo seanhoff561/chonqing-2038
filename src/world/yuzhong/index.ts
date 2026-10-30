@@ -2,7 +2,7 @@
 // peninsula from the geo data. Each lot is built by the city's lot code in its own unturned frame, then turned
 // into place.
 import { solid, rampSolid, turn, buildIndex, raycast, type Solid } from '../geom';
-import { HUNG, PROP_BOX } from '../../data/props';
+import { HUNG, PROP_BOX, PROP_HIDE } from '../../data/props';
 import { makeWorld, type World, type Teleport, type Prop, type Inter, type Climbable, type HideSpot, type Site, type Plot } from '../world';
 import { MAT } from '../mats';
 import { makeRng, hashString, rand, randInt, type Rng } from '../../sim/rng';
@@ -87,6 +87,13 @@ export function buildYuzhong(): World {
     const from = Math.max(p.y, heightAt(g, p.x, p.z) ?? p.y) + 0.5, hit = raycast(world.index, p.x, from, p.z, 0, -1, 0, 30);
     if (hit && hit.t > 0.01) p.y = from - hit.t;
   }
+  // Dumpsters, drums, kiosks, car boots and the backs of vans are places to hide (M3-47).
+  for (const p of world.props) {
+    const h = PROP_HIDE[p.kind];
+    if (!h) continue;
+    const x = p.x + Math.sin(p.yaw) * h.z, z = p.z + Math.cos(p.yaw) * h.z;
+    world.hides.push({ id: world.hides.length, kind: h.kind, yaw: p.yaw, inner: { x0: x - h.w / 2, y0: p.y + h.y, z0: z - h.d / 2, x1: x + h.w / 2, y1: p.y + h.y + h.h, z1: z + h.d / 2 } });
+  }
   return world;
 }
 
@@ -157,9 +164,10 @@ function place(f: Fabric, o: Obb, prefix: string, out: Fabric): (x: number, z: n
   out.props.push(...f.props.map((q): Prop => { const [x, z] = pt(q.x, q.z); return { ...q, x, z, yaw: q.yaw - o.yaw }; }));
   out.inter.push(...f.inter.map((q): Inter => { const [x, z] = pt(q.x, q.z); return { ...q, id: `${prefix}-${q.id}`, x, z }; }));
   out.climbables.push(...f.climbables.map((q): Climbable => { const [x, z] = pt(q.x, q.z); return { ...q, x, z, nx: c * q.nx - s * q.nz, nz: s * q.nx + c * q.nz }; }));
-  out.hides.push(...f.hides.map((h): HideSpot => {
-    const cs = [pt(h.inner.x0, h.inner.z0), pt(h.inner.x1, h.inner.z0), pt(h.inner.x0, h.inner.z1), pt(h.inner.x1, h.inner.z1)], xs = cs.map(q => q[0]), zs = cs.map(q => q[1]);
-    return { ...h, id: out.hides.length, inner: { ...h.inner, x0: Math.min(...xs), z0: Math.min(...zs), x1: Math.max(...xs), z1: Math.max(...zs) } };
+  // A hiding place keeps its size, moved and turned with the rest (M3-47).
+  out.hides.push(...f.hides.map((h, n): HideSpot => {
+    const b = h.inner, [x, z] = pt((b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2), hw = (b.x1 - b.x0) / 2, hd = (b.z1 - b.z0) / 2;
+    return { ...h, id: out.hides.length + n, inner: { ...b, x0: x - hw, z0: z - hd, x1: x + hw, z1: z + hd }, yaw: (h.yaw ?? 0) - o.yaw };
   }));
   out.sites.push(...f.sites.map((q): Site => { const [x, z] = pt(q.x, q.z); return { ...q, id: `${prefix}-${q.id}`, x, z, bed: q.bed && `${prefix}-${q.bed}`, table: q.table && `${prefix}-${q.table}`, containers: q.containers.map(id => `${prefix}-${id}`) }; }));
   out.features.push(...f.features.map(q => { const [x, z] = pt(q.x, q.z); return { ...q, x, z, group: out.features.length + q.group }; }));

@@ -9,8 +9,19 @@ export const PROP_BOX: Record<string, { w: number; d: number; h: number }> = {
   dronedock: { w: 0.6, d: 0.6, h: 2.2 }, rubblepile: { w: 1.6, d: 1.6, h: 0.6 }, bollard: { w: 0.25, d: 0.25, h: 0.9 },
   edict: { w: 3.2, d: 0.3, h: 4.4 }, slab: { w: 2.4, d: 2.6, h: 0.5 }, halfwall: { w: 0.3, d: 3, h: 2 },
   bags: { w: 1.4, d: 1.4, h: 0.65 }, garden: { w: 2, d: 3, h: 0.3 }, tarp: { w: 0.3, d: 3, h: 1.8 },
+  dumpster: { w: 1.9, d: 1.15, h: 1.3 }, drum: { w: 1.0, d: 1.0, h: 1.25 },
 };
 
 /** Props hung on walls, strung overhead, set on roofs or built round a place: everything else stands on the
  *  ground or on whatever is under it (M3-56). */
 export const HUNG = new Set(['neonblade', 'neonsign', 'ledscreen', 'laundry', 'vine', 'figroots', 'cablebundle', 'arches', 'train', 'grate', 'graffiti']);
+
+/** Props he can hide in (M3-47, U-021): the space inside, in the prop's frame: width (x), height, depth (z), its
+ *  floor above the prop's foot and its middle along z. */
+export const PROP_HIDE: Record<string, { kind: string; w: number; h: number; d: number; y: number; z: number }> = {
+  dumpster: { kind: 'dumpster', w: 1.7, h: 1.0, d: 0.95, y: 0.2, z: 0 },
+  drum: { kind: 'drum', w: 0.82, h: 1.05, d: 0.82, y: 0.12, z: 0 },
+  kiosk: { kind: 'kiosk', w: 2.0, h: 2.1, d: 1.6, y: 0.1, z: 0 },
+  car: { kind: 'boot', w: 1.2, h: 0.6, d: 0.85, y: 0.6, z: -1.65 },
+  van: { kind: 'van', w: 1.6, h: 1.35, d: 2.0, y: 0.55, z: -1.2 },
+};

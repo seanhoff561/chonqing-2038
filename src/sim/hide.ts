@@ -22,7 +22,9 @@ export function hideNear(world: World, p: Player): number {
 }
 
 export const fits = (world: World, i: number) => {
-  const b = world.hides[i].inner;
+  const h = world.hides[i], b = h.inner;
+  // Lying curled in a car boot he needs less height than sitting in a box.
+  if (h.kind === 'boot') return Math.min(b.x1 - b.x0, b.z1 - b.z0) >= M.hide.minInner - 1e-6 && b.y1 - b.y0 >= M.hide.minBoot - 1e-6;
   return Math.min(b.x1 - b.x0, b.y1 - b.y0, b.z1 - b.z0) >= M.hide.minInner - 1e-6;
 };
 

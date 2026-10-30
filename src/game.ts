@@ -1,4 +1,5 @@
 // The browser game: fixed-step sim, input, rendering with interpolation.
+import { HideView } from './render/hideview';
 import { hideNear } from './sim/hide';
 import { createState, step } from './sim/sim';
 import { DT, type SimState, type Vec3 } from './sim/types';
@@ -37,7 +38,10 @@ const FAR_HAZE = 2800;
 
 export interface GameOpts { scenario: string; seed: number; dev: boolean }
 
-const HIDE_NAMES: Record<string, [string, string]> = { crate: ['躲进箱子', 'Hide in the crate'], dumpster: ['躲进垃圾箱', 'Hide in the dumpster'], box: ['躲进箱子', 'Hide in the box'], wardrobe: ['躲进衣柜', 'Hide in the wardrobe'] };
+const HIDE_NAMES: Record<string, [string, string]> = {
+  crate: ['躲进箱子', 'Hide in the crate'], dumpster: ['躲进垃圾箱', 'Hide in the dumpster'], box: ['躲进箱子', 'Hide in the box'], wardrobe: ['躲进衣柜', 'Hide in the wardrobe'],
+  tank: ['躲进水箱', 'Hide in the water tank'], drum: ['躲进水桶', 'Hide in the drum'], kiosk: ['躲进报亭', 'Hide in the kiosk'], boot: ['躲进后备箱', 'Hide in the car boot'], van: ['躲进货车', 'Hide in the van'],
+};
 
 export class Game {
   world!: World;
@@ -50,6 +54,8 @@ export class Game {
   readonly inv: InventoryUI;
   readonly audio = new Audio();
   readonly hands: Hands3D;
+  /** The inside of where he's hidden (M3-47). */
+  readonly hideView = new HideView();
   readonly sleep: SleepUI;
   readonly death = new DeathScreen(this);
   readonly pause: PauseMenu;
@@ -72,6 +78,7 @@ export class Game {
     this.input = new Input(this.view.renderer.domElement);
     this.sky = new Sky(this.view);
     this.hands = new Hands3D(this.view.fp.cam);
+    this.view.scene.add(this.hideView.group);
     this.view.scene.add(this.furniture.group);
     this.rain = new Rain(this.view.scene);
     this.bodyFx = new BodyFx(this.view.renderer.domElement);
@@ -199,6 +206,7 @@ export class Game {
   private updateHands(dt: number) {
     const p = this.state.player, cam = this.view.fp.cam;
     this.hands.group.visible = p.mode !== 'dead' && p.mode !== 'hidden' && !this.input.uiOpen;
+    this.hideView.update(p.mode === 'hidden' && p.hideId >= 0 ? this.world.hides[p.hideId] ?? null : null);
     if (!this.hands.ready || !this.hands.group.visible) return;
     const held = heldStack(this.state), support = held ? supportPoint(held.id) : null;
     const readied = !held && findGrab(this.world, p) !== null;

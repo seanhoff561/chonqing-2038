@@ -98,7 +98,11 @@ function mass(l: Lot, r: Rng, out: Fabric) {
   for (let i = 0; i < n; i++) {
     const cx = px0 + 1.5 + rand(r) * Math.max(0.1, px1 - px0 - 3), cz = pz0 + 1.5 + rand(r) * Math.max(0.1, pz1 - pz0 - 3);
     const k = randInt(r, 3);
-    if (k === 0) { out.solids.push(solid(cx - 1, wall + 0.6, cz - 1, cx + 1, wall + 2.2, cz + 1, MAT.metal)); out.props.push({ kind: 'stilts', x: cx, y: wall, z: cz, yaw: 0, w: 2, h: 0.6 }); }
+    if (k === 0) {
+      // A water tank on stilts, empty now: room to hide in (M3-47).
+      out.solids.push(solid(cx - 1, wall + 0.6, cz - 1, cx + 1, wall + 2.2, cz + 1, MAT.metal)); out.props.push({ kind: 'stilts', x: cx, y: wall, z: cz, yaw: 0, w: 2, h: 0.6 });
+      out.hides.push({ id: out.hides.length, kind: 'tank', inner: { x0: cx - 0.9, y0: wall + 0.7, z0: cz - 0.9, x1: cx + 0.9, y1: wall + 2.1, z1: cz + 0.9 } });
+    }
     else if (k === 1) out.solids.push(solid(cx - 0.5, wall, cz - 0.35, cx + 0.5, wall + 0.7, cz + 0.35, MAT.metal));
     else if (px1 - px0 > 6 && pz1 - pz0 > 6) out.solids.push(solid(cx - 1.3, wall, cz - 1.3, cx + 1.3, wall + 2.6, cz + 1.3, MAT.concrete));
   }

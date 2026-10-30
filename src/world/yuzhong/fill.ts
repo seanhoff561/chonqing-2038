@@ -40,20 +40,25 @@ export function fill(index: SolidIndex, g: Heightfield, mk: Marks, plots: Plot[]
     }
     return best;
   };
+  // Doors stay clear: nothing within 2.5 m of one.
+  const doors = new Map<number, [number, number][]>();
+  for (const p of plots) if (p.route) { const [x, z] = [p.route[0].x, p.route[0].z], k = key(Math.floor(x / 16), Math.floor(z / 16)), a = doors.get(k); if (a) a.push([x, z]); else doors.set(k, [[x, z]]); }
+  const byDoor = (x: number, z: number) => { for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) if ((doors.get(key(Math.floor(x / 16) + i, Math.floor(z / 16) + j)) ?? []).some(([dx, dz]) => Math.hypot(dx - x, dz - z) < 2.5)) return true; return false; };
   // What's been placed here, by 8 m cell, so pieces don't pile into each other.
   const mine = new Map<number, Solid[]>();
   /** Whether boxes are clear of everything built (and, with ground, of the ground but a slope at their foot). */
   const free = (bs: Solid[], ground = true) => bs.every(b => {
+    if (byDoor(b.x0, b.z0) || byDoor(b.x1, b.z1) || byDoor((b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2)) return false;
     if (ground ? overlaps(index, { x0: b.x0, y0: b.y0 + 0.6, z0: b.z0, x1: b.x1, y1: b.y1, z1: b.z1 }) : query(index, b.x0, b.z0, b.x1, b.z1).some(i => { const o = index.solids[i]; return o.y1 > b.y0 && o.y0 < b.y1; })) return false;
     for (let i = Math.floor(b.x0 / 8); i <= Math.floor(b.x1 / 8); i++) for (let j = Math.floor(b.z0 / 8); j <= Math.floor(b.z1 / 8); j++)
       for (const o of mine.get(i * 65536 + j) ?? []) if (o.x0 < b.x1 && b.x0 < o.x1 && o.z0 < b.z1 && b.z0 < o.z1 && o.y0 < b.y1 && b.y0 < o.y1) return false;
     return true;
   });
   const keep = (bs: Solid[]) => { for (const b of bs) for (let i = Math.floor(b.x0 / 8); i <= Math.floor(b.x1 / 8); i++) for (let j = Math.floor(b.z0 / 8); j <= Math.floor(b.z1 / 8); j++) { const k = i * 65536 + j, a = mine.get(k); if (a) a.push(b); else mine.set(k, [b]); } };
-  /** A prop at (x, z) on the ground there, if it fits. */
+  /** A prop at (x, z) on the ground there (near its slot), if it fits. */
   const put = (kind: string, x: number, z: number, yaw: number, extra: Partial<Prop> = {}) => {
     const y = heightAt(g, x, z);
-    if (y === null || !markAt(mk, x, z)) return false;
+    if (y === null) return false;
     const p: Prop = { kind, x, y, z, yaw, ...extra }, bs = propBoxes(p);
     if (!free(bs)) return false;
     props.push(p); solids.push(...bs); keep(bs);
@@ -80,7 +85,8 @@ export function fill(index: SolidIndex, g: Heightfield, mk: Marks, plots: Plot[]
     const x = (i + a + 0.2 + rand(r) * 0.6) * mk.cell, z = (j + b + 0.2 + rand(r) * 0.6) * mk.cell, y = heightAt(g, x, z);
     if (y === null) continue;
     const w = wallNear(x, z), q = rand(r);
-    if (w && w.d < 4.5) againstWall(w, y, q, r) || put(q < 0.6 ? 'bags' : 'boxes', x, z, out(w)) || put('weeds', x, z, rand(r) * 6.3);
+    // By a wall: something against it, and litter blown into the corner of the yard.
+    if (w && w.d < 4.5) { againstWall(w, y, q, r) || put(q < 0.6 ? 'bags' : 'boxes', x, z, out(w)); put(['weeds', 'trash', 'debris'][Math.floor(rand(r) * 3)], x, z, rand(r) * 6.3); }
     else if (grassAt(mk, x, z)) onGrass(x, z, w, q, r) || put('weeds', x, z, rand(r) * 6.3);
     else inOpen(x, z, y, w, q, r) || put('debris', x, z, rand(r) * 6.3);
   }
@@ -98,9 +104,11 @@ export function fill(index: SolidIndex, g: Heightfield, mk: Marks, plots: Plot[]
     if (q < 0.42) {
       // Rubbish bags heaped under the wall, and a bin or two: soft to drop onto (U-024).
       let n = +put('bags', ...at(t, 0.85), out(w));
-      for (let k = 0; k < 1 + (rand(r) < 0.5 ? 1 : 0); k++) n += +put('bin', ...at(t + 1.4 + k * 0.8, 0.45), out(w));
+      if (rand(r) < 0.35) n += +put('dumpster', ...at(t + 1.9, 0.7), along(w) - Math.PI / 2);
+      else for (let k = 0; k < 1 + (rand(r) < 0.5 ? 1 : 0); k++) n += +put('bin', ...at(t + 1.4 + k * 0.8, 0.45), out(w));
       return n > 0;
     }
+    if (q < 0.52 && rand(r) < 0.4) return put('drum', ...at(t, 0.6), out(w)) && (put('drum', ...at(t + 1.1, 0.6), out(w)) || true);
     if (q < 0.52) {
       // Crates stacked against the wall: steps up it.
       const s = 0.9;
@@ -141,7 +149,7 @@ export function fill(index: SolidIndex, g: Heightfield, mk: Marks, plots: Plot[]
     }
     if (q < 0.42) {
       // An abandoned market: a stall or two, stools, boxes.
-      let n = +put('stall', x, z, turnTo);
+      let n = +put(rand(r) < 0.3 ? 'kiosk' : 'stall', x, z, turnTo);
       n += +put('stools', x + Math.cos(yaw) * 2, z - Math.sin(yaw) * 2, turnTo);
       n += +put('boxes', x - Math.cos(yaw) * 2, z + Math.sin(yaw) * 2, rand(r) * 6.3);
       return n > 0;
@@ -153,7 +161,7 @@ export function fill(index: SolidIndex, g: Heightfield, mk: Marks, plots: Plot[]
       n += +put('sandbags', x + Math.sin(yaw + Math.PI / 2) * 1.4, z + Math.cos(yaw + Math.PI / 2) * 1.4, yaw + Math.PI / 2);
       return n > 0;
     }
-    if (q < 0.74) return put('bags', x, z, rand(r) * 6.3) || put('bin', x, z, yaw);
+    if (q < 0.74) return rand(r) < 0.5 ? put('drum', x, z, rand(r) * 6.3) && (put('drum', x + 1.1, z + 0.3, rand(r) * 6.3) || true) : put('bags', x, z, rand(r) * 6.3) || put('bin', x, z, yaw);
     if (q < 0.84) return put(rand(r) < 0.5 ? 'jersey' : 'barrier', x, z, yaw);
     return put('rubblepile', x, z, rand(r) * 6.3, { w: 1.5 + rand(r) * 1.5 });
   }

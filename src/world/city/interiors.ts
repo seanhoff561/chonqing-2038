@@ -22,6 +22,8 @@ const FURNITURE = {
   fridge: { w: 0.7, d: 0.7, h: 1.7, mat: MAT.metal, zh: '冰箱', en: 'Fridge', loot: 'kitchen' },
   locker: { w: 0.5, d: 0.5, h: 1.9, mat: MAT.metal, zh: '储物柜', en: 'Locker', loot: 'bedroom' },
   crate: { w: 1.0, d: 0.8, h: 0.8, mat: MAT.wood, zh: '货箱', en: 'Crate', loot: 'shop' },
+  // Big enough to hide in (M3-47).
+  wardrobe: { w: 1.2, d: 0.95, h: 2.0, mat: MAT.wood, zh: '衣柜', en: 'Wardrobe', loot: 'bedroom' },
   // Not containers: a bed to claim, a table that becomes a workbench with a toolbox (U-013).
   bed: { w: 2.0, d: 1.0, h: 0.5, mat: MAT.wood, zh: '床', en: 'Bed', use: 'mattress' },
   table: { w: 1.2, d: 0.7, h: 0.78, mat: MAT.wood, zh: '桌子', en: 'Table', use: 'table' },
@@ -131,7 +133,7 @@ export function hollow(l: Lot, r: Rng, out: Fabric) {
       exits: k === 0 ? 2 : k === 1 ? 2 : 1 };
     out.sites.push(site);
     for (let i = 0; i < m; i++) {
-      const kind: Piece = shop && i === 0 ? 'crate' : (['cabinet', 'drawer', 'fridge', 'locker', 'bed', 'table'] as const)[randInt(r, 6)];
+      const kind: Piece = shop && i === 0 ? 'crate' : (['cabinet', 'drawer', 'fridge', 'locker', 'bed', 'table', 'wardrobe', 'wardrobe'] as const)[randInt(r, 8)];
       const f = FURNITURE[kind];
       // Against the far wall (u = U, which has the door) or the side wall (v = V): [u0, v0, u1, v1].
       const far = rand(r) < 0.5, t = rand(r);
@@ -144,6 +146,12 @@ export function hollow(l: Lot, r: Rng, out: Fabric) {
       if (placed.some(p => p[0] < box[2] && box[0] < p[2] && p[1] < box[3] && box[1] < p[3])) continue;
       placed.push(box);
       out.solids.push(B(box[0], y, box[1], box[2], y + f.h, box[3], f.mat));
+      if (kind === 'wardrobe') {
+        // Its space, turned so its doors (the shell's +z) face the room: across the far wall's face, or the side's.
+        const [cx, cz] = at((box[0] + box[2]) / 2, (box[1] + box[3]) / 2), hw = (f.w - 0.1) / 2, hd = (f.d - 0.1) / 2;
+        const [nu, nv] = far ? [-1, 0] : [0, -1], [nx, nz] = alongZ ? [nv, nu] : [nu, nv];
+        out.hides.push({ id: out.hides.length, kind: 'wardrobe', yaw: Math.atan2(nx, nz), inner: { x0: cx - hw, y0: y + 0.05, z0: cz - hd, x1: cx + hw, y1: y + 1.9, z1: cz + hd } });
+      }
       // The front face, where he reaches in.
       const [fx, fz] = far ? at(box[0] - 0.05, (box[1] + box[3]) / 2) : at((box[0] + box[2]) / 2, box[1] - 0.05);
       const id = `b${l.id}.${k}.${i}`;

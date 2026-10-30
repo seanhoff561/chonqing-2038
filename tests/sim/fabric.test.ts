@@ -6,6 +6,7 @@ import { minRect, inside, corners } from '../../src/world/yuzhong/shapes';
 import { free } from '../../src/sim/physics';
 import { run, secs, aim, LMB, RMB } from './helpers';
 import { teleport } from '../../src/sim/player';
+import { fits } from '../../src/sim/hide';
 
 const w = getWorld('yuzhong'), fabric = { features: w.features, hides: w.hides };
 const inDistrict = (id: string, x: number, z: number) => districtAt(x, z).district === id;
@@ -22,7 +23,8 @@ describe('fabric climbables and hiding spots (M3-05)', () => {
     const all = (k: string) => fabric.features.filter(f => f.kind === k).length;
     for (const k of ['ladder', 'balcony', 'bar', 'fence', 'dumpster', 'crate', 'sign']) expect(all(k), k).toBeGreaterThan(10);
     expect(fabric.hides.length).toBeGreaterThanOrEqual(fabric.features.filter(f => f.kind === 'crate' || f.kind === 'dumpster').length);
-    expect(fabric.hides.every(h => h.inner.x1 - h.inner.x0 > 0.79 && h.inner.y1 - h.inner.y0 > 0.79 && h.inner.z1 - h.inner.z0 > 0.79)).toBe(true);
+    // Every one is big enough to get into (a car boot, lying down, lower than the rest: M3-47).
+    expect(w.hides.every((_, i) => fits(w, i))).toBe(true);
   });
   it('hand-route columns climb in 1.2-2.0 m steps, with the odd gap that needs a push-off', () => {
     const groups = new Map<number, number[]>();

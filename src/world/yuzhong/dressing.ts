@@ -126,8 +126,10 @@ function road(s: Street, len: number, at: (t: number, off: number) => [number, n
     const side = rand(r) < 0.5 ? -1 : 1, q = rand(r);
     if (q < 0.35) for (let i = 0, n = 2 + randInt(r, 3); i < n; i++) { const yaw = along + Math.PI / 2 + (rand(r) - 0.5) * 0.6; either(t + i * 1.2, wall - 0.5, side, (x, z) => put('scooter', x, z, yaw)); }
     else if (q < 0.6) { const yaw = rand(r) * 6; either(t, kerb + 0.6, side, (x, z) => put('tree', x, z, yaw)); }
-    else if (q < 0.7) either(t, wall - 0.5, side, (x, z, sd) => put('bin', x, z, along + (sd > 0 ? Math.PI : 0)));
-    else if (q < 0.76) either(t, wall - 0.6, side, (x, z, sd) => put('dronedock', x, z, along + (sd > 0 ? Math.PI : 0)));
+    else if (q < 0.66) either(t, wall - 0.5, side, (x, z, sd) => put('bin', x, z, along + (sd > 0 ? Math.PI : 0)));
+    else if (q < 0.7) either(t, wall - 0.65, side, (x, z) => put('dumpster', x, z, -th));
+    else if (q < 0.73) either(t, wall - 0.6, side, (x, z, sd) => put('dronedock', x, z, along + (sd > 0 ? Math.PI : 0)));
+    else if (q < 0.76) either(t, wall + 0.2, side, (x, z, sd) => put('kiosk', x, z, along + (sd > 0 ? Math.PI : 0)));
   }
   if (len > 30 && rand(r) < 0.05) {
     const [x, z] = at(len / 2, kerb + 0.4), [ex, ez] = at(len / 2 + 4, -(wall - 0.4));

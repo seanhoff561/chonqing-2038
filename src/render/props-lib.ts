@@ -195,6 +195,25 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
     k.use('bag').blob(0.25, 0x2a3a2a, 0.55, 0.2, 0.6, 0.8, 0);
     return group([{ geo: k.geometry(), mat: PROP_MAT }]);
   },
+  // A wheeled dumpster (its long side along x), lids down but for one propped a crack: room inside to hide (M3-47).
+  dumpster: p => {
+    const k = new Kit(seedOf(p)).use('paint'), r = k.r, col = [0x3a5a3a, 0x4a4e52, 0x2a4a6a][Math.floor(r() * 3)];
+    k.box(1.9, 1.1, 1.15, col, 0, 0.15).box(1.95, 0.06, 1.2, 0x2a2c2e, 0, 1.25);
+    k.use('plastic').box(0.93, 0.05, 1.18, 0x1e2022, -0.48, 1.3, 0, 0, 0.08).box(0.93, 0.05, 1.18, 0x1e2022, 0.48, 1.31, 0.02, 0, 0.16);
+    k.use('rubber');
+    for (const x of [-0.8, 0.8]) for (const z of [-0.45, 0.45]) k.cyl(0.08, 0.08, 0.06, TIRE, x, 0.08, z, 8, 'x');
+    k.use('rust');
+    for (let i = 0; i < 3; i++) k.box(0.02, 0.2 + r() * 0.4, 0.3 + r() * 0.4, 0x6a3a22, 0.96, 0.3 + r() * 0.5, (r() - 0.5) * 0.6);
+    return group([{ geo: k.geometry(), mat: PROP_MAT }]);
+  },
+  // A big plastic water drum, lid off, ribbed: room to crouch in (M3-47).
+  drum: p => {
+    const k = new Kit(seedOf(p)).use('plastic'), r = k.r, col = [0x2a5a9a, 0x3a6aaa, 0x8a8a3a][Math.floor(r() * 3)];
+    k.cyl(0.5, 0.48, 1.25, col, 0, 0, 0, 14);
+    for (const y of [0.3, 0.62, 0.94]) k.cyl(0.515, 0.515, 0.05, col, 0, y, 0, 14);
+    k.cyl(0.46, 0.46, 0.05, col, 0.6, 0, 0.3, 12);
+    return group([{ geo: k.geometry(), mat: PROP_MAT }]);
+  },
   lamppost: p => {
     const k = new Kit(seedOf(p)).use('paint'), r = k.r;
     k.cyl(0.1, 0.07, 7.5, 0x4a4e52, 0, 0, 0, 8).box(0.08, 0.08, 1.6, 0x4a4e52, 0, 7.2, 0.7).box(0.3, 0.12, 0.6, 0x3a3e42, 0, 7.05, 1.4);
