@@ -1,6 +1,6 @@
 // Climbing and hiding in the city fabric (M3-05, U-002, U-005, U-032). Facades get a few holds high up: broken
 // downpipes, short ladders, runs of sills and AC units (1.4-1.9 m apart, now and then a 2.3-2.6 m gap that needs
-// a push-off), beam ends, balconies; glass towers and the rest stay smooth; poles in the street to start from. Alleys inside a block get hide crates and dumpsters,
+// a push-off), beam ends, balconies; the towers the same as the rest (U-036); poles in the street to start from. Alleys inside a block get hide crates and dumpsters,
 // scaffold bars to swing and lache along, or a fence with a crawl hole under it.
 import { solid, carve } from '../geom';
 import { MAT } from '../mats';
@@ -52,7 +52,6 @@ export function pole(x: number, z: number, nx: number, nz: number, y0: number, y
  *  run of sills and AC units, a beam end left sticking out. Getting onto one takes something else: a neighbour's
  *  roof, a pole, scaffolding, a wall-run. Balconies start on the third floor; a shop sign's bar hangs low. */
 export function facades(l: Lot, r: Rng, out: Fabric) {
-  if (l.kind === 'tower') return;
   // The roof edge he pulls over: a parapet, or the eave plate of a tiled roof.
   const top = l.kind === 'trad' ? l.wall : l.top;
   const door = l.route?.[0], line = l.climb && sides(l)[l.climb.face];

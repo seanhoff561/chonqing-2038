@@ -40,6 +40,8 @@ export const movement = {
     spring: 80, capOne: 35, capTwo: 80, strainOne: 0.1, strainTwo: 0.25,
     drainOne: 6, drainTwo: 2, ladderScale: 0.5, mantleFrom: 1.3, climbTime: 0.7,
     dynoUp: 4.6, regrab: 0.25,
+    /** seconds of Space held hanging free before a muscle-up onto the bar or edge (U-035) */
+    muscleUp: 0.4,
     /** U-005: mouse drags move the body (radians to metres), sideways range; bar swings and laches */
     mousePull: 0.7, sideMax: 0.45, mouseSwing: 2.5, pump: 2.0, swingMax: 6.5, swingDamp: 0.15,
   },

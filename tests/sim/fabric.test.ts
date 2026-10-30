@@ -7,6 +7,8 @@ import { free } from '../../src/sim/physics';
 import { run, secs, aim, LMB, RMB } from './helpers';
 import { teleport } from '../../src/sim/player';
 import { fits } from '../../src/sim/hide';
+import { heightAt } from '../../src/world/heightfield';
+import { BARE } from '../../src/world/city/climb';
 
 const w = getWorld('yuzhong'), fabric = { features: w.features, hides: w.hides };
 const inDistrict = (id: string, x: number, z: number) => districtAt(x, z).district === id;
@@ -45,13 +47,16 @@ describe('fabric climbables and hiding spots (M3-05)', () => {
     const paired = bars.filter(a => bars.some(b => b !== a && Math.abs(b.y - a.y) < 0.01 && Math.abs(Math.hypot(b.x - a.x, b.z - a.z) - 2.4) < 0.01));
     expect(paired.length).toBe(bars.length);
   });
-  it('glass towers offer no holds', () => {
+  // (Until U-036 the towers held nothing; now their walls hold what any other building's do, none in reach of the street.)
+  it("towers' walls hold what other buildings' do, none in reach of the street", () => {
     const grown = (k: (kind: string) => boolean) => w.plots.filter(l => k(l.kind) && !l.far).map(l => { const o = minRect(l.corners); return corners({ ...o, hw: o.hw + 0.5, hd: o.hd + 0.5 }); });
     const towers = grown(k => k === 'tower'), others = grown(k => k !== 'tower');
     expect(towers.length).toBeGreaterThan(5);
     // On a tower's walls and not a lower neighbour's built against it.
     const near = (x: number, z: number) => towers.some(c => inside(c, x, z)) && !others.some(c => inside(c, x, z));
-    expect(fabric.features.filter(f => ['pipe', 'ladder', 'sill', 'ac', 'balcony'].includes(f.kind) && near(f.x, f.z)).length).toBe(0);
+    const held = fabric.features.filter(f => ['pipe', 'ladder', 'sill', 'ac', 'balcony', 'route'].includes(f.kind) && near(f.x, f.z));
+    expect(held.length).toBeGreaterThan(100);
+    expect(held.filter(f => f.y < (heightAt(w.ground!, f.x, f.z) ?? 0) + BARE - 0.2).length).toBe(0);
   });
   it('climbs a generated drain pipe hand over hand onto the roof', () => {
     const pipe = w.climbables.find(c => c.kind === 'pipe' && c.y1 - c.y0 <= 9 && c.y1 - c.y0 >= 5 && free(w.index, c.x + c.nx * 0.65, c.y0 - 1.2, c.z + c.nz * 0.65, 1.7, 0.4) && free(w.index, c.x - c.nx * 1.5, c.y1 + 0.3, c.z - c.nz * 1.5, 1.7, 0.3))!;

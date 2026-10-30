@@ -29,6 +29,8 @@ export interface Lot {
   route?: { x: number; y: number; z: number }[];
   /** a climbing line up one side (north, south, west, east) at `at` along it, from a neighbour's roof at y0 (U-032) */
   climb?: { face: number; at: number; y0: number };
+  /** a tower's skyline: the highest roof round it (U-036); over it its walls hold more */
+  sky?: number;
   /** its roof runs out to its walls (a plank or a bridge meets its edge): no setback at the top */
   edge?: boolean;
   /** the ground height at a point of its own frame (Yuzhong, where the ground round a lot may rise over its base) */
@@ -45,7 +47,7 @@ export function buildLot(l: Lot, r: Rng, out: Fabric) {
   const s0 = out.solids.length, f0 = out.far.length;
   l.tint ??= tintFor(l.mat, makeRng(hashString(`tint:${l.x0}:${l.z0}`)));
   if (l.kind === 'tower') tower(l, r, out); else { mass(l, r, out); facades(l, r, out); }
-  if (l.climb && l.kind !== 'tower') climbLine(l, [{ x0: l.x0, z0: l.z0, x1: l.x1, z1: l.z1, y0: l.climb.y0, y1: l.wall, top: l.top }], l.climb.face, l.climb.at, r, out, 'deck');
+  if (l.climb && l.kind !== 'tower') climbLine(l, [{ x0: l.x0, z0: l.z0, x1: l.x1, z1: l.z1, y0: l.climb.y0, y1: l.wall, top: l.top }], l.climb.face, l.climb.at, r, out);
   for (const list of [out.solids.slice(s0), out.far.slice(f0)]) for (const s of list) if (s.tint === undefined && PAINTED.has(s.mat)) s.tint = l.tint;
 }
 

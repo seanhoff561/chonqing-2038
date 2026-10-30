@@ -7,15 +7,16 @@ import { rand, randInt, type Rng } from '../../sim/rng';
 import { pick, GLASS } from './palette';
 import { PARAPET, type Lot, type Fabric } from './buildings';
 import { lobby } from './fronts';
-import { climbLine, type Block } from './routes';
-import { BARE, footOf, sides } from './climb';
+import type { Block } from './routes';
+import { sides, facades, onFace, faceXZ, footOf, BARE } from './climb';
+import { skyward } from './skyward';
 
 export function tower(l: Lot, r: Rng, out: Fabric) {
   const { base, wall } = l;
   let { x0, z0, x1, z1 } = l;
   const grid = rand(r) < 0.35, shaftMat = grid ? MAT.facadeBand : MAT.glass, stone = 0xd8d4ca - randInt(r, 4) * 0x0a0a0a;
   const push = (s: ReturnType<typeof solid>, tint?: number, far = true) => { s.tint = tint; out.solids.push(s); if (far) out.far.push({ ...s }); };
-  // The blocks it's built of, bottom up, for a climbing line (M3-57a).
+  // The blocks it's built of, bottom up: each one's walls get their own holds.
   const blocks: Block[] = [];
   // Podium: four to six tall commercial floors over the whole lot.
   if (Math.min(x1 - x0, z1 - z0) >= 18 && rand(r) < 0.6) {
@@ -54,14 +55,30 @@ export function tower(l: Lot, r: Rng, out: Fabric) {
     default: // a lit band round the top
       out.decor.push(solid(x0 - 0.05, wall - 2.5, z0 - 0.05, x1 + 0.05, wall - 1.5, z1 + 0.05, MAT.lamp));
   }
-  lobby(l, () => rand(r), out);
+  const span = lobby(l, () => rand(r), out);
   // The roof edge.
   out.solids.push(solid(x0, wall, z0, x1, wall + PARAPET, z0 + 0.2, MAT.concrete), solid(x0, wall, z1 - 0.2, x1, wall + PARAPET, z1, MAT.concrete),
     solid(x0, wall, z0 + 0.2, x0 + 0.2, wall + PARAPET, z1 - 0.2, MAT.concrete), solid(x1 - 0.2, wall, z0 + 0.2, x1, wall + PARAPET, z1 - 0.2, MAT.concrete));
   l.top = wall + PARAPET;
-  // Over half the tall ones have a line up a north or south face, from a street pole beside it (U-032).
-  if (wall - base >= 40 && rand(r) < 0.6) {
-    const face = randInt(r, 2);
-    climbLine(l, [{ ...blocks[0], y0: footOf(l, sides(l)[face]) + BARE }, ...blocks.slice(1)], face, (x0 + x1) / 2 + (rand(r) - 0.5) * (x1 - x0 - 6), r, out, 'pole');
+  // Under the roofs round it, the same scattered holds as any other building's walls (U-036), block by block (over
+  // a podium or a setback the bare stretch counts from its roof); clear of them, more: a way up for whoever finds it.
+  const from = Math.max((l.sky ?? base) + 1.5, Math.max(...sides(l).map(s => footOf(l, s))) + BARE + 0.5);
+  for (const [i, b] of blocks.entries()) {
+    if (b.y0 + BARE + 2.5 >= from) continue;
+    facades({ ...l, ...b, base: i ? b.y0 : base, wall: b.y1, top: Math.min(b.top, from), street: i ? [false, false, false, false] : l.street.map((v, k) => v && k !== span.face) as Lot['street'], ground: i ? undefined : l.ground }, r, out);
+  }
+  const held = skyward(l, blocks, from, r, out);
+  // Over 80 m, most have a platform out from a wall halfway up, railed, to look down on the street from (M3-57a).
+  const vy = base + Math.round(((wall - base) * (0.5 + rand(r) * 0.15)) / 3) * 3, b = blocks.find(k => k.y0 + 3 < vy && vy < k.y1 - 3), f0 = randInt(r, 4);
+  if (wall - base > 80 && b && rand(r) < 0.8) for (let k = 0; k < 4; k++) {
+    const s = sides({ ...l, ...b })[(f0 + k) % 4], u = s.a + 2 + rand(r) * (s.b - s.a - 8), c = faceXZ(s, u + 2, 1.3);
+    if (s.b - s.a < 8 || held.some(h => Math.hypot(h.x - c.x, h.z - c.z) < 5 && Math.abs(h.y - vy) < 4)) continue;
+    out.solids.push(onFace(s, u, u + 4, 0, 2.6, vy - 0.25, vy, MAT.concrete));
+    // A railing of bars: posts, a mid rail and a top rail along its edge and both ends; a service door behind.
+    for (const [a, c] of [[1.02, 1.06], [0.5, 0.54]]) out.decor.push(onFace(s, u, u + 4, 2.54, 2.6, vy + a, vy + c, MAT.metal), onFace(s, u, u + 0.06, 0, 2.6, vy + a, vy + c, MAT.metal), onFace(s, u + 3.94, u + 4, 0, 2.6, vy + a, vy + c, MAT.metal));
+    for (let c = u + 0.05; c < u + 4; c += 1.3) out.decor.push(onFace(s, c - 0.03, c + 0.03, 2.54, 2.6, vy, vy + 1.02, MAT.metal));
+    out.decor.push(onFace(s, u + 1.5, u + 2.5, 0, 0.04, vy, vy + 2.1, MAT.metal));
+    out.features.push({ kind: 'vantage', ...c, y: vy, group: out.features.length, nx: s.nx, nz: s.nz });
+    break;
   }
 }

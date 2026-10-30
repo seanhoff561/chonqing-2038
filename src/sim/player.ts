@@ -35,6 +35,8 @@ export interface Player {
   kicks: number;
   /** seconds the hands have been pulling at their limit */
   strain: number;
+  /** seconds Space has been held hanging free from a bar or edge (a muscle-up onto it at grip.muscleUp, U-035) */
+  muscle: number;
   /** sideways body shift against the hands from mouse drags (U-005) */
   side: number;
   /** Space still held since a ground jump (released early cuts the jump) */
@@ -65,7 +67,7 @@ export function createPlayer(x: number, y: number, z: number, yaw: number): Play
   return {
     pos: { x, y, z }, vel: { x: 0, y: 0, z: 0 }, yaw, pitch: 0,
     mode: 'air', posture: 'stand', onGround: false, fallFrom: y, crouchAge: 99,
-    endurance: 100, exhausted: false, hands: [{ grip: null }, { grip: null }], pull: 1.5, regrab: 0, kicks: 0, strain: 0, side: 0, jumpHeld: false, clung: false, act: null,
+    endurance: 100, exhausted: false, hands: [{ grip: null }, { grip: null }], pull: 1.5, regrab: 0, kicks: 0, strain: 0, muscle: 0, side: 0, jumpHeld: false, clung: false, act: null,
     wall: { nx: 0, nz: 0, t: 0, y: 0, id: -1 }, breath: 40, wetUntil: 0, stepAcc: 0, crawlToggle: false, hideId: -1, coyote: 0, slide: -1, hideExit: null, lamp: 0,
   };
 }

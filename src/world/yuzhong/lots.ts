@@ -23,6 +23,8 @@ export interface Plan {
   noEnter?: boolean;
   /** a climbing line up one of its sides from a neighbour's roof (vertical.ts, U-032) */
   climb?: { face: number; at: number; y0: number };
+  /** a tower's skyline: the highest roof within 25 m of it (U-036) */
+  sky?: number;
   /** its roof runs out to its walls (a plank meets its edge, vertical.ts) */
   edge?: boolean;
   /** the district it stands in, and whether that was a crowded centre now gone cyberpunk (U-011, U-020) */

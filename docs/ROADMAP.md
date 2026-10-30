@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 57 of 77 done
+## M3: 58 of 77 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -385,12 +385,13 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Tunnels short and real: a metro tunnel (track bed, cable trays, cross passages, signals) and service tunnels with their own props, joined to the underground city's levels rather than long empty runs
   - Layers step down off the street into the underground city in places, so ground level keeps going down (moved here from M3-66, where the underground is reworked)
   - A bot walk and screenshots
-- [ ] **M3-69** Quick fixes from U-034 and U-035
+- [x] **M3-69** Quick fixes from U-034 and U-035
   - What looks solid on a facade is solid and grabbable: AC units and vents, the metal skins over upper floors, canopies and signboards over shopfronts (none of it giving a building its own way up from the street, M3-67)
   - Hanging from a bar or edge with no wall for his feet, holding Space mantles him up onto it
   - Holding crouch he can't walk or slide off an edge: he stops at it, as Minecraft's sneak
   - No zipline spawns on its own (U-034; M5-33 makes them the player's)
   - Sim tests for each: a vent grabbed, a facade skin stood against, a bar mantled, a crouch stopped at a roof edge; the climbing and envelope tests still pass
+  - U-036: the towers lose their stub lines; under the skyline round them the same holds as any other building, over it more (a wandering way, dead ends), not promised climbable
 - [ ] **M3-66** The layered city, filled with buildings, evened (U-032, U-033, U-034)
   - Everything purposeful (U-033): M3-60's grid-cell parks, plazas and parking lots replaced; the open ground filled with buildings (blocks, low layers, fillers) right up to each other and the streets; green only in the few real parks, laid inside their real outlines; what open ground is left is hardscape shaped to the buildings and streets round it (paving to the building lines, forecourts, steps, a parking court between buildings) with its walkways running from somewhere to somewhere (street to entrance, street to stair) like the roads; nothing on the cell grid, nothing jagged or repeated
   - Short and medium buildings about twice as tall; between them half-height layers (low blocks, decks, scaffolding, platforms) and short fillers as low as today's short ones, so the city stands in layers to be crossed by parkour; bridges between buildings, beams sticking out, vertical alleys (narrow slots between tall walls to climb or wall-run up)
@@ -490,10 +491,10 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - src/data/envelope.ts: measured from the sim, the gaps and heights of standing and running jumps, mantles, hand reaches, wall kicks and wall-runs, slide distances (flat and downhill), safe drops, swing and lache distances, and the chained moves (a jump then two wall kicks, a jump up then a back-jump to a grab, a wall-run into a kick, the same with an item in hand), each with a comfortable and a maximum value
   - Soft landings (U-024): bins, bags, cardboard, awnings and tarps cut fall damage; the envelope lists the safe drop onto each; a sim test lands a fall onto each kind
   - Unit tests regenerate each number from the sim and fail when movement changes it; DESIGN section 3 shows the table; generators and hand layouts read it
-- [x] **M3-57a** Climbing the towers (U-023)
-  - Exteriors climbable all the way up by the envelope's hardest chains: beams, poles, ledges, cornices, scaffold and cables; open and broken floors to duck through mid-climb; vantage ledges high over the street to look down from
-  - Hard by design (U-023): huge gaps at the envelope's maximum, no easy line to the top of a tower; a bot climbs three towers over 80 m from the street using only generated features
-  - Screenshots looking down from three vantage points
+- [x] **M3-57a** Climbing the towers (U-023, U-036)
+  - Under the roofs round it a tower's walls hold what any other building's do (U-036): no line of stubs, broken floors or street pole up it
+  - Over the skyline its walls hold more, not so obvious: sills, AC units, beam ends and ledges wandering across the faces and setbacks, with dead ends off them; it needn't be fully climbable and has no test of its own (U-036)
+  - Vantage platforms halfway up the tallest, to look down from; screenshots looking down from three vantage points
 - [x] **M3-57b** The factory at Chaotianmen (U-030)
   - The factory (U-030, D-020): Raffles City at Chaotianmen is where the machines are made, lit all night and guarded, its output marching onto the roads
 - [x] **M3-57** The vertical city: packed, stacked and bridged (U-023, U-024)

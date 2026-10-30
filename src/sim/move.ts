@@ -199,6 +199,18 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
   const blocked = moveHorizontal(idx, p.pos, h, p.vel.x * DT, p.vel.z * DT, p.onGround ? M.stepHeight : 0.05);
   if (blocked & 1) p.vel.x = 0;
   if (blocked & 2) p.vel.z = 0;
+  // Crouch held on the ground, he won't step off an edge (U-035, as Minecraft's sneak): a move that leaves nothing
+  // under him within a step down is taken back, an axis at a time, so he edges along it.
+  if (wasGround && !jumped && p.slide < 0 && p.posture !== 'stand' && (input.buttons & B.CROUCH) && groundGap(idx, p.pos, M.snapDown) === Infinity) {
+    const x1 = p.pos.x;
+    p.pos.x = x0;
+    if (groundGap(idx, p.pos, M.snapDown) !== Infinity) p.vel.x = 0;
+    else {
+      p.pos.x = x1; p.pos.z = z0;
+      if (groundGap(idx, p.pos, M.snapDown) !== Infinity) p.vel.z = 0;
+      else { p.pos.x = x0; p.vel.x = p.vel.z = 0; }
+    }
+  }
   // Jumping into a wall clings for a moment (U-005).
   if (blocked && !p.onGround && !p.clung && p.posture === 'stand' && !jumped) {
     const nx = blocked & 1 ? -Math.sign(into.x) : 0, nz = blocked & 1 ? 0 : -Math.sign(into.z);

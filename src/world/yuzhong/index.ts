@@ -13,12 +13,11 @@ import { greenery } from './green';
 import { layout, doorPaths } from './layout';
 import { ruins } from './ruins';
 import { fill } from './fill';
-import { cables } from './cables';
 import { GEO } from '../geo';
 import { heightAt, type Heightfield } from '../heightfield';
 import { buildGround, streets, onGround, WATER_Y, streetCells, type Street } from './ground';
 import { planLots, levelLots, markEnterable, type Plan } from './lots';
-import { corners, rasterPoly, type Obb } from './shapes';
+import { corners, rasterPoly, obbOverlap, type Obb } from './shapes';
 import { alleys } from '../city/climb';
 import { buildTunnels, tunnelFrame, JUNCTION } from './tunnels';
 import { buildUnder } from './under';
@@ -57,6 +56,11 @@ export function buildYuzhong(): World {
   const out = empty(), plots: Plot[] = [];
   // Bridged, stacked and built over (M3-57): it may set roofs to meet, so before the lots are built.
   const vert = verticalCity(plans, g, sts);
+  // Each tower's skyline (U-036): the highest roof within 25 m of it.
+  for (const p of plans) if (p.kind === 'tower' && !p.far) {
+    p.sky = p.base;
+    for (const q of plans) if (q !== p && !q.far && q.wall > p.sky && Math.hypot(q.obb.cx - p.obb.cx, q.obb.cz - p.obb.cz) < p.obb.hw + p.obb.hd + q.obb.hw + q.obb.hd + 25 && obbOverlap(p.obb, q.obb, 12.5)) p.sky = q.wall;
+  }
   plans.forEach((p, n) => plots.push(buildPlan(p, n, out, g)));
   rowAlleys(plans, out, g);
   // The streets as drawn, and paths from the doors set back from them to them (U-033).
@@ -108,14 +112,15 @@ export function buildYuzhong(): World {
   solids.push(...laid.solids);
   const idx = buildIndex(solids, g), green = greenery(idx, g, marks), rubble = ruins(idx, g, marks);
   solids.push(...green.solids, ...rubble.solids);
-  // And the rest of the open ground filled, round all of it; cables strung over the streets.
-  const filled = fill(buildIndex(solids, g), g, marks, plots), strung = cables(plans, buildIndex(solids, g));
-  solids.push(...filled.solids, ...strung.masts);
+  // And the rest of the open ground filled, round all of it. (No cables strung over the streets: ziplines are
+  // the player's to rig, U-034.)
+  const filled = fill(buildIndex(solids, g), g, marks, plots);
+  solids.push(...filled.solids);
   const world = makeWorld({
     name: 'yuzhong', solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? [], fac?.decor ?? [], vert.decor, under.decor, laid.decor, filled.decor),
     props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], fac?.props ?? [], under.props, laid.props, dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(line.climbables, site?.climbables ?? [], vert.climbables, under.climbables, dress.climbables),
     hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones.concat(under.zones),
-    far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(fac?.features ?? [], vert.features, under.features, laid.features, dress.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n })), under.descents.flatMap((d, i) => d.map((q, n) => ({ kind: 'descentRoute', ...q, group: i * 100 + n })))), marks, lawns: laid.lawns, lines: strung.lines, convoys: fac?.convoys, streets: drawn.concat(laid.paths, doorWays), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
+    far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(fac?.features ?? [], vert.features, under.features, laid.features, dress.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n })), under.descents.flatMap((d, i) => d.map((q, n) => ({ kind: 'descentRoute', ...q, group: i * 100 + n })))), marks, lawns: laid.lawns, convoys: fac?.convoys, streets: drawn.concat(laid.paths, doorWays), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
     teleports, spawn: hide,
   });
   // Nothing floats or sinks (M3-56): whatever stands on something above ground settles onto what's under it, or
@@ -218,7 +223,7 @@ function landMask(g: Heightfield): Uint8Array {
 
 /** Build one lot in its own frame and turn everything it made into place. */
 function buildPlan(p: Plan, n: number, out: Fabric, g: Heightfield): Plot {
-  const o = p.obb, l: Lot = { id: n, x0: o.cx - o.hw, z0: o.cz - o.hd, x1: o.cx + o.hw, z1: o.cz + o.hd, base: p.base, wall: p.wall, top: p.wall, kind: p.kind, mat: p.mat, street: p.street, across: p.across, noEnter: p.noEnter, climb: p.climb, edge: p.edge,
+  const o = p.obb, l: Lot = { id: n, x0: o.cx - o.hw, z0: o.cz - o.hd, x1: o.cx + o.hw, z1: o.cz + o.hd, base: p.base, wall: p.wall, top: p.wall, kind: p.kind, mat: p.mat, street: p.street, across: p.across, noEnter: p.noEnter, climb: p.climb, edge: p.edge, sky: p.sky,
     ground: (x, z) => { const c = Math.cos(o.yaw), s = Math.sin(o.yaw); return heightAt(g, o.cx + c * (x - o.cx) - s * (z - o.cz), o.cz + s * (x - o.cx) + c * (z - o.cz)) ?? p.base; } };
   const f = empty(), r = makeRng(hashString(p.seed));
   if (p.far) {

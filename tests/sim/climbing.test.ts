@@ -6,7 +6,6 @@ import { describe, it, expect } from 'vitest';
 import { getWorld } from '../../src/world/build';
 import { raycast } from '../../src/world/geom';
 import { heightAt } from '../../src/world/heightfield';
-import { MAT } from '../../src/world/mats';
 import { createState } from '../../src/sim/sim';
 import { teleport } from '../../src/sim/player';
 import { B } from '../../src/sim/types';
@@ -62,7 +61,7 @@ function holds(p: Plot): { x: number; z: number; y: number }[] {
   const out: { x: number; z: number; y: number }[] = [];
   for (let i = p.own!.solids[0]; i < p.own!.solids[1]; i++) {
     const s = w.solids[i], x = (s.x0 + s.x1) / 2, z = (s.z0 + s.z1) / 2;
-    if (s.mat === MAT.hidden || s.y1 >= p.wall + 0.3 || s.y1 <= p.base + 0.3 || !within(p, x, z, 1.6) || within(p, x, z, -0.35)) continue;
+    if (s.y1 >= p.wall + 0.3 || s.y1 <= p.base + 0.3 || !within(p, x, z, 1.6) || within(p, x, z, -0.35)) continue;
     if (s.y0 < Math.max(...[[x, z], [s.x0, s.z0], [s.x1, s.z0], [s.x0, s.z1], [s.x1, s.z1]].map(([a, b]) => heightAt(g, a, b) ?? -99)) + 0.3) continue;
     out.push({ x, z, y: s.y1 });
   }

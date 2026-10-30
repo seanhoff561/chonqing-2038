@@ -1,6 +1,6 @@
 // The lived-in, abandoned detail of the reference look (M3-22, U-009): balcony bands with solid parapets on
 // some fronts, AC units, roof gardens gone wild, laundry left on the lines, and cables sagging across streets.
-// Balconies are solid (their edges and parapets are holds); the rest is render-only decor.
+// Balconies and AC units are solid (their edges and parapets are holds); the rest is render-only decor.
 import { solid } from '../geom';
 import { MAT } from '../mats';
 import { rand, randInt, makeRng, hashString, type Rng } from '../../sim/rng';
@@ -37,8 +37,9 @@ export function details(l: Lot, r: Rng, out: Fabric, roof: number) {
     const s = all[randInt(r, 4)], len = s.b - s.a;
     if (len < 4) continue;
     const c = s.a + 1.5 + rand(r) * (len - 3), y = l.base + (1 + randInt(r, Math.max(1, n - 1))) * FLOOR + 0.3;
-    if (y + 0.5 > roof - 1) continue;
-    out.decor.push(onFace(s, c - 0.4, c + 0.4, 0, 0.42, y, y + 0.5, MAT.metal));
+    // Solid, a hold (U-035), so none low enough to start a climb from the street (U-032).
+    if (y + 0.5 > roof - 1 || y + 0.5 < footOf(l, s) + BARE) continue;
+    out.solids.push(onFace(s, c - 0.4, c + 0.4, 0, 0.42, y, y + 0.5, MAT.metal));
   }
   // A roof gone wild: moss, shrubs, now and then a small tree.
   if (rand(r) < 0.28) {

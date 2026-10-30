@@ -8,7 +8,7 @@
 import { solid, carve } from '../geom';
 import { MAT } from '../mats';
 import { rand, randInt, makeRng, hashString } from '../../sim/rng';
-import { sides } from './climb';
+import { sides, footOf, BARE } from './climb';
 import type { Lot, Fabric } from './buildings';
 
 const FLOOR = 3;
@@ -36,12 +36,15 @@ export function fronts(l: Lot, look: number, open: boolean, stepped: boolean, ou
     // Floor bands across the wall of the lower floors (the facade paints the rest).
     if (s.street || s === front) for (let f = 1; f < Math.min(n, 7); f++) out.decor.push(onFace(s, s.a, s.b, 0, 0.1, b0 + f * FLOOR - 0.16, b0 + f * FLOOR, MAT.concrete));
     if (open || (!s.street && s !== front)) continue;
-    // Window cages and AC units at the painted windows of the lower floors, on the faces seen from the street.
+    // Window cages and AC units at the painted windows of the lower floors, on the faces seen from the street:
+    // solid, holds (U-035), so only from where they can't start a climb from the street (U-032).
     let cages = 0, acs = 0;
-    for (let f = 1; f < Math.min(n, 4); f++) for (let k = 0; k < nb; k++) {
+    const bare = footOf(l, s) + BARE;
+    for (let f = 1; f < Math.min(n, 5); f++) for (let k = 0; k < nb; k++) {
       const c = bay(k), y = b0 + f * FLOOR + sill, q = rand(r);
+      if (y < bare) continue;
       if (q < 0.25 && cages < 2) { cages++; cage(s, c, y, Math.min(ww, bw - 0.4), wh, out); }
-      else if (q < 0.4 && acs < 2 && bw > ww + 1.2) { acs++; out.decor.push(onFace(s, c + ww / 2 + 0.15, c + ww / 2 + 0.95, 0, 0.42, y + 0.1, y + 0.62, MAT.metal)); }
+      else if (q < 0.4 && acs < 2 && bw > ww + 1.2) { acs++; out.solids.push(onFace(s, c + ww / 2 + 0.15, c + ww / 2 + 0.95, 0, 0.42, y + 0.1, y + 0.62, MAT.metal)); }
     }
   }
   // The way in on the street face.
@@ -51,8 +54,8 @@ export function fronts(l: Lot, look: number, open: boolean, stepped: boolean, ou
     const door = l.route![0], at = all.reduce((a, s) => (Math.abs((s.nz !== 0 ? door.z : door.x) - s.f) < Math.abs((a.nz !== 0 ? door.z : door.x) - a.f) ? s : a));
     const c = at.nz !== 0 ? door.x : door.z;
     out.decor.push(onFace(at, c - 0.85, c - 0.7, 0, 0.12, b0, b0 + 2.35, MAT.concrete), onFace(at, c + 0.7, c + 0.85, 0, 0.12, b0, b0 + 2.35, MAT.concrete),
-      onFace(at, c - 1.2, c + 1.2, 0, 1.0, b0 + 2.6, b0 + 2.75, MAT.concrete), onFace(at, c + 0.62, c + 0.68, 0.05, 1.15, b0, b0 + 2.1, MAT.tealMetal),
-      onFace(at, c - 0.5, c + 0.5, -0.7, -0.6, b0 + 2.15, b0 + 2.25, MAT.lamp));
+      onFace(at, c + 0.62, c + 0.68, 0.05, 1.15, b0, b0 + 2.1, MAT.tealMetal), onFace(at, c - 0.5, c + 0.5, -0.7, -0.6, b0 + 2.15, b0 + 2.25, MAT.lamp));
+    out.solids.push(onFace(at, c - 1.2, c + 1.2, 0, 1.0, b0 + 2.6, b0 + 2.75, MAT.concrete));
   } else if (shop && len > 4) {
     // A shopfront: glass between the end piers, a shutter half down here and there, an awning, a signboard.
     out.decor.push(onFace(front, front.a + 0.6, front.b - 0.6, 0, 0.05, b0 + 0.25, b0 + 2.9, MAT.glass));
@@ -63,22 +66,25 @@ export function fronts(l: Lot, look: number, open: boolean, stepped: boolean, ou
     }
     // The awning is solid, and soft: a lip to pull up on, something to drop onto (U-024).
     out.solids.push(onFace(front, front.a + 0.3, front.b - 0.3, 0, 1.3, b0 + 3.0, b0 + 3.1, MAT.cloth));
-    out.decor.push(onFace(front, front.a + 0.6, front.b - 0.6, 0, 0.14, b0 + 3.2, b0 + 4.0, rand(r) < 0.5 ? MAT.plaster : MAT.tealMetal));
+    out.solids.push(onFace(front, front.a + 0.6, front.b - 0.6, 0, 0.14, b0 + 3.2, b0 + 4.0, rand(r) < 0.5 ? MAT.plaster : MAT.tealMetal));
   } else {
     const c = mid + (rand(r) - 0.5) * Math.max(0, len - 4);
     out.decor.push(onFace(front, c - 0.6, c + 0.6, 0, 0.06, b0, b0 + 2.2, MAT.tealMetal),
-      onFace(front, c - 0.8, c - 0.6, 0, 0.12, b0, b0 + 2.4, MAT.concrete), onFace(front, c + 0.6, c + 0.8, 0, 0.12, b0, b0 + 2.4, MAT.concrete),
-      onFace(front, c - 1.1, c + 1.1, 0, 0.9, b0 + 2.5, b0 + 2.65, MAT.concrete));
+      onFace(front, c - 0.8, c - 0.6, 0, 0.12, b0, b0 + 2.4, MAT.concrete), onFace(front, c + 0.6, c + 0.8, 0, 0.12, b0, b0 + 2.4, MAT.concrete));
+    out.solids.push(onFace(front, c - 1.1, c + 1.1, 0, 0.9, b0 + 2.5, b0 + 2.65, MAT.concrete));
   }
-  // 2038 (U-024): a new metal skin with ribbon windows over the upper floors of an old block.
+  // 2038 (U-024): a new metal skin with ribbon windows over the upper floors of an old block. Solid (U-035), one
+  // sheet from its first floor to the roof (its ribbons and panels a facing on it), so its only edge to grab is
+  // the roof's.
   if (!open && !stepped && n >= 5 && rand(r) < 0.3) {
     const from = Math.max(2, Math.floor(n / 2) - randInt(r, 2)), panel = rand(r) < 0.5 ? MAT.tealMetal : MAT.metal;
     for (const s of all) {
       if (!s.street && s !== front) continue;
+      out.solids.push(onFace(s, s.a - 0.05, s.b + 0.05, 0, 0.16, b0 + from * FLOOR, l.wall, panel));
       for (let f = from; f < n; f++) {
         const y = b0 + f * FLOOR;
-        out.decor.push(onFace(s, s.a - 0.05, s.b + 0.05, 0, 0.18, y, y + 0.9, panel), onFace(s, s.a - 0.05, s.b + 0.05, 0.02, 0.12, y + 0.9, y + 2.3, MAT.glass),
-          onFace(s, s.a - 0.05, s.b + 0.05, 0, 0.18, y + 2.3, y + FLOOR, panel));
+        out.decor.push(onFace(s, s.a - 0.05, s.b + 0.05, 0.16, 0.19, y, y + 0.9, panel), onFace(s, s.a - 0.05, s.b + 0.05, 0.16, 0.17, y + 0.9, y + 2.3, MAT.glass),
+          onFace(s, s.a - 0.05, s.b + 0.05, 0.16, 0.19, y + 2.3, y + FLOOR, panel));
       }
     }
   }
@@ -93,6 +99,8 @@ export function fronts(l: Lot, look: number, open: boolean, stepped: boolean, ou
 /** A window cage (防盗窗): a frame of bars standing out from the wall round a window opening. */
 function cage(s: Side, c: number, y: number, w: number, h: number, out: Fabric) {
   const x0 = c - w / 2 - 0.05, x1 = c + w / 2 + 0.05, top = y + h + 0.05, D = 0.42;
+  // Solid (U-035): its frame's box, its top a ledge to stand on; the bars drawn on its front.
+  out.solids.push(onFace(s, x0, x1, 0, D, y - 0.06, top + 0.05, MAT.hidden));
   out.decor.push(onFace(s, x0, x1, 0, D, y - 0.06, y, MAT.metal), onFace(s, x0, x1, 0, D, top, top + 0.05, MAT.metal));
   for (const t of [0, 1 / 3, 2 / 3, 1]) { const x = x0 + (x1 - x0) * t; out.decor.push(onFace(s, x - 0.015, x + 0.015, D - 0.03, D, y, top, MAT.metal)); }
 }
@@ -113,18 +121,23 @@ export function shopHouse(l: Lot, side: number, look: number, out: Fabric) {
 }
 
 /** A tower's way in (M3-55): a two-storey glass lobby under a deep canopy with a lit soffit and the building's
- *  lit name over it; a podium's street face is shop windows under signboards to either side. */
-export function lobby(l: Lot, r: () => number, out: Fabric) {
-  const all = sides(l), s = all.find(q => q.street) ?? all[1], len = s.b - s.a, b0 = l.base;
-  if (len < 8) return;
+ *  lit name over it; a podium's street face is shop windows under signboards to either side. The face it's on
+ *  and the stretch of it the canopy takes. */
+export function lobby(l: Lot, r: () => number, out: Fabric): { face: number; a: number; b: number } {
+  const all = sides(l), s = all.find(q => q.street) ?? all[1], len = s.b - s.a, b0 = l.base, face = all.indexOf(s);
+  if (len < 8) return { face, a: 0, b: 0 };
   const w = Math.min(12, len * 0.4), c = s.a + len / 2 + (r() - 0.5) * (len - w - 2) * 0.5, H = 6;
-  out.decor.push(onFace(s, c - w / 2, c + w / 2, 0, 0.06, b0, b0 + H, MAT.glass), onFace(s, c - w / 2 - 0.4, c + w / 2 + 0.4, 0, 3.2, b0 + H, b0 + H + 0.35, MAT.metal),
+  out.decor.push(onFace(s, c - w / 2, c + w / 2, 0, 0.06, b0, b0 + H, MAT.glass),
     onFace(s, c - w / 2, c + w / 2, 0.3, 3.0, b0 + H - 0.04, b0 + H, MAT.lamp), onFace(s, c - w * 0.35, c + w * 0.35, 0, 0.12, b0 + H + 0.6, b0 + H + 1.4, MAT.lamp));
+  // The canopy is solid (U-035): a deck over the street 6 m up.
+  out.solids.push(onFace(s, c - w / 2 - 0.4, c + w / 2 + 0.4, 0, 3.2, b0 + H, b0 + H + 0.35, MAT.metal));
   for (let x = c - w / 2; x <= c + w / 2 + 0.01; x += w / Math.round(w / 1.6)) out.decor.push(onFace(s, x - 0.05, x + 0.05, 0, 0.12, b0, b0 + H, MAT.metal));
   out.decor.push(onFace(s, c - w / 2, c + w / 2, 0, 0.12, b0 + 3, b0 + 3.12, MAT.metal));
-  if (!l.podium) return;
+  const span = { face, a: c - w / 2 - 0.4, b: c + w / 2 + 0.4 };
+  if (!l.podium) return span;
   for (const [a, b] of [[s.a + 0.5, c - w / 2 - 1], [c + w / 2 + 1, s.b - 0.5]]) {
     if (b - a < 3) continue;
     out.decor.push(onFace(s, a, b, 0, 0.05, b0 + 0.3, b0 + 3.8, MAT.glass), onFace(s, a, b, 0, 0.3, b0 + 4, b0 + 5, r() < 0.5 ? MAT.tealMetal : MAT.plaster), onFace(s, a + 0.3, b - 0.3, 0.3, 0.34, b0 + 4.2, b0 + 4.8, MAT.lamp));
   }
+  return span;
 }

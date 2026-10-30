@@ -8,8 +8,6 @@ import { addItem } from '../../src/sim/inventory';
 import { B, type SimState } from '../../src/sim/types';
 import type { Line } from '../../src/world/world';
 import { getWorld } from '../../src/world/build';
-import { createState } from '../../src/sim/sim';
-import { teleport } from '../../src/sim/player';
 
 /** A line from 12 m up at z = 0 down to `low` m at z = -30, ground under it; him hanging at its top. */
 function onLine(low: number, gear = ['trolley'], extra: Partial<Line> = {}) {
@@ -91,29 +89,8 @@ describe('ziplines (M3-52)', () => {
     aim(state, 0, 9.5, -46); run(state, world, 1, { pressed: B.USE, buttons: B.USE });
     expect(state.lines?.length ?? 0).toBe(0);
   });
-  it('strings cables across Yuzhong streets to ride, a few of them live', async () => {
+  it('strings no line across Yuzhong on its own: every zipline is one he rigs (U-034)', async () => {
     await settle();
-    const w = getWorld('yuzhong');
-    expect(w.lines.length).toBeGreaterThan(80);
-    expect(w.lines.filter(l => l.live).length).toBeGreaterThan(5);
-    for (const l of w.lines) {
-      const run = Math.hypot(l.b.x - l.a.x, l.b.z - l.a.z);
-      expect(Math.hypot(run, l.b.y - l.a.y)).toBeLessThanOrEqual(40);
-      expect(Math.abs(l.b.y - l.a.y)).toBeGreaterThanOrEqual(0.1 * run - 1e-6);
-    }
-    // From the high roof, a pulley on, across and down onto the low one: most of them carry him over.
-    let over = 0;
-    const dead = w.lines.filter(l => !l.live).slice(0, 10);
-    for (const l of dead) {
-      const s = createState(1, w), [hi, lo] = l.a.y > l.b.y ? [l.a, l.b] : [l.b, l.a];
-      addItem(s, s.inv.pack, 'trolley');
-      teleport(s.player, hi.x, hi.y - 1.2 + 0.05, hi.z);
-      run(s, w, 20);
-      run(s, w, 1, { pressed: LMB, buttons: LMB });
-      for (let i = 0; i < secs(10) && s.player.mode === 'zip'; i++) run(s, w, 1);
-      run(s, w, secs(2));
-      if (Math.hypot(s.player.pos.x - lo.x, s.player.pos.z - lo.z) < 5 && Math.abs(s.player.pos.y - (lo.y - 3.3)) < 1) over++;
-    }
-    expect(over).toBeGreaterThanOrEqual(dead.length * 0.6);
+    expect(getWorld('yuzhong').lines).toHaveLength(0);
   });
 });

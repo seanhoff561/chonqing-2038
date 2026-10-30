@@ -160,6 +160,21 @@ export function stepGrip(s: SimState, world: World, input: InputFrame) {
   }
   // Feet on the wall below the hands? Then Space pushes off; without footing it pumps a swing (U-005).
   const foothold = !!raycast(world.index, p.pos.x, p.pos.y + 0.45, p.pos.z, -nx, 0, -nz, HW + 0.45);
+  // Hanging free from a bar or an edge, Space held a moment hauls him up onto it, a muscle-up (U-035): onto the
+  // ledge behind the edge, or standing on the bar itself, if there's room.
+  p.muscle = !foothold && (input.buttons & B.JUMP) ? (p.muscle || 0) + DT : 0;
+  if (p.muscle >= G.muscleUp && lip.kind === 'lip') {
+    for (const back of [HW + 0.05, 0.03]) {
+      const b = { x: lip.x - lip.nx * back, y: lip.top + 1e-3, z: lip.z - lip.nz * back };
+      if (!free(world.index, b.x, b.y, b.z, M.height.crouch) || groundGap(world.index, b, 0.05) === Infinity) continue;
+      p.muscle = 0;
+      p.hands[0].grip = p.hands[1].grip = null;
+      startAction(p, 'climbup', G.climbTime * 1.5, b, 'ground', 'crouch', 0);
+      sfx(s, 'pullover');
+      s.events.push({ t: 'noise', x: p.pos.x, y: p.pos.y, z: p.pos.z, r: M.noise.mantle, kind: 'mantle' });
+      return;
+    }
+  }
   const look = lookDelta();
   if ((input.pressed & B.JUMP) && L.jumpScale > 0 && foothold) {
     releaseAll(p, G.regrab);
