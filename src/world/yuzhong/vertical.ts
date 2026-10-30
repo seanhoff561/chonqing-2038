@@ -181,7 +181,8 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
     const o0 = Math.max(-tall.obb.hd, ld - low.obb.hd), o1 = Math.min(tall.obb.hd, ld + low.obb.hd), d = Math.max(-tall.obb.hd + 3.5, Math.min(tall.obb.hd - 3.5, (o0 + o1) / 2));
     // (The plank out of reach of the ground in the gap: BARE over it, as every hold on the wall.)
     const gapFoot = Math.max(...[-1, -0.5, 0, 0.5, 1].map(t => yAt(...world(tall, sd * (tall.obb.hw + 0.8), t * tall.obb.hd))));
-    if (gap >= 1.2 && gap <= 4 && low.kind === 'res' && !tall.climb && tall.wall - low.wall >= 12 && low.wall + PARAPET - gapFoot >= BARE && d > o0 + 0.8 && d < o1 - 0.8 && rand(r) < 0.35) {
+    // (Its wall 13 m long or more: over each broken floor the line steps 1.65 m aside, clear of the hole.)
+    if (gap >= 1.2 && gap <= 4 && low.kind === 'res' && !tall.climb && tall.obb.hd >= 6.5 && tall.wall - low.wall >= 12 && low.wall + PARAPET - gapFoot >= BARE && d > o0 + 0.8 && d < o1 - 0.8 && rand(r) < 0.35) {
       const deck = low.wall + PARAPET, ua = sd * tall.obb.hw, ub = sd * (tall.obb.hw + gap), f = frame(tall), [x, z] = world(tall, ua, d);
       out.solids.push(box(tall, Math.min(ua, ub), Math.max(ua, ub), d - 0.6, d + 0.6, deck - 0.15, deck, MAT.wood));
       out.features.push({ kind: 'crossing', x, y: deck, z, group: out.features.length, nx: sd * f.ux, nz: sd * f.uz });

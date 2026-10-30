@@ -36,7 +36,7 @@ export const BARE = 7.2;
  *  wall may stand well over the lot's base). */
 export function footOf(l: Lot, s: Side): number {
   let y = l.base;
-  if (l.ground) for (let k = 0, n = Math.ceil(s.b - s.a); k <= n; k++) for (const d of [0.8, 2.2]) { const p = faceXZ(s, s.a + ((s.b - s.a) * k) / n, d); y = Math.max(y, l.ground(p.x, p.z)); }
+  if (l.ground) for (let k = 0, n = Math.ceil((s.b - s.a) * 2); k <= n; k++) for (const d of [0.5, 1.2, 2.0, 2.6]) { const p = faceXZ(s, s.a + ((s.b - s.a) * k) / n, d); y = Math.max(y, l.ground(p.x, p.z)); }
   return y;
 }
 
@@ -55,14 +55,16 @@ export function facades(l: Lot, r: Rng, out: Fabric) {
   if (l.kind === 'tower') return;
   // The roof edge he pulls over: a parapet, or the eave plate of a tiled roof.
   const top = l.kind === 'trad' ? l.wall : l.top;
-  const door = l.route?.[0];
+  const door = l.route?.[0], line = l.climb && sides(l)[l.climb.face];
   for (const s of sides(l)) {
     if (s.b - s.a < 3) continue;
     const foot = footOf(l, s), high = top - foot;
     const n = high < BARE + 2.5 ? 0 : rand(r) < 0.5 ? 0 : rand(r) < 0.75 ? 1 : 2;
     for (let k = 0; k < n; k++) {
       const c = s.a + 0.8 + rand(r) * (s.b - s.a - 1.6), y0 = foot + BARE + rand(r) * (high - BARE - 2.5), x = rand(r);
+      // (Clear of a door, and of a climbing line up this wall: routes.ts places every hold on that.)
       if (door && Math.hypot(door.x - faceXZ(s, c, 0).x, door.z - faceXZ(s, c, 0).z) < 2.5) continue;
+      if (line && s.f === line.f && s.nx === line.nx && Math.abs(c - l.climb!.at) < 5) continue;
       if (x < 0.25) {
         // A downpipe from the gutter, its lower length torn away: a hopper head under the edge, brackets down it.
         const p = faceXZ(s, c, 0.06);

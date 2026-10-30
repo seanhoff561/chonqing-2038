@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 56 of 77 done
+## M3: 57 of 77 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -381,7 +381,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - A run starts in the hideout at the Grand Tunnel vent junction: a bedroll, a stash, the grate overhead with neon, searchlights and patrols passing above
   - He can make more hideouts anywhere (a bed and storage), each keeping its own storage; sleeping, saving and crafting work at any of them; the journal lists them
   - Sim tests: start in the vent hideout, make a second, store items in each, sleep in either; e2e screenshot looking up through the grate
-- [ ] **M3-68** The underground reworked (U-032)
+- [x] **M3-68** The underground reworked (U-032)
   - Tunnels short and real: a metro tunnel (track bed, cable trays, cross passages, signals) and service tunnels with their own props, joined to the underground city's levels rather than long empty runs
   - Layers step down off the street into the underground city in places, so ground level keeps going down (moved here from M3-66, where the underground is reworked)
   - A bot walk and screenshots

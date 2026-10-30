@@ -67,6 +67,8 @@ export function buildYuzhong(): World {
   const [W, H] = GEO.size;
   const L = GEO.landmarks, at = (k: string, yaw = 0): Teleport => ({ name: k, x: L[k].x, y: hAt(g, L[k].x, L[k].z) + 1.5, z: L[k].z, yaw });
   const hide = { name: "Friends' hideout (vent grate)", x: tun.at.spawn.x, y: tun.at.spawn.y + 0.05, z: tun.at.spawn.z, yaw: -Math.PI / 2 - tun.frame.yaw };
+  // (Looking down the stepped street from its mouth.)
+  const dw = under.features.find(f => f.kind === 'way:descent'), descentYaw = dw ? Math.atan2(-dw.nx!, -dw.nz!) : 0;
   const teleports = ['jiefangbei', 'shibati', 'jiaochangkou', 'hongyadong', 'xiaoshizi', 'chaotianmen', 'cablewayNorth'].map(k => at(k)).concat([
     hide,
     { name: 'Grand Tunnel entrance', x: tun.at.entrance.x, y: tun.at.entrance.y + 0.05, z: tun.at.entrance.z, yaw: Math.PI / 2 - tun.frame.yaw },
@@ -80,6 +82,9 @@ export function buildYuzhong(): World {
     { name: 'Underground city deck', x: under.at.deck.x, y: under.at.deck.y + 1.5, z: under.at.deck.z, yaw: 0 },
     { name: 'Underground city concourse', x: under.at.concourse.x, y: under.at.concourse.y + 1.5, z: under.at.concourse.z, yaw: 0 },
     { name: 'Underground Xiaoshizi', x: under.at.xiaoshizi.x, y: under.at.xiaoshizi.y + 1.5, z: under.at.xiaoshizi.z, yaw: 0 },
+    // The metro and the old tunnels (M3-68): a platform, the running tunnel, a shelter, a stepped street's mouth.
+    ...([['station', 'Metro station Jiefangbei', -Math.PI / 2], ['metro', 'Metro tunnel', -Math.PI / 2], ['shelter', 'Air-raid shelter', 0], ['descent', 'Stepped street down', 0]] as const)
+      .filter(([k]) => under.at[k]).map(([k, name, yaw]) => ({ name, x: under.at[k].x, y: under.at[k].y + 1.5, z: under.at[k].z, yaw: k === 'descent' ? descentYaw : yaw })),
     ...under.features.filter(f => f.kind === 'way:culvert' || f.kind === 'way:drain').map((f, n) => ({ name: `${f.kind === 'way:drain' ? 'Drain' : 'Culvert'} mouth ${n + 1}`, x: f.x, y: f.y + 1.5, z: f.z, yaw: 0 })),
     ...(fac?.gates ?? []).map((q, n) => ({ name: `Factory gate ${n + 1}`, x: q.x + q.nx * 16, y: q.y + 1.5, z: q.z + q.nz * 16, yaw: Math.atan2(q.nx, q.nz) })),
   ], metro.at.map(m => ({ name: `Metro ${m.name}`, x: m.x, y: hAt(g, m.x, m.z) + 1.5, z: m.z, yaw: 0 })),
@@ -110,7 +115,7 @@ export function buildYuzhong(): World {
     name: 'yuzhong', solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? [], fac?.decor ?? [], vert.decor, under.decor, laid.decor, filled.decor),
     props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], fac?.props ?? [], under.props, laid.props, dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(line.climbables, site?.climbables ?? [], vert.climbables, under.climbables, dress.climbables),
     hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones.concat(under.zones),
-    far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(fac?.features ?? [], vert.features, under.features, laid.features, dress.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n }))), marks, lawns: laid.lawns, lines: strung.lines, convoys: fac?.convoys, streets: drawn.concat(laid.paths, doorWays), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
+    far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(fac?.features ?? [], vert.features, under.features, laid.features, dress.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n })), under.descents.flatMap((d, i) => d.map((q, n) => ({ kind: 'descentRoute', ...q, group: i * 100 + n })))), marks, lawns: laid.lawns, lines: strung.lines, convoys: fac?.convoys, streets: drawn.concat(laid.paths, doorWays), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
     teleports, spawn: hide,
   });
   // Nothing floats or sinks (M3-56): whatever stands on something above ground settles onto what's under it, or

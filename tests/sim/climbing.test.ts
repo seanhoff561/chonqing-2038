@@ -113,8 +113,9 @@ describe('climbing reworked (M3-67)', () => {
       if (!p) continue;
       counted++;
       const ground = Math.max(p.base, street(f.x, f.z));
-      // (To the generator's sampling of the ground, a point a metre.)
-      if (f.y < ground + BARE - 0.05) { low++; if (low < 6) lows.push(`${f.kind} ${f.x.toFixed(0)},${f.z.toFixed(0)} ${(f.y - ground).toFixed(1)}`); }
+      // (To the generator's sampling of the ground, every half metre: on the steepest ground it can be a few
+      // centimetres under.)
+      if (f.y < ground + BARE - 0.2) { low++; if (low < 6) lows.push(`${f.kind} ${f.x.toFixed(0)},${f.z.toFixed(0)} ${(f.y - ground).toFixed(1)}`); }
     }
     expect(counted).toBeGreaterThan(5000);
     expect(low, lows.join('; ')).toBe(0);

@@ -15,6 +15,7 @@ import { stair } from '../steps';
 import { streetCells } from './ground';
 import { districtAt } from './lots';
 import type { Obb, P2 } from './shapes';
+import { run, fit, room, tubes, station, descent, TUBE, type Dig } from './underkit';
 
 type V3 = { x: number; y: number; z: number };
 export interface Under {
@@ -23,6 +24,8 @@ export interface Under {
   keep: Obb[];
   /** a walk from the Grand Tunnel under Jiaochangkou through both levels of the city to Xiaoshizi */
   route: V3[];
+  /** walks down the stepped streets from the street into the city (M3-68) */
+  descents: V3[][];
   at: Record<string, V3>;
 }
 
@@ -37,7 +40,7 @@ const TW = 3.6, TH = 3.4;
 /** gt: the Grand Tunnel's floor, the end of its passage north (the junction), its ways in, and a walk along it
  *  from under Jiaochangkou into the passage. */
 export function buildUnder(g: Heightfield, gt: { floor: number; junction: V3; ways: V3[]; walk: V3[] }): Under {
-  const u: Under = { solids: [], decor: [], props: [], climbables: [], zones: [], features: [], keep: [], route: [], at: {} };
+  const u: Under = { solids: [], decor: [], props: [], climbables: [], zones: [], features: [], keep: [], route: [], descents: [], at: {} };
   const lining: Solid[] = [], bores: Box[] = [], kept: Solid[] = [], r = makeRng(hashString('under'));
   const k = (x: number, z: number) => Math.max(0, Math.min(g.h - 1, Math.round(z / g.cell))) * g.w + Math.max(0, Math.min(g.w - 1, Math.round(x / g.cell)));
   const gy = (x: number, z: number) => g.y[k(x, z)], street = (x: number, z: number) => streetCells[k(x, z)] !== 0;
@@ -154,18 +157,31 @@ export function buildUnder(g: Heightfield, gt: { floor: number; junction: V3; wa
     return true;
   };
 
-  // The junction room off the Grand Tunnel's passage, then north under the city at its depth.
+  const dig: Dig = { space, bores, kept, decor: u.decor, props: u.props, gy, hole: holeRect, keep, clearOf, mark: (kind, [x, z], y) => { u.features.push({ kind, x, y, z, group: u.features.length }); } };
+  /** A service tunnel from a to b at y, its fittings, and the rooms it passes through, evenly spaced (U-032: no long
+   *  empty runs). */
+  const service = (a: P2, b: P2, y: number, rooms: Parameters<typeof room>[4][]) => {
+    tunnel(a, b, y);
+    const R = run(a, b), gap = R.len / (rooms.length + 1);
+    let t = 0;
+    rooms.forEach((kind, i) => { const c = gap * (i + 1); room(dig, R, c, y, kind, r); fit(dig, R, t + 3, c - 8, y, TW, TH, r); t = c + 8; });
+    fit(dig, R, t + 3, R.len - 3, y, TW, TH, r);
+    return R;
+  };
+
+  // The junction room off the Grand Tunnel's passage, then north under the city at its depth: an air-raid tunnel,
+  // shelters, a store and a pump room on it.
   const J = gt.junction, F = gt.floor, C = GEO.landmarks.jiefangbei;
   space(J.x - 4, J.z - 4, J.x + 4, J.z + 4, F, F + TH);
   // Where the passage comes in from the south-west, through the room's south wall.
   bores.push({ x0: J.x - 4, y0: F, z0: J.z + 3.5, x1: J.x + 0.3, y1: F + 3.2, z1: J.z + 5.5 });
-  tunnel([J.x, J.z], [J.x, C.z], F);
+  const north = service([J.x, J.z], [J.x, C.z], F, ['shelter', 'store', 'pump', 'shelter']);
   // Up a flight to the network's level, east to the city's lower concourse.
   const fx0 = J.x + 1.5, fx1 = fx0 + (LB - F) / T35;
   space(fx0, C.z - 1.6, fx1, C.z + 1.6, F, LB + TH);
   stair(fx0, C.z - 1.6, fx1, C.z + 1.6, F, LB, 1, kept, u.decor);
   const X0 = C.x - HX, X1 = C.x + HX, Z0 = C.z - HZ, Z1 = C.z + HZ;
-  tunnel([fx1, C.z], [X0, C.z], LB);
+  service([fx1, C.z], [X0, C.z], LB, ['market', 'store']);
 
   // The city: a cavern from the concourse to the ceiling, the deck at LA across it but for two voids and two
   // stair wells and a ladder hole.
@@ -214,28 +230,50 @@ export function buildUnder(g: Heightfield, gt: { floor: number; junction: V3; wa
   // Light strips along the cavern's ceiling and under the deck.
   for (let x = X0 + 6; x < X1 - 6; x += 12) u.decor.push(solid(x - 3, CEIL - 0.08, C.z - 0.15, x + 3, CEIL, C.z + 0.15, MAT.glare), solid(C.x - 0.15, LA - 0.68, Z0 + 4, C.x + 0.15, LA - 0.6, Z1 - 4, MAT.glare));
 
-  // On east to Xiaoshizi at the network's level, its end under the station.
-  const XS = GEO.landmarks.xiaoshizi, xe = XS.x, ze = XS.z + 18;
-  tunnel([X1, C.z], [xe, C.z], LB);
-  tunnel([xe, C.z], [xe, ze], LB);
+  // The metro on east to Xiaoshizi at the network's level (U-032: a real running tunnel): Jiefangbei's station
+  // off the cavern's east end, the twin tubes east to a crossover chamber under the corner (a train stalled in
+  // one), north to Xiaoshizi's station under its stair.
+  const XS = GEO.landmarks.xiaoshizi, xe = XS.x, ze = XS.z + 18, SL = 70, CX = 12, off = TUBE.off;
+  station(dig, run([X1, C.z], [X1 + SL, C.z]), SL, LB, r);
+  const east = run([X1 + SL, C.z], [xe - CX, C.z]);
+  tubes(dig, east, 0, east.len, LB, east.len * 0.45);
+  space(xe - CX, C.z - CX, xe + CX, C.z + CX, LB, LB + 6);
+  u.decor.push(solid(xe - 0.4, LB + 5.85, C.z - 0.4, xe + 0.4, LB + 6, C.z + 0.4, MAT.lamp));
+  const northT = run([xe, C.z - CX], [xe, ze + SL]);
+  tubes(dig, northT, 0, northT.len, LB);
+  station(dig, run([xe, ze + SL], [xe, ze - 4]), SL + 4, LB, r);
 
-  // Ways in. Stairways down to the deck from each side of the cavern, the first spot on each side clear of streets.
+  // Ways in. Streets stepping down off the street in landings, open to the sky, onto the city's deck (U-032:
+  // ground level keeps going down): one on each of two sides of the cavern, where one fits clear of the streets.
   const sides: [number, number, (t: number) => P2][] = [[0, 1, t => [C.x + t, Z0]], [0, -1, t => [C.x + t, Z1]], [1, 0, t => [X0, C.z + t]], [-1, 0, t => [X1, C.z + t]]];
-  for (const [dx, dz, edge] of sides) for (const t of [-40, -25, -12, 12, 25, 40]) if (stairTo(...edge(t), dx, dz, LA, 'stairs')) break;
+  const arrivals: P2[] = [];
+  for (const [dx, dz, edge] of sides) for (const t of [-30, 30, -45, 45, -18, 18]) {
+    if (u.descents.length >= 2) break;
+    const walk = descent(dig, edge(t), dx, dz, LA, 8, r);
+    if (!walk) continue;
+    u.descents.push(walk);
+    arrivals.push(edge(t));
+    way('descent', walk[0].x, walk[0].y, walk[0].z, dx, dz);
+    break;
+  }
+  // Stairways down to the deck from each side, the first spot on each side clear of streets and the descents.
+  for (const [dx, dz, edge] of sides) for (const t of [-40, -25, -12, 12, 25, 40]) if (!arrivals.some(a => Math.hypot(a[0] - edge(t)[0], a[1] - edge(t)[1]) < 18) && stairTo(...edge(t), dx, dz, LA, 'stairs')) break;
   // The stations' stairs: Xiaoshizi's down to the tunnel's end; Linjiangmen's by a spur off the tunnel west.
-  for (const [dx, dz] of [[0, 1], [1, 0], [-1, 0], [0, -1]]) if (stairTo(xe, ze, dx, dz, LB, 'metro')) break;
+  for (const [dx, dz] of [[0, 1], [1, 0], [-1, 0], [0, -1]]) if (stairTo(xe, ze - 4.5, dx, dz, LB, 'metro')) break;
   const LJ = GEO.stations.find(s => s[0] === '临江门');
   if (LJ) {
     const lx = LJ[2] / 10;
     // The spur north from the tunnel as far as the first spot by the station a stair can come down.
     for (const lz of [LJ[3] / 10 + 30, LJ[3] / 10 + 50, LJ[3] / 10 + 15, LJ[3] / 10 + 65]) {
       if (![[0, 1], [1, 0], [-1, 0]].some(([dx, dz]) => stairTo(lx, lz, dx, dz, LB, 'metro'))) continue;
-      tunnel([lx, C.z], [lx, lz], LB);
+      service([lx, C.z], [lx, lz], LB, []);
       break;
     }
   }
-  // Grates beside the pavements over the tunnels, 50 m apart or more.
-  const legs: [P2, P2, number][] = [[[J.x, J.z - 10], [J.x, C.z + 10], F], [[fx1 + 6, C.z], [X0 - 6, C.z], LB], [[X1 + 6, C.z], [xe, C.z], LB], [[xe, C.z], [xe, ze + 8], LB]];
+  // Grates beside the pavements over the tunnels, 50 m apart or more. (Each leg: its ends, level, half width, and
+  // the sides cellars may come in from: either for a service tunnel, the outer for the metro's first tube.)
+  const legs: [P2, P2, number, number, number[]][] = [[[J.x, J.z - 10], [J.x, C.z + 10], F, TW / 2, [-1, 1]], [[fx1 + 6, C.z], [X0 - 6, C.z], LB, TW / 2, [-1, 1]],
+    [[X1 + SL + 6, C.z - off], [xe - CX - 6, C.z - off], LB, TUBE.w / 2, [-1]], [[xe - off, C.z - CX - 6], [xe - off, ze + SL + 6], LB, TUBE.w / 2, [-1]]];
   const grates: P2[] = [];
   for (const [a, b, y] of legs) {
     const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
@@ -257,35 +295,45 @@ export function buildUnder(g: Heightfield, gt: { floor: number; junction: V3; wa
   }
   // Cellar steps up into the yards behind the buildings along the tunnels, 120 m apart or more.
   const cellars: P2[] = [];
-  for (const [a, b, y] of legs) {
+  for (const [a, b, y, hw, from] of legs) {
     const len = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / len, uz = (b[1] - a[1]) / len;
     for (let t = 30; t < len - 30; t += 20) {
       const x = a[0] + ux * t, z = a[1] + uz * t;
       if (cellars.some(q => Math.hypot(q[0] - x, q[1] - z) < 120) || grates.some(q => Math.hypot(q[0] - x, q[1] - z) < 12)) continue;
       // Its foot at the tunnel's wall, coming in from the side.
-      if ([-1, 1].some(sd => stairTo(x - uz * sd * (TW / 2 + 1), z + ux * sd * (TW / 2 + 1), uz * sd, -ux * sd, y, 'cellar'))) cellars.push([x, z]);
+      if (from.some(sd => stairTo(x - uz * sd * (hw + 1), z + ux * sd * (hw + 1), uz * sd, -ux * sd, y, 'cellar'))) cellars.push([x, z]);
     }
   }
   // Culverts and drains out to the hillsides off the tunnels, square to them, every 30 m tried.
   // Each spot tries the kind most wanted next (a culvert, a drain, a high one, in turn), then the others.
   let culverts = 0;
   const kinds: [boolean, boolean][] = [[false, false], [true, false], [false, true]];
-  for (const [a, b, y] of legs) {
+  // (Off the metro only out of each tube's outer side: the tubes run side by side.)
+  const outs: [P2, P2, number, number, number[]][] = [...legs, [[X1 + SL + 6, C.z + off], [xe - CX - 6, C.z + off], LB, TUBE.w / 2, [1]], [[xe + off, C.z - CX - 6], [xe + off, ze + SL + 6], LB, TUBE.w / 2, [1]]];
+  for (const [a, b, y, , from] of outs) {
     const len = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / len, uz = (b[1] - a[1]) / len;
-    for (let t = 20; t < len - 20 && culverts < 9; t += 30) for (const s of [-1, 1]) {
+    for (let t = 20; t < len - 20 && culverts < 9; t += 30) for (const s of from) {
       const x = a[0] + ux * t, z = a[1] + uz * t, order = [0, 1, 2].map(i => kinds[(culverts + i) % 3]);
       if (order.some(([drain, high]) => culvert(x, z, -uz * s, ux * s, y, drain, high))) { culverts++; break; }
     }
   }
 
-  // The route: along the Grand Tunnel from under Jiaochangkou to the junction, north, up the flight, east into the
-  // concourse, up the west well onto the deck, along it, down the east well, on east and north to Xiaoshizi.
-  const pt = (x: number, y: number, z: number): V3 => ({ x, y, z });
+  // The route: along the Grand Tunnel from under Jiaochangkou to the junction, north through the shelters, up the
+  // flight, east through the market into the concourse, up the west well onto the deck, along it, down the east
+  // well, through Jiefangbei's station (up onto the platform, along it, down off its end), along the first tube to
+  // the crossover, north along the third to Xiaoshizi's station, up onto its platform and down off its far end.
+  const pt = (x: number, y: number, z: number): V3 => ({ x, y, z }), W = LB + TUBE.walk;
   u.route = [
     ...gt.walk, J, pt(J.x, F, C.z), pt(fx1 + 2, LB, C.z), pt(C.x - 3, LB, C.z), pt(C.x - 3, LB, wells[0].z0 - 1.5), pt(C.x - 3, LA, wells[0].z1 + 1.5), pt(C.x, LA, wells[0].z1 + 1.5),
-    pt(C.x, LA, wells[1].z0 - 1.5), pt(C.x + 3, LA, wells[1].z0 - 1.5), pt(C.x + 3, LB, wells[1].z1 + 1.5), pt(C.x + 3, LB, C.z), pt(xe, LB, C.z), pt(xe, LB, ze),
+    pt(C.x, LA, wells[1].z0 - 1.5), pt(C.x + 3, LA, wells[1].z0 - 1.5), pt(C.x + 3, LB, wells[1].z1 + 1.5), pt(C.x + 3, LB, C.z),
+    pt(X1 + 1.5, LB, C.z), pt(X1 + 5, W, C.z), pt(X1 + 7, W, C.z - 1.5), pt(X1 + SL - 7, W, C.z - 1.5), pt(X1 + SL - 5, W, C.z), pt(X1 + SL - 1.2, LB, C.z), pt(X1 + SL + 3, LB, C.z - off),
+    pt(xe - CX - 1, LB, C.z - off), pt(xe - off, LB, C.z - CX + 1), pt(xe - off, LB, ze + SL + 2), pt(xe, LB, ze + SL - 1.5), pt(xe, W, ze + SL - 5), pt(xe - 1.5, W, ze + SL - 7), pt(xe - 1.5, W, ze + 3), pt(xe, W, ze + 1), pt(xe, LB, ze - 2.8),
   ];
-  u.at = { deck: { x: C.x, y: LA, z: C.z }, concourse: { x: C.x, y: LB, z: C.z + 30 }, xiaoshizi: { x: xe, y: LB, z: ze } };
+  u.at = {
+    deck: { x: C.x, y: LA, z: C.z }, concourse: { x: C.x, y: LB, z: C.z + 30 }, xiaoshizi: { x: xe, y: W, z: ze + 30 }, station: { x: X1 + 30, y: W, z: C.z },
+    metro: { x: X1 + SL + east.len * 0.3, y: LB, z: C.z - off }, shelter: { x: J.x, y: F, z: J.z - north.len / 5 },
+    ...(u.descents[0] ? { descent: u.descents[0][0] } : {}),
+  };
 
   let all = lining;
   for (const b of bores) all = carve(all, b);

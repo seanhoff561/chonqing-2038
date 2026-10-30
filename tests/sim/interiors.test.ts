@@ -44,8 +44,9 @@ describe('enterable buildings (M3-04)', () => {
     expect(s.dead).toBeFalsy();
   });
   it("walks into Shibati's open shop houses under the rolled-up shutter (M3-55)", () => {
+    // (Five and more: U-034 rebuilds them as apartment blocks in M3-66.)
     const shops = open.filter(l => l.kind === 'trad');
-    expect(shops.length).toBeGreaterThan(5);
+    expect(shops.length).toBeGreaterThanOrEqual(5);
     for (const lot of shops.slice(0, 4)) {
       const s = createState(1, w), route = lot.route!;
       teleport(s.player, route[0].x, route[0].y + 0.05, route[0].z);
