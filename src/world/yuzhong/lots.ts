@@ -21,6 +21,8 @@ export interface Plan {
   far: boolean;
   /** the ground round it rises above its base (a higher street beside it): solid only, never hollowed */
   noEnter?: boolean;
+  /** a cache reached only with a tool (M3-37, U-037): no holds on it, nothing joining it */
+  sheer?: boolean;
   /** a climbing line up one of its sides from a neighbour's roof (vertical.ts, U-032) */
   climb?: { face: number; at: number; y0: number };
   /** a tower's skyline: the highest roof within 25 m of it (U-036) */

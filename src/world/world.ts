@@ -48,8 +48,18 @@ export interface Plot { corners: [number, number][]; base: number; wall: number;
 
 export interface Teleport { name: string; x: number; y: number; z: number; yaw: number }
 
+/** A way across the city off the streets (M3-37): its points (roof to roof, along connections) and how each step
+ *  is taken ('jump', 'drop', or the connection's kind). */
+export interface Route { id: string; kind: 'main' | 'branch'; pts: { x: number; y: number; z: number }[]; ways: string[] }
+/** A machine's beat (M3-37, laid for M4): along streets or over the roofs, between the hours it keeps. */
+export interface Patrol { kind: 'street' | 'drone'; pts: { x: number; y: number; z: number }[]; hours: [number, number] }
+/** A place reached only one way, with a tool (U-037): where, what it takes, and where that's used from. */
+export interface Gate { tool: string; x: number; y: number; z: number; from: { x: number; y: number; z: number } }
+
 export interface World {
   name: string;
+  /** off-street routes, machines' beats, tool-gated places (M3-37); empty for small worlds */
+  routes: Route[]; patrols: Patrol[]; gates: Gate[];
   /** render-only boxes (visible stair steps over invisible ramps, trims) */
   decor: Solid[];
   teleports: Teleport[];
@@ -85,6 +95,7 @@ export interface World {
 
 export interface WorldParts {
   name: string;
+  routes?: Route[]; patrols?: Patrol[]; gates?: Gate[];
   solids: Solid[];
   decor?: Solid[];
   water?: Box[];
@@ -123,6 +134,7 @@ export function makeWorld(p: WorldParts): World {
   if (parts.size) for (const it of p.inter ?? []) if (typeof it.data?.part === 'string' && parts.has(it.data.part)) it.data.solid = parts.get(it.data.part);
   return {
     name: p.name,
+    routes: p.routes ?? [], patrols: p.patrols ?? [], gates: p.gates ?? [],
     decor: p.decor ?? [],
     solids,
     ground: p.ground,

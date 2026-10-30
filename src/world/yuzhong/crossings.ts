@@ -21,7 +21,7 @@ type V3 = [number, number, number];
 
 /** A straight member from a to b (plank, beam, bar): w wide, t thick, its top on the line a-b (sloped if they
  *  differ); in its own frame along +x, turned into place. */
-function member(a: V3, b: V3, w: number, t: number, mat: number): Solid {
+export function member(a: V3, b: V3, w: number, t: number, mat: number): Solid {
   const dx = b[0] - a[0], dz = b[2] - a[2], len = Math.hypot(dx, dz), yaw = Math.atan2(dz, dx), lo = Math.min(a[1], b[1]), hi = Math.max(a[1], b[1]);
   const s = Math.abs(hi - lo) < 0.02 ? solid(a[0], lo - t, a[2] - w / 2, a[0] + len, lo, a[2] + w / 2, mat)
     : rampSolid(a[0], lo - t, a[2] - w / 2, a[0] + len, a[2] + w / 2, lo, hi, b[1] > a[1] ? 1 : 2, mat);
@@ -30,14 +30,14 @@ function member(a: V3, b: V3, w: number, t: number, mat: number): Solid {
 
 /** A cable bundle from a to b sagging `sag` in the middle: walkable segments a metre or so long (their tops on the
  *  curve), two more cables beside it, and junk hung along it. */
-function cord(a: V3, b: V3, sag: number, r: Rng, out: Vertical, junk: boolean) {
+export function cord(a: V3, b: V3, sag: number, r: Rng, out: Vertical, junk: boolean) {
   const len = Math.hypot(b[0] - a[0], b[2] - a[2]), n = Math.max(2, Math.round(len)), at = (t: number): V3 => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t - 4 * sag * t * (1 - t), a[2] + (b[2] - a[2]) * t];
   const ux = (b[0] - a[0]) / len, uz = (b[2] - a[2]) / len;
   for (let i = 0; i < n; i++) {
     const p = at(i / n), q = at((i + 1) / n);
-    out.solids.push(member(p, q, 0.14, 0.12, MAT.metal));
+    out.solids.push(member(p, q, 0.14, 0.12, MAT.cable));
     // Two more beside it, a hand apart, drawn only.
-    for (const o of [-0.09, 0.09]) out.decor.push(member([p[0] - uz * o, p[1] - 0.03, p[2] + ux * o], [q[0] - uz * o, q[1] - 0.03, q[2] + ux * o], 0.05, 0.05, MAT.metal));
+    for (const o of [-0.09, 0.09]) out.decor.push(member([p[0] - uz * o, p[1] - 0.03, p[2] + ux * o], [q[0] - uz * o, q[1] - 0.03, q[2] + ux * o], 0.05, 0.05, MAT.cable));
   }
   if (!junk) return;
   // Junk hung off it (U-035): loops of loose cable, rags, a pair of shoes by their laces, a lamp, a sign.
@@ -60,7 +60,7 @@ export function crossings(plans: Plan[], g: Heightfield, sts: Street[], used: Se
     const l = Math.hypot(b[0] - a[0], b[2] - a[2]) || 1;
     out.features.push({ kind, x: a[0], y: a[1], z: a[2], group, nx: (b[0] - a[0]) / l, nz: (b[2] - a[2]) / l }, { kind, x: b[0], y: b[1], z: b[2], group, nx: (a[0] - b[0]) / l, nz: (a[2] - b[2]) / l });
   };
-  const live = plans.filter(p => !p.far && (p.kind === 'res' || p.kind === 'tower'));
+  const live = plans.filter(p => !p.far && !p.sheer && (p.kind === 'res' || p.kind === 'tower'));
 
   // Across the streets: each street's rows, facing each other, a crossing one pair in three.
   const rows = new Map<string, Plan[]>();
@@ -145,7 +145,7 @@ export function windowBridges(wins: Feature[], index: SolidIndex, out: Vertical)
     const nx = w.nx!, nz = w.nz!, y = w.y, h = raycast(index, w.x + nx * 0.3, y + 0.3, w.z + nz * 0.3, nx, 0, nz, 9);
     if (!h || h.t < 1.2) continue;
     const t = h.t + 0.3, hx = w.x + nx * t, hz = w.z + nz * t;
-    // A window across within a metre and a half, near the sill's height: window to window.
+    // A window across within a metre and a half, near the sill's height: sill to sill.
     const other = wins.find(q => q !== w && Math.hypot(q.x - hx, q.z - hz) < 1.5 && Math.abs(q.y - y) < 0.8 && q.nx! * nx + q.nz! * nz < -0.9);
     // Or a roof edge across, a step down to a mantle up.
     let top = NaN;

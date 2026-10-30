@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 66 of 84 done
+## M3: 67 of 84 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -433,7 +433,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - U-035: the cords dressed to look dystopian, junk hanging off them (cables, rags, shoes, lamps, signs); bars across the gap wherever two buildings stand close together
   - Moved from M3-36 (it needs the neighbours): from some windows a makeshift beam bridge to a building nearby; walkways joining buildings to cross over (U-034)
   - Sim tests: counts of each, something underfoot along each, none in reach of the street, a bot walks a cable and a plank end to end; screenshots
-- [ ] **M3-37** The ant-hill route network (U-014, U-021, U-023)
+- [x] **M3-37** The ant-hill route network (U-014, U-021, U-023)
   - Hand-designed main routes like highways across the district over roofs, through buildings, along beams and through tunnels, carrying the sites and key supplies needed to finish the game; branching neighbourhood routes off them; streets are the dangerous shortcut; organic, the whole map playing like a skatepark, the ways made of rooms, windows and insides rather than added holds (U-037)
   - Every gap, height and reach on a route is within the movement envelope (M3-50) and near its top (U-023): main routes demand the full movement set (chained wall kicks, a back-jump to a grab, wall-runs, swings and laches, item tricks), risky branches sit at the maximum; nothing on a route is a walk
   - A readable visual language: planks, open windows, broken railings and worn paths mark the way; dead ends read as dead ends

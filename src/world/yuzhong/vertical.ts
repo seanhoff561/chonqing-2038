@@ -44,7 +44,7 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
   const yAt = (x: number, z: number) => g.y[Math.max(0, Math.min(g.h - 1, Math.round(z / g.cell))) * g.w + Math.max(0, Math.min(g.w - 1, Math.round(x / g.cell)))];
   const feature = (kind: string, p: Plan, a: number, d: number, y: number, group = out.features.length) => { const [x, z] = world(p, a, d), f = frame(p); out.features.push({ kind, x, y, z, group, nx: f.nx, nz: f.nz }); };
   const rows = new Map<string, Plan[]>();
-  for (const p of plans) if (p.row && /^\d+:/.test(p.row) && !p.far && p.kind === 'res') { const a = rows.get(p.row); if (a) a.push(p); else rows.set(p.row, [p]); }
+  for (const p of plans) if (p.row && /^\d+:/.test(p.row) && !p.far && p.kind === 'res' && !p.sheer) { const a = rows.get(p.row); if (a) a.push(p); else rows.set(p.row, [p]); }
 
   // Across the street: buildings facing each other, overlapping along it.
   let bridges = 0, lanes = 0;
@@ -95,7 +95,7 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
   // Streets on the roof: a street up the hill passing a building's back within 6 m, two floors or more over its
   // foot. Its roof comes to the street's level (to the floor nearest) and a ramp crosses to it.
   for (const p of plans) {
-    if (used.has(p) || !p.flex || p.far || p.kind !== 'res' || !p.row || !/^\d+:/.test(p.row)) continue;
+    if (used.has(p) || p.sheer || !p.flex || p.far || p.kind !== 'res' || !p.row || !/^\d+:/.test(p.row)) continue;
     let H = 0, d = 0;
     for (let k = 1; k <= 6 && !d; k++) {
       const [x, z] = world(p, 0, -p.obb.hd - k), c = Math.round(z / g.cell) * g.w + Math.round(x / g.cell);
@@ -205,7 +205,7 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
   // Scaffolding hung on one front in eight of the taller buildings, from 8-12 m up (out of reach of the street) to
   // half its height.
   for (const p of plans) {
-    if (p.far || p.kind !== 'res' || p.wall - p.base < 20 || !p.row || rand(r) > 0.12) continue;
+    if (p.far || p.sheer || p.kind !== 'res' || p.wall - p.base < 20 || !p.row || rand(r) > 0.12) continue;
     const w = Math.min(p.obb.hw * 2 - 2, 6 + rand(r) * 4), u0 = (rand(r) - 0.5) * (p.obb.hw * 2 - w - 1) - w / 2, u1 = u0 + w, f = p.obb.hd;
     const y0 = p.base + BARE + 1 + rand(r) * 4, y1 = Math.max(y0 + 6, p.base + (p.wall - p.base) * 0.5);
     for (let y = y0; y <= y1 + 0.01; y += 2) out.solids.push(box(p, u0, u1, f + 0.1, f + 1.2, y - 0.05, y, MAT.wood));

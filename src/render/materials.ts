@@ -141,6 +141,7 @@ const draws: Record<number, [Draw, number]> = {
   }, 1],
   [MAT.mark]: [(g, w, h) => { g.fillStyle = '#d4b020'; g.fillRect(0, 0, w, h); g.fillStyle = '#151515'; for (let x = -h; x < w; x += 48) { g.beginPath(); g.moveTo(x, h); g.lineTo(x + h, 0); g.lineTo(x + h + 24, 0); g.lineTo(x + 24, h); g.fill(); } }, 1],
 };
+draws[MAT.cable] = draws[MAT.metal];
 
 const mats = new Map<string, THREE.MeshPhongMaterial>();
 const glowing: THREE.MeshPhongMaterial[] = [];
@@ -164,6 +165,8 @@ function wetSky(): THREE.CubeTexture {
 /** Detail radius (U-012): detailed chunks draw inside it, the far stand-ins outside it. */
 export const lodRadius = { value: 1e9 };
 export type Lod = 'all' | 'near' | 'far';
+/** Seconds, for what sways in the wind (M3-37: cables). */
+export const swayTime = { value: 0 };
 
 /** Cut fragments by horizontal distance from the camera: near keeps inside the radius, far keeps outside. */
 function lodCut(m: THREE.Material, lod: Lod) {
@@ -203,6 +206,17 @@ export function material(id: number, vc = false, lod: Lod = 'all'): THREE.MeshPh
     // Water shows from below too (M3-48).
     m = new THREE.MeshPhongMaterial({ map: tex, vertexColors: vc, transparent: id === MAT.water, opacity: id === MAT.water ? 0.82 : 1, side: id === MAT.water ? THREE.DoubleSide : THREE.FrontSide, ...DRY });
     lodCut(m, lod);
+  }
+  if (id === MAT.cable) {
+    // Cables sway: every vertex drifts a few centimetres, slow and quick together, by where it is (M3-37).
+    const before = m.onBeforeCompile, key0 = m.customProgramCacheKey;
+    m.onBeforeCompile = (sh, rr) => {
+      before.call(m, sh, rr);
+      sh.uniforms.uSway = swayTime;
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uSway;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\n{ vec3 wp = (modelMatrix * vec4(position, 1.0)).xyz; float s = sin(uSway * 1.1 + wp.x * 0.15 + wp.z * 0.11) * 0.05 + sin(uSway * 2.3 + wp.x * 0.4 + wp.z * 0.3) * 0.02; transformed.x += s; transformed.z += s * 0.6; }');
+    };
+    m.customProgramCacheKey = () => `${key0.call(m)}:sway`;
   }
   mats.set(key, m);
   return m;

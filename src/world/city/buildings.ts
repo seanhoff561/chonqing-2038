@@ -21,6 +21,8 @@ export interface Lot {
   across: [number, number, number, number];
   /** never hollowed: the ground round it rises above its floor (Yuzhong lots against a higher street) */
   noEnter?: boolean;
+  /** a cache reached only with a tool (M3-37, U-037): no holds, fronts or details on its walls */
+  sheer?: boolean;
   /** its colour (M3-46): set by the caller or chosen from the palette by its material */
   tint?: number;
   /** a tower's podium top, if it has one */
@@ -48,7 +50,7 @@ export const PARAPET = 0.6;
 export function buildLot(l: Lot, r: Rng, out: Fabric) {
   const s0 = out.solids.length, f0 = out.far.length;
   l.tint ??= tintFor(l.mat, makeRng(hashString(`tint:${l.x0}:${l.z0}`)));
-  if (l.kind === 'tower') tower(l, r, out); else { mass(l, r, out); facades(l, r, out); }
+  if (l.kind === 'tower') tower(l, r, out); else { mass(l, r, out); if (!l.sheer) facades(l, r, out); }
   if (l.climb && l.kind !== 'tower') climbLine(l, [{ x0: l.x0, z0: l.z0, x1: l.x1, z1: l.z1, y0: l.climb.y0, y1: l.wall, top: l.top }], l.climb.face, l.climb.at, r, out);
   for (const list of [out.solids.slice(s0), out.far.slice(f0)]) for (const s of list) if (s.tint === undefined && PAINTED.has(s.mat)) s.tint = l.tint;
 }
@@ -78,8 +80,8 @@ function mass(l: Lot, r: Rng, out: Fabric) {
   if (step) {
     out.solids.push(solid(x0, wall - 2 * FLOOR, z0, x1, wall - 2 * FLOOR + 0.3, z0 + w, MAT.concrete), solid(x0, wall - 2 * FLOOR, z1 - w, x1, wall - 2 * FLOOR + 0.3, z1, MAT.concrete));
   }
-  if (!open) details(l, r, out, wall - (step ? 2 * FLOOR : 0));
-  fronts(l, look, open, step > 0, out);
+  if (!open && !l.sheer) details(l, r, out, wall - (step ? 2 * FLOOR : 0));
+  if (!l.sheer) fronts(l, look, open, step > 0, out);
   const px0 = x0 + step, pz0 = z0 + step, px1 = x1 - step, pz1 = z1 - step;
   out.solids.push(
     solid(px0, wall, pz0, px1, wall + p, pz0 + w, MAT.concrete), solid(px0, wall, pz1 - w, px1, wall + p, pz1, MAT.concrete),

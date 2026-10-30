@@ -25,6 +25,7 @@ import { buildSite } from './site';
 import { podiumMask, buildFactory } from './factory';
 import { verticalCity } from './vertical';
 import { crossings, windowBridges } from './crossings';
+import { pickGates, placeGates, network, isolated } from './network';
 import { buildLine2, stationEntrances, BEAM } from './line2';
 import { dressStreets } from './dressing';
 
@@ -54,6 +55,8 @@ export function buildYuzhong(): World {
   // What its halls leave of the podium is open ground like any other, to fill.
   if (fac) for (let k = 0; k < pod.length; k++) block[k] = unblocked[k] | fac.under[k];
   const out = empty(), plots: Plot[] = [];
+  // A few caches only a grappling hook reaches (M3-37, U-037): chosen first, so nothing gives them a hold.
+  const gatePairs = pickGates(plans, makeRng(hashString('gates')));
   // Bridged, stacked and built over (M3-57): it may set roofs to meet, so before the lots are built.
   const vert = verticalCity(plans, g, sts);
   // The connections across the streets and between close buildings (M3-37a): roofs may still be set to meet.
@@ -67,6 +70,11 @@ export function buildYuzhong(): World {
   // Planks out of windows across to a window or a roof, now the buildings stand.
   windowBridges(out.features.filter(f => f.kind.startsWith('win:')), buildIndex(out.solids), cross);
   rowAlleys(plans, out, g);
+  // The caches, and the route network over everything that joins the roofs (M3-37).
+  const gates = placeGates(gatePairs.filter(q => isolated(q, plans)), out), L0 = GEO.landmarks, lm = (k: string) => ({ x: L0[k].x, y: 0, z: L0[k].z });
+  const net = network(plots, out.features.concat(vert.features, cross.features), out.sites, sts, g,
+    [['jiaochangkou', 'shibati', 'jiefangbei', 'cablewayNorth', 'xiaoshizi', 'chaotianmen'].map(lm), ['jiefangbei', 'xinhuaIntl', 'hongyadong', 'chaotianmen'].map(lm)],
+    { x: tun.at.grate.x, y: tun.at.grate.y, z: tun.at.grate.z }, cross, gates);
   // The streets as drawn, and paths from the doors set back from them to them (U-033).
   const drawn = drawnStreets(sts.filter(onGround), plots), doorWays = doorPaths(g, plots, drawn);
   const decor: Solid[] = [];
@@ -121,7 +129,7 @@ export function buildYuzhong(): World {
   const filled = fill(buildIndex(solids, g), g, marks, plots);
   solids.push(...filled.solids);
   const world = makeWorld({
-    name: 'yuzhong', solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? [], fac?.decor ?? [], vert.decor, cross.decor, under.decor, laid.decor, filled.decor),
+    name: 'yuzhong', routes: net.routes, patrols: net.patrols, gates, solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? [], fac?.decor ?? [], vert.decor, cross.decor, under.decor, laid.decor, filled.decor),
     props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], fac?.props ?? [], under.props, laid.props, dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(line.climbables, site?.climbables ?? [], vert.climbables, under.climbables, dress.climbables),
     hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones.concat(under.zones),
     far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(fac?.features ?? [], vert.features, cross.features, under.features, laid.features, dress.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n })), under.descents.flatMap((d, i) => d.map((q, n) => ({ kind: 'descentRoute', ...q, group: i * 100 + n })))), marks, lawns: laid.lawns, convoys: fac?.convoys, streets: drawn.concat(laid.paths, doorWays), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
@@ -227,7 +235,7 @@ function landMask(g: Heightfield): Uint8Array {
 
 /** Build one lot in its own frame and turn everything it made into place. */
 function buildPlan(p: Plan, n: number, out: Fabric, g: Heightfield): Plot {
-  const o = p.obb, l: Lot = { id: n, x0: o.cx - o.hw, z0: o.cz - o.hd, x1: o.cx + o.hw, z1: o.cz + o.hd, base: p.base, wall: p.wall, top: p.wall, kind: p.kind, mat: p.mat, street: p.street, across: p.across, noEnter: p.noEnter, climb: p.climb, edge: p.edge, sky: p.sky, bare: p.bare,
+  const o = p.obb, l: Lot = { id: n, x0: o.cx - o.hw, z0: o.cz - o.hd, x1: o.cx + o.hw, z1: o.cz + o.hd, base: p.base, wall: p.wall, top: p.wall, kind: p.kind, mat: p.mat, street: p.street, across: p.across, noEnter: p.noEnter, climb: p.climb, edge: p.edge, sky: p.sky, bare: p.bare, sheer: p.sheer,
     ground: (x, z) => { const c = Math.cos(o.yaw), s = Math.sin(o.yaw); return heightAt(g, o.cx + c * (x - o.cx) - s * (z - o.cz), o.cz + s * (x - o.cx) + c * (z - o.cz)) ?? p.base; } };
   const f = empty(), r = makeRng(hashString(p.seed));
   if (p.far) {

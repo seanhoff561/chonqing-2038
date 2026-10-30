@@ -19,6 +19,8 @@ export const MAT = {
   screen: 29,
   /** a room's papered walls (M3-74): a faded pattern, water-stained, peeling off the plaster */
   wallpaper: 30,
+  /** cables and cable bundles (M3-37): drawn swaying in the wind */
+  cable: 31,
   /** collision only and soft (a prop draws it): bags, bins, cardboard; landing on it breaks a fall (U-024) */
   soft: 98,
   /** collision only: a prop draws it */

@@ -66,3 +66,10 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 ## M3-38 rooms (frame rate)
 - Walk into a few enterable blocks and round the streets beside them: does the frame rate hold on your GPU? (In software GL, frame CPU was over budget before the rooms and still is; rooms draw only within 45 m.)
 - Do the rooms read as rooms (flats, shops, restaurants, offices, workshops), and do the fallen ceilings let you climb to the floor above?
+
+## M3-36, M3-74, M3-37a, M3-37: buildings as puzzles, rooms, connections, routes
+- Pick a few enterable blocks (`?dev=1`, the teleport list) and try to get in and through them: windows to break or find broken, doors locked, jammed or chained, vents to pry, holes and ladders between floors. Does each feel like its own puzzle? Too easy, too hard?
+- Do the rooms look real enough close up (furniture, wallpaper, clutter, ceiling lights, decay)? What looks worst?
+- Cross a street on a plank, a beam and a cable; walk a cable bundle between close buildings; swing the bars across a narrow gap. Do they read, and do the cables sway?
+- Follow a main route (look for the red rags and worn paths on roofs) from Shibati toward Jiefangbei: is it a way across the city off the streets? Where does it break?
+- Find a grappling cache (a bare block with a crate and a post on its roof): is there really no other way up?

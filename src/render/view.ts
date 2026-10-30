@@ -8,7 +8,7 @@ import { buildStreetMeshes } from './streets';
 import { lineMeshes } from './lines';
 import { Convoys } from './convoys';
 import { buildLabels } from './labels';
-import { material, lodRadius } from './materials';
+import { material, lodRadius, swayTime } from './materials';
 import { MAT } from '../world/mats';
 import { FPCamera } from './fpcamera';
 import { buildProps, tickProps } from './props';
@@ -186,6 +186,7 @@ export class View {
       for (const cell of this.cells) if ((cell.visible = within(cell))) for (const m of cell.children) m.visible = within(m);
     }
     tickProps(t, open);
+    swayTime.value = t;
     if (this.rooms) { this.rooms.update(c); if (this.rooms.group.parent !== this.scene) this.scene.add(this.rooms.group); }
     this.convoys?.update(t, c);
     for (const o of this.scene.children) if (o === this.world) liveWalk(o, false); else o.updateMatrixWorld();
