@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 60 of 77 done
+## M3: 60 of 81 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -403,6 +403,10 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Room templates (flats, stairwells, corridors, shops, restaurants, offices, workshops) furnished from a furniture and clutter set in states of decay: collapsed ceilings, debris, water damage, overturned furniture
   - Several variants per template so rooms rarely repeat; references from docs/reference interiors
   - Screenshots of five different rooms
+- [ ] **M3-70** Walkable slopes (U-038)
+  - Ground walkable and runnable up to near-wall-like faces (about 72 degrees); only steeper faces act as walls he slides off (replaces U-020's 45 degrees)
+  - Uphill he's slower the steeper it is; downhill and across unchanged
+  - Sim tests: he walks up a 60 degree ramp (slower than on the flat) and not up an 80 degree one; the envelope and movement tests still pass
 - [ ] **M3-36** Building access by design (U-014, U-037)
   - Procedural building insides in several variations each: most doors locked or jammed, stair doors chained, only a few rooms open, the rest collapsed or blocked; ways in like a window off a neighbour's roof, a hole in a floor, a balcony to crawl along, a fire door opened from inside
   - U-037: the city's holds stay as they are; ways in are designed around rooms, windows and insides rather than added holds, and holds are taken away only round places meant to be reached one designed way
@@ -421,6 +425,23 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - U-034 street crossings: the streets are where the city stops for parkour, so that's where the crossings are: makeshift bridges and planks, beams, cables to hang from, blocks built over the street; generated ziplines gone (M5-33 makes them the player's)
   - U-034 thick electrical cords: cable bundles thick enough to walk across, sagging between buildings close together (relatively common), a balance walk along their curve; they sway and can hold his weight
   - U-035: the cords dressed to look dystopian, junk hanging off them (cables, rags, shoes, lamps, signs); bars across the gap wherever two buildings stand close together
+- [ ] **M3-71** Tight ways at ground level (U-038)
+  - Between buildings, through large areas of collapsed buildings and structures and through building insides: maze-like gaps, holes, crawlspaces and squeezes to find a way through, dark enough to need the headlamp, joined seamlessly to the rooftop routes (a hole down from a roof, a squeeze up into a building)
+  - Every street a dangerous gap to cross, not a way to walk: the ways across are over (buildings, crossings), under (basements, the underground) or a quick dash between cover
+  - Nooks on the sides of buildings to hide in from a passing patrol
+  - Not tested for being possible (U-037): data checks of what's there and screenshots; the director plays the ways
+- [ ] **M3-72** The start hideout under the alley (U-038)
+  - The start hideout is underground under an alleyway (the neon still over the alley), reached by a ladder up to a grate hidden under rubbish bags
+  - The grate takes time to unlock and open (and to shut and lock from below), and is loud doing it (noise events heard by what's near)
+  - Left open, or a trace left (a dropped item, the bags moved off it), it's found: he is killed in his sleep there
+  - The intro screenplay (M8-25) and the intro cutscene's feature (M8-05) rewritten to match
+  - Sim tests: the grate's open and close times and noise; sleeping with it open, or a trace, kills him; shut and clean, he wakes
+- [ ] **M3-73** Basements and the underground maze (U-038)
+  - Some buildings have basements, joined to the underground layer by grates, vents and broken walls
+  - Under the city an ant hill of sewers, vents and tunnels, some only crawl-high, some flooded to swim through fully under water; vents to pry open into buildings; grates up into basements
+  - Now and then they open through grates into the underground city's patrolled parts
+  - The underground city's buildings built like the city's above (fronts, rooms, insides), heavily neon and cyberpunk
+  - Data checks and screenshots; not tested for being possible (U-037)
 - [ ] **M3-43** The subway way in (U-018)
   - The underground Line 1/2 station at Jiaochangkou (platforms, concourse, dead escalators, screen doors) and a running tunnel joining the Grand Tunnel system near Shibati
   - A sim test walks from the station to the vent hideout underground
@@ -617,6 +638,7 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
 - [ ] **M4-07** Cameras
   - Fixed, sweeping and lamppost cameras with FOV and ranges from data; sweepers pan on a fixed period
   - A sim test: walking through a cone engages; timing the sweep gets past
+  - U-038: security cameras commonplace, so he's always on edge; each beeps audibly like any other machine
 - [ ] **M4-08** Patrol drones and docks
   - Drones fly loop routes at altitude with a searchlight cone at night and go home to recharge (6 min flight, 2 min charge)
   - Rooftop docks launch and recall them
@@ -681,6 +703,7 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
   - Code-built meshes: cameras, lamppost cameras, patrol and hunter drones with spinning rotors, quadrupeds with leg animation, humanoids, turrets and docks
   - ?scenario=units shows a lineup; a screenshot
   - The machines (U-031): white so they're seen, detailed and armed (rifles, launchers, armour plates, sensor heads); they move like soldiers (human-like walk, run, crouch, aim and turn animations), not robots; genuinely intimidating; models and animations from openly licensed sources if found, else built to reference
+  - U-038: street heavies: bigger, scarier robots along the streets
 - [ ] **M4-27** The world shows the alert state
   - Unit lights go white, amber or red by state; LED boards switch to alert text; sirens sound
   - No HUD indicator; screenshots Unaware and Engaged
@@ -690,6 +713,7 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
 - [ ] **M4-29** Machines in the first district
   - Patrol data for Shibati, Jiaochangkou and the tunnels: cameras, lampposts, 2 drone docks, quadrupeds, humanoids, delivery robots
   - A sim test runs a full game day with no stuck units
+  - U-038: the open is dangerous (streets, roofs, open air): drones and robots everywhere, a high chance of being seen; streets impassable by normal means; under ground, inside or in a nook on a building's side is where he's safe
 - [ ] **M4-30** Dev perception overlay
   - ?dev=1 toggles perception cones, awareness bars, the alert overlay and a unit list
   - The smoke test toggles it
@@ -975,6 +999,7 @@ M8 Story and sound: the intro cutscene, endings, the voice system with subtitles
   - The scripted intro from DESIGN section 13 and docs/cinematics/INTRO.md (news of the AI, the city fighting back and the rubble it left, the factory and the convoys out (U-030), Li Wei at the construction site, his father's call, the attack, the flight through Shibati, the subway and the underground city, Anna wakes) ending on day 1 at 06:00 in the grate hideout under Shibati (U-018)
   - The smoke test plays it to the end
   - Plays the generated clips in public/cinematics when present (subtitled, zh and en), else the in-engine version
+  - U-038: the intro shows the start hideout under the alley: the ladder, the grate under the rubbish bags
 - [ ] **M8-06** Intro skip after the first run
   - After a first run the intro can be skipped with a key; the first run can't skip it
   - The smoke test covers both

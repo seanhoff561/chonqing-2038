@@ -1,34 +1,18 @@
 // Enterable buildings (M3-04): a hollow shell with a street door and window openings (their sills are hand
-// holds), floor slabs, a switchback stair core from the street to a hut on the roof, and furniture containers
-// on every floor.
+// holds), floor slabs, a switchback stair core from the street to a hut on the roof, and on every floor rooms
+// round it (rooms.ts, M3-38).
 import { solid, rampSolid, carve } from '../geom';
 import { stepsFor } from '../steps';
 import { sides } from './climb';
 import { MAT } from '../mats';
-import { rand, randInt, type Rng } from '../../sim/rng';
+import { rand, type Rng } from '../../sim/rng';
+import { floorRooms, FLOOR, WALL, SLAB, CORE, CORE_L, CORE_W } from './rooms';
 import type { Lot, Fabric } from './buildings';
 import type { Site } from '../world';
 
-const FLOOR = 3, WALL = 0.25, SLAB = 0.2, HUT = 2.6;
-/** Core space: u runs along the flights, v across. Near landing, two half flights side by side, far landing. */
-const CORE = { near: 1.2, run: 4.0, far: 0.9, lane: 1.3 };
-const CORE_L = CORE.near + CORE.run + CORE.far, CORE_W = CORE.lane * 2;
+const HUT = 2.6;
 /** Window openings: wide and tall enough to hop onto the sill and drop through, or vault at a run (U-014). */
 const WIN = { w: 1.4, sill: 0.8, h: 1.9, every: 4.5 };
-
-const FURNITURE = {
-  cabinet: { w: 1.0, d: 0.5, h: 1.8, mat: MAT.wood, zh: '柜子', en: 'Cabinet', loot: 'kitchen' },
-  drawer: { w: 0.9, d: 0.5, h: 0.8, mat: MAT.wood, zh: '抽屉', en: 'Drawers', loot: 'bedroom' },
-  fridge: { w: 0.7, d: 0.7, h: 1.7, mat: MAT.metal, zh: '冰箱', en: 'Fridge', loot: 'kitchen' },
-  locker: { w: 0.5, d: 0.5, h: 1.9, mat: MAT.metal, zh: '储物柜', en: 'Locker', loot: 'bedroom' },
-  crate: { w: 1.0, d: 0.8, h: 0.8, mat: MAT.wood, zh: '货箱', en: 'Crate', loot: 'shop' },
-  // Big enough to hide in (M3-47).
-  wardrobe: { w: 1.2, d: 0.95, h: 2.0, mat: MAT.wood, zh: '衣柜', en: 'Wardrobe', loot: 'bedroom' },
-  // Not containers: a bed to claim, a table that becomes a workbench with a toolbox (U-013).
-  bed: { w: 2.0, d: 1.0, h: 0.5, mat: MAT.wood, zh: '床', en: 'Bed', use: 'mattress' },
-  table: { w: 1.2, d: 0.7, h: 0.78, mat: MAT.wood, zh: '桌子', en: 'Table', use: 'table' },
-} as const;
-type Piece = keyof typeof FURNITURE;
 
 /** Room for the core and a room beside it, a whole number of floors, not too tall to climb on foot. */
 export function canEnter(l: Lot): boolean {
@@ -38,7 +22,7 @@ export function canEnter(l: Lot): boolean {
 }
 
 export function hollow(l: Lot, r: Rng, out: Fabric) {
-  const { x0, z0, x1, z1, base, wall } = l;
+  const { x0, z0, x1, z1, base, wall } = l, from = out.solids.length;
   const n = Math.round((wall - base) / FLOOR);
   const alongZ = z1 - z0 >= x1 - x0;
   const ox = x0 + WALL, oz = z0 + WALL;
@@ -122,44 +106,17 @@ export function hollow(l: Lot, r: Rng, out: Fabric) {
   const [hx, hz] = at(CORE.near / 2, CORE_W / 2);
   out.sites.push({ id: `b${l.id}.hut`, kind: 'roof hut', x: hx, y: wall, z: hz, bed: null, table: null, containers: [], exits: 2, windows: 0, streetSides: 0 });
 
-  // Furniture along the walls of the room beside the core, a container in each.
+  // Rooms on every floor; how far gone the building is.
+  const decay = 0.3 + rand(r) * 0.7;
+  let holes: [number, number, number, number][] = [];
   for (let k = 0; k < n; k++) {
-    const y = base + k * FLOOR, shop = k === 0 && rand(r) < 0.4;
-    const m = 1 + randInt(r, 3);
-    const placed: [number, number, number, number][] = [];
+    const y = base + k * FLOOR;
     const [sx, sz] = at((CORE_L + U) / 2, (CORE_W + V) / 2);
     const site: Site = { id: `b${l.id}.${k}`, kind: 'flat', x: sx, y, z: sz, bed: null, table: null, containers: [], windows, streetSides,
       // Ground floors have the street door; every floor has the stairs; the first floor's windows are a drop.
       exits: k === 0 ? 2 : k === 1 ? 2 : 1 };
     out.sites.push(site);
-    for (let i = 0; i < m; i++) {
-      const kind: Piece = shop && i === 0 ? 'crate' : (['cabinet', 'drawer', 'fridge', 'locker', 'bed', 'table', 'wardrobe', 'wardrobe'] as const)[randInt(r, 8)];
-      const f = FURNITURE[kind];
-      // Against the far wall (u = U, which has the door) or the side wall (v = V): [u0, v0, u1, v1].
-      const far = rand(r) < 0.5, t = rand(r);
-      const box: [number, number, number, number] = far
-        ? [U - f.d, CORE_W + 0.4 + t * Math.max(0, V - CORE_W - 0.4 - f.w), U, 0]
-        : [CORE_L + 0.4 + t * Math.max(0, U - CORE_L - 0.4 - f.w), V - f.d, 0, V];
-      if (far) box[3] = box[1] + f.w; else box[2] = box[0] + f.w;
-      if (box[2] > U || box[3] > V) continue;
-      if (k === 0 && far && Math.abs((box[1] + box[3]) / 2 - doorV) < 1.6) continue;
-      if (placed.some(p => p[0] < box[2] && box[0] < p[2] && p[1] < box[3] && box[1] < p[3])) continue;
-      placed.push(box);
-      out.solids.push(B(box[0], y, box[1], box[2], y + f.h, box[3], f.mat));
-      if (kind === 'wardrobe') {
-        // Its space, turned so its doors (the shell's +z) face the room: across the far wall's face, or the side's.
-        const [cx, cz] = at((box[0] + box[2]) / 2, (box[1] + box[3]) / 2), hw = (f.w - 0.1) / 2, hd = (f.d - 0.1) / 2;
-        const [nu, nv] = far ? [-1, 0] : [0, -1], [nx, nz] = alongZ ? [nv, nu] : [nu, nv];
-        out.hides.push({ id: out.hides.length, kind: 'wardrobe', yaw: Math.atan2(nx, nz), inner: { x0: cx - hw, y0: y + 0.05, z0: cz - hd, x1: cx + hw, y1: y + 1.9, z1: cz + hd } });
-      }
-      // The front face, where he reaches in.
-      const [fx, fz] = far ? at(box[0] - 0.05, (box[1] + box[3]) / 2) : at((box[0] + box[2]) / 2, box[1] - 0.05);
-      const id = `b${l.id}.${k}.${i}`;
-      if ('use' in f) { if (f.use === 'mattress') site.bed = id; else site.table = id; } else site.containers.push(id);
-      out.inter.push('use' in f
-        ? { id, kind: f.use, x: fx, y: y + f.h, z: fz, r: 0.8, zh: f.zh, en: f.en }
-        : { id, kind: 'container', x: fx, y: y + Math.min(1.0, f.h / 2), z: fz, r: 0.6, zh: f.zh, en: f.en, data: { type: kind, loot: f.loot } });
-    }
+    holes = floorRooms({ l, U, V, y, k, top: k === n - 1, alongZ, doorV, B, at, holes, decay, from }, r, out, site);
   }
 
   // A walking route for tests and, later, pursuers: door, up every flight, out of the roof hut.
