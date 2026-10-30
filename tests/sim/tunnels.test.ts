@@ -67,7 +67,7 @@ describe('the Grand Tunnel under Shibati (M3-41c)', () => {
     expect(site.bed).toBe('airraid-mattress');
     expect(w.inter.find(i => i.id === 'airraid-mattress')?.kind).toBe('mattress');
     // Flush with the alley's levelled paving round it (3 m off: the lane is 3.4 m wide since M3-72).
-    const grate = w.props.find(p => p.kind === 'grate')!, ground = heightAt(g, grate.x + 3, grate.z)!;
+    const grate = w.props.find(p => p.kind === 'grate' && p.text === 'airraid-grate')!, ground = heightAt(g, grate.x + 3, grate.z)!;
     expect(grate.y - floor).toBeGreaterThan(8);
     expect(Math.abs(ground - grate.y)).toBeLessThan(0.1);
     const cool = w.sites.find(x => x.id === 'coolroom')!;

@@ -39,6 +39,9 @@ export interface Lot {
   bare?: boolean;
   /** the ground height at a point of its own frame (Yuzhong, where the ground round a lot may rise over its base) */
   ground?: (x: number, z: number) => number;
+  /** its basement (M3-73a), in its own frame: the space under the ground floor (the foundation is cut for it and the
+   *  ground's shell holed over it by the caller) */
+  basement?: { x0: number; z0: number; x1: number; z1: number; y0: number; y1: number };
 }
 export interface Fabric { solids: Solid[]; decor: Solid[]; props: Prop[]; lots: Lot[]; inter: Inter[]; climbables: Climbable[]; hides: HideSpot[]; features: Feature[]; sites: Site[]; far: Solid[] }
 

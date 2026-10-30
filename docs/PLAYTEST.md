@@ -90,3 +90,7 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 ## M3-78: chimneying
 - `?scenario=gym`, teleport "chimneys": jump in the shaft and press Space at the top of the jump, then W looking up. Does bracing and working up read and feel right (speed, the scrape)? Out onto the deck at the top, back down, Space to let go. Up the 40-degree slot the same way.
 - In a warren (M3-77), find a shaft off a corridor (a low duct at floor level) and climb it to the floor above.
+
+## M3-73a: basements and the sewer maze
+- Find a block with a stairwell, get into its lobby and down the hatch to the basement (headlamp on). Open the manhole grate (some are bolted from below), climb down and follow the sewers: do they read as sewers, crawlways and a flooded sump to swim? Is getting lost in them fun or tedious?
+- Find a grate into the underground city and force it.

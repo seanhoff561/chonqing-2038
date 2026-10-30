@@ -26,7 +26,7 @@ describe('starting supplies', () => {
     for (const [id, n] of FRIENDS_CRATE) expect(count(s.containers[START_CRATE], id), id).toBe(n);
     expect(stashIds(s, w, s.shelters[0])).toContain(START_CRATE);
     // The grate is up a shaft off the chamber (M3-72: set off the roads, in an alley).
-    const g = w.props.find(p => p.kind === 'grate')!;
+    const g = w.props.find(p => p.kind === 'grate' && p.text === 'airraid-grate')!;
     expect(Math.hypot(g.x - sc.x, g.z - sc.z)).toBeLessThan(30);
     expect(g.y - sc.y).toBeGreaterThan(8);
   });

@@ -1,7 +1,7 @@
 // Yuzhong at 1:1 (M3-41b, D-016): the real ground, streets, stairs, bridges and buildings of the eastern
 // peninsula from the geo data. Each lot is built by the city's lot code in its own unturned frame, then turned
 // into place.
-import { solid, rampSolid, turn, buildIndex, raycast, type Solid } from '../geom';
+import { solid, rampSolid, turn, buildIndex, raycast, carve, type Solid } from '../geom';
 import { HUNG, PROP_BOX, PROP_HIDE } from '../../data/props';
 import { makeWorld, type World, type Teleport, type Prop, type Inter, type Climbable, type HideSpot, type Site, type Plot } from '../world';
 import { MAT } from '../mats';
@@ -28,6 +28,7 @@ import { crossings, windowBridges } from './crossings';
 import { pickGates, placeGates, network, isolated } from './network';
 import { buildLine2, stationEntrances, BEAM } from './line2';
 import { dressStreets } from './dressing';
+import { sewers } from './sewers';
 
 const empty = (): Fabric => ({ solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [], sites: [], far: [] });
 
@@ -74,6 +75,8 @@ export function buildYuzhong(): World {
   // Planks out of windows across to a window or a roof, now the buildings stand.
   windowBridges(out.features.filter(f => f.kind.startsWith('win:')), buildIndex(out.solids), cross);
   rowAlleys(plans, out, g);
+  // The sewer maze under the basements (M3-73a).
+  const sew = sewers(out.features.filter(f => f.kind === 'sewer'), plots, g, under.route, tun.zones.map(z => z.box), under.solids, under.zones.map(z => z.box));
   // The caches, and the route network over everything that joins the roofs (M3-37).
   const gates = placeGates(gatePairs.filter(q => isolated(q, plans)), out), L0 = GEO.landmarks, lm = (k: string) => ({ x: L0[k].x, y: 0, z: L0[k].z });
   const net = network(plots, out.features.concat(vert.features, cross.features), out.sites, sts, g,
@@ -113,7 +116,7 @@ export function buildYuzhong(): World {
     { name: 'Construction site', x: site.frame.x, y: site.base + 0.05, z: site.frame.z, yaw: 0 },
     { name: 'Construction site crane', x: site.crane.x, y: site.crane.top + 2.55, z: site.crane.z, yaw: 0 },
   ] : []);
-  const solids = out.solids.concat(line.solids, metro.solids, site?.solids ?? [], fac?.solids ?? [], vert.solids, cross.solids, under.solids, tun.solids), inter = out.inter.concat(tun.inter, line.inter);
+  const solids = out.solids.concat(line.solids, metro.solids, site?.solids ?? [], fac?.solids ?? [], vert.solids, cross.solids, under.solids, sew.solids, tun.solids), inter = out.inter.concat(sew.inter, tun.inter, line.inter);
   // The tunnel gate's door switches its own collision solid, the tunnels' last.
   tun.inter.find(i => i.id === 'shibati-gate')!.data!.solid = solids.length - 1;
   // Street dressing goes last, round everything else (its solids append, so the gate's index holds).
@@ -133,10 +136,10 @@ export function buildYuzhong(): World {
   const filled = fill(buildIndex(solids, g), g, marks, plots);
   solids.push(...filled.solids);
   const world = makeWorld({
-    name: 'yuzhong', routes: net.routes, patrols: net.patrols, gates, solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? [], fac?.decor ?? [], vert.decor, cross.decor, under.decor, laid.decor, filled.decor),
-    props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], fac?.props ?? [], under.props, laid.props, dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(tun.climbables, line.climbables, site?.climbables ?? [], vert.climbables, under.climbables, dress.climbables),
-    hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones.concat(under.zones),
-    far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(fac?.features ?? [], vert.features, cross.features, rubble.features, under.features, laid.features, dress.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n })), under.descents.flatMap((d, i) => d.map((q, n) => ({ kind: 'descentRoute', ...q, group: i * 100 + n })))), marks, lawns: laid.lawns, convoys: fac?.convoys, streets: drawn.concat(laid.paths, doorWays), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
+    name: 'yuzhong', routes: net.routes, patrols: net.patrols, gates, solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? [], fac?.decor ?? [], vert.decor, cross.decor, under.decor, sew.decor, laid.decor, filled.decor),
+    props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], fac?.props ?? [], under.props, sew.props, laid.props, dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(sew.climbables, tun.climbables, line.climbables, site?.climbables ?? [], vert.climbables, under.climbables, dress.climbables),
+    hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones.concat(under.zones, sew.zones),
+    far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(fac?.features ?? [], vert.features, cross.features, rubble.features, under.features, sew.features, laid.features, dress.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n })), under.descents.flatMap((d, i) => d.map((q, n) => ({ kind: 'descentRoute', ...q, group: i * 100 + n })))), marks, lawns: laid.lawns, convoys: fac?.convoys, streets: drawn.concat(laid.paths, doorWays), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }, ...sew.water],
     teleports, spawn: hide,
   });
   // Nothing floats or sinks (M3-56): whatever stands on something above ground settles onto what's under it, or
@@ -256,6 +259,15 @@ function buildPlan(p: Plan, n: number, out: Fabric, g: Heightfield): Plot {
   let low = l.base;
   rasterPoly(corners({ ...o, hw: o.hw + 4.5, hd: o.hd + 4.5 }), 0, 0, g.cell, g.w, g.h, (i0, i1, j) => { for (let k = j * g.w + i0; k <= j * g.w + i1; k++) low = Math.min(low, g.y[k]); });
   f.solids.push(solid(l.x0, low - 1, l.z0, l.x1, l.base, l.z1, MAT.concrete));
+  // A basement (M3-73a): the foundation cut away under it, the ground's shell holed over it (2 m past it, all under
+  // the building).
+  const bs = l.basement;
+  if (bs) {
+    f.solids.push(...carve([f.solids.pop()!], { x0: bs.x0, y0: low - 2, z0: bs.z0, x1: bs.x1, y1: l.base + 0.01, z1: bs.z1 }));
+    const c = Math.cos(o.yaw), s = Math.sin(o.yaw), cx = (bs.x0 + bs.x1) / 2, cz = (bs.z0 + bs.z1) / 2;
+    rasterPoly(corners({ cx: o.cx + c * (cx - o.cx) - s * (cz - o.cz), cz: o.cz + s * (cx - o.cx) + c * (cz - o.cz), hw: (bs.x1 - bs.x0) / 2 + 2, hd: (bs.z1 - bs.z0) / 2 + 2, yaw: o.yaw }), 0, 0, g.cell, g.w, g.h,
+      (i0, i1, j) => { for (let i = i0; i <= i1; i++) if (i < g.w - 1 && j < g.h - 1) g.hole[j * (g.w - 1) + i] = 1; });
+  }
   const s0 = out.solids.length, c0 = out.climbables.length, pt = place(f, o, p.seed, out);
   if (l.route) l.route = l.route.map(q => { const [x, z] = pt(q.x, q.z); return { ...q, x, z }; });
   out.lots.push(l);
@@ -271,8 +283,8 @@ function place(f: Fabric, o: Obb, prefix: string, out: Fabric): (x: number, z: n
   out.solids.push(...turn(f.solids, o.yaw, o.cx, o.cz));
   out.decor.push(...turn(f.decor, o.yaw, o.cx, o.cz));
   out.far.push(...turn(f.far, o.yaw, o.cx, o.cz));
-  // (A door's or window's prop names its interactable, prefixed as the interactables are.)
-  out.props.push(...f.props.map((q): Prop => { const [x, z] = pt(q.x, q.z); return { ...q, x, z, yaw: q.yaw - o.yaw, ...(q.kind === 'door' || q.kind === 'pane' ? { text: `${prefix}-${q.text}` } : {}) }; }));
+  // (A door's, window's or grate's prop names its interactable, prefixed as the interactables are.)
+  out.props.push(...f.props.map((q): Prop => { const [x, z] = pt(q.x, q.z); return { ...q, x, z, yaw: q.yaw - o.yaw, ...(q.kind === 'door' || q.kind === 'pane' || (q.kind === 'grate' && q.text) ? { text: `${prefix}-${q.text}` } : {}) }; }));
   out.inter.push(...f.inter.map((q): Inter => { const [x, z] = pt(q.x, q.z); return { ...q, id: `${prefix}-${q.id}`, x, z }; }));
   out.climbables.push(...f.climbables.map((q): Climbable => { const [x, z] = pt(q.x, q.z); return { ...q, x, z, nx: c * q.nx - s * q.nz, nz: s * q.nx + c * q.nz }; }));
   // A hiding place keeps its size, moved and turned with the rest (M3-47).

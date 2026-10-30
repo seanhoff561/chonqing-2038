@@ -9,6 +9,7 @@ import { rand, type Rng } from '../../sim/rng';
 import { FLOOR, WALL, SLAB, CORE, CORE_L, CORE_W } from './rooms';
 import { door, roll } from './access';
 import { puzzle } from './puzzle';
+import { basement } from './basement';
 import type { Lot, Fabric } from './buildings';
 
 const HUT = 2.6;
@@ -93,6 +94,7 @@ export function hollow(l: Lot, r: Rng, out: Fabric, look = l.mat, core?: boolean
     }
     path.push(P(0.6, CORE_W + 0.9, wall));
     l.route = path;
+    if (rand(r) < 0.7) basement(l, r, out, { U, V, base, alongZ, B, at, nid, decay, lobby });
   }
   const { sites } = puzzle({ l, U, V, n, base, alongZ, decay, B, at, nid, core: hasCore ? { shaft, lobby } : undefined }, from, r, out);
   out.sites.push(...sites.map(q => ({ ...q, streetSides: sides(l).filter(sd => sd.street).length })));

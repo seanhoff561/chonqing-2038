@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 72 of 88 done
+## M3: 73 of 89 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -473,12 +473,14 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - The routes run mostly through buildings (room to room, floor to floor by doors, holes, vents, squeezes, shafts, stairs) and now and then out of them: out of a broken window, up or along a wall, along a building's side on ledges and sills, across into the next building, down into basements and the underground, only sometimes over a roof (roofs are dangerous, U-038)
   - Planned against what he can do: the unaided moves (jumps, drops, climbs) and, for the tool-gated legs, what his tools reach (the grappling hook's rise and the larger gaps crossed with rope and line); a data table of those reaches drives the plan
   - Sim tests: most of each route's length inside buildings or underground, little over roofs; every leg within the reach table for the moves or tools it needs; no route marks
-- [ ] **M3-73** Basements and the underground maze (U-038)
+- [x] **M3-73a** Basements and the sewer maze (U-038, split from M3-73)
   - Some buildings have basements, joined to the underground layer by grates, vents and broken walls
   - Under the city an ant hill of sewers, vents and tunnels, some only crawl-high, some flooded to swim through fully under water; vents to pry open into buildings; grates up into basements
   - Now and then they open through grates into the underground city's patrolled parts
-  - The underground city's buildings built like the city's above (fronts, rooms, insides), heavily neon and cyberpunk
   - Data checks and screenshots; not tested for being possible (U-037)
+- [ ] **M3-73** The underground city's buildings (U-038)
+  - The underground city's buildings built like the city's above (fronts, rooms, insides), heavily neon and cyberpunk
+  - Screenshots
 - [ ] **M3-43** The subway way in (U-018)
   - The underground Line 1/2 station at Jiaochangkou (platforms, concourse, dead escalators, screen doors) and a running tunnel joining the Grand Tunnel system near Shibati
   - A sim test walks from the station to the vent hideout underground

@@ -2,7 +2,7 @@
 
 <!-- status -->
 **Status:** building M3. Next: M3-76 The anthill: routes through buildings, unmarked (U-043).
-Features done: 135 / 290 | Last done: M3-78
+Features done: 136 / 291 | Last done: M3-73a
 <!-- /status -->
 
 ## Log
@@ -83,3 +83,4 @@ Features done: 135 / 290 | Last done: M3-78
 - M3-79 Monotone buildings (U-043): monotone buildings: every building colour muted to a fifth of its hue, the per-building cast quartered (U-043)
 - M3-77 Buildings as warrens: many rooms, a structure to explore (U-043): buildings as warrens: whole floors built, corridors, rooms off rooms, locked doors, cracks to squeeze, shafts and collapsed slabs between floors; rooms' walls drawn as the block's interior (U-043)
 - M3-78 Chimneying (U-043): chimneying: braced across a 0.6-1.25 m gap, worked up or down the way he looks, upright or sloped; a gym station; warren shafts ducted from the corridors (U-043)
+- M3-73a Basements and the sewer maze (U-038, split from M3-73): basements under blocks with a stairwell (hatch, ladder, a manhole grate bolted from below in half), joined by a maze of sewers, crawlways and flooded sumps, now and then through a grate into the underground city (U-038)

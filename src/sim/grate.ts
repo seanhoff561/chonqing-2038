@@ -24,8 +24,10 @@ export const GRATE = {
 
 export const bagsId = (it: Inter) => it.id + '-bags';
 const isOpen = (s: SimState, it: Inter) => !!s.wstate.open[it.id];
-const bolted = (s: SimState, it: Inter) => !s.wstate.unlocked?.[it.id];
-const bagsOff = (s: SimState, it: Inter) => !!s.wstate.open[bagsId(it)];
+/** A basement's manhole grate (M3-73a) has no bags; a loose one was never bolted. */
+const manhole = (it: Inter) => !!it.data?.manhole;
+const bolted = (s: SimState, it: Inter) => !it.data?.loose && !s.wstate.unlocked?.[it.id];
+const bagsOff = (s: SimState, it: Inter) => !manhole(it) && !!s.wstate.open[bagsId(it)];
 const below = (s: SimState, it: Inter) => s.player.pos.y < it.y - 0.3;
 type Act = 'unbolt' | 'lift' | 'shut' | 'lower' | 'cover';
 function act(s: SimState, it: Inter): Act {
@@ -107,7 +109,7 @@ function foundAt(from: number) {
 
 // Asleep down there with a give-away up top, he doesn't wake.
 sleepHooks.fates.push((s, _until, w) => {
-  const p = s.player.pos, grate = w.inter.find(i => i.kind === 'grate' && p.y < i.y - 2 && Math.hypot(p.x - i.x, p.z - i.z) < 25);
+  const p = s.player.pos, grate = w.inter.find(i => i.kind === 'grate' && !manhole(i) && p.y < i.y - 2 && Math.hypot(p.x - i.x, p.z - i.z) < 25);
   const why = grate ? giveaway(s, grate) : null;
   return why ? { at: foundAt(s.time), cause: 'found', why } : null;
 });
