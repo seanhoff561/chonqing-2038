@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 61 of 81 done
+## M3: 62 of 81 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -403,7 +403,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Room templates (flats, stairwells, corridors, shops, restaurants, offices, workshops) furnished from a furniture and clutter set in states of decay: collapsed ceilings, debris, water damage, overturned furniture
   - Several variants per template so rooms rarely repeat; references from docs/reference interiors
   - Screenshots of five different rooms
-- [ ] **M3-70** Walkable slopes (U-038)
+- [x] **M3-70** Walkable slopes (U-038)
   - Ground walkable and runnable up to near-wall-like faces (about 72 degrees); only steeper faces act as walls he slides off (replaces U-020's 45 degrees)
   - Uphill he's slower the steeper it is; downhill and across unchanged
   - Sim tests: he walks up a 60 degree ramp (slower than on the flat) and not up an 80 degree one; the envelope and movement tests still pass

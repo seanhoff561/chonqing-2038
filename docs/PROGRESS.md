@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-70 Walkable slopes (U-038).
-Features done: 124 / 283 | Last done: M3-38
+**Status:** building M3. Next: M3-36 Building access by design (U-014, U-037).
+Features done: 125 / 283 | Last done: M3-70
 <!-- /status -->
 
 ## Log
@@ -72,3 +72,4 @@ Features done: 124 / 283 | Last done: M3-38
 - M3-69 Quick fixes from U-034 and U-035: solid facade fixtures, the muscle-up, crouch edge-stop, no spawned ziplines, towers held like other buildings (U-036)
 - M3-66 The layered city, filled with buildings, evened (U-032, U-033, U-034): heights with variety beside the tall ones, more low fillers (parks kept), Shibati apartments, megastructures low on thick columns (U-034, U-037)
 - M3-38 Interiors with variety (U-014): rooms round the stair core: templates and variants, furnished and decayed; scarce loot; looked-at search by cell; rooms drawn near only
+- M3-70 Walkable slopes (U-038): ground walkable up to about 72 degrees, slower uphill past stair steepness (U-038)

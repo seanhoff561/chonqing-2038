@@ -24,8 +24,12 @@ export const movement = {
   /** a slide starts at 7.5 m/s, bleeds `friction` on the flat and gathers g x the grade downhill, up to max; on a
    *  downhill grade of 0.2 or more it starts from a jog (U-020) */
   slide: { minSpeed: 6.0, start: 7.5, end: 3.0, friction: 3.5, max: 14, downhill: 0.2, downhillMin: 3.0 },
-  /** ground steeper than this (normal's y; about 45 degrees) is a wall: no walking up it, he slides off it (U-020) */
-  steep: 0.7,
+  /** ground steeper than this (normal's y; about 72 degrees, near a wall) is a wall: no walking up it, he slides
+   *  off it (U-020, U-038); short of it he walks and runs up, slower the steeper (uphill) */
+  steep: 0.3,
+  /** up slopes steeper than stairs (a sine over 0.5, 30 degrees) his speed falls by the sine past that (U-038):
+   *  to 79% up 45 degrees, 63% up 60, 56% up 70 */
+  uphill: 0.5,
   /** moving faster than this (a fall of about 12 m), grabs tear loose and wall moves are refused (U-020) */
   tear: { speed: 15, keep: 0.8, damage: 6, regrab: 0.6 },
   wallRun: { maxTime: 0.9, speed: 6.5, upSpeed: 3.0, minSpeed: 5.5, stepEvery: 0.3, gravityScale: 0.6, wallDist: 0.8, maxAngle: 35, leapSpeed: 5.0, leapUp: 3.0 },

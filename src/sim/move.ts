@@ -162,6 +162,8 @@ function groundAir(state: SimState, world: World, input: InputFrame) {
     p.slide += DT;
     if (sp < M.slide.end) endSlide(p, world, (input.buttons & B.CROUCH) !== 0);
   }
+  // Up a slope steeper than stairs he's slower the steeper it is (U-038).
+  if (p.onGround && p.slide < 0 && wl > 0.01) { const d = Math.hypot(wx, wz), g = grade(idx, p.pos, wx / d, wz / d); if (-g > M.uphill) sp *= 1 - (-g - M.uphill); }
   // In the air he can steer and slow but not speed up past his take-off speed (or a jog).
   if (!p.onGround) sp = Math.min(sp, Math.max(M.speed.jog, Math.hypot(p.vel.x, p.vel.z)));
   const accel = (p.onGround ? (p.slide >= 0 ? 1000 : M.groundAccel) : M.airAccel) * DT;

@@ -1,5 +1,5 @@
 // M1-41 (U-020): slides gather speed downhill, steep ground is a wall, grabs tear loose and wall moves are
-// refused when falling too fast.
+// refused when falling too fast. (U-038, M3-70: only near-wall ground is a wall; up to it he walks, slower.)
 import { describe, it, expect } from 'vitest';
 import { setup, run, floor, secs, hspeed, aim, LMB } from './helpers';
 import { solid, rampSolid } from '../../src/world/geom';
@@ -39,7 +39,7 @@ describe('slides (U-020)', () => {
   });
 });
 
-describe('steep ground is a wall (U-020)', () => {
+describe('steep ground is a wall (U-020, U-038)', () => {
   /** Ground rising north at `k` per metre from z = 0. */
   function hill(k: number) {
     const g = heightfield(-30, -30, 2, 31, 31, 4);
@@ -47,24 +47,36 @@ describe('steep ground is a wall (U-020)', () => {
     const world = makeWorld({ name: 't', solids: [], ground: g, spawn: { x: 0, y: 0.05, z: 10, yaw: 0 } });
     return { world, state: createState(1, world), g };
   }
-  it('walks up 40 degrees but not 60', () => {
-    const easy = hill(Math.tan((40 * Math.PI) / 180));
-    run(easy.state, easy.world, secs(6), { my: 1 });
-    expect(easy.state.player.pos.y).toBeGreaterThan(3);
-    const steep = hill(Math.tan((60 * Math.PI) / 180));
-    run(steep.state, steep.world, secs(6), { my: 1 });
-    expect(steep.state.player.pos.y).toBeLessThan(0.5);
+  it('walks up 60 degrees, slower the steeper, but not 80', () => {
+    // Uphill speed off the 10 m mark, from his time over the next 2 m of the slope's run.
+    const pace = (deg: number) => {
+      const h = hill(Math.tan((deg * Math.PI) / 180)), p = h.state.player;
+      let t = 0;
+      for (; t < secs(12) && p.pos.z > -2; t++) run(h.state, h.world, 1, { my: 1 });
+      return { y: p.pos.y, t };
+    };
+    const flat = pace(0), mid = pace(40), steep = pace(60);
+    expect(mid.y).toBeGreaterThan(1.5);
+    expect(steep.y).toBeGreaterThan(3);
+    expect(mid.t).toBeGreaterThan(flat.t);
+    expect(steep.t).toBeGreaterThan(mid.t);
+    // (At 80 degrees his footprint's front edge at its foot already stands 1.4 m up it: no further.)
+    const wall = hill(Math.tan((80 * Math.PI) / 180));
+    run(wall.state, wall.world, secs(6), { my: 1 });
+    expect(wall.state.player.pos.y).toBeLessThan(1.6);
+    expect(wall.state.player.pos.z).toBeGreaterThan(-0.4);
   });
-  it('standing on a 60 degree slope he slides off it', () => {
-    const steep = hill(Math.tan((60 * Math.PI) / 180)), y = heightAt(steep.g, 0, -8)!;
+  it('standing on an 80 degree slope he slides off it', () => {
+    const steep = hill(Math.tan((80 * Math.PI) / 180)), y = heightAt(steep.g, 0, -8)!;
     Object.assign(steep.state.player.pos, { x: 0, y: y + 0.2, z: -8 });
     run(steep.state, steep.world, secs(3));
     expect(steep.state.player.pos.z).toBeGreaterThan(-2);
-    expect(steep.state.player.pos.y).toBeLessThan(1);
+    expect(steep.state.player.pos.y).toBeLessThan(1.6);
   });
-  it('a 60 degree slope takes a wall kick up it', () => {
-    const steep = hill(Math.tan((60 * Math.PI) / 180)), p = steep.state.player;
-    Object.assign(p.pos, { x: 0, y: 1.5, z: -0.5 });
+  it('an 80 degree slope takes a wall kick up it', () => {
+    // In the air just off its foot, the face rising in front of him.
+    const steep = hill(Math.tan((80 * Math.PI) / 180)), p = steep.state.player;
+    Object.assign(p.pos, { x: 0, y: 1.5, z: 0.3 });
     p.mode = 'air'; p.onGround = false;
     run(steep.state, steep.world, 1, { pressed: B.JUMP, yaw: 0 });
     expect(p.mode).toBe('wallclimb');
