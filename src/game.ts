@@ -187,6 +187,7 @@ export class Game {
     const cam = this.view.fp.cam.position;
     this.sky.update(this.state.time, cam, this.hazeDistance(), this.underAmount(dt), this.state.weather);
     const wet = this.underwater.update(this.world, this.state.tick / 60);
+    this.sky.dome.mesh.visible = !wet;
     // The lines he has rigged (M3-52).
     const rigged = this.state.lines ?? [];
     if (rigged.length !== this.rigged.userData.n) {

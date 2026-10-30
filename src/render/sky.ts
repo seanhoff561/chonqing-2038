@@ -1,13 +1,14 @@
-// Sky, sun, moon, ambient and fog colour from the game clock.
+// Sky, sun, moon, ambient and fog colour from the game clock; the painted sky dome (M3-49) over it all.
 import * as THREE from 'three';
 import { daylight, hourOf } from '../sim/clock';
 import { SHADOW_R, type View } from './view';
 import { setNight, setWet } from './materials';
+import { SkyDome } from './skydome';
 
 const DAY_SKY = new THREE.Color(0x9fabb2), DUSK_SKY = new THREE.Color(0x6b5a58), NIGHT_SKY = new THREE.Color(0x151a27);
 const OVERCAST = new THREE.Color(0xb4b8b8), RAIN_SKY = new THREE.Color(0x5a6268);
 const NIGHT_GROUND = new THREE.Color(0x3a2a18), DAY_GROUND = new THREE.Color(0x7a7266);
-const c = new THREE.Color();
+const c = new THREE.Color(), sunDir = new THREE.Vector3();
 
 export class Sky {
   readonly moon = new THREE.Mesh(new THREE.SphereGeometry(6, 12, 8), new THREE.MeshBasicMaterial({ color: 0xd8dce6, fog: false }));
@@ -16,7 +17,10 @@ export class Sky {
   /** 0 clear to 1 overcast: flat light, no sun, pale haze */
   overcast = 0;
 
-  constructor(private view: View) { view.scene.add(this.moon); }
+  /** The painted sky, clouds and stars (M3-49). */
+  readonly dome = new SkyDome();
+
+  constructor(private view: View) { view.scene.add(this.moon, this.dome.mesh); }
 
   /** under: 0 in the open, 1 deep underground (sky light shut out); weather fog and rain 0..1 (M3-13) */
   update(time: number, camPos: THREE.Vector3, farBase: number, under = 0, weather = { fog: 0, rain: 0 }) {
@@ -53,6 +57,10 @@ export class Sky {
     v.hemi.color.copy(NIGHT_SKY).lerp(new THREE.Color(0xc8d4e0), d).lerp(new THREE.Color(0x5f74a8), (1 - d) * 0.9);
     v.hemi.groundColor.copy(NIGHT_GROUND).lerp(DAY_GROUND, d);
     setNight(Math.max(0, 1 - d * 1.6));
+    // Cloud: some every day (how much, by the day), closing in with overcast, rain and fog.
+    const day = Math.floor(time / 86400), base = 0.25 + 0.4 * Math.abs(Math.sin(day * 12.9898) * 43758.5453 % 1);
+    const cover = Math.min(1, Math.max(base, this.overcast * 0.95, weather.rain * 0.9 + 0.1, weather.fog * 0.7));
+    this.dome.update(camPos, sunDir.copy(v.sun.position).sub(v.sun.target.position), d, duskness, cover, weather.rain, weather.fog, fog.color, performance.now() / 1000);
     const ma = ((h - 18) / 12) * Math.PI;
     this.moon.visible = d < 0.6;
     this.moon.position.set(camPos.x - Math.cos(ma) * 300, camPos.y + Math.max(40, Math.sin(ma) * 260), camPos.z - 200);

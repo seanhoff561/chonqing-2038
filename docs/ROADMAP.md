@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 46 of 64 done
+## M3: 47 of 64 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -468,7 +468,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - With a rope and two hooks he rigs a line between two anchors in reach (railings, poles, roof edges, up to 40 m, falling at least 1 in 10); hanging from it by a hook, pulley or gloved hands he rides down it, faster on steeper lines, and lets go with Ctrl
   - Existing cables strung between buildings ride the same way; a live power line shocks him
   - Sim tests: rig and ride, ride a cable, fall off at the end, the shock
-- [ ] **M3-49** Real skies (U-021)
+- [x] **M3-49** Real skies (U-021)
   - A sky dome with real-looking clouds (overcast layers, broken cloud, low fog banks), sunrise and sunset colour, a starry night with the moon and the city's glow on low cloud, following the clock and the weather; from CC0 sky images or painted in code
   - E2e screenshots at dawn, noon, dusk and night in clear and overcast weather
 - [ ] **M3-41** The city at 1:1 (U-017)
