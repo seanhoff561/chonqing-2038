@@ -39,7 +39,7 @@ describe('buildings and rooftops (M3-03)', () => {
     const jumpable = low.filter(a => low.some(b => b !== a && near(a, b, E.runningJump.comfortable) && !near(a, b, 0.5) && a.top - b.top >= -0.5 && a.top - b.top <= E.safeDrop.max));
     expect(jumpable.length / low.length).toBeGreaterThan(0.5);
   });
-  it('runs a rooftop route across four buildings in Shibati', { timeout: 60000 }, () => {
+  it('runs a rooftop route across four buildings in Shibati', () => {
     // Flat roofs a running jump apart (a 3.2 m gap at most, level or up to 3.5 m down), nearest Shibati first.
     const roofs = low.filter(p => p.kind === 'res' || p.kind === 'trad');
     // From the back of one roof straight at the middle of the next, nothing in his way (knee and chest high, his

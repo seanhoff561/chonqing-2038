@@ -55,7 +55,7 @@ describe('the vertical city (M3-57)', () => {
     expect(wide.filter(spanned).length / wide.length).toBeGreaterThan(0.6);
   });
 
-  it('carries him across a skybridge, its far roof a mantle up from the deck', { timeout: 60000 }, () => {
+  it('carries him across a skybridge, its far roof a mantle up from the deck', () => {
     // Each bridge's two ends; from the end at the lower roof (the deck's level) to the other.
     const ends = new Map<number, Feature[]>();
     for (const f of of('skybridge')) ends.set(f.group, [...(ends.get(f.group) ?? []), f]);
@@ -74,7 +74,7 @@ describe('the vertical city (M3-57)', () => {
     expect(crossed).toBeGreaterThanOrEqual(4);
   });
 
-  it('walks up from the street onto a roof street, and under a block over its lane', { timeout: 60000 }, () => {
+  it('walks up from the street onto a roof street, and under a block over its lane', () => {
     let up = 0;
     for (const f of of('roofStreet').slice(0, 6)) {
       const s = createState(1, w), p = s.player, back = (d: number): [number, number] => [f.x - f.nx! * d, f.z - f.nz! * d];

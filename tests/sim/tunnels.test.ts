@@ -7,7 +7,7 @@ import { heightAt } from '../../src/world/heightfield';
 import { createState } from '../../src/sim/sim';
 import { teleport } from '../../src/sim/player';
 import { tunnelFrame } from '../../src/world/yuzhong/tunnels';
-import { run, aim } from './helpers';
+import { run, aim, settle } from './helpers';
 import { B, type SimState } from '../../src/sim/types';
 import type { World } from '../../src/world/world';
 
@@ -30,7 +30,8 @@ function walk(s: SimState, world: World, pts: [number, number][]): boolean {
 const uv = (...p: [number, number][]) => p.map(([u, v]) => F.W(u, v));
 
 describe('the Grand Tunnel under Shibati (M3-41c)', () => {
-  it('walks from the chamber to the rusted gate, opens it and climbs the stairway to the Shibati street', { timeout: 60000 }, () => {
+  it('walks from the chamber to the rusted gate, opens it and climbs the stairway to the Shibati street', async () => {
+    await settle();
     const s = createState(1, w);
     teleport(s.player, hide.x, hide.y, hide.z);
     run(s, w, 10);
@@ -43,7 +44,8 @@ describe('the Grand Tunnel under Shibati (M3-41c)', () => {
     expect(walk(s, w, uv([inRun - 2, 0], [-1.5, 0]))).toBe(true);
     expect(s.player.pos.y).toBeCloseTo(top, 0);
   });
-  it('walks from the chamber along the Grand Tunnel and up the far stairway to the street', { timeout: 60000 }, () => {
+  it('walks from the chamber along the Grand Tunnel and up the far stairway to the street', async () => {
+    await settle();
     const s = createState(1, w);
     teleport(s.player, hide.x, hide.y, hide.z);
     run(s, w, 10);

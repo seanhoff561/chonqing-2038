@@ -3,7 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { solid, raycast } from '../../src/world/geom';
 import { getWorld } from '../../src/world/build';
-import { setup, floor, run, secs, aim, LMB, RMB } from './helpers';
+import { setup, floor, run, secs, aim, LMB, RMB, settle } from './helpers';
 
 describe('ladders (M3-65)', () => {
   it('climbs a ladder with nothing behind it up onto a deck', () => {
@@ -24,7 +24,8 @@ describe('ladders (M3-65)', () => {
     expect(state.player.pos.y).toBeGreaterThan(5.9);
   });
 
-  it('backs every ladder in Yuzhong', { timeout: 60000 }, () => {
+  it('backs every ladder in Yuzhong', async () => {
+    await settle();
     const w = getWorld('yuzhong'), ladders = w.climbables.filter(c => c.kind === 'ladder');
     expect(ladders.length).toBeGreaterThan(20);
     // From where his feet would be on it, toward it: something there at a third and two thirds of its height.

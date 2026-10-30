@@ -2,7 +2,7 @@
 // or gloved hands, faster the steeper it is; he rides the cables strung between buildings the same way, lets go
 // with Ctrl or at the end, and a live power line throws him off with a shock.
 import { describe, it, expect } from 'vitest';
-import { setup, run, secs, floor, aim, LMB } from './helpers';
+import { setup, run, secs, floor, aim, LMB, settle } from './helpers';
 import { solid } from '../../src/world/geom';
 import { addItem } from '../../src/sim/inventory';
 import { B, type SimState } from '../../src/sim/types';
@@ -91,7 +91,8 @@ describe('ziplines (M3-52)', () => {
     aim(state, 0, 9.5, -46); run(state, world, 1, { pressed: B.USE, buttons: B.USE });
     expect(state.lines?.length ?? 0).toBe(0);
   });
-  it('strings cables across Yuzhong streets to ride, a few of them live', { timeout: 60000 }, () => {
+  it('strings cables across Yuzhong streets to ride, a few of them live', async () => {
+    await settle();
     const w = getWorld('yuzhong');
     expect(w.lines.length).toBeGreaterThan(80);
     expect(w.lines.filter(l => l.live).length).toBeGreaterThan(5);

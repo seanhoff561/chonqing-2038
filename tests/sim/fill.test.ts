@@ -72,7 +72,7 @@ describe('nothing empty, everything in order (M3-56)', () => {
     expect(stretches).toBeGreaterThan(3000);
     expect(empty / stretches).toBeLessThan(0.02);
   });
-  it('stands every prop on what is under it: nothing floats', { timeout: 60000 }, () => {
+  it('stands every prop on what is under it: nothing floats', () => {
     const floating = w.props.filter(p => {
       if (HUNG.has(p.kind)) return false;
       const hit = raycast(w.index, p.x, p.y + 0.3, p.z, 0, -1, 0, 30);

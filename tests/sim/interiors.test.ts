@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { getWorld } from '../../src/world/build';
 import { createState } from '../../src/sim/sim';
-import { run } from './helpers';
+import { run, settle } from './helpers';
 import { teleport } from '../../src/sim/player';
 import type { SimState } from '../../src/sim/types';
 import type { World } from '../../src/world/world';
@@ -31,7 +31,8 @@ describe('enterable buildings (M3-04)', () => {
     expect(containers.length).toBeGreaterThan(open.length * 2);
     expect(new Set(containers.map(c => c.id)).size).toBe(containers.length);
   });
-  it('walks in from the street and climbs the stairwell to the roof', { timeout: 60000 }, () => {
+  it('walks in from the street and climbs the stairwell to the roof', async () => {
+    await settle();
     const lot = open.find(l => (l.wall - l.base) / 3 >= 4)!;
     const s = createState(1, w);
     const route = lot.route!;

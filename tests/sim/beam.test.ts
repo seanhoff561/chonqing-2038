@@ -7,12 +7,13 @@ import { createState } from '../../src/sim/sim';
 import { teleport } from '../../src/sim/player';
 import { buildGround } from '../../src/world/yuzhong/ground';
 import { buildLine2, BEAM, TRAIN } from '../../src/world/yuzhong/line2';
-import { run } from './helpers';
+import { run, settle } from './helpers';
 
 const w = getWorld('yuzhong'), line = buildLine2(buildGround());
 
 describe('Line 2 on the real map (M3-07, M3-41c)', () => {
-  it('walks the beam from the portal 240 m west, through the stalled train, without falling off', { timeout: 60000 }, () => {
+  it('walks the beam from the portal 240 m west, through the stalled train, without falling off', async () => {
+    await settle();
     const b = line.beams[0], s = createState(1, w);
     teleport(s.player, b.pts[1][0], b.top[1] + 0.05, b.pts[1][1]);
     run(s, w, 10);

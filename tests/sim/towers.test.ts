@@ -7,7 +7,7 @@ import { getWorld } from '../../src/world/build';
 import { createState } from '../../src/sim/sim';
 import { teleport } from '../../src/sim/player';
 import type { Feature } from '../../src/world/world';
-import { run } from './helpers';
+import { run, settle } from './helpers';
 import { climbPole, climbHolds } from './climbbot';
 
 const w = getWorld('yuzhong');
@@ -50,7 +50,8 @@ describe('climbing the towers (M3-57a)', () => {
       expect(h.filter((f, i) => i > 0 && f.kind === 'route' && h[i - 1].kind === 'route' && f.y - h[i - 1].y > 1.95).length).toBeGreaterThan(2);
     }
   });
-  it('a bot climbs three towers over 80 m from the street, up a pole and the generated holds', { timeout: 240000 }, () => {
+  it('a bot climbs three towers over 80 m from the street, up a pole and the generated holds', async () => {
+    await settle();
     const tall = [...lines.values()].filter(fs => height(fs) > 80).map(holds).sort((a, b) => a[0].x - b[0].x);
     const results = tall.slice(0, 6).map(climb);
     expect(results.filter(r => r.ok).length, JSON.stringify(results)).toBeGreaterThanOrEqual(3);

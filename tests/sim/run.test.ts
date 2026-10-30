@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { settle } from './helpers';
 import { buildHideoutScene } from '../../src/world/sets/hideout-scene';
 import { createState } from '../../src/sim/sim';
 import { startRun, furnish, START_BED, START_CRATE, FRIENDS_CRATE } from '../../src/sim/run';
@@ -15,7 +16,8 @@ describe('starting supplies', () => {
     for (const [id, n] of [['noodles', 2], ['luncheon', 1], ['bread', 1], ['water', 3], ['bandage', 1]] as const) expect(count(g, id), id).toBe(n);
     expect(shelfLeft(s, g.items.find(i => i.id === 'bread')!)).toBeCloseTo(2);
   });
-  it("starts in the friends' hideout under the vent grate: their mattress claimed, their crate stocked (U-018)", { timeout: 60000 }, () => {
+  it("starts in the friends' hideout under the vent grate: their mattress claimed, their crate stocked (U-018)", async () => {
+    await settle();
     const w = getWorld('yuzhong'), s = createState(3, w);
     startRun(s, w);
     const sc = w.spawn;

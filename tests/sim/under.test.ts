@@ -6,7 +6,7 @@ import { createState } from '../../src/sim/sim';
 import { teleport } from '../../src/sim/player';
 import { heightAt } from '../../src/world/heightfield';
 import { districtAt } from '../../src/world/yuzhong/lots';
-import { run, secs } from './helpers';
+import { run, secs, settle } from './helpers';
 
 const w = getWorld('yuzhong');
 const ways = w.features.filter(f => f.kind.startsWith('way:'));
@@ -21,7 +21,8 @@ describe('the underground city (M3-58)', () => {
     expect(climbs.length + ways.filter(f => f.kind === 'way:drain').length).toBeGreaterThanOrEqual(2);
   });
 
-  it('walks underground from Jiaochangkou through both levels under Jiefangbei to Xiaoshizi', { timeout: 120000 }, () => {
+  it('walks underground from Jiaochangkou through both levels under Jiefangbei to Xiaoshizi', async () => {
+    await settle();
     const route = w.features.filter(f => f.kind === 'underRoute').sort((a, b) => a.group - b.group);
     const s = createState(1, w), p = s.player;
     s.flags.clear = true;
