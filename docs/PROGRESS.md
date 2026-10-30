@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-66 The layered city, filled with buildings, evened (U-032, U-033, U-034).
-Features done: 119 / 277 | Last done: M3-67
+**Status:** building M3. Next: M3-68 The underground reworked (U-032).
+Features done: 120 / 277 | Last done: M3-67
 <!-- /status -->
 
 ## Log
@@ -138,3 +138,4 @@ Features done: 119 / 277 | Last done: M3-67
 - M3-65 Quick fixes from U-032: every ladder on a frame, the plastic stools gone, interact and sleep on F
 - M3-66 The layered city, filled with buildings (U-032, U-033): the layered city filled with buildings: taller rows, back buildings in bands, vertical alleys, bridges, beams, scaffolding, real parks only, door paths
 - M3-67 Climbing reworked (U-032): climbing reworked: bare ground floors, scarce scattered holds, street poles, tower lines from poles, crossing lines from lower roofs
+- CI: the site deploys every build that compiles, tests in their own job (the M3-57/58/66/67 deploys had failed on time limits); U-034 withdrawn by the director pending their testing.
