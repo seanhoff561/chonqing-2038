@@ -1,6 +1,8 @@
 // Merges world solids into one mesh per material per 64 m chunk (M3-10). UVs are world-scale; facade materials
 // anchor theirs to each building's corner (shifted by whole bays and floors) so windows sit on its floors.
-// Vertex colours tint each building a little differently and darken walls toward the ground.
+// Vertex colours tint each building a little differently and darken walls toward the ground. A carved block's
+// faces inside its own outline (its rooms', stairwell's and openings' walls, M3-77) are its interior: plaster or
+// papered, not the facade.
 import * as THREE from 'three';
 import { topAt, raycast, type Solid, type SolidIndex } from '../world/geom';
 import { material, texScale, isFacade, FACADE_BAY, type Lod } from './materials';
@@ -33,13 +35,23 @@ function hash(a: number, b: number, c: number): number {
   return (h >>> 0) / 4294967296;
 }
 
-/** Faces go to b; a facade's roof and underside go to roof (plain concrete) instead. */
-/** ao: occlusion for the +z, -z, +x and -x walls (1 open, lower in a narrow alley). */
-export function pushSolid(s: Solid, b: Buf, roof: Buf = b, ao: number[] = OPEN) {
+/** Which of a carved facade block's walls (+z, -z, +x, -x) face into it rather than out of its outline. */
+export function inward(s: Solid): boolean[] {
+  // (A turned block's pieces and outline are both in its own frame.)
+  const o = s.orig, e = s.rot ?? s;
+  if (!o || !isFacade(s.mat)) return [false, false, false, false];
+  return [e.z1 < o.z1 - 0.01, e.z0 > o.z0 + 0.01, e.x1 < o.x1 - 0.01, e.x0 > o.x0 + 0.01];
+}
+/** A block's interior: papered more often than not, by its corner. */
+export const interiorMat = (s: Solid) => (s.orig && hash(s.orig.x0, s.orig.z0, 77) < 0.6 ? MAT.wallpaper : MAT.plaster);
+
+/** Faces go to b; a facade's roof and underside go to roof (plain concrete) instead, and its walls facing into the
+ *  block to inner. ao: occlusion for the +z, -z, +x and -x walls (1 open, lower in a narrow alley). */
+export function pushSolid(s: Solid, b: Buf, roof: Buf = b, ao: number[] = OPEN, inner: Buf = b) {
   if (s.rot) {
     // A turned solid (M3-40): build it unturned, then turn the vertices it wrote.
-    const r = s.rot, bufs = roof === b ? [b] : [b, roof], from = bufs.map(o => o.n);
-    pushSolid({ ...s, x0: r.x0, z0: r.z0, x1: r.x1, z1: r.z1, rot: undefined }, b, roof, OPEN);
+    const r = s.rot, bufs = [...new Set([b, roof, inner])], from = bufs.map(o => o.n);
+    pushSolid({ ...s, x0: r.x0, z0: r.z0, x1: r.x1, z1: r.z1, rot: undefined }, b, roof, OPEN, inner);
     bufs.forEach((o, k) => {
       for (let v = from[k]; v < o.n; v++) {
         const dx = o.pos[v * 3] - r.px, dz = o.pos[v * 3 + 2] - r.pz, nx = o.nor[v * 3], nz = o.nor[v * 3 + 2];
@@ -64,15 +76,17 @@ export function pushSolid(s: Solid, b: Buf, roof: Buf = b, ao: number[] = OPEN) 
     const k = tone * g * shade;
     o.col[o.n * 3] = k * (1 + warm) * tc[0]; o.col[o.n * 3 + 1] = k * tc[1]; o.col[o.n * 3 + 2] = k * (1 - warm) * tc[2];
   };
-  const quad = (pts: number[][], n: number[], uvs: number[][], side: boolean, shade = 1) => {
-    const o = side ? b : roof, k = side ? sc : rsc;
+  const ins = inward(s), isc = 1 / texScale(interiorMat(s));
+  const quad = (pts: number[][], n: number[], uvs: number[][], side: boolean, shade = 1, inside = false) => {
+    const o = inside ? inner : side ? b : roof, k = inside ? isc : side ? sc : rsc;
     for (const i of [0, 1, 2, 0, 2, 3]) {
       const p = pts[i];
       const v = o.n;
       o.pos[v * 3] = p[0]; o.pos[v * 3 + 1] = p[1]; o.pos[v * 3 + 2] = p[2];
       o.nor[v * 3] = n[0]; o.nor[v * 3 + 1] = n[1]; o.nor[v * 3 + 2] = n[2];
-      o.uv[v * 2] = uvs[i][0] * k; o.uv[v * 2 + 1] = uvs[i][1] * k;
-      colour(o, p[1], side, shade);
+      // An inside wall in plain world UVs along it, lit evenly.
+      o.uv[v * 2] = (inside ? (n[0] ? p[2] : p[0]) : uvs[i][0]) * k; o.uv[v * 2 + 1] = (inside ? p[1] : uvs[i][1]) * k;
+      if (inside) o.col.fill(0.86 * shade, v * 3, v * 3 + 3); else colour(o, p[1], side, shade);
       o.n++;
     }
   };
@@ -95,13 +109,13 @@ export function pushSolid(s: Solid, b: Buf, roof: Buf = b, ao: number[] = OPEN) 
   const U = (w: number, from: number, back: boolean, k: number) => (facade ? (back ? from - w : w - from) * k + ou : back ? -w : w);
   const V = (y: number) => (facade ? y - o0.y0 + ov : y);
   quad([[x0, y0, z1], [x1, y0, z1], [x1, h11, z1], [x0, h01, z1]], [0, 0, 1],
-    [[U(x0, o0.x0, false, kx), V(y0)], [U(x1, o0.x0, false, kx), V(y0)], [U(x1, o0.x0, false, kx), V(h11)], [U(x0, o0.x0, false, kx), V(h01)]], true, ao[0]);
+    [[U(x0, o0.x0, false, kx), V(y0)], [U(x1, o0.x0, false, kx), V(y0)], [U(x1, o0.x0, false, kx), V(h11)], [U(x0, o0.x0, false, kx), V(h01)]], true, ao[0], ins[0]);
   quad([[x1, y0, z0], [x0, y0, z0], [x0, h00, z0], [x1, h10, z0]], [0, 0, -1],
-    [[U(x1, o0.x1, true, kx), V(y0)], [U(x0, o0.x1, true, kx), V(y0)], [U(x0, o0.x1, true, kx), V(h00)], [U(x1, o0.x1, true, kx), V(h10)]], true, ao[1]);
+    [[U(x1, o0.x1, true, kx), V(y0)], [U(x0, o0.x1, true, kx), V(y0)], [U(x0, o0.x1, true, kx), V(h00)], [U(x1, o0.x1, true, kx), V(h10)]], true, ao[1], ins[1]);
   quad([[x1, y0, z1], [x1, y0, z0], [x1, h10, z0], [x1, h11, z1]], [1, 0, 0],
-    [[U(z1, o0.z1, true, kz), V(y0)], [U(z0, o0.z1, true, kz), V(y0)], [U(z0, o0.z1, true, kz), V(h10)], [U(z1, o0.z1, true, kz), V(h11)]], true, ao[2]);
+    [[U(z1, o0.z1, true, kz), V(y0)], [U(z0, o0.z1, true, kz), V(y0)], [U(z0, o0.z1, true, kz), V(h10)], [U(z1, o0.z1, true, kz), V(h11)]], true, ao[2], ins[2]);
   quad([[x0, y0, z0], [x0, y0, z1], [x0, h01, z1], [x0, h00, z0]], [-1, 0, 0],
-    [[U(z0, o0.z0, false, kz), V(y0)], [U(z1, o0.z0, false, kz), V(y0)], [U(z1, o0.z0, false, kz), V(h01)], [U(z0, o0.z0, false, kz), V(h00)]], true, ao[3]);
+    [[U(z0, o0.z0, false, kz), V(y0)], [U(z1, o0.z0, false, kz), V(y0)], [U(z1, o0.z0, false, kz), V(h01)], [U(z0, o0.z0, false, kz), V(h00)]], true, ao[3], ins[3]);
 }
 
 /** Chunk meshes, each tagged with its chunk centre for distance culling. */
@@ -133,9 +147,10 @@ export function buildSolidMeshes(solids: Solid[], lod: Lod = 'all', chunk = CHUN
   // Count first (24 side and 12 top/bottom vertices per solid), then fill typed arrays.
   for (const s of solids) {
     if (s.mat >= MAT.soft) continue;
-    const f = isFacade(s.mat);
-    group(s, s.mat).count += f ? 24 : 36;
+    const f = isFacade(s.mat), n = inward(s).filter(Boolean).length;
+    group(s, s.mat).count += f ? 24 - 6 * n : 36;
     if (f) group(s, MAT.concrete).count += 12;
+    if (n) group(s, interiorMat(s)).count += 6 * n;
   }
   for (const g of groups.values()) {
     g.pos = new Float32Array(g.count * 3); g.nor = new Float32Array(g.count * 3); g.uv = new Float32Array(g.count * 2); g.col = new Float32Array(g.count * 3);
@@ -146,7 +161,7 @@ export function buildSolidMeshes(solids: Solid[], lod: Lod = 'all', chunk = CHUN
   for (const s of solids) {
     if (s.mat >= MAT.soft) continue;
     const b = group(s, s.mat), roof = isFacade(s.mat) ? group(s, MAT.concrete) : undefined, from = [b.n, roof?.n ?? 0];
-    pushSolid(s, b, roof, idx ? occlusion(s, idx) : OPEN);
+    pushSolid(s, b, roof, idx ? occlusion(s, idx) : OPEN, inward(s).some(Boolean) ? group(s, interiorMat(s)) : b);
     const e = s.rot ?? s;
     if (Math.max(e.x1 - e.x0, e.z1 - e.z0) < 1.2 || Math.min(e.x1 - e.x0, e.z1 - e.z0, s.y1 - s.y0) < 0.12) continue;
     for (const [g, a] of [[b, from[0]], [roof, from[1]]] as const) if (g) { const r = casts.get(g); if (r) r.push(a, g.n); else casts.set(g, [a, g.n]); }

@@ -82,3 +82,7 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M3-79: monotone buildings
 - By day from a roof over the slopes and over Jiefangbei: do the buildings read as one weathered, near-monotone city now, with the colour left to the neon, screens and lights? Too grey or not grey enough?
+
+## M3-77: buildings as warrens
+- Get into a few blocks (`?dev=1` teleports, or find a broken window or a burrow) and explore a warren floor: does the corridor-and-rooms structure feel like a real building to scavenge through, while still a maze (locked doors, rubble, rooms reached only through others, cracks to squeeze)? Too many rooms, too few, too samey?
+- Does the boot (world build, about 30 s in node) feel too long in your browser? And the frame rate inside, on your GPU?

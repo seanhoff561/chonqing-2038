@@ -39,11 +39,11 @@ function before(it: Inter) {
 }
 
 describe('buildings as puzzles (M3-36)', () => {
-  it('carves a few small rooms into each enterable block, the main stairwell into some', () => {
+  it('carves small rooms into each enterable block (a warren of whole floors and clusters, U-043), the main stairwell into some', () => {
     expect(blocks.length).toBeGreaterThan(300);
     const per = blocks.reduce((a, b) => a + b.n, 0) / blocks.length;
-    expect(per).toBeGreaterThan(2);
-    expect(per).toBeLessThan(10);
+    expect(per).toBeGreaterThan(8);
+    expect(per).toBeLessThan(60);
     const cored = blocks.filter(b => b.p.route).length / blocks.length;
     expect(cored).toBeGreaterThan(0.3);
     expect(cored).toBeLessThan(0.8);
@@ -61,11 +61,11 @@ describe('buildings as puzzles (M3-36)', () => {
     expect(share(inside, 'locked', 'jammed', 'chained')).toBeGreaterThan(0.4);
   });
 
-  it('cuts a few windows a block, most glazed or broken in, some barred', () => {
+  it("cuts windows into a block's rooms, most glazed or broken in, some barred", () => {
     const panes = w.inter.filter(i => i.kind === 'window'), barred = w.solids.filter(s => s.part && /\.w\d+$/.test(s.part) && !panes.some(p => p.data?.part === s.part));
     const per = (panes.length + barred.length) / blocks.length;
     expect(per).toBeGreaterThan(0.8);
-    expect(per).toBeLessThan(8);
+    expect(per).toBeLessThan(30);
     expect(panes.length).toBeGreaterThan(barred.length);
   });
 

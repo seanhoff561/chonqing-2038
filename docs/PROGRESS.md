@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-77 Buildings as warrens: many rooms, a structure to explore (U-043).
-Features done: 133 / 290 | Last done: M3-79
+**Status:** building M3. Next: M3-78 Chimneying (U-043).
+Features done: 134 / 290 | Last done: M3-77
 <!-- /status -->
 
 ## Log
@@ -81,3 +81,4 @@ Features done: 133 / 290 | Last done: M3-79
 - M3-71 Tight ways at ground level (U-038): tight ways at ground level: alley squeezes, ruin crawl spaces, holes broken into buildings, nooks to hide in (U-038)
 - M3-72 The start hideout under the alley (U-038): the start hideout under an alley: the chamber moved off the roads, a ladder up its shaft to a grate under bin bags, slow and loud to unbolt and bolt from below, found in your sleep if left open or traced; dropping things (U-038)
 - M3-79 Monotone buildings (U-043): monotone buildings: every building colour muted to a fifth of its hue, the per-building cast quartered (U-043)
+- M3-77 Buildings as warrens: many rooms, a structure to explore (U-043): buildings as warrens: whole floors built, corridors, rooms off rooms, locked doors, cracks to squeeze, shafts and collapsed slabs between floors; rooms' walls drawn as the block's interior (U-043)

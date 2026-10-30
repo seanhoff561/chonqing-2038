@@ -39,7 +39,7 @@ export function hollow(l: Lot, r: Rng, out: Fabric, look = l.mat, core?: boolean
   const mass = solid(x0, base, z0, x1, wall, z1, look);
   mass.orig = { x0, y0: base, z0, x1, z1 };
   out.solids.push(mass);
-  const decay = 0.3 + rand(r) * 0.7, lining: Solid[] = [];
+  const decay = 0.3 + rand(r) * 0.7;
   // The main stairwell on some: a shaft up the corner from a lobby inside the street door (in the far wall, u = U)
   // to a hut on the roof; it opens onto few rooms (puzzle.ts).
   const doorV = CORE_W + (V - CORE_W) / 2;
@@ -51,11 +51,6 @@ export function hollow(l: Lot, r: Rng, out: Fabric, look = l.mat, core?: boolean
     cut(B(lobby[0], base, lobby[1], lobby[2], base + FLOOR - SLAB, lobby[3], 0));
     const doorCut = B(U - 0.01, base, doorV - 0.8, U + WALL + 0.05, base + 2.2, doorV + 0.8, 0);
     cut(doorCut);
-    // Plaster over the shaft's and the lobby's walls (the lobby open along the shaft, the door cut through).
-    lining.push(...carve([B(0, base, 0, 0.02, wall, CORE_W, MAT.plaster), B(0, base, 0, CORE_L, wall, 0.02, MAT.plaster), B(CORE_L - 0.02, base, 0, CORE_L, wall, CORE_W, MAT.plaster),
-      B(0, base + FLOOR - SLAB, CORE_W - 0.02, CORE_L, wall, CORE_W, MAT.plaster),
-      B(lobby[0], base, lobby[3] - 0.02, lobby[2], base + FLOOR - SLAB, lobby[3], MAT.plaster), B(lobby[2] - 0.02, base, lobby[1], lobby[2], base + FLOOR - SLAB, lobby[3], MAT.plaster),
-      B(CORE_L, base + FLOOR - SLAB - 0.02, lobby[1], lobby[2], base + FLOOR - SLAB, lobby[3], MAT.plaster)], doorCut));
     door(nid('street'), B(U + WALL / 2 - 0.03, base, doorV - 0.8, U + WALL / 2 + 0.03, base + 2.2, doorV + 0.8, 0), at(U + WALL / 2, doorV - 0.8), alongZ ? [1, 0] : [0, 1], 1.6, roll(r, [0.1, 0.25, 0.4, 0.15, 0.1]), out);
     // Landings at each floor, flights between, each two invisible ramps under visible steps (thin, so the flight
     // above leaves headroom): lane A rises along +u to the far landing, lane B comes back to the next floor's.
@@ -99,6 +94,6 @@ export function hollow(l: Lot, r: Rng, out: Fabric, look = l.mat, core?: boolean
     path.push(P(0.6, CORE_W + 0.9, wall));
     l.route = path;
   }
-  const { sites } = puzzle({ l, U, V, n, base, alongZ, decay, B, at, nid, lining, core: hasCore ? { shaft, lobby } : undefined }, from, r, out);
+  const { sites } = puzzle({ l, U, V, n, base, alongZ, decay, B, at, nid, core: hasCore ? { shaft, lobby } : undefined }, from, r, out);
   out.sites.push(...sites.map(q => ({ ...q, streetSides: sides(l).filter(sd => sd.street).length })));
 }

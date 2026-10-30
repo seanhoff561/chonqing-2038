@@ -37,7 +37,7 @@ export const FURNITURE = {
   rack: { w: 1.6, d: 0.5, h: 2.0, mat: MAT.metal },
 } as const;
 export type Piece = keyof typeof FURNITURE;
-export type Kind = 'living' | 'bedroom' | 'kitchen' | 'store' | 'shop' | 'restaurant' | 'workshop' | 'lobby' | 'office';
+export type Kind = 'living' | 'bedroom' | 'kitchen' | 'store' | 'shop' | 'restaurant' | 'workshop' | 'lobby' | 'office' | 'corridor';
 /** Each template's variants: the pieces along its walls; 'T' a table with stools out in the room. */
 const ROOMS: Record<Kind, (Piece | 'T')[][]> = {
   living: [['sofa', 'table', 'cabinet', 'shelf'], ['sofa', 'cabinet', 'chair', 'chair'], ['table', 'chair', 'chair', 'shelf', 'drawer'], ['sofa', 'shelf', 'locker', 'T']],
@@ -48,11 +48,13 @@ const ROOMS: Record<Kind, (Piece | 'T')[][]> = {
   restaurant: [['counter', 'stove', 'fridge', 'T', 'T', 'T'], ['counter', 'sink', 'stove', 'cabinet', 'T', 'T'], ['stove', 'stove', 'fridge', 'T', 'T', 'T', 'T']],
   workshop: [['table', 'rack', 'locker', 'crate', 'crate'], ['table', 'rack', 'rack', 'cabinet'], ['table', 'table', 'locker', 'crate', 'shelf']],
   lobby: [['cabinet', 'locker', 'crate'], ['shelf', 'crate', 'drawer'], ['locker', 'locker', 'crate']],
+  // A block's corridor (M3-77): what the tenants left outside their doors.
+  corridor: [['cabinet', 'crate'], ['locker'], ['shelf', 'crate'], ['crate']],
   office: [['desk', 'chair', 'desk', 'chair', 'locker', 'shelf'], ['desk', 'desk', 'desk', 'locker', 'locker', 'cabinet'], ['table', 'chair', 'chair', 'chair', 'shelf', 'locker']],
 };
 const FLOORING: Record<Kind, number[]> = {
   living: [MAT.tile, MAT.wood], bedroom: [MAT.wood, MAT.tile], kitchen: [MAT.tile], store: [MAT.concrete], shop: [MAT.tile, MAT.stone],
-  restaurant: [MAT.tile], workshop: [MAT.concrete], lobby: [MAT.tile, MAT.stone], office: [MAT.tile, MAT.wood],
+  restaurant: [MAT.tile], workshop: [MAT.concrete], lobby: [MAT.tile, MAT.stone], office: [MAT.tile, MAT.wood], corridor: [MAT.tile, MAT.concrete],
 };
 
 export type Rect = [number, number, number, number];
@@ -77,12 +79,14 @@ export const over = (a: Rect, b: Rect) => a[0] < b[2] && b[0] < a[2] && a[1] < b
 export function furnish(f0: Floor, rect: Rect, kind: Kind, keep: Rect[], fallen: boolean, r: Rng, out: Fabric, site: Site) {
   const f: Floor = { ...f0, B: (...a) => { const s = f0.B(...a); s.inner = true; return s; } };
   const { y, B } = f, [u0, v0, u1, v1] = rect;
-  if (u1 - u0 < 1.2 || v1 - v0 < 1.2) return;
+  if (u1 - u0 < 1.1 || v1 - v0 < 1.1) return;
   out.decor.push(B(u0, y + 0.03, v0, u1, y + 0.045, v1, FLOORING[kind][randInt(r, FLOORING[kind].length)]));
-  // Skirting round its walls (cut where it's kept clear: doorways, under windows) (M3-74).
-  let skirt = [B(u0, y, v0, u1, y + 0.09, v0 + 0.035, MAT.wood), B(u0, y, v1 - 0.035, u1, y + 0.09, v1, MAT.wood), B(u0, y, v0, u0 + 0.035, y + 0.09, v1, MAT.wood), B(u1 - 0.035, y, v0, u1, y + 0.09, v1, MAT.wood)];
-  for (const k of keep) skirt = carve(skirt, B(k[0], y - 0.01, k[1], k[2], y + 0.2, k[3], 0));
-  for (const s of skirt) { s.inner = true; out.decor.push(s); }
+  // Skirting round a home's walls (cut where it's kept clear: doorways, under windows) (M3-74).
+  if (kind === 'living' || kind === 'bedroom' || kind === 'office') {
+    let skirt = [B(u0, y, v0, u1, y + 0.09, v0 + 0.035, MAT.wood), B(u0, y, v1 - 0.035, u1, y + 0.09, v1, MAT.wood), B(u0, y, v0, u0 + 0.035, y + 0.09, v1, MAT.wood), B(u1 - 0.035, y, v0, u1, y + 0.09, v1, MAT.wood)];
+    for (const k of keep) skirt = carve(skirt, B(k[0], y - 0.01, k[1], k[2], y + 0.2, k[3], 0));
+    for (const s of skirt) { s.inner = true; out.decor.push(s); }
+  }
   const placed: Rect[] = [];
   const free = (b: Rect) => !placed.some(p => over(p, b)) && !keep.some(p => over(p, b));
   const list = ROOMS[kind][randInt(r, ROOMS[kind].length)], want = Math.max(list.length, Math.min(8, Math.round(area(rect) / 7)));
@@ -193,7 +197,7 @@ function table(f: Floor, [u0, v0, u1, v1]: Rect, free: (b: Rect) => boolean, pla
  *  ceiling. */
 function clutter(f: Floor, [u0, v0, u1, v1]: Rect, placed: Rect[], keep: Rect[], r: Rng, out: Fabric) {
   const KINDS: [string, number, number, number][] = [['box', 0.45, 0.35, 0.4], ['books', 0.25, 0.2, 0.18], ['papers', 0.4, 0.01, 0.4], ['bottles', 0.4, 0.3, 0.3], ['clothes', 0.5, 0.15, 0.4], ['bag', 0.4, 0.4, 0.3], ['papers', 0.4, 0.01, 0.4]];
-  for (let i = 0, k = 2 + randInt(r, 3) + Math.round(((u1 - u0) * (v1 - v0)) / 8); i < k; i++) {
+  for (let i = 0, k = 1 + randInt(r, 3) + Math.round(((u1 - u0) * (v1 - v0)) / 12); i < k; i++) {
     const [kind, w, h, d] = KINDS[randInt(r, KINDS.length)];
     const u = u0 + 0.15 + rand(r) * Math.max(0, u1 - u0 - 0.3 - w), v = v0 + 0.15 + rand(r) * Math.max(0, v1 - v0 - 0.3 - d), b: Rect = [u, v, u + w, v + d];
     if (placed.some(p => over(p, b)) || (h > 0.2 && keep.some(p => over(p, b)))) continue;

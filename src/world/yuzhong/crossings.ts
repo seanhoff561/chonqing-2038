@@ -140,13 +140,17 @@ export function crossings(plans: Plan[], g: Heightfield, sts: Street[], used: Se
  *  1.2-9 m off. `wins` are the windows' features (kind 'win:<state>', at the sill outside, n out). */
 export function windowBridges(wins: Feature[], index: SolidIndex, out: Vertical) {
   const r = makeRng(hashString('windowBridges'));
+  // The windows in 4 m cells, to find one across without scanning them all (there are tens of thousands, M3-77).
+  const cells = new Map<number, Feature[]>(), key = (x: number, z: number) => Math.floor(x / 4) * 100003 + Math.floor(z / 4);
+  for (const q of wins) { const k = key(q.x, q.z), a = cells.get(k); if (a) a.push(q); else cells.set(k, [q]); }
+  const near = (x: number, z: number) => [-4, 0, 4].flatMap(dx => [-4, 0, 4].flatMap(dz => cells.get(key(x + dx, z + dz)) ?? []));
   for (const w of wins) {
     if (w.kind === 'win:barred' || rand(r) > 0.6) continue;
     const nx = w.nx!, nz = w.nz!, y = w.y, h = raycast(index, w.x + nx * 0.3, y + 0.3, w.z + nz * 0.3, nx, 0, nz, 9);
     if (!h || h.t < 1.2) continue;
     const t = h.t + 0.3, hx = w.x + nx * t, hz = w.z + nz * t;
     // A window across within a metre and a half, near the sill's height: sill to sill.
-    const other = wins.find(q => q !== w && Math.hypot(q.x - hx, q.z - hz) < 1.5 && Math.abs(q.y - y) < 0.8 && q.nx! * nx + q.nz! * nz < -0.9);
+    const other = near(hx, hz).find(q => q !== w && Math.hypot(q.x - hx, q.z - hz) < 1.5 && Math.abs(q.y - y) < 0.8 && q.nx! * nx + q.nz! * nz < -0.9);
     // Or a roof edge across, a step down to a mantle up.
     let top = NaN;
     if (!other) { const g = raycast(index, hx + nx * 0.5, y + 0.8, hz + nz * 0.5, 0, -1, 0, 3.2); if (g) top = y + 0.8 - g.t; }

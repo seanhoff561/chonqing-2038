@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 70 of 88 done
+## M3: 71 of 88 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -455,7 +455,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Building facades muted to near monotone like the rest of the visual overhaul: paint faded to greys, off-whites and dirty concrete, colour left only as faint tints and stains; tile, brick and render read by texture and grime, not hue
   - The colour in the city is its light: neon, screens, lamps and the machines' lights stand out against the buildings
   - Screenshots of the same street views by day and night before and after
-- [ ] **M3-77** Buildings as warrens: many rooms, a structure to explore (U-043)
+- [x] **M3-77** Buildings as warrens: many rooms, a structure to explore (U-043)
   - Enterable buildings have many rooms over their floors (flats, corridors, stairwells, shops, offices, service rooms, storerooms), with a building's structure to explore: corridors, stairs, landings, rooms off rooms
   - Still a maze: doors in every room but many locked, jammed or chained; stairs collapsed or blocked in places; the way on through holes in floors, vents, broken walls; rarely the whole building from one way in
   - Inner rooms without windows, reached only through other rooms

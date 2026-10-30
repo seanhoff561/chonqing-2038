@@ -15,19 +15,20 @@ const CORE_NEAR = CORE.near;
 import { door, glaze, roll, type Glazing } from './access';
 import type { Lot, Fabric } from './buildings';
 import type { Site } from '../world';
+import { warren } from './warren';
 
-/** Rooms are small (U-040); the mass left between two; a window; a vent to crawl through. */
-const SIZE = { w: [2.6, 4.2], d: [2.4, 3.4] }, GAP = 0.3, WIN = { w: 1.4, sill: 0.9, h: 1.5 }, VENT = { w: 0.75, h: 0.65 };
+/** Rooms are small (U-040); the mass left between two; a window; a vent to crawl through; a crack to squeeze
+ *  through (he is 0.5 m across, square to the world's axes, so a turned block's crack needs a little more). */
+export const SIZE = { w: [2.6, 4.2], d: [2.4, 3.4] }, GAP = 0.3, WIN = { w: 1.4, sill: 0.9, h: 1.5 }, VENT = { w: 0.75, h: 0.65 }, SQUEEZE = { w: 0.72, h: 1.8 };
 
 export interface Frame {
   l: Lot; U: number; V: number; n: number; base: number; alongZ: boolean; decay: number;
   B: Floor['B']; at: Floor['at']; nid: (p: string) => string;
-  /** plaster over walls already carved (the stairwell's), cut here for the openings with the rooms' own */
-  lining: Solid[];
   /** the main stairwell's footprint (every floor) and its ground floor lobby, if it has one */
   core?: { shaft: Rect; lobby: Rect };
 }
-interface Room { face: number; a0: number; a1: number; d: number; k: number; kind: Kind; fallen: boolean; keep: Rect[] }
+/** A room against a face: along it from a0 to a1, in from it from d0 (0 for a room on the facade) to d. */
+export interface Room { face: number; a0: number; a1: number; d0: number; d: number; k: number; kind: Kind; fallen: boolean; keep: Rect[] }
 type Step = 'door' | 'vent' | 'rubble' | 'over' | 'stair' | 'escape';
 /** The templates: a cluster's first room, then its steps. */
 const RECIPES: Record<string, { steps: Step[]; top?: boolean; ground?: boolean; burrow?: boolean }> = {
@@ -48,17 +49,18 @@ export function puzzle(fr: Frame, from: number, r: Rng, out: Fabric) {
   const unit = (du: number, dv: number): [number, number] => { const [ax, az] = at(0, 0), [bx, bz] = at(du, dv); return [bx - ax, bz - az]; };
   /** Along a face, and in from it, as a world step. */
   const alongDir = (face: number) => (face < 2 ? unit(1, 0) : unit(0, 1)), inDir = (face: number) => (face === 0 ? unit(0, 1) : face === 1 ? unit(0, -1) : face === 2 ? unit(1, 0) : unit(-1, 0));
-  const rooms: Room[] = [], cuts: Solid[] = [], lining: Solid[] = [], later: (() => void)[] = [];
-  const roomRect = (m: Room) => rect(m.face, m.a0, m.a1, 0, m.d);
+  const rooms: Room[] = [], cuts: Solid[] = [], later: (() => void)[] = [];
+  const roomRect = (m: Room) => rect(m.face, m.a0, m.a1, m.d0, m.d);
   const free = (q: Rect, k: number) => {
     if (q[0] < 0 || q[1] < 0 || q[2] > U || q[3] > V) return false;
-    const g: Rect = [q[0] - GAP, q[1] - GAP, q[2] + GAP, q[3] + GAP];
+    // (A hair under the wall's thickness, so rooms laid a wall apart in sums of floats still fit.)
+    const t = GAP - 1e-4, g: Rect = [q[0] - t, q[1] - t, q[2] + t, q[3] + t];
     if (fr.core && (over(g, fr.core.shaft) || (k === 0 && over(g, fr.core.lobby)))) return false;
     return !rooms.some(m => m.k === k && over(g, roomRect(m)));
   };
-  const add = (face: number, a0: number, w: number, d: number, k: number, kind: Kind): Room | null => {
-    if (k < 0 || k >= n || a0 < 0 || a0 + w > len(face)) return null;
-    const m: Room = { face, a0, a1: a0 + w, d, k, kind, fallen: false, keep: [] };
+  const add = (face: number, a0: number, w: number, d: number, k: number, kind: Kind, d0 = 0): Room | null => {
+    if (k < 0 || k >= n || a0 < 0 || a0 + w > len(face) + 1e-6) return null;
+    const m: Room = { face, a0, a1: a0 + w, d0, d, k, kind, fallen: false, keep: [] };
     if (!free(roomRect(m), k)) return null;
     rooms.push(m);
     return m;
@@ -85,12 +87,21 @@ export function puzzle(fr: Frame, from: number, r: Rng, out: Fabric) {
     out.features.push({ kind: `win:${state}`, x: sx, y: o0, z: sz, group: out.features.length, nx: -ix, nz: -iz });
   };
   const winState = (k: number): Glazing => { const q = rand(r); return k === 0 ? (q < 0.6 ? 'barred' : q < 0.9 ? 'glass' : 'open') : q < 0.25 ? 'open' : q < 0.75 ? 'glass' : 'barred'; };
-  /** A doorway (or a vent, low and narrow) through the mass between two rooms side by side along a face. */
-  const between = (a: Room, b: Room, kind: 'door' | 'vent' | 'rubble') => {
-    const lo = a.a1 < b.a0 ? a : b, hi = lo === a ? b : a, d = Math.min(a.d, b.d), w = kind === 'vent' ? VENT.w : DOOR, h = kind === 'vent' ? VENT.h : DOOR_H;
-    const dc = Math.min(d - w / 2 - 0.2, 0.4 + w / 2 + rand(r) * Math.max(0, d - w - 0.8)), y = yOf(a.k);
+  /** A doorway (or a vent, low and narrow, or a squeeze, a crack he turns sideways through) through the mass between
+   *  two rooms side by side along a face. */
+  const between = (a: Room, b: Room, kind: 'door' | 'vent' | 'rubble' | 'squeeze') => {
+    const lo = a.a1 < b.a0 ? a : b, hi = lo === a ? b : a, e0 = Math.max(a.d0, b.d0), d = Math.min(a.d, b.d) - e0;
+    const w = kind === 'vent' ? VENT.w : kind === 'squeeze' ? SQUEEZE.w : DOOR, h = kind === 'vent' ? VENT.h : kind === 'squeeze' ? SQUEEZE.h : DOOR_H;
+    const dc = e0 + Math.min(d - w / 2 - 0.2, 0.4 + w / 2 + rand(r) * Math.max(0, d - w - 0.8)), y = yOf(a.k);
     cuts.push(box(rect(a.face, lo.a1 - 0.01, hi.a0 + 0.01, dc - w / 2, dc + w / 2), y, y + h));
     lo.keep.push(rect(a.face, lo.a1 - 1, lo.a1, dc - 0.7, dc + 0.7)); hi.keep.push(rect(a.face, hi.a0, hi.a0 + 1, dc - 0.7, dc + 0.7));
+    if (kind === 'squeeze') {
+      // Broken through: chunks of the wall lying either side.
+      for (const [u0, u1] of [[lo.a1 - 0.6, lo.a1], [hi.a0, hi.a0 + 0.6]]) out.decor.push(box(rect(a.face, u0, u1, dc - 0.45, dc + 0.45), y, y + 0.15 + rand(r) * 0.2, MAT.rubble));
+      const q = rect(a.face, (lo.a1 + hi.a0) / 2, (lo.a1 + hi.a0) / 2, dc, dc), [x, z] = at(q[0], q[1]), [nx, nz] = alongDir(a.face);
+      out.features.push({ kind: 'squeeze', x, y, z, group: out.features.length, nx, nz });
+      return;
+    }
     if (kind === 'rubble') {
       // Choked with rubble: the room beyond has come down.
       const q = rect(a.face, lo.a1 - 0.5, hi.a0 + 0.5, dc - w / 2, dc + w / 2);
@@ -170,10 +181,20 @@ export function puzzle(fr: Frame, from: number, r: Rng, out: Fabric) {
     return lo;
   };
 
-  // The clusters: one to three, each from a template.
   const names = Object.keys(RECIPES), sites: Site[] = [], siteOf = new Map<Room, Site>();
-  for (let c = 0, count = 1 + randInt(r, Math.min(3, 1 + Math.floor(n / 4))); c < count; c++) {
-    const recipe = RECIPES[names[randInt(r, names.length)]], first = rooms.length;
+  // The warren: a band of whole floors built (M3-77, U-043).
+  const band = warren({
+    U, V, n, core: !!fr.core, alongZ, r, out, nid: fr.nid, add, rect, box, at, unit, yOf, cut: c => cuts.push(c), later: f => later.push(f), window, winState, between, hole, flatKind,
+    site: ms => {
+      const q = roomRect(ms[0]), [sx, sz] = at((q[0] + q[2]) / 2, (q[1] + q[3]) / 2);
+      sites.push({ id: `b${l.id}.w${ms[0].k}`, kind: 'flat', x: sx, y: yOf(ms[0].k), z: sz, bed: null, table: null, containers: [], exits: 1, windows: ms.length, streetSides: 0 });
+      for (const m of ms) siteOf.set(m, sites[sites.length - 1]);
+    },
+  });
+  // The clusters elsewhere: one to three, each from a template (fewer beside a warren).
+  for (let c = 0, count = band.length ? 1 : 1 + randInt(r, Math.min(3, 1 + Math.floor(n / 4))); c < count; c++) {
+    // Beside a warren, half the time it's the hole broken in low from the alley (M3-71).
+    const recipe = RECIPES[band.length && rand(r) < 0.5 ? 'burrow' : names[randInt(r, names.length)]], first = rooms.length;
     let m: Room | null = null;
     for (let t = 0; t < 14 && !m; t++) {
       const face = randInt(r, 4), w = size(SIZE.w[0], SIZE.w[1]), k = recipe.ground ? 0 : recipe.top ? n - 1 : 1 + randInt(r, Math.max(1, n - 1));
@@ -242,24 +263,13 @@ export function puzzle(fr: Frame, from: number, r: Rng, out: Fabric) {
     siteOf.set(m, sites[sites.length - 1]);
   }
 
-  // Carve: the rooms (a stair room's two floors as one), then every opening.
+  // Carve: the rooms (a stair room's two floors as one), then every opening. (Their walls show the building's
+  // inside, plaster or paper: world-mesh.ts.)
   for (const m of rooms) {
-    const y = yOf(m.k), q = roomRect(m);
-    out.solids.splice(from, out.solids.length - from, ...carve(out.solids.slice(from), box(q, y, y + FLOOR - SLAB)));
-    // Its walls lined (cut for the openings below): papered in homes and offices most of the time (M3-74), tiled to
-    // shoulder height in kitchens, else plaster; plaster on the ceiling.
-    const t = 0.02, top = y + FLOOR - SLAB, home = ['living', 'bedroom', 'office'].includes(m.kind), kitchen = m.kind === 'kitchen' || m.kind === 'restaurant';
-    const wallMat = home && rand(r) < 0.65 ? MAT.wallpaper : MAT.plaster;
-    for (const w of [[q[0], q[1], q[2], q[1] + t], [q[0], q[3] - t, q[2], q[3]], [q[0], q[1], q[0] + t, q[3]], [q[2] - t, q[1], q[2], q[3]]] as Rect[]) {
-      if (kitchen) lining.push(box(w, y, y + 1.4, MAT.tile), box(w, y + 1.4, top, MAT.plaster));
-      else lining.push(box(w, y, top, wallMat));
-    }
-    lining.push(box(q, top - t, top, MAT.plaster));
+    const y = yOf(m.k);
+    out.solids.splice(from, out.solids.length - from, ...carve(out.solids.slice(from), box(roomRect(m), y, y + FLOOR - SLAB)));
   }
   for (const c of cuts) out.solids.splice(from, out.solids.length - from, ...carve(out.solids.slice(from), c));
-  let lin = lining.concat(fr.lining);
-  for (const c of cuts) lin = carve(lin, c);
-  for (const s of lin) { s.inner = true; out.decor.push(s); }
   for (const f of later) f();
   for (const m of rooms) {
     const site = siteOf.get(m)!;
