@@ -10,7 +10,8 @@ export default async function ({ open, fail, screenshot }) {
     if (r.tris > 1.5e6) fail('chunks', `viewpoint ${i}: ${r.tris} triangles`);
     if (i === 0) await screenshot(page, 'facades-day');
   }
-  const meshes = await page.evaluate('window.__cq.game.view.world.children[0].children.length');
+  // (Chunk meshes sit in 256 m cells since M3-53, each cell a group with a rect.)
+  const meshes = await page.evaluate('window.__cq.game.view.world.children.filter(c => c.userData.rect).reduce((a, c) => a + c.children.length, 0)');
   if (meshes < 50) fail('chunks', `only ${meshes} chunk meshes`);
   await view(...points[0], 21);
   await screenshot(page, 'facades-night');

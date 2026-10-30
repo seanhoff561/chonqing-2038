@@ -16,7 +16,7 @@
     "verify": "node tools/verify.mjs"
   },
   "dependencies": {
-    "three": "^0.186.1"
+    "three": "^0.187.0"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

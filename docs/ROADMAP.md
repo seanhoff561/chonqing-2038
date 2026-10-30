@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 63 of 83 done
+## M3: 64 of 83 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -417,7 +417,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - U-035: sills only under real windows; some buildings with a ledge running all the way round to traverse on
   - U-034, Q-008, U-040: no open shells and no fully partitioned floors: the few rooms are the building's inside
   - U-034 procedural insides: enterable windows by size into rooms, stairs to more rooms, most of it locked or collapsed, a few rooms open each with a window (broken in, to break, locked or barred); short fire escapes from windows; ground doors sometimes to an unlocked stairwell; roof doors locked but breakable (beam bridges and walkways: M3-37)
-- [ ] **M3-75** three.js r187 (U-041)
+- [x] **M3-75** three.js r187 (U-041)
   - three upgraded from r186 to r187; nothing uses what r187 removed (deprecated since r177); all tests and the smoke tests pass
   - Shadow maps redrawn only when the sun has moved enough or the world changed (r187: shadows render only when flagged), measured as less frame CPU on the perf views
   - Clustered lighting tried for the many small lights (street lamps, neon, the headlamp): used where it holds the draw-call and frame budgets, else noted with numbers in DECISIONS
