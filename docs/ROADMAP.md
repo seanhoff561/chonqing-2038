@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 44 of 64 done
+## M3: 45 of 64 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -444,7 +444,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Hidden, he sees the inside of what he's in (crate slats with light between, a dumpster under a lifted lid, a wardrobe's door crack, a car boot), not through it
   - Many more places to hide across the city: dumpsters and big bins on streets and in alleys, wardrobes and cupboards in flats, stall cabinets, water tanks on roofs, car boots, barrels; each with a prompt
   - Sim tests for entering each kind; screenshots from inside three
-- [ ] **M3-48** Underwater (U-021)
+- [x] **M3-48** Underwater (U-021)
   - Under the surface the view turns murky green-brown with short sight, dim wavering light and drifting particles; the surface seen from below; sound muffles
   - Back above it, it clears at once; e2e screenshots under and over
 - [ ] **M3-50** The movement envelope (U-021, U-023)

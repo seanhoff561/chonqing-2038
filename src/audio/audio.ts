@@ -4,6 +4,7 @@ export type Bus = 'voice' | 'effects' | 'ambience' | 'music';
 export class Audio {
   ctx: AudioContext | null = null;
   master!: GainNode;
+  private muffle!: BiquadFilterNode;
   readonly bus = {} as Record<Bus, GainNode>;
   private noiseBuf!: AudioBuffer;
   readonly volumes: Record<'master' | Bus, number> = { master: 0.8, voice: 1, effects: 1, ambience: 0.8, music: 0.6 };
@@ -20,7 +21,11 @@ export class Audio {
     if (!C) return;
     const ctx = (this.ctx = new C());
     this.master = ctx.createGain();
-    this.master.connect(ctx.destination);
+    // Everything heard through a low-pass that closes under water (M3-48).
+    this.muffle = ctx.createBiquadFilter();
+    this.muffle.type = 'lowpass';
+    this.muffle.frequency.value = 22000;
+    this.master.connect(this.muffle).connect(ctx.destination);
     for (const b of ['voice', 'effects', 'ambience', 'music'] as Bus[]) {
       this.bus[b] = ctx.createGain();
       this.bus[b].connect(this.master);
@@ -40,6 +45,11 @@ export class Audio {
   }
 
   get ready() { return !!this.ctx && this.ctx.state === 'running'; }
+
+  /** Under water every sound comes dull and low; out of it, clear again at once. */
+  setUnderwater(on: boolean) {
+    if (this.ctx) this.muffle.frequency.value = on ? 500 : 22000;
+  }
 
   /** A noise burst through a filter with an attack/decay envelope. */
   noise(at: number, dur: number, gain: number, type: BiquadFilterType, freq: number, q = 1, freqEnd?: number, out?: AudioNode) {

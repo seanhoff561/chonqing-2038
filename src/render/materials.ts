@@ -164,7 +164,8 @@ export function material(id: number, vc = false, lod: Lod = 'all'): THREE.MeshPh
   } else {
     const [draw] = draws[id] ?? draws[MAT.concrete];
     const tex = canvasTexture(`mat${id}`, 512, 512, draw);
-    m = new THREE.MeshPhongMaterial({ map: tex, vertexColors: vc, transparent: id === MAT.water, opacity: id === MAT.water ? 0.82 : 1, ...DRY });
+    // Water shows from below too (M3-48).
+    m = new THREE.MeshPhongMaterial({ map: tex, vertexColors: vc, transparent: id === MAT.water, opacity: id === MAT.water ? 0.82 : 1, side: id === MAT.water ? THREE.DoubleSide : THREE.FrontSide, ...DRY });
     lodCut(m, lod);
   }
   mats.set(key, m);

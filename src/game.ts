@@ -1,5 +1,6 @@
 // The browser game: fixed-step sim, input, rendering with interpolation.
 import { HideView } from './render/hideview';
+import { Underwater } from './render/underwater';
 import { hideNear } from './sim/hide';
 import { createState, step } from './sim/sim';
 import { DT, type SimState, type Vec3 } from './sim/types';
@@ -56,6 +57,8 @@ export class Game {
   readonly hands: Hands3D;
   /** The inside of where he's hidden (M3-47). */
   readonly hideView = new HideView();
+  /** Murk, silt and dull sound with his head under water (M3-48). */
+  readonly underwater: Underwater;
   readonly sleep: SleepUI;
   readonly death = new DeathScreen(this);
   readonly pause: PauseMenu;
@@ -79,6 +82,7 @@ export class Game {
     this.sky = new Sky(this.view);
     this.hands = new Hands3D(this.view.fp.cam);
     this.view.scene.add(this.hideView.group);
+    this.underwater = new Underwater(this.view);
     this.view.scene.add(this.furniture.group);
     this.rain = new Rain(this.view.scene);
     this.bodyFx = new BodyFx(this.view.renderer.domElement);
@@ -176,8 +180,10 @@ export class Game {
     this.status.update(this.state, dt);
     const cam = this.view.fp.cam.position;
     this.sky.update(this.state.time, cam, this.hazeDistance(), this.underAmount(dt), this.state.weather);
-    // Rain stops at a roof or underground.
-    const covered = this.under > 0.5 || !!raycast(this.world.index, cam.x, cam.y, cam.z, 0, 1, 0, 40);
+    const wet = this.underwater.update(this.world, this.state.tick / 60);
+    this.audio.setUnderwater(wet);
+    // Rain stops at a roof, underground or under water.
+    const covered = wet || this.under > 0.5 || !!raycast(this.world.index, cam.x, cam.y, cam.z, 0, 1, 0, 40);
     this.rain.update(this.state.tick / 60, cam, this.state.weather.rain, covered);
     this.view.setLamp(this.state.player.lamp);
     this.view.render(this.state.tick / 60, this.state.wstate.open);
