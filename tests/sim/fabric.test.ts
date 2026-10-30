@@ -59,7 +59,9 @@ describe('fabric climbables and hiding spots (M3-05)', () => {
     expect(held.filter(f => f.y < (heightAt(w.ground!, f.x, f.z) ?? 0) + BARE - 0.2).length).toBe(0);
   });
   it('climbs a generated drain pipe hand over hand onto the roof', () => {
-    const pipe = w.climbables.find(c => c.kind === 'pipe' && c.y1 - c.y0 <= 9 && c.y1 - c.y0 >= 5 && free(w.index, c.x + c.nx * 0.65, c.y0 - 1.2, c.z + c.nz * 0.65, 1.7, 0.4) && free(w.index, c.x - c.nx * 1.5, c.y1 + 0.3, c.z - c.nz * 1.5, 1.7, 0.3))!;
+    // (Wall behind it all the way up: past a window he'd climb in instead.)
+    const walled = (c: (typeof w.climbables)[number]) => { for (let y = c.y0; y < c.y1 - 1; y += 0.5) if (free(w.index, c.x - c.nx * 0.4, y, c.z - c.nz * 0.4, 0.3, 0.1)) return false; return true; };
+    const pipe = w.climbables.find(c => c.kind === 'pipe' && c.y1 - c.y0 <= 9 && c.y1 - c.y0 >= 5 && free(w.index, c.x + c.nx * 0.65, c.y0 - 1.2, c.z + c.nz * 0.65, 1.7, 0.4) && free(w.index, c.x - c.nx * 1.5, c.y1 + 0.3, c.z - c.nz * 1.5, 1.7, 0.3) && walled(c))!;
     expect(pipe).toBeTruthy();
     const s = createState(1, w);
     // (Broken off high over the street, U-032: he starts hanging from its foot, as if off a pole or a roof.)

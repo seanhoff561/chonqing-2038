@@ -11,7 +11,7 @@ export interface Box { x0: number; y0: number; z0: number; x1: number; y1: numbe
 export interface Rot { x0: number; z0: number; x1: number; z1: number; px: number; pz: number; c: number; s: number }
 
 /** ramp: 0 flat box, 1 rises toward +x, 2 toward -x, 3 toward +z, 4 toward -z (in the unturned frame) */
-export interface Solid extends Box { mat: number; ramp: number; low: number; rot?: Rot; /** render colour multiplier, sRGB hex (M3-46) */ tint?: number }
+export interface Solid extends Box { mat: number; ramp: number; low: number; rot?: Rot; /** render colour multiplier, sRGB hex (M3-46) */ tint?: number; /** inside a building: drawn only near (M3-38) */ inner?: boolean }
 
 export interface Hit { t: number; nx: number; ny: number; nz: number; id: number }
 

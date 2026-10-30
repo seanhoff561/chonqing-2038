@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-38 Interiors with variety (U-014).
-Features done: 123 / 279 | Last done: M3-66
+**Status:** building M3. Next: M3-70 Walkable slopes (U-038).
+Features done: 124 / 283 | Last done: M3-38
 <!-- /status -->
 
 ## Log
@@ -71,3 +71,4 @@ Features done: 123 / 279 | Last done: M3-66
 - M3-68 The underground reworked (U-032): the underground made real: fitted service tunnels broken into rooms, the metro with twin tubes and two stations, streets stepping down into the city
 - M3-69 Quick fixes from U-034 and U-035: solid facade fixtures, the muscle-up, crouch edge-stop, no spawned ziplines, towers held like other buildings (U-036)
 - M3-66 The layered city, filled with buildings, evened (U-032, U-033, U-034): heights with variety beside the tall ones, more low fillers (parks kept), Shibati apartments, megastructures low on thick columns (U-034, U-037)
+- M3-38 Interiors with variety (U-014): rooms round the stair core: templates and variants, furnished and decayed; scarce loot; looked-at search by cell; rooms drawn near only

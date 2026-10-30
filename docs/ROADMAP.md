@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 60 of 81 done
+## M3: 61 of 81 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -399,7 +399,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - U-034, U-037: more variety, so a short building beside a tall one isn't always a huge step: many of the shorter ones beside tall ones at 60-80% of their height, more low fillers on the open ground (today's parks kept as they are); big gaps between buildings are fine and a big building may stand over its neighbours (a test measures the spread of heights beside the tall ones)
   - U-034: Shibati's old houses rebuilt as apartment blocks like the rest of the city
   - U-034: megastructures only low over roofs of near one height, on thick columns (a test bounds their columns' height and thickness)
-- [ ] **M3-38** Interiors with variety (U-014)
+- [x] **M3-38** Interiors with variety (U-014)
   - Room templates (flats, stairwells, corridors, shops, restaurants, offices, workshops) furnished from a furniture and clutter set in states of decay: collapsed ceilings, debris, water damage, overturned furniture
   - Several variants per template so rooms rarely repeat; references from docs/reference interiors
   - Screenshots of five different rooms

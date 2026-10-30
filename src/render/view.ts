@@ -87,10 +87,15 @@ export class View {
     // Small trims (window cages, AC units, bars, signs) are drawn only within DETAIL of the camera and cast no
     // shadow: from further off they are a pixel or two (M3-55).
     const small = (s: Solid) => { const e = s.rot ?? s; return this.hasFar && !s.ramp && Math.max(e.x1 - e.x0, s.y1 - s.y0, e.z1 - e.z0) < 2.6; };
-    const meshes = buildSolidMeshes(w.solids.concat(w.decor.filter(s => !small(s))), this.hasFar ? 'near' : 'all', undefined, w.index);
-    const detail = buildSolidMeshes(w.decor.filter(small), 'near').children.filter(m => !m.castShadow);
+    // Rooms inside buildings (M3-38) only within INNER, and casting nothing (the shell does).
+    const inner = (s: Solid) => this.hasFar && !!s.inner;
+    const meshes = buildSolidMeshes(w.solids.filter(s => !inner(s)).concat(w.decor.filter(s => !small(s) && !inner(s))), this.hasFar ? 'near' : 'all', undefined, w.index);
+    const detail = buildSolidMeshes(w.decor.filter(s => small(s) && !inner(s)), 'near').children.filter(m => !m.castShadow);
     for (const m of detail) m.userData.detail = true;
+    const rooms = buildSolidMeshes(w.solids.filter(inner).concat(w.decor.filter(inner)), 'near').children.filter(m => !m.castShadow);
+    for (const m of rooms) m.userData.detail = m.userData.inner = true;
     if (detail.length) meshes.add(...detail);
+    if (rooms.length) meshes.add(...rooms);
     if (w.ground) meshes.add(...buildGroundMeshes(w.ground, this.hasFar ? 'near' : 'all', w.marks), ...buildStreetMeshes(w.ground, w.streets, this.hasFar ? 'near' : 'all', w.lawns));
     const props = buildProps(w.props);
     this.world.add(meshes, buildLabels(w.labels), props);
@@ -172,7 +177,7 @@ export class View {
     const c = this.fp.cam.position, far = this.hasFar ? lodRadius.value : (this.scene.fog as THREE.Fog).far;
     if (far !== this.visFar || Math.hypot(c.x - this.visAt.x, c.z - this.visAt.z) > 4) {
       this.visFar = far; this.visAt.copy(c);
-      const within = (o: THREE.Object3D) => { const [x0, z0, x1, z1] = o.userData.rect; return Math.hypot(Math.max(x0 - c.x, 0, c.x - x1), Math.max(z0 - c.z, 0, c.z - z1)) < (o.userData.detail ? Math.min(far, DETAIL) : far); };
+      const within = (o: THREE.Object3D) => { const [x0, z0, x1, z1] = o.userData.rect; return Math.hypot(Math.max(x0 - c.x, 0, c.x - x1), Math.max(z0 - c.z, 0, c.z - z1)) < (o.userData.inner ? Math.min(far, INNER) : o.userData.detail ? Math.min(far, DETAIL) : far); };
       for (const cell of this.cells) if ((cell.visible = within(cell))) for (const m of cell.children) m.visible = within(m);
     }
     tickProps(t, open);
@@ -216,7 +221,7 @@ function liveWalk(o: THREE.Object3D, force: boolean) {
 
 export type Resolution = 'high' | 'balanced' | 'fast';
 /** How far small trims are drawn. */
-const DETAIL = 110;
+const DETAIL = 110, INNER = 45;
 const RES_KEY = 'cq2038.resolution';
 function loadResolution(): Resolution {
   try { const r = localStorage.getItem(RES_KEY); if (r === 'high' || r === 'fast') return r; } catch { /* default */ }

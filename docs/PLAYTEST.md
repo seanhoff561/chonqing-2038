@@ -62,3 +62,7 @@ Report: where does it still feel empty or out of place (props in odd spots, anyt
 Start: the game, or `?scenario=shibati&dev=1`; the dev teleports include Skybridge, Vantage, Factory gate, Underground city and Roof street entries.
 Try: walk a few blocks off a main road and through the back buildings (most doors open; set-back ones have a paved path to the street); look up a vertical alley; cross a bridge or a beam between roofs; climb scaffolding; walk through one of the real parks; ride the frame rate at street level and on a roof.
 Report: does the city feel full and layered now, or still too open anywhere? Do the parks and paths look purposeful? Frame rate at street level and from a high roof (this build adds about a third more triangles; this machine can't measure real GPU time).
+
+## M3-38 rooms (frame rate)
+- Walk into a few enterable blocks and round the streets beside them: does the frame rate hold on your GPU? (In software GL, frame CPU was over budget before the rooms and still is; rooms draw only within 45 m.)
+- Do the rooms read as rooms (flats, shops, restaurants, offices, workshops), and do the fallen ceilings let you climb to the floor above?

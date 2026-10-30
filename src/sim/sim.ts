@@ -58,7 +58,7 @@ export function step(state: SimState, world: World, input: InputFrame): void {
   stepPlayer(state, world, input);
   stepHeld(state, world, input);
   stepLamp(state, input);
-  stepContainers(state, { inter: allInters(state, world) });
+  if (state.openContainer) stepContainers(state, { inter: allInters(state, world) });
   stepWeather(state);
   stepBody(state);
   checkCollapse(state);

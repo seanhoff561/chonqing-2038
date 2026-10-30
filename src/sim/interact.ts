@@ -32,12 +32,36 @@ function eye(s: SimState) {
   return { x: p.pos.x, y: p.pos.y + M.eye[p.posture], z: p.pos.z };
 }
 
+/** The world's interactables in 8 m cells (built on first use, rebuilt if the list grows), and the widest reach
+ *  of any: a look only scans the cells round him (M3-38 made them many). */
+const grids = new WeakMap<Inter[], { n: number; r: number; cells: Map<number, Inter[]> }>();
+const CELL = 8, key = (i: number, j: number) => i * 65536 + j;
+function near(s: SimState, w: World, x: number, z: number, d: number): Inter[] {
+  let g = grids.get(w.inter);
+  if (!g || g.n !== w.inter.length) {
+    g = { n: w.inter.length, r: 0, cells: new Map() };
+    for (const it of w.inter) {
+      const k = key(Math.floor(it.x / CELL), Math.floor(it.z / CELL)), a = g.cells.get(k);
+      if (a) a.push(it); else g.cells.set(k, [it]);
+      g.r = Math.max(g.r, it.r);
+    }
+    grids.set(w.inter, g);
+  }
+  const out: Inter[] = extraInters.length ? ([] as Inter[]).concat(...extraInters.map(f => f(s))) : [];
+  const m = d + g.r;
+  for (let i = Math.floor((x - m) / CELL); i <= Math.floor((x + m) / CELL); i++) for (let j = Math.floor((z - m) / CELL); j <= Math.floor((z + m) / CELL); j++) {
+    const a = g.cells.get(key(i, j));
+    if (a) for (const it of a) out.push(it);
+  }
+  return out;
+}
+
 /** The interactable he's looking at: nearest to the look ray within reach and not behind a wall. */
 export function lookTarget(s: SimState, w: World): Inter | null {
   const p = s.player, e = eye(s);
   const dx = -Math.sin(p.yaw) * Math.cos(p.pitch), dy = Math.sin(p.pitch), dz = -Math.cos(p.yaw) * Math.cos(p.pitch);
   let best: Inter | null = null, bestScore = Infinity;
-  for (const it of allInters(s, w)) {
+  for (const it of near(s, w, e.x, e.z, REACH)) {
     if (s.wstate.gone[it.id]) continue;
     const vx = it.x - e.x, vy = it.y - e.y, vz = it.z - e.z;
     const along = vx * dx + vy * dy + vz * dz;

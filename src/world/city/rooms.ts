@@ -76,7 +76,9 @@ export interface Floor {
 const bays = (a: number, len: number) => { const k = Math.max(1, Math.floor(len / 4.5)); return Array.from({ length: k + 1 }, (_, i) => a + (len / k) * i); };
 
 /** Divide and furnish one floor; its holes in the ceiling for the floor above. */
-export function floorRooms(f: Floor, r: Rng, out: Fabric, site: Site): Rect[] {
+export function floorRooms(f0: Floor, r: Rng, out: Fabric, site: Site): Rect[] {
+  // Everything made here is inside: drawn only near (M3-38).
+  const f: Floor = { ...f0, B: (...a) => { const s = f0.B(...a); s.inner = true; return s; } };
   const { U, V, y, B } = f, keep: Rect[] = [...f.holes], holes: Rect[] = [];
   // Partitions, a metre kept clear each side of their doorways.
   const wallU = (u: number, v0: number, v1: number, doors: number[]) => { wall(f, 'u', u, v0, v1, doors, out); for (const d of doors) keep.push([u - 1, d - 0.7, u + T + 1, d + 0.7]); };
@@ -138,15 +140,19 @@ export function floorRooms(f: Floor, r: Rng, out: Fabric, site: Site): Rect[] {
     out.decor.push(B(u0, y + 0.03, v0, u1, y + 0.045, v1, FLOORING[m.kind][randInt(r, FLOORING[m.kind].length)]));
     const placed: Rect[] = [];
     const free = (b: Rect) => !placed.some(p => over(p, b)) && !keep.some(p => over(p, b));
-    // Its variant's pieces, round again in a big room (one a 5 m2 or so).
-    const list = ROOMS[m.kind][randInt(r, ROOMS[m.kind].length)], want = Math.max(list.length, Math.min(12, Math.round(area(m.rect) / 5)));
+    // Its variant's pieces, round again in a big room (one a 7 m2 or so).
+    const list = ROOMS[m.kind][randInt(r, ROOMS[m.kind].length)], want = Math.max(list.length, Math.min(8, Math.round(area(m.rect) / 7)));
+    let looted = false;
     for (let i = 0, got = 0; i < want * 2 && got < want; i++) {
       const p = list[i % list.length];
       if (p === 'T') { if (table(f, m.rect, free, placed, r, out)) got++; continue; }
       const at = against(f, m.rect, FURNITURE[p], free, r);
       if (!at) continue;
       placed.push(at.b); got++;
-      piece(f, p, at.b, at.face, `b${f.l.id}.${f.k}.${n++}`, rand(r) < 0.25 * f.decay && FURNITURE[p].h > 1.2, out, site);
+      // Loot is scarce (M3-36): one room in five has a container worth opening, the first that could be.
+      const loot = 'loot' in FURNITURE[p] && !looted && rand(r) < 0.2;
+      if (loot) looted = true;
+      piece(f, p, at.b, at.face, `b${f.l.id}.${f.k}.${n++}`, rand(r) < 0.25 * f.decay && FURNITURE[p].h > 1.2, loot, out, site);
     }
     clutter(f, m.rect, placed, keep, r, out);
     // Where to look in from: a corner, across to the far one.
@@ -213,7 +219,7 @@ function window(f: Floor, [u0, v0, u1, v1]: Rect): boolean {
 }
 
 /** Build a piece in its box: upright with its front to the room, or knocked over onto its back. */
-function piece(f: Floor, p: Piece, b: Rect, face: [number, number], id: string, fallen: boolean, out: Fabric, site: Site) {
+function piece(f: Floor, p: Piece, b: Rect, face: [number, number], id: string, fallen: boolean, loot: boolean, out: Fabric, site: Site) {
   const P = FURNITURE[p], { y, B, at } = f;
   if (fallen) {
     // On its back, out from the wall the length of its height, a cabinet's worth of mess.
@@ -222,17 +228,19 @@ function piece(f: Floor, p: Piece, b: Rect, face: [number, number], id: string, 
     out.solids.push(B(lb[0], y, lb[1], lb[2], y + P.d, lb[3], P.mat));
     return;
   }
-  out.solids.push(B(b[0], y, b[1], b[2], y + P.h, b[3], P.mat));
+  // (Chairs are in the way to look at, not to collide with.)
+  (p === 'chair' ? out.decor : out.solids).push(B(b[0], y, b[1], b[2], y + P.h, b[3], P.mat));
   if (p === 'wardrobe') {
     const [cx, cz] = at((b[0] + b[2]) / 2, (b[1] + b[3]) / 2), hw = (P.w - 0.1) / 2, hd = (P.d - 0.1) / 2;
     const [nx, nz] = f.alongZ ? [face[1], face[0]] : face;
     // Its space, turned so its doors (the shell's +z) face the room.
     out.hides.push({ id: out.hides.length, kind: 'wardrobe', yaw: Math.atan2(nx, nz), inner: { x0: cx - hw, y0: y + 0.05, z0: cz - hd, x1: cx + hw, y1: y + 1.9, z1: cz + hd } });
   }
-  if (!('zh' in P)) return;
+  // Only a container with loot, and a floor's first bed and table, are there to use.
+  if (!('zh' in P) || ('loot' in P && !loot) || ('use' in P && (P.use === 'mattress' ? site.bed : site.table))) return;
   // The front face, where he reaches in.
   const [fx, fz] = at((b[0] + b[2]) / 2 + face[0] * ((b[2] - b[0]) / 2 + 0.05), (b[1] + b[3]) / 2 + face[1] * ((b[3] - b[1]) / 2 + 0.05));
-  if ('use' in P) { if (P.use === 'mattress') site.bed ??= id; else site.table ??= id; } else site.containers.push(id);
+  if ('use' in P) { if (P.use === 'mattress') site.bed = id; else site.table = id; } else site.containers.push(id);
   out.inter.push('use' in P
     ? { id, kind: P.use, x: fx, y: y + P.h, z: fz, r: 0.8, zh: P.zh, en: P.en }
     : { id, kind: 'container', x: fx, y: y + Math.min(1.0, P.h / 2), z: fz, r: 0.6, zh: P.zh, en: P.en, data: { type: p, loot: P.loot } });
@@ -249,7 +257,7 @@ function table(f: Floor, [u0, v0, u1, v1]: Rect, free: (b: Rect) => boolean, pla
     for (const [su, sv] of [[-0.45, 0.15], [1.0, 0.15], [0.25, -0.45], [0.25, 0.75]]) {
       // Some knocked over.
       if (rand(r) < 0.3 * f.decay) out.decor.push(B(u + su, y, v + sv, u + su + 0.35, y + 0.3, v + sv + 0.6, MAT.wood));
-      else out.solids.push(B(u + su, y, v + sv, u + su + 0.35, y + 0.45, v + sv + 0.35, MAT.wood));
+      else out.decor.push(B(u + su, y, v + sv, u + su + 0.35, y + 0.45, v + sv + 0.35, MAT.wood));
     }
     return true;
   }
@@ -295,7 +303,9 @@ function collapse(f: Floor, [u0, v0, u1, v1]: Rect, free: (b: Rect) => boolean, 
   const hole: Rect = [u + open, v, u + open + s, v + s];
   out.solids.splice(f.from, out.solids.length - f.from, ...carve(out.solids.slice(f.from), B(hole[0], top - SLAB - 0.01, hole[1], hole[2], top + 0.01, hole[3], 0)));
   const [ax, az] = f.at(u, v + 0.1), [bx, bz] = f.at(u + run, v + s - 0.1);
-  out.solids.push(rampSolid(Math.min(ax, bx), y, Math.min(az, bz), Math.max(ax, bx), Math.max(az, bz), y, y + 1.6, f.alongZ ? 3 : 1, MAT.concrete));
+  const slab = rampSolid(Math.min(ax, bx), y, Math.min(az, bz), Math.max(ax, bx), Math.max(az, bz), y, y + 1.6, f.alongZ ? 3 : 1, MAT.concrete);
+  slab.inner = true;
+  out.solids.push(slab);
   for (let i = 0; i < 4; i++) {
     const a = u + rand(r) * (open + s - 0.4), b = v + rand(r) * (s - 0.3), w = 0.2 + rand(r) * 0.4;
     out.decor.push(B(a, y, b, a + w, y + 0.1 + rand(r) * 0.3, b + w, MAT.rubble));
