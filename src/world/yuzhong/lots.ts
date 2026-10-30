@@ -4,7 +4,8 @@
 // street and the slope behind becomes a retaining wall or a buried lower floor.
 import type { Heightfield } from '../heightfield';
 import { GEO } from '../geo';
-import { makeRng, hashString, rand, randInt } from '../../sim/rng';
+import { makeRng, hashString, rand, randInt, type Rng } from '../../sim/rng';
+import { ENVELOPE as E } from '../../data/envelope';
 import { MAT } from '../mats';
 import type { LotKind } from '../city/buildings';
 import { onGround, WATER_Y, streetCells, type Street } from './ground';
@@ -48,6 +49,12 @@ export function districtAt(x: number, z: number): { district: string; cyber: boo
 /** APRON: the gap kept round each lot (half the narrowest alley: obbOverlap pads both); LEVEL: how far round it the ground is levelled, more than a
  *  ground cell's diagonal so its edges never lean on unlevelled ground. */
 const FLOOR = 3, APRON = 0.75, LEVEL = 3;
+/** The gap to the next lot along a row (M3-57, U-023): mostly an alley a standing jump across, one in five a
+ *  running jump (up to its longest), one in ten a wall-run (a billboard spans it, vertical.ts). */
+const rowGap = (r: Rng) => {
+  const k = rand(r);
+  return k < 0.7 ? 1.6 + rand(r) * (E.standingJump.max - 1.65) : k < 0.9 ? 4 + rand(r) * (E.runningJump.max - 4.05) : E.runningJump.max + 1.5 + rand(r) * (E.wallRun.comfortable - E.runningJump.max - 2.5);
+};
 /** How far the street outside may lean from a building's floor for a landing to level it off. */
 const LANDING = 1.2;
 const MAIN = new Set(['trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'living_street', 'service', 'pedestrian']);
@@ -204,6 +211,8 @@ export function planLots(g: Heightfield, sts: Street[], land: Uint8Array, block 
       return [ax + (bx - ax) * f, az + (bz - az) * f];
     };
     for (const side of [1, -1]) {
+      // Towers stand in clusters (M3-57, U-023): after one, the next is often another its height or a floor lower.
+      let tower = 0;
       for (let t = 3 + rand(r) * 2; t < total - 6;) {
         const f = (MAIN.has(s.kind) ? 11 : 7) + rand(r) * (MAIN.has(s.kind) ? 14 : 9);
         if (t + f > total - 2) break;
@@ -222,23 +231,27 @@ export function planLots(g: Heightfield, sts: Street[], land: Uint8Array, block 
         if (ok) {
           const n = plans.length, rr = makeRng(hashString(`lot${n}`)), far = land[cellAt(ok.cx, ok.cz)] === 2;
           const base = edgeHeight(ok, 1, hAt), dist = districtAt(ok.cx, ok.cz);
-          // The crowded centres build up: shops below, offices and flats above; elsewhere walk-ups and the odd slab.
-          const floors = MAIN.has(s.kind) ? 4 + randInt(rr, 8) + (rand(rr) < (dist.cyber ? 0.35 : 0.15) ? 12 + randInt(rr, 14) : 0) : 2 + randInt(rr, 6);
+          // The crowded centres build up (U-023): shops below, offices and flats above, towers among them;
+          // elsewhere walk-ups and slabs.
+          const floors = tower && rand(rr) < 0.7 ? tower - (rand(rr) < 0.4 ? 1 : 0) : MAIN.has(s.kind) ? 5 + randInt(rr, 8) + (rand(rr) < (dist.cyber ? 0.4 : 0.2) ? 12 + randInt(rr, 20) : 0) : 3 + randInt(rr, 7);
           const trad = !far && inShibati(ok.cx, ok.cz), shop = dist.cyber && MAIN.has(s.kind) && rand(rr) < 0.4;
           const own = trad ? tradFloors[side > 0 ? 0 : 1] : floors, fl = own < 13 ? fit(ok, base, own, 2, trad ? 3 : 12, rr) : own;
+          tower = own >= 13 ? own : 0;
           add({ obb: ok, base, wall: base + fl * FLOOR, flex: own < 13 ? [2, trad ? 3 : 12] : undefined, row: `${si}:${side}`, kind: trad ? 'trad' : 'res', mat: trad ? MAT.brick : shop ? MAT.facadeBand : [MAT.tile, MAT.plaster, MAT.tile, MAT.concrete][randInt(rr, 4)], seed: `lot${n}`, street: [false, true, false, false], across: [0, s.w + 3, 0, 0], osm: false, name: '', far, noEnter: shop || undefined, ...dist });
         }
-        t += f + 1.6 + rand(r) * 1.6;
+        t += f + rowGap(r);
       }
     }
   });
-  // A second pass with every neighbour known: a flexible building whose roof no neighbour's is in jumping range of
-  // (either way) rises to the lowest neighbour's roof it can meet (level, or up to a floor above it).
-  const top = (p: Plan) => p.wall + (p.kind === 'trad' ? 2 : 0.6), reach = (a: Plan, b: Plan) => top(a) - top(b) >= -0.5 && top(a) - top(b) <= 4;
+  // A second pass with every neighbour known: a flexible building with no neighbour's roof in jumping range from
+  // its own (a running jump across, a safe drop down) moves to the lowest neighbour's roof it can meet (level, or up
+  // to a floor above it).
+  const top = (p: Plan) => p.wall + (p.kind === 'trad' ? 2 : 0.6), reach = (a: Plan, b: Plan) => top(a) - top(b) >= -0.5 && top(a) - top(b) <= E.safeDrop.max;
+  // (Shibati's terraces keep the height they share a side.)
   for (let pass = 0; pass < 3; pass++) for (const a of plans) {
-    if (!a.flex || a.far) continue;
-    const [x0, z0, x1, z1] = bounds(a.obb, 4), nbs = [...placed.near(x0, z0, x1, z1)].filter(b => b !== a && !b.far && b.kind !== 'tower' && obbOverlap(a.obb, b.obb, 2) && !obbOverlap(a.obb, b.obb, 0.25));
-    if (!nbs.length || nbs.some(b => reach(a, b) || reach(b, a))) continue;
+    if (!a.flex || a.far || a.kind === 'trad') continue;
+    const [x0, z0, x1, z1] = bounds(a.obb, 7), nbs = [...placed.near(x0, z0, x1, z1)].filter(b => b !== a && !b.far && b.kind !== 'tower' && obbOverlap(a.obb, b.obb, E.runningJump.comfortable / 2) && !obbOverlap(a.obb, b.obb, 0.25));
+    if (!nbs.length || nbs.some(b => reach(a, b))) continue;
     for (const b of nbs.sort((p, q) => top(p) - top(q))) {
       const f = Math.ceil((top(b) - 0.5 - (top(a) - a.wall) - a.base) / FLOOR);
       if (f >= a.flex[0] && f <= a.flex[1]) { a.wall = a.base + f * FLOOR; break; }

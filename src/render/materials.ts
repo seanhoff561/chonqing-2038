@@ -41,7 +41,26 @@ function cracks(g: CanvasRenderingContext2D, w: number, h: number, seed: number,
   }
 }
 
+/** An advertising screen (M3-57): panels of the city's last campaigns and the machines' own, in magenta, cyan
+ *  and amber on black, big characters, scanlines. 8 m a repeat. */
+const drawScreen: Draw = (g, w, h) => {
+  const r = mulberry(291), cols = [['#ff2f8f', '#5a0a3a'], ['#2fe0ff', '#06304a'], ['#ffb02f', '#4a2a06'], ['#9a5cff', '#1c0a4a']];
+  g.fillStyle = '#05040a'; g.fillRect(0, 0, w, h);
+  const words = ['未来', '智能', '云城', '重庆', '新生活', '机器', '2038', '光'];
+  for (let i = 0; i < 4; i++) {
+    const x = (i % 2) * w / 2 + 6, y = Math.floor(i / 2) * h / 2 + 6, pw = w / 2 - 12, ph = h / 2 - 12, [a, b] = cols[Math.floor(r() * cols.length)];
+    const grd = g.createLinearGradient(x, y, x + pw, y + ph);
+    grd.addColorStop(0, a); grd.addColorStop(1, b);
+    g.fillStyle = grd; g.fillRect(x, y, pw, ph);
+    g.fillStyle = 'rgba(255,255,255,0.9)'; g.font = `bold ${Math.floor(ph * 0.42)}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(words[Math.floor(r() * words.length)], x + pw / 2, y + ph * 0.45);
+    g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillRect(x, y + ph * 0.78, pw, ph * 0.1);
+  }
+  g.fillStyle = 'rgba(0,0,0,0.25)'; for (let y = 0; y < h; y += 4) g.fillRect(0, y, w, 1);
+};
+
 const draws: Record<number, [Draw, number]> = {
+  [MAT.screen]: [drawScreen, 8],
   [MAT.concrete]: [(g, w, h) => {
     noise(g, w, h, '#8a867d', 0.16, 1);
     blotches(g, w, h, 101, 30, '50,46,40', 0.18, 20, 90); blotches(g, w, h, 102, 15, '225,220,205', 0.12, 20, 70);
@@ -155,6 +174,10 @@ export function material(id: number, vc = false, lod: Lod = 'all'): THREE.MeshPh
   if (id === MAT.lamp || id === MAT.glare) {
     const cold = id === MAT.glare;
     m = new THREE.MeshPhongMaterial({ color: cold ? 0xe8f2ff : 0xfff1c0, emissive: cold ? 0xc4ddff : 0xffd890, emissiveIntensity: 1.2, vertexColors: vc });
+    lodCut(m, lod);
+  } else if (id === MAT.screen) {
+    const tex = canvasTexture(`mat${id}`, 512, 512, drawScreen);
+    m = new THREE.MeshPhongMaterial({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.85, vertexColors: vc, ...DRY });
     lodCut(m, lod);
   } else if (isFacade(id)) {
     const map = canvasTexture(`facade${id}`, 1024, 1024, (g, w) => drawFacade(id, g, w));

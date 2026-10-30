@@ -10,6 +10,7 @@ import { minRect, obbOverlap, corners, inside, type Obb } from '../../src/world/
 import { districtAt } from '../../src/world/yuzhong/lots';
 import { run } from './helpers';
 import { B } from '../../src/sim/types';
+import { ENVELOPE as E } from '../../src/data/envelope';
 import type { Plot } from '../../src/world/world';
 
 const w = getWorld('yuzhong');
@@ -33,8 +34,9 @@ describe('buildings and rooftops (M3-03)', () => {
     expect(w.features.filter(f => ['crate', 'dumpster', 'bar', 'fence'].includes(f.kind)).length).toBeGreaterThan(200);
     expect(w.props.filter(p => p.kind === 'stilts').length).toBeGreaterThan(100);
   });
-  it('neighbouring roofs are often within jumping range (4 m across, no more than 4 m down)', () => {
-    const jumpable = low.filter(a => low.some(b => b !== a && near(a, b, 4) && !near(a, b, 0.5) && a.top - b.top >= -0.5 && a.top - b.top <= 4));
+  // Jumping range from the movement envelope (M3-50): a running jump across, a safe drop down.
+  it('neighbouring roofs are often within jumping range (a running jump across, a safe drop down)', () => {
+    const jumpable = low.filter(a => low.some(b => b !== a && near(a, b, E.runningJump.comfortable) && !near(a, b, 0.5) && a.top - b.top >= -0.5 && a.top - b.top <= E.safeDrop.max));
     expect(jumpable.length / low.length).toBeGreaterThan(0.5);
   });
   it('runs a rooftop route across four buildings in Shibati', { timeout: 60000 }, () => {

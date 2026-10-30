@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 50 of 66 done
+## M3: 51 of 66 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -457,7 +457,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Screenshots looking down from three vantage points
 - [x] **M3-57b** The factory at Chaotianmen (U-030)
   - The factory (U-030, D-020): Raffles City at Chaotianmen is where the machines are made, lit all night and guarded, its output marching onto the roads
-- [ ] **M3-57** The vertical city: packed, stacked and bridged (U-023, U-024)
+- [x] **M3-57** The vertical city: packed, stacked and bridged (U-023, U-024)
   - Many more and much taller buildings, packed side by side in clusters a running jump or a wall-run apart; buildings stacked and bridging over each other and over the lanes (skybridges, a block built across a street, Chongqing's street-on-the-roof levels with entrances on many floors); futuristic megastructures (U-024)
   - Gaps between packed buildings sized from the envelope (a running jump or a wall-run, some at its maximum); a unit test measures them
   - Screenshots of a skybridge, a block over a lane and a street-on-the-roof level
