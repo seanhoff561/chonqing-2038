@@ -55,7 +55,9 @@ export function buildYuzhong(): World {
     { name: 'Grand Tunnel entrance', x: tun.at.entrance.x, y: tun.at.entrance.y + 0.05, z: tun.at.entrance.z, yaw: Math.PI / 2 - tun.frame.yaw },
     { name: 'Grand Tunnel exit', x: tun.at.exit.x, y: tun.at.exit.y + 0.05, z: tun.at.exit.z, yaw: 0 },
     { name: 'Line 2 stalled train', x: line.train.x, y: line.train.top + 0.45, z: line.train.z, yaw: Math.PI / 2 - line.train.yaw },
-  ], metro.at.map(m => ({ name: `Metro ${m.name}`, x: m.x, y: hAt(g, m.x, m.z) + 1.5, z: m.z, yaw: 0 })), site ? [
+  ], metro.at.map(m => ({ name: `Metro ${m.name}`, x: m.x, y: hAt(g, m.x, m.z) + 1.5, z: m.z, yaw: 0 })),
+  // Vantage ledges high on the towers (M3-57a), looking out.
+  out.features.filter(f => f.kind === 'vantage').map((f, n) => ({ name: `Vantage ${n + 1}`, x: f.x, y: f.y + 1.6, z: f.z, yaw: Math.atan2(-f.nx!, -f.nz!) })), site ? [
     { name: 'Construction site', x: site.frame.x, y: site.base + 0.05, z: site.frame.z, yaw: 0 },
     { name: 'Construction site crane', x: site.crane.x, y: site.crane.top + 2.55, z: site.crane.z, yaw: 0 },
   ] : []);
@@ -172,7 +174,7 @@ function place(f: Fabric, o: Obb, prefix: string, out: Fabric): (x: number, z: n
     return { ...h, id: out.hides.length + n, inner: { ...b, x0: x - hw, z0: z - hd, x1: x + hw, z1: z + hd }, yaw: (h.yaw ?? 0) - o.yaw };
   }));
   out.sites.push(...f.sites.map((q): Site => { const [x, z] = pt(q.x, q.z); return { ...q, id: `${prefix}-${q.id}`, x, z, bed: q.bed && `${prefix}-${q.bed}`, table: q.table && `${prefix}-${q.table}`, containers: q.containers.map(id => `${prefix}-${id}`) }; }));
-  out.features.push(...f.features.map(q => { const [x, z] = pt(q.x, q.z); return { ...q, x, z, group: out.features.length + q.group }; }));
+  out.features.push(...f.features.map(q => { const [x, z] = pt(q.x, q.z); return { ...q, x, z, group: out.features.length + q.group, ...(q.nx !== undefined ? { nx: c * q.nx - s * q.nz!, nz: s * q.nx + c * q.nz! } : {}) }; }));
   return pt;
 }
 

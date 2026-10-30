@@ -167,6 +167,8 @@ export function stepGrip(s: SimState, world: World, input: InputFrame) {
     if (-(hx * nx + hz * nz) > 0.3 || p.pitch > M.wallKick.upPitch) {
       p.vel.y = G.dynoUp * Math.sqrt(L.jumpScale);
       p.vel.x = -nx * 0.3; p.vel.z = -nz * 0.3;
+      // Leg-driven: letting go of Space doesn't cut it short (a jump-grab made with Space held left that set).
+      p.jumpHeld = false;
       sfx(s, 'dyno');
     } else kickOff(s, nx, nz);
     s.events.push({ t: 'noise', x: p.pos.x, y: p.pos.y, z: p.pos.z, r: M.noise.vault, kind: 'dyno' });

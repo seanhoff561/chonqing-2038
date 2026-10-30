@@ -37,7 +37,7 @@ export interface Zone { kind: string; box: Box }
 export interface StreetLine { kind: string; w: number; steps: boolean; pts: [number, number][] }
 
 /** A hold, hide spot or alley piece: one group per hand-route column. */
-export interface Feature { kind: string; x: number; y: number; z: number; group: number }
+export interface Feature { kind: string; x: number; y: number; z: number; group: number; /** out of the wall it's on */ nx?: number; nz?: number }
 
 /** A built lot as laid out on the map (Yuzhong): its corners, base and walking route, for tests and tools. */
 export interface Plot { corners: [number, number][]; base: number; wall: number; /** roof top (ridge or parapet) */ top: number; kind: string; /** its infill row, if any */ row?: string; /** foundation bottom */ found: number; route?: { x: number; y: number; z: number }[]; far: boolean; osm: boolean }

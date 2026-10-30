@@ -10,7 +10,7 @@ import { ENVELOPE as E } from '../../data/envelope';
 
 const FLOOR = 3;
 
-interface Side { a: number; b: number; f: number; nx: number; nz: number; street: boolean; across: number }
+export interface Side { a: number; b: number; f: number; nx: number; nz: number; street: boolean; across: number }
 
 /** The four facades: along a..b, face at f, outward normal, whether a street lies beyond and how far across it
  *  the next building stands (0 for none). */
@@ -24,9 +24,9 @@ export function sides(l: Lot): Side[] {
 }
 
 /** A box on a facade: c0..c1 along it, d0..d1 out from the face. */
-const onFace = (s: Side, c0: number, c1: number, d0: number, d1: number, y0: number, y1: number, mat: number) =>
+export const onFace = (s: Side, c0: number, c1: number, d0: number, d1: number, y0: number, y1: number, mat: number) =>
   s.nz !== 0 ? solid(c0, y0, s.f + s.nz * d0, c1, y1, s.f + s.nz * d1, mat) : solid(s.f + s.nx * d0, y0, c0, s.f + s.nx * d1, y1, c1, mat);
-const faceXZ = (s: Side, c: number, d: number) => (s.nz !== 0 ? { x: c, z: s.f + s.nz * d } : { x: s.f + s.nx * d, z: c });
+export const faceXZ = (s: Side, c: number, d: number) => (s.nz !== 0 ? { x: c, z: s.f + s.nz * d } : { x: s.f + s.nx * d, z: c });
 
 export function facades(l: Lot, r: Rng, out: Fabric) {
   if (l.kind === 'tower') return;
