@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-68 The underground reworked (U-032).
-Features done: 120 / 277 | Last done: M3-67
+**Status:** building M3. Now: M3-68 The underground reworked (U-032); then M3-66 reopened by U-034, the U-034 quick fixes (pipes, no natural ziplines) first.
+Features done: 119 / 278 | Last done: M3-67
 <!-- /status -->
 
 ## Log
@@ -139,3 +139,4 @@ Features done: 120 / 277 | Last done: M3-67
 - M3-66 The layered city, filled with buildings (U-032, U-033): the layered city filled with buildings: taller rows, back buildings in bands, vertical alleys, bridges, beams, scaffolding, real parks only, door paths
 - M3-67 Climbing reworked (U-032): climbing reworked: bare ground floors, scarce scattered holds, street poles, tower lines from poles, crossing lines from lower roofs
 - CI: the site deploys every build that compiles, tests in their own job (the M3-57/58/66/67 deploys had failed on time limits); U-034 withdrawn by the director pending their testing.
+- U-034 logged (playtest of M3-67): M3-66 reopened, M3-36 and M3-37 amended, M5-33 player-set ziplines added, Q-008 asked.

@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 57 of 76 done
+## M3: 56 of 76 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -481,10 +481,13 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Every ladder has something behind it (a wall or its own frame) so he can climb it; a unit test climbs one of each kind
   - The red and blue plastic stools are gone
   - Interact and sleep are on F (E and Q free for leaning, M4-21); prompts and the help say so
-- [x] **M3-66** The layered city, filled with buildings (U-032, U-033)
+- [ ] **M3-66** The layered city, filled with buildings, evened (U-032, U-033, U-034)
   - Everything purposeful (U-033): M3-60's grid-cell parks, plazas and parking lots replaced; the open ground filled with buildings (blocks, low layers, fillers) right up to each other and the streets; green only in the few real parks, laid inside their real outlines; what open ground is left is hardscape shaped to the buildings and streets round it (paving to the building lines, forecourts, steps, a parking court between buildings) with its walkways running from somewhere to somewhere (street to entrance, street to stair) like the roads; nothing on the cell grid, nothing jagged or repeated
   - Short and medium buildings about twice as tall; between them half-height layers (low blocks, decks, scaffolding, platforms) and short fillers as low as today's short ones, so the city stands in layers to be crossed by parkour; bridges between buildings, beams sticking out, vertical alleys (narrow slots between tall walls to climb or wall-run up)
   - A unit test measures the layers (heights spread across bands) and the vertical alleys; screenshots
+  - U-034: the shorter buildings beside tall ones 60-80% of their height and no building far over the ones round it (a test bounds each building's height against its neighbours'); many more low fillers in the open ground and the small parks left
+  - U-034: Shibati's old houses rebuilt as apartment blocks like the rest of the city; the banded "parking garage" facades gone (Q-008)
+  - U-034: megastructures only low over roofs of near one height, on thick columns (a test bounds their columns' height and thickness)
 - [x] **M3-67** Climbing reworked (U-032)
   - No building can be climbed to its top by itself: its holds (vents, sills, short ladders, pipes, beams) are scarce and scattered, ground floors bare; reaching a roof takes crossing from other buildings and things beside them (climbable street poles, kiosks, walls, scaffolding) using the whole envelope (wall-runs, kicks, long jumps, items)
   - A unit test finds no building whose own holds chain from the ground to its roof, and a bot reaches three roofs over 20 m by crossing from others
@@ -529,12 +532,15 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Generic pipes, ladders and hold columns are removed; climbables appear only where a template or route places them
   - Loot is scarce: a few containers per open building, most rooms empty or picked over
   - Sim tests take one way into each template and find the locked alternatives refuse him
+  - U-034 procedural insides and connections: each building a number of enterable windows by its size, into rooms, stairs up to more rooms; most of it locked or collapsed, a few rooms per building open, each with a window to it (broken in, to break, locked or barred); from some windows a makeshift beam bridge to a building nearby or a short fire escape; ground doors sometimes to an unlocked stairwell; roof doors locked but breakable; walkways joining buildings to cross over
+  - U-034 windows: fewer and bigger (real sizes), spread out, real openings with frames and glass close up (painted far off)
 - [ ] **M3-37** The ant-hill route network (U-014, U-021, U-023)
   - Hand-designed main routes like highways across the district over roofs, through buildings, along beams and through tunnels, carrying the sites and key supplies needed to finish the game; branching neighbourhood routes off them; streets are the dangerous shortcut
   - Every gap, height and reach on a route is within the movement envelope (M3-50) and near its top (U-023): main routes demand the full movement set (chained wall kicks, a back-jump to a grab, wall-runs, swings and laches, item tricks), risky branches sit at the maximum; nothing on a route is a walk
   - A readable visual language: planks, open windows, broken railings and worn paths mark the way; dead ends read as dead ends
   - Route and patrol data: the routes as graphs, patrols laid against them; a patrol route and a drone corridor pass over the start hideout's vent grate at night (U-018)
   - A bot walks each main route end to end; screenshots of three junctions
+  - U-034 street crossings: the streets are where the city stops for parkour, so that's where the crossings are: makeshift bridges and planks, beams, cables to hang from, blocks built over the street; generated ziplines gone (M5-33 makes them the player's)
 - [ ] **M3-38** Interiors with variety (U-014)
   - Room templates (flats, stairwells, corridors, shops, restaurants, offices, workshops) furnished from a furniture and clutter set in states of decay: collapsed ceilings, debris, water damage, overturned furniture
   - Several variants per template so rooms rarely repeat; references from docs/reference interiors
@@ -691,7 +697,7 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
   - Rooftop searchlights sweep at night, adding full light inside their cone; on contact they converge on the last known position
   - A sim test covers sweep and convergence
 
-## M5: 0 of 33 done
+## M5: 0 of 34 done
 
 M5 Anna and tech: the laptop interface, scanning, food checks, the auto-map and patrol logs, hacking cameras and drones, jamming, crafting at the workbench, healing items, weapons, and the full item set.
 
@@ -797,6 +803,10 @@ M5 Anna and tech: the laptop interface, scanning, food checks, the auto-map and 
 - [ ] **M5-32** Anna's remarks
   - Anna remarks (subtitled dialogue lines) on scans, injuries, low battery, nearby drones with the SDR, and tags
   - A unit test checks every trigger maps to an existing dialogue id
+- [ ] **M5-33** Player-set ziplines (U-034)
+  - No zipline spawns on its own; a zipline kit (cable, clamps, a trolley) is found as loot and strung by him between two anchors in reach of each other and in line of sight (masts, poles, railings, a roof's edge), sloping down, then ridden as M3-52's lines are
+  - He can take it down and carry it on; it weighs and takes space like any item; machines that see a strung line investigate it
+  - A sim test strings one across a street between two roofs and rides it
 
 ## M6: 0 of 27 done
 
