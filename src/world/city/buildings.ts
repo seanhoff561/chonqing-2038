@@ -68,7 +68,7 @@ function mass(l: Lot, r: Rng, out: Fabric) {
   const look = open ? (l.mat === MAT.tile ? MAT.facadeTile : MAT.facade) : paint(l, r);
   // Some tall solid blocks step their top two floors back from the edge.
   const step = !open && !l.climb && !l.edge && l.kind === 'res' && wall - base >= 24 && rand(r) < 0.25 ? 1.6 : 0;
-  if (open) hollow(l, r, out);
+  if (open) hollow(l, r, out, look);
   else if (step) out.solids.push(solid(x0, base, z0, x1, wall - 2 * FLOOR, z1, look), solid(x0 + step, wall - 2 * FLOOR, z0 + step, x1 - step, wall, z1 - step, look));
   else out.solids.push(solid(x0, base, z0, x1, wall, z1, look));
   // The far view's stand-in: the whole block in its painted facade, parapet included.

@@ -254,7 +254,8 @@ function place(f: Fabric, o: Obb, prefix: string, out: Fabric): (x: number, z: n
   out.solids.push(...turn(f.solids, o.yaw, o.cx, o.cz));
   out.decor.push(...turn(f.decor, o.yaw, o.cx, o.cz));
   out.far.push(...turn(f.far, o.yaw, o.cx, o.cz));
-  out.props.push(...f.props.map((q): Prop => { const [x, z] = pt(q.x, q.z); return { ...q, x, z, yaw: q.yaw - o.yaw }; }));
+  // (A door's or window's prop names its interactable, prefixed as the interactables are.)
+  out.props.push(...f.props.map((q): Prop => { const [x, z] = pt(q.x, q.z); return { ...q, x, z, yaw: q.yaw - o.yaw, ...(q.kind === 'door' || q.kind === 'pane' ? { text: `${prefix}-${q.text}` } : {}) }; }));
   out.inter.push(...f.inter.map((q): Inter => { const [x, z] = pt(q.x, q.z); return { ...q, id: `${prefix}-${q.id}`, x, z }; }));
   out.climbables.push(...f.climbables.map((q): Climbable => { const [x, z] = pt(q.x, q.z); return { ...q, x, z, nx: c * q.nx - s * q.nz, nz: s * q.nx + c * q.nz }; }));
   // A hiding place keeps its size, moved and turned with the rest (M3-47).

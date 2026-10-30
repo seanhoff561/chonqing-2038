@@ -1,6 +1,6 @@
 // Building fronts in 2038 (M3-55, U-022, U-024): what makes a painted block read as a building. Its street face
 // gets a way in: a shopfront (glass, a shutter half down, an awning, a signboard) or a door with its frame and
-// canopy; an enterable block's door hangs open with light behind it. Floor bands run across the walls; on the
+// canopy; an enterable block's street door gets a frame, a canopy and a light. Floor bands run across the walls; on the
 // lower floors Chongqing's window cages and AC units sit at the windows the facade paints (whole bays from the
 // corner, the style's sill height). Some old blocks wear a new skin: metal panels with ribbon windows over
 // their upper floors; some carry their top floors cantilevered out over the street. Decor, from its own stream,
@@ -49,12 +49,12 @@ export function fronts(l: Lot, look: number, open: boolean, stepped: boolean, ou
   }
   // The way in on the street face.
   const len = front.b - front.a, mid = (front.a + front.b) / 2;
-  if (open) {
-    // The real door is in the wall at the route's start: a frame, a canopy, the leaf hanging open, light inside.
-    const door = l.route![0], at = all.reduce((a, s) => (Math.abs((s.nz !== 0 ? door.z : door.x) - s.f) < Math.abs((a.nz !== 0 ? door.z : door.x) - a.f) ? s : a));
+  if (open && l.route) {
+    // The real door (M3-36: a leaf of its own) is in the wall at the route's start: a frame, a canopy, a light.
+    const door = l.route[0], at = all.reduce((a, s) => (Math.abs((s.nz !== 0 ? door.z : door.x) - s.f) < Math.abs((a.nz !== 0 ? door.z : door.x) - a.f) ? s : a));
     const c = at.nz !== 0 ? door.x : door.z;
     out.decor.push(onFace(at, c - 0.85, c - 0.7, 0, 0.12, b0, b0 + 2.35, MAT.concrete), onFace(at, c + 0.7, c + 0.85, 0, 0.12, b0, b0 + 2.35, MAT.concrete),
-      onFace(at, c + 0.62, c + 0.68, 0.05, 1.15, b0, b0 + 2.1, MAT.tealMetal), onFace(at, c - 0.5, c + 0.5, -0.7, -0.6, b0 + 2.15, b0 + 2.25, MAT.lamp));
+      onFace(at, c - 0.5, c + 0.5, -0.7, -0.6, b0 + 2.15, b0 + 2.25, MAT.lamp));
     out.solids.push(onFace(at, c - 1.2, c + 1.2, 0, 1.0, b0 + 2.6, b0 + 2.75, MAT.concrete));
   } else if (shop && len > 4) {
     // A shopfront: glass between the end piers, a shutter half down here and there, an awning, a signboard.

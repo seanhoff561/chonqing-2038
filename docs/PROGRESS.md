@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-36 Building access by design (U-014, U-037).
-Features done: 125 / 283 | Last done: M3-70
+**Status:** building M3. Next: M3-75 three.js r187 (U-041).
+Features done: 126 / 285 | Last done: M3-36
 <!-- /status -->
 
 ## Log
@@ -73,3 +73,4 @@ Features done: 125 / 283 | Last done: M3-70
 - M3-66 The layered city, filled with buildings, evened (U-032, U-033, U-034): heights with variety beside the tall ones, more low fillers (parks kept), Shibati apartments, megastructures low on thick columns (U-034, U-037)
 - M3-38 Interiors with variety (U-014): rooms round the stair core: templates and variants, furnished and decayed; scarce loot; looked-at search by cell; rooms drawn near only
 - M3-70 Walkable slopes (U-038): ground walkable up to about 72 degrees, slower uphill past stair steepness (U-038)
+- M3-36 Buildings as puzzles (U-014, U-037, U-040): buildings as puzzles: a few small rooms carved into each block, eight templates, locked doors, vents, holes, breakable windows (U-040)

@@ -50,7 +50,8 @@ export function pushSolid(s: Solid, b: Buf, roof: Buf = b, ao: number[] = OPEN) 
     return;
   }
   const sc = 1 / texScale(s.mat), facade = isFacade(s.mat), rsc = facade ? 1 / texScale(MAT.concrete) : sc;
-  const h = hash(s.x0, s.z0, s.mat), h2 = hash(s.z1, s.x1, s.mat + 31);
+  // (A block carved into pieces paints as the block it was: the same offsets, its bays counted from its corners.)
+  const o0 = s.orig ?? s, h = hash(o0.x0, o0.z0, s.mat), h2 = hash(o0.z1, o0.x1, s.mat + 31);
   const bay = FACADE_BAY;
   const ou = facade ? Math.floor(h * 4) * bay : 0, ov = facade ? Math.floor(h2 * 4) * bay : 0;
   // Per-building tint: brightness and a slight warm or cool cast, times the building's colour (M3-46).
@@ -90,17 +91,17 @@ export function pushSolid(s: Solid, b: Buf, roof: Buf = b, ao: number[] = OPEN) 
   // Sides: u runs left to right as seen from outside; facades count from the building's corner.
   // Whole bays across each wall, so no window is cut at a corner.
   const fit = (len: number) => (Math.max(1, Math.round(len / bay)) * bay) / len;
-  const kx = fit(s.x1 - s.x0), kz = fit(s.z1 - s.z0);
+  const kx = fit(o0.x1 - o0.x0), kz = fit(o0.z1 - o0.z0);
   const U = (w: number, from: number, back: boolean, k: number) => (facade ? (back ? from - w : w - from) * k + ou : back ? -w : w);
-  const V = (y: number) => (facade ? y - y0 + ov : y);
+  const V = (y: number) => (facade ? y - o0.y0 + ov : y);
   quad([[x0, y0, z1], [x1, y0, z1], [x1, h11, z1], [x0, h01, z1]], [0, 0, 1],
-    [[U(x0, x0, false, kx), V(y0)], [U(x1, x0, false, kx), V(y0)], [U(x1, x0, false, kx), V(h11)], [U(x0, x0, false, kx), V(h01)]], true, ao[0]);
+    [[U(x0, o0.x0, false, kx), V(y0)], [U(x1, o0.x0, false, kx), V(y0)], [U(x1, o0.x0, false, kx), V(h11)], [U(x0, o0.x0, false, kx), V(h01)]], true, ao[0]);
   quad([[x1, y0, z0], [x0, y0, z0], [x0, h00, z0], [x1, h10, z0]], [0, 0, -1],
-    [[U(x1, x1, true, kx), V(y0)], [U(x0, x1, true, kx), V(y0)], [U(x0, x1, true, kx), V(h00)], [U(x1, x1, true, kx), V(h10)]], true, ao[1]);
+    [[U(x1, o0.x1, true, kx), V(y0)], [U(x0, o0.x1, true, kx), V(y0)], [U(x0, o0.x1, true, kx), V(h00)], [U(x1, o0.x1, true, kx), V(h10)]], true, ao[1]);
   quad([[x1, y0, z1], [x1, y0, z0], [x1, h10, z0], [x1, h11, z1]], [1, 0, 0],
-    [[U(z1, z1, true, kz), V(y0)], [U(z0, z1, true, kz), V(y0)], [U(z0, z1, true, kz), V(h10)], [U(z1, z1, true, kz), V(h11)]], true, ao[2]);
+    [[U(z1, o0.z1, true, kz), V(y0)], [U(z0, o0.z1, true, kz), V(y0)], [U(z0, o0.z1, true, kz), V(h10)], [U(z1, o0.z1, true, kz), V(h11)]], true, ao[2]);
   quad([[x0, y0, z0], [x0, y0, z1], [x0, h01, z1], [x0, h00, z0]], [-1, 0, 0],
-    [[U(z0, z0, false, kz), V(y0)], [U(z1, z0, false, kz), V(y0)], [U(z1, z0, false, kz), V(h01)], [U(z0, z0, false, kz), V(h00)]], true, ao[3]);
+    [[U(z0, o0.z0, false, kz), V(y0)], [U(z1, o0.z0, false, kz), V(y0)], [U(z1, o0.z0, false, kz), V(h01)], [U(z0, o0.z0, false, kz), V(h00)]], true, ao[3]);
 }
 
 /** Chunk meshes, each tagged with its chunk centre for distance culling. */

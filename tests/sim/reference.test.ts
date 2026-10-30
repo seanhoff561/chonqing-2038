@@ -6,6 +6,7 @@ import { run } from './helpers';
 import { teleport } from '../../src/sim/player';
 import { B, type SimState } from '../../src/sim/types';
 import type { World } from '../../src/world/world';
+import { syncWorld } from '../../src/sim/doors';
 
 const parts = referenceParts();
 const block = (id: string) => parts.blocks.find(b => b.id === id)!;
@@ -26,7 +27,8 @@ function follow(s: SimState, w: World, pts: { x: number; z: number }[]): boolean
 describe('reference hillside (M3-23)', () => {
   it('has climbable facades and enterable blocks with containers', () => {
     expect(parts.climbables.length).toBeGreaterThan(5);
-    expect(parts.inter.filter(i => i.kind === 'container').length).toBeGreaterThan(5);
+    // (Loot is scarce, M3-36: a container in one room in five.)
+    expect(parts.inter.filter(i => i.kind === 'container').length).toBeGreaterThan(0);
     expect(parts.blocks.filter(b => b.lot?.route).length).toBeGreaterThanOrEqual(3);
   });
   it('runs a rooftop route across three brick low-rises', () => {
@@ -50,6 +52,9 @@ describe('reference hillside (M3-23)', () => {
     const w = getWorld('reference'), s = createState(1, w);
     expect(s.player.pos.y).toBeGreaterThan(32.9);
     const down = [...block('V').lot!.route!].reverse();
+    // (Its roof and street doors locked, M3-36: opened for the walk.)
+    for (const it of w.inter) if (it.kind === 'door' && down.some(q => Math.hypot(q.x - it.x, q.z - it.z) < 2.5 && Math.abs(q.y + 1.1 - it.y) < 1.5)) s.wstate.open[it.id] = true;
+    syncWorld(s, w);
     teleport(s.player, down[0].x, down[0].y + 0.05, down[0].z);
     run(s, w, 10);
     expect(follow(s, w, down.slice(1))).toBe(true);

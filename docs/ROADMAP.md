@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 62 of 81 done
+## M3: 63 of 83 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -407,15 +407,26 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Ground walkable and runnable up to near-wall-like faces (about 72 degrees); only steeper faces act as walls he slides off (replaces U-020's 45 degrees)
   - Uphill he's slower the steeper it is; downhill and across unchanged
   - Sim tests: he walks up a 60 degree ramp (slower than on the flat) and not up an 80 degree one; the envelope and movement tests still pass
-- [ ] **M3-36** Building access by design (U-014, U-037)
+- [x] **M3-36** Buildings as puzzles (U-014, U-037, U-040)
+  - U-040: an enterable building is solid but for a few small rooms carved into it, only those built; each room one to three ways in (a window, a door, a hole in the floor or ceiling, a short stair); a set of building templates mixed so each building is its own maze; the main stairwell, where there is one, locked off from most rooms, some rooms never reaching it; stairs wherever a template puts them, ways blocked by rubble and locks, holes in floors and crawl vents to get round; rarely the whole building from one way in (U-040)
   - Procedural building insides in several variations each: most doors locked or jammed, stair doors chained, only a few rooms open, the rest collapsed or blocked; ways in like a window off a neighbour's roof, a hole in a floor, a balcony to crawl along, a fire door opened from inside
   - U-037: the city's holds stay as they are; ways in are designed around rooms, windows and insides rather than added holds, and holds are taken away only round places meant to be reached one designed way
   - Loot is scarce: a few containers per open building, most rooms empty or picked over
   - Unit tests check the insides' data (rooms, open windows, locks per building) and that a locked door or barred window refuses him; whether each way in plays well is for the director (U-037: no tests that a way is possible)
-  - U-034 procedural insides and connections: each building a number of enterable windows by its size, into rooms, stairs up to more rooms; most of it locked or collapsed, a few rooms per building open, each with a window to it (broken in, to break, locked or barred); from some windows a makeshift beam bridge to a building nearby or a short fire escape; ground doors sometimes to an unlocked stairwell; roof doors locked but breakable; walkways joining buildings to cross over
   - U-034 windows: fewer and bigger (real sizes), spread out, real openings with frames and glass close up (painted far off)
-  - U-034, Q-008: the open shells (every floor open round a stair core, empty, like a car park) are gone, replaced by these insides
   - U-035: sills only under real windows; some buildings with a ledge running all the way round to traverse on
+  - U-034, Q-008, U-040: no open shells and no fully partitioned floors: the few rooms are the building's inside
+  - U-034 procedural insides: enterable windows by size into rooms, stairs to more rooms, most of it locked or collapsed, a few rooms open each with a window (broken in, to break, locked or barred); short fire escapes from windows; ground doors sometimes to an unlocked stairwell; roof doors locked but breakable (beam bridges and walkways: M3-37)
+- [ ] **M3-75** three.js r187 (U-041)
+  - three upgraded from r186 to r187; nothing uses what r187 removed (deprecated since r177); all tests and the smoke tests pass
+  - Shadow maps redrawn only when the sun has moved enough or the world changed (r187: shadows render only when flagged), measured as less frame CPU on the perf views
+  - Clustered lighting tried for the many small lights (street lamps, neon, the headlamp): used where it holds the draw-call and frame budgets, else noted with numbers in DECISIONS
+  - Light-probe grids tried for indirect light inside rooms (for M3-74): used if they read better within budget, else noted
+- [ ] **M3-74** Detailed, realistic rooms and props (U-040)
+  - Furniture and clutter modelled in detail, not boxes: beds with frames, mattresses, pillows and sheets; tables and chairs on legs; cabinets, drawers and wardrobes with doors, drawers and handles; fridges, stoves, sinks and counters; sofas with cushions; shelves with books and things on them; shop racks with goods, restaurant fittings, office desks and screens, workshop benches and tools
+  - Room surfaces that read as real: skirting, tiles, wallpaper or paint peeling, ceiling lights, doors with frames, window frames with glass
+  - Decay detailed to match: broken furniture, scattered papers and clothes, dust, stains
+  - Within the triangle and draw-call budgets (rooms drawn near only); screenshots of five rooms close up
 - [ ] **M3-37** The ant-hill route network (U-014, U-021, U-023)
   - Hand-designed main routes like highways across the district over roofs, through buildings, along beams and through tunnels, carrying the sites and key supplies needed to finish the game; branching neighbourhood routes off them; streets are the dangerous shortcut; organic, the whole map playing like a skatepark, the ways made of rooms, windows and insides rather than added holds (U-037)
   - Every gap, height and reach on a route is within the movement envelope (M3-50) and near its top (U-023): main routes demand the full movement set (chained wall kicks, a back-jump to a grab, wall-runs, swings and laches, item tricks), risky branches sit at the maximum; nothing on a route is a walk
@@ -425,6 +436,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - U-034 street crossings: the streets are where the city stops for parkour, so that's where the crossings are: makeshift bridges and planks, beams, cables to hang from, blocks built over the street; generated ziplines gone (M5-33 makes them the player's)
   - U-034 thick electrical cords: cable bundles thick enough to walk across, sagging between buildings close together (relatively common), a balance walk along their curve; they sway and can hold his weight
   - U-035: the cords dressed to look dystopian, junk hanging off them (cables, rags, shoes, lamps, signs); bars across the gap wherever two buildings stand close together
+  - Moved from M3-36 (it needs the neighbours): from some windows a makeshift beam bridge to a building nearby; walkways joining buildings to cross over (U-034)
 - [ ] **M3-71** Tight ways at ground level (U-038)
   - Between buildings, through large areas of collapsed buildings and structures and through building insides: maze-like gaps, holes, crawlspaces and squeezes to find a way through, dark enough to need the headlamp, joined seamlessly to the rooftop routes (a hole down from a roof, a squeeze up into a building)
   - Every street a dangerous gap to cross, not a way to walk: the ways across are over (buildings, crossings), under (basements, the underground) or a quick dash between cover

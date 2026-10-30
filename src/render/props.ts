@@ -153,15 +153,6 @@ const builders: Record<string, Builder> = {
   neon,
   searchlight,
   patrolDecor,
-  // A hinged door slab: w wide, h tall, d thick; text is its interactable id. Swings open with the world state.
-  door: p => {
-    const g = new THREE.Group();
-    const slab = new THREE.Mesh(box(p.w!, p.h!, p.d ?? 0.06, p.w! / 2, 0, 0), material(MAT.metal));
-    g.add(slab);
-    let a = 0;
-    g.userData.tick = (_t: number, open: Record<string, boolean>) => { a += ((open[p.text!] ? 1.45 : 0) - a) * 0.15; slab.rotation.y = a; };
-    return g;
-  },
   stilts: p => {
     const parts: THREE.BufferGeometry[] = [];
     const o = p.w! / 2 - 0.1;
@@ -238,8 +229,9 @@ const SMALL = new Set(['weeds', 'trash', 'debris', 'boxes', 'bags', 'pot', 'scoo
  *  small ones on their own. */
 export function buildProps(props: Prop[]): THREE.Group {
   ticking.length = 0;
-  const g = new THREE.Group(), big = new ChunkMerger(), small = new ChunkMerger();
+  const g = new THREE.Group(), big = new ChunkMerger(), small = new ChunkMerger(), swing: Prop[] = [];
   for (const p of props) {
+    if (p.kind === 'door' || p.kind === 'pane') { swing.push(p); continue; }
     const b = builders[p.kind];
     const o = b ? b(p) : libProp(p);
     if (!o) continue;
@@ -253,7 +245,57 @@ export function buildProps(props: Prop[]): THREE.Group {
   }
   for (const m of big.build(mergeGeometries)) g.add(m);
   for (const m of small.build(mergeGeometries)) { m.userData.detail = true; g.add(m); }
+  for (const m of swingers(swing)) g.add(m);
   return g;
 }
 
-export const propKinds = () => Object.keys(builders).concat(libKinds());
+/** Doors and window panes (M3-36), thousands of them: one instanced mesh of each per 64 m chunk, culled with the
+ *  city's chunks and drawn only near; a door swings open (its slab turned about its hinge) and a pane goes when its
+ *  interactable's world state opens. */
+function swingers(props: Prop[]): THREE.InstancedMesh[] {
+  const chunks = new Map<string, Prop[]>();
+  for (const p of props) { const k = `${p.kind}:${Math.floor(p.x / 64)},${Math.floor(p.z / 64)}`; (chunks.get(k) ?? chunks.set(k, []).get(k)!).push(p); }
+  const out: THREE.InstancedMesh[] = [], m = new THREE.Matrix4(), q = new THREE.Matrix4(), sc = new THREE.Matrix4(), zero = new THREE.Matrix4().makeScale(0, 0, 0);
+  for (const ps of chunks.values()) {
+    const door = ps[0].kind === 'door';
+    // A unit slab: a door's from its hinge along +x, a pane's about its middle; each scaled to its size.
+    const mesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1).translate(door ? 0.5 : 0, 0.5, 0), material(door ? MAT.metal : MAT.glass), ps.length);
+    const place = (i: number, a: number) => {
+      const p = ps[i];
+      m.makeTranslation(p.x, p.y, p.z).multiply(q.makeRotationY(p.yaw + a)).multiply(sc.makeScale(p.w!, p.h!, p.d ?? (door ? 0.06 : 0.03)));
+      mesh.setMatrixAt(i, m);
+    };
+    ps.forEach((_, i) => place(i, 0));
+    mesh.computeBoundingSphere();
+    mesh.computeBoundingBox();
+    mesh.geometry.boundingBox = mesh.boundingBox!.clone();
+    mesh.userData.chunk = { x: ps[0].x, z: ps[0].z };
+    mesh.userData.detail = true;
+    const angle = new Float32Array(ps.length), gone = new Uint8Array(ps.length);
+    ticking.push((_t, open) => {
+      // (Out of range, it catches up once it's drawn again.)
+      if (!mesh.visible || !mesh.parent?.visible) return;
+      let moved = false;
+      for (let i = 0; i < ps.length; i++) {
+        const o = !!open[ps[i].text!];
+        if (door) {
+          const want = o ? 1.45 : 0;
+          if (Math.abs(angle[i] - want) < 1e-3) continue;
+          angle[i] += (want - angle[i]) * 0.15;
+          if (Math.abs(angle[i] - want) < 1e-3) angle[i] = want;
+          place(i, angle[i]);
+        } else {
+          if (+o === gone[i]) continue;
+          gone[i] = +o;
+          if (o) mesh.setMatrixAt(i, zero); else place(i, 0);
+        }
+        moved = true;
+      }
+      if (moved) mesh.instanceMatrix.needsUpdate = true;
+    });
+    out.push(mesh);
+  }
+  return out;
+}
+
+export const propKinds = () => Object.keys(builders).concat(libKinds(), ['door', 'pane']);

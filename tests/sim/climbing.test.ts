@@ -11,6 +11,7 @@ import { teleport } from '../../src/sim/player';
 import { B } from '../../src/sim/types';
 import { ENVELOPE as E } from '../../src/data/envelope';
 import { BARE } from '../../src/world/city/climb';
+import { free } from '../../src/sim/physics';
 import type { Feature, Plot } from '../../src/world/world';
 import { run, secs, settle } from './helpers';
 import { climbPole, climbHolds } from './climbbot';
@@ -63,11 +64,14 @@ function holds(p: Plot): { x: number; z: number; y: number }[] {
     const s = w.solids[i], x = (s.x0 + s.x1) / 2, z = (s.z0 + s.z1) / 2;
     if (s.y1 >= p.wall + 0.3 || s.y1 <= p.base + 0.3 || !within(p, x, z, 1.6) || within(p, x, z, -0.35)) continue;
     if (s.y0 < Math.max(...[[x, z], [s.x0, s.z0], [s.x1, s.z0], [s.x0, s.z1], [s.x1, s.z1]].map(([a, b]) => heightAt(g, a, b) ?? -99)) + 0.3) continue;
+    // (Only a top with room over it: a block carved into pieces, M3-36, stacks some on others.)
+    if (!free(w.index, x, s.y1 + 0.02, z, 0.1, 0.02)) continue;
     out.push({ x, z, y: s.y1 });
   }
   for (let i = p.own!.climbables[0]; i < p.own!.climbables[1]; i++) {
     const c = w.climbables[i];
-    if (c.kind !== 'pole') for (let y = c.y0; y <= c.y1; y += 0.5) out.push({ x: c.x, z: c.z, y });
+    // (Not one inside it: a ladder up through a hole in a room's floor, M3-36.)
+    if (c.kind !== 'pole' && !within(p, c.x, c.z, -0.35)) for (let y = c.y0; y <= c.y1; y += 0.5) out.push({ x: c.x, z: c.z, y });
   }
   return out;
 }

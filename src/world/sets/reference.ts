@@ -79,7 +79,7 @@ export function referenceParts() {
     let wall = Y(s.row, s.d) - lip;
     if (s.enter) wall = base + Math.max(2, Math.round((wall - base) / FLOOR)) * FLOOR;
     const lot: Lot = { id: 1000 + blocks.length, x0, z0, x1, z1, base, wall, top: wall + lip, kind: 'res', mat: s.mat, street: [true, true, false, false], across: [0, 0, 0, 0] };
-    if (s.enter) hollow(lot, r, out);
+    if (s.enter) hollow(lot, r, out, s.mat, true);
     else out.solids.push(solid(x0, base, z0, x1, wall, z1, s.mat));
     roof(s, lot, out);
     if (s.balconies) balconies(s, lot, out);
@@ -139,12 +139,14 @@ function vantageBlock(r: ReturnType<typeof makeRng>, out: Fabric): RefBlock {
   const x0 = -6, x1 = 6, z0 = -5.6, z1 = 4.4, base = 0, wall = 33;
   const tmp: Fabric = { solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [], sites: [], far: [] };
   const lot: Lot = { id: 999, x0, z0, x1, z1, base, wall, top: wall + PARAPET, kind: 'res', mat: MAT.concrete, street: [true, false, false, false], across: [0, 0, 0, 0] };
-  hollow(lot, r, tmp);
+  hollow(lot, r, tmp, lot.mat, true);
   // Mirror north-south so the stair core and its roof hut sit at the back.
   const m = z0 + z1, flip = (s: Solid): Solid => ({ ...s, z0: m - s.z1, z1: m - s.z0, ramp: s.ramp === 3 ? 4 : s.ramp === 4 ? 3 : s.ramp });
   out.solids.push(...tmp.solids.map(flip));
   out.decor.push(...tmp.decor.map(flip));
   out.inter.push(...tmp.inter.map(i => ({ ...i, z: m - i.z })));
+  out.props.push(...tmp.props.map(q => ({ ...q, z: m - q.z, yaw: -q.yaw })));
+  out.climbables.push(...tmp.climbables.map(c => ({ ...c, z: m - c.z, nz: -c.nz })));
   lot.route = lot.route!.map(p => ({ ...p, z: m - p.z }));
   // A low parapet he can see over.
   out.solids.push(solid(x0, wall, z0, x1, wall + 0.75, z0 + 0.2, MAT.concrete), solid(x0, wall, z0, x0 + 0.2, wall + 0.75, z1, MAT.concrete), solid(x1 - 0.2, wall, z0, x1, wall + 0.75, z1, MAT.concrete));

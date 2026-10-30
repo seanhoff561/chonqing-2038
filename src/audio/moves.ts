@@ -33,6 +33,11 @@ export const MOVE_SOUNDS: Record<string, Play> = {
   pump: (a, t) => { a.noise(t, 0.2, 0.06, 'bandpass', 500, 0.7, 900); a.tone(t, 0.12, 0.05, 220, 180, 'triangle'); },
   // The headlamp's switch: a small plastic click.
   click: (a, t) => { a.noise(t, 0.015, 0.25, 'highpass', 4000); a.tone(t, 0.02, 0.06, 2400, 1800, 'square'); },
+  // Doors and windows (M3-36): a hinge's creak, a slam, a lock wrenched out, glass going.
+  'door-open': (a, t) => { a.noise(t, 0.3, 0.08, 'bandpass', 700, 3, 350); a.tone(t + 0.04, 0.28, 0.04, 240, 190, 'sawtooth'); },
+  'door-close': (a, t) => { a.tone(t, 0.14, 0.3, 95, 55); a.noise(t, 0.1, 0.2, 'lowpass', 500); },
+  force: (a, t) => { a.tone(t, 0.18, 0.5, 130, 45); a.noise(t, 0.25, 0.4, 'bandpass', 1100, 1, 300); a.noise(t + 0.2, 0.15, 0.3, 'highpass', 2500); },
+  glass: (a, t) => { a.noise(t, 0.5, 0.45, 'highpass', 3500, 0.7, 7000); for (let i = 0; i < 5; i++) a.tone(t + 0.05 + i * 0.04, 0.06, 0.08, 3800 + i * 600, 3000, 'sine'); },
   dyno: (a, t) => { a.tone(t, 0.1, 0.35, 130, 60, 'triangle'); breath(a, t, 0.14, 0.22, 800); },
 };
 

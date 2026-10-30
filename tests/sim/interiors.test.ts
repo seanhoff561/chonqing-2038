@@ -6,8 +6,15 @@ import { run, settle } from './helpers';
 import { teleport } from '../../src/sim/player';
 import type { SimState } from '../../src/sim/types';
 import type { World } from '../../src/world/world';
+import { syncWorld } from '../../src/sim/doors';
 
 const w = getWorld('yuzhong'), near = w.plots.filter(p => !p.far), open = near.filter(l => l.route);
+
+/** Open every door along a route (M3-36 locks most of them). */
+function unlock(s: SimState, w: World, route: { x: number; y: number; z: number }[]) {
+  for (const it of w.inter) if (it.kind === 'door' && route.some(q => Math.hypot(q.x - it.x, q.z - it.z) < 2.5 && Math.abs(q.y + 1.1 - it.y) < 1.5)) s.wstate.open[it.id] = true;
+  syncWorld(s, w);
+}
 
 /** Walk a list of points at a jog, steering at each; false if he gets stuck. */
 function follow(s: SimState, w: World, pts: { x: number; z: number }[]): boolean {
@@ -28,8 +35,9 @@ describe('enterable buildings (M3-04)', () => {
     const res = near.filter(l => l.kind === 'res');
     expect(open.length).toBeGreaterThan(150);
     expect(open.length / res.length).toBeGreaterThan(0.1);
+    // (Loot is scarce, M3-36: a container in one room in five, a few rooms a building.)
     const containers = w.inter.filter(i => i.kind === 'container');
-    expect(containers.length).toBeGreaterThan(open.length * 2);
+    expect(containers.length).toBeGreaterThan(open.length * 0.5);
     expect(new Set(containers.map(c => c.id)).size).toBe(containers.length);
   });
   it('walks in from the street and climbs the stairwell to the roof', async () => {
@@ -37,6 +45,7 @@ describe('enterable buildings (M3-04)', () => {
     const lot = open.find(l => (l.wall - l.base) / 3 >= 4)!;
     const s = createState(1, w);
     const route = lot.route!;
+    unlock(s, w, route);
     teleport(s.player, route[0].x, route[0].y + 0.05, route[0].z);
     run(s, w, 20);
     const reached = follow(s, w, route.slice(1));
@@ -49,6 +58,7 @@ describe('enterable buildings (M3-04)', () => {
     expect(blocks.length).toBeGreaterThan(3);
     for (const lot of blocks.slice(0, 2)) {
       const s = createState(1, w), route = lot.route!;
+      unlock(s, w, route);
       teleport(s.player, route[0].x, route[0].y + 0.05, route[0].z);
       run(s, w, 20);
       // In at the door and over to the foot of the stairs.

@@ -14,19 +14,20 @@ interface Style {
   open?: boolean;
   /** each floor a white balcony parapet over a dark recessed strip */
   bands?: boolean;
-  /** share of bays with no window; floors between floor bands */
-  blank?: number; bandEvery?: number;
+  /** share of bays with no window; floors between floor bands; window bays across the 12 m (U-034: three, 4 m
+   *  apart, at real sizes) */
+  blank?: number; bandEvery?: number; bays?: number;
   /** the machines' works (M3-57b): ribbed steel cladding, a band of glazing every 6 m, all of it lit at night */
   works?: boolean;
 }
 
 const STYLES: Record<number, Style> = {
   // Near-white bases: each building's colour (M3-46) tints them.
-  [MAT.facade]: { seed: 21, wall: '#e6e3dc', band: '#f0eee8', win: [1.4, 1.6], sill: 0.9, blank: 0.12 },
-  [MAT.facadeTile]: { seed: 22, wall: '#f2f0ea', band: '#f6f4ef', win: [1.0, 1.1], sill: 1.1, tile: true, blank: 0.45, bandEvery: 2 },
-  [MAT.facadeBrick]: { seed: 23, wall: '#dcd4c6', band: '#cfc6b6', win: [0.9, 1.15], sill: 1.0, brick: true, lattice: true, blank: 0.4 },
+  [MAT.facade]: { seed: 21, wall: '#e6e3dc', band: '#f0eee8', win: [1.8, 1.5], sill: 0.9, blank: 0.15 },
+  [MAT.facadeTile]: { seed: 22, wall: '#f2f0ea', band: '#f6f4ef', win: [1.5, 1.3], sill: 1.0, tile: true, blank: 0.3, bandEvery: 2 },
+  [MAT.facadeBrick]: { seed: 23, wall: '#dcd4c6', band: '#cfc6b6', win: [1.3, 1.4], sill: 1.0, brick: true, lattice: true, blank: 0.3 },
   [MAT.facadeOpen]: { seed: 24, wall: '#a89a8a', band: '#b4a896', win: [2.2, 1.9], sill: 0.75, open: true },
-  [MAT.facadeBand]: { seed: 25, wall: '#eeece6', band: '#f6f5f1', win: [2.4, 1.6], sill: 1.05, bands: true },
+  [MAT.facadeBand]: { seed: 25, wall: '#eeece6', band: '#f6f5f1', win: [2.4, 1.6], sill: 1.05, bands: true, bays: 4 },
   [MAT.facadeWorks]: { seed: 26, wall: '#7b8187', band: '#5a5f64', win: [0, 1.5], sill: 3.2, works: true },
 };
 
@@ -59,9 +60,10 @@ type Window = { x: number; y: number; w: number; h: number; kind: number; lit: b
 function layout(st: Style, px: number): Window[] {
   const r = mulberry(st.seed), out: Window[] = [];
   const S = FACADE_M * px;
-  for (let f = 0; f < 4; f++) for (let b = 0; b < 4; b++) {
-    const w = st.win[0] * px * (0.75 + r() * 0.5), h = st.win[1] * px * (0.9 + r() * 0.2);
-    const x = (b * FACADE_BAY + FACADE_BAY / 2) * px - w / 2, y = S - (f * FACADE_BAY + st.sill) * px - h;
+  const n = st.bays ?? 3, bay = FACADE_M / n;
+  for (let f = 0; f < 4; f++) for (let b = 0; b < n; b++) {
+    const w = st.win[0] * px * (0.85 + r() * 0.3), h = st.win[1] * px * (0.9 + r() * 0.2);
+    const x = (b * bay + bay / 2) * px - w / 2, y = S - (f * FACADE_BAY + st.sill) * px - h;
     const kind = r(), lit = r() < 0.2 && kind < 0.45;
     if (r() >= (st.blank ?? 0)) out.push({ x, y, w, h, kind, lit });
   }

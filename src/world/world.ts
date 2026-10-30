@@ -117,6 +117,10 @@ function ladderBack(c: Climbable): Solid {
 
 export function makeWorld(p: WorldParts): World {
   const solids = p.solids.concat((p.climbables ?? []).filter(c => c.kind === 'ladder').map(ladderBack));
+  // Doors and windows (M3-36) find the solid they switch by its part.
+  const parts = new Map<string, number>();
+  solids.forEach((s, i) => { if (s.part) parts.set(s.part, i); });
+  if (parts.size) for (const it of p.inter ?? []) if (typeof it.data?.part === 'string' && parts.has(it.data.part)) it.data.solid = parts.get(it.data.part);
   return {
     name: p.name,
     decor: p.decor ?? [],

@@ -55,6 +55,16 @@ export function facades(l: Lot, r: Rng, out: Fabric) {
   // The roof edge he pulls over: its parapet.
   const top = l.top;
   const door = l.route?.[0], line = l.climb && sides(l)[l.climb.face];
+  // Now and then a ledge right round it at a floor line, out of reach of the street, to traverse on (U-035).
+  if (l.kind === 'res' && rand(r) < 0.08) {
+    const lo = Math.max(...sides(l).map(s => footOf(l, s))) + BARE + 0.5, y = l.base + Math.ceil((lo - l.base) / FLOOR) * FLOOR;
+    if (y < top - 2.5) {
+      const { x0, z0, x1, z1 } = l, d = 0.35;
+      out.solids.push(solid(x0 - d, y - 0.2, z0 - d, x1 + d, y, z0, MAT.concrete), solid(x0 - d, y - 0.2, z1, x1 + d, y, z1 + d, MAT.concrete),
+        solid(x0 - d, y - 0.2, z0, x0, y, z1, MAT.concrete), solid(x1, y - 0.2, z0, x1 + d, y, z1, MAT.concrete));
+      out.features.push({ kind: 'ledge', x: (x0 + x1) / 2, y, z: z0 - d, group: out.features.length });
+    }
+  }
   for (const s of sides(l)) {
     if (s.b - s.a < 3) continue;
     const foot = footOf(l, s), high = top - foot;
