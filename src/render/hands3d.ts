@@ -167,6 +167,8 @@ export function poseFor(p: Player, i: number, readied: boolean, holding: boolean
   if (gripCam) return gripCam;
   if (p.mode === 'cling') return { curl: 0.05, thumb: 0.15, pos: P(0.2, 0.02, -0.34), rot: R(0.9, 0, 0) };
   if (p.mode === 'action') return { curl: 0.2, thumb: 0.2, pos: P(0.22, -0.2, -0.42), rot: R(-0.3, 0, 0) };
+  // Riding a line (M3-52): both fists up round the hook or trolley over his head.
+  if (p.mode === 'zip') return { curl: 0.9, thumb: 0.75, pos: P(0.07, 0.38, -0.22), rot: R(1.4, 0, 0) };
   // Handshake grip: back of the hand outward, so whatever is held stands up through the fist.
   if (holding && i === 1) return { curl: 0.95, thumb: 0.8, pos: HOLD_POS.clone(), rot: HOLD_ROT.clone() };
   // The left hand wraps the item at its support point: its fist centre (the mirror of HELD_AT) lands there.

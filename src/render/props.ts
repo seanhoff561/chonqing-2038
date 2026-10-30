@@ -219,22 +219,29 @@ const ticking: Tick[] = [];
 /** Animate props that move (searchlights, scripted patrols, doors following the world state). */
 export function tickProps(t: number, open: Record<string, boolean> = {}) { for (const f of ticking) f(t, open); }
 
-/** Props: animated ones stay separate; static meshes (and the parts of static library props) merge per chunk. */
+/** Small things, a few pixels from further off: merged apart and drawn only near the camera (view.ts DETAIL). */
+const SMALL = new Set(['weeds', 'trash', 'debris', 'boxes', 'bags', 'pot', 'stools', 'scooter', 'bike', 'sign', 'bin', 'rebar', 'shrub', 'garden', 'bench', 'mahjong', 'drum', 'stall',
+  'cablebundle', 'dish', 'antenna', 'stilts', 'laundry', 'dronewreck', 'bangbang']);
+
+/** Props: animated ones stay separate; static meshes (and the parts of static library props) merge per chunk, the
+ *  small ones on their own. */
 export function buildProps(props: Prop[]): THREE.Group {
   ticking.length = 0;
-  const g = new THREE.Group(), merger = new ChunkMerger();
+  const g = new THREE.Group(), big = new ChunkMerger(), small = new ChunkMerger();
   for (const p of props) {
     const b = builders[p.kind];
     const o = b ? b(p) : libProp(p);
     if (!o) continue;
     o.position.set(p.x, p.y, p.z);
     o.rotation.y = p.yaw;
+    const merger = SMALL.has(p.kind) ? small : big;
     if (o.userData.tick) ticking.push(o.userData.tick);
     if ((o as THREE.Mesh).isMesh && !o.userData.tick && o.children.length === 0) merger.add(o as THREE.Mesh);
     else if (!b && !o.userData.tick) { o.updateMatrixWorld(true); for (const c of [...o.children]) merger.add(c as THREE.Mesh); }
     else g.add(o);
   }
-  for (const m of merger.build(mergeGeometries)) g.add(m);
+  for (const m of big.build(mergeGeometries)) g.add(m);
+  for (const m of small.build(mergeGeometries)) { m.userData.detail = true; g.add(m); }
   return g;
 }
 

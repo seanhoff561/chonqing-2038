@@ -14,8 +14,8 @@ import type { Prop, Inter } from '../world';
 import { onGround, ROAD, KERB_W, PAVE, type Street } from './ground';
 import { districtAt } from './lots';
 
-/** Props that break a fall (U-024). */
-const SOFT = new Set(['bags', 'bin']);
+/** Props that break a fall (U-024): rubbish bags, bins, cardboard, a tarp shelter (it gives under him). */
+export const SOFT = new Set(['bags', 'bin', 'boxes', 'tarp']);
 
 /** Collision boxes for a prop: long footprints turned at an angle are split into short AABB segments. */
 export function propBoxes(p: Prop): Solid[] {
@@ -90,8 +90,8 @@ export function dressStreets(index: SolidIndex, g: Heightfield, sts: Street[], l
         const kind = q < 0.35 ? 'weeds' : q < 0.6 ? 'trash' : q < 0.75 ? 'debris' : q < 0.85 ? 'boxes' : q < 0.92 ? 'sign' : cyber ? 'trash' : 'rubblepile', extra = q >= 0.92 && !cyber ? { w: 1.5 + rand(r) * 2 } : {};
         put(kind, x, z, yaw, extra) || put(kind, ...at(t, -side * o), yaw, extra);
       }
-      // Wherever that left 10 m of street with nothing beside it, weeds or a bag at its edge.
-      for (let t = 5; t < len; t += 10) {
+      // Wherever that left 8 m of street with nothing beside it, weeds or a bag at its edge.
+      for (let t = 4; t < len; t += 8) {
         const [cx, cz] = at(t, 0);
         if (anyNear(cx, cz, s.w / 2 + 5)) continue;
         for (const o of [edge, edge + 0.8, edge + 1.6, -edge, -edge - 0.8, -edge - 1.6]) if (put(rand(r) < 0.6 ? 'weeds' : 'trash', ...at(t + (rand(r) - 0.5) * 4, o), rand(r) * 6.28)) break;

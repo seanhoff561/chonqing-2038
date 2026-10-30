@@ -8,7 +8,7 @@ export const PROP_BOX: Record<string, { w: number; d: number; h: number }> = {
   figtree: { w: 0.6, d: 0.6, h: 4 }, lamppost: { w: 0.2, d: 0.2, h: 7.5 }, campole: { w: 0.2, d: 0.2, h: 4.5 },
   dronedock: { w: 0.6, d: 0.6, h: 2.2 }, rubblepile: { w: 1.6, d: 1.6, h: 0.6 }, bollard: { w: 0.25, d: 0.25, h: 0.9 },
   edict: { w: 3.2, d: 0.3, h: 4.4 }, slab: { w: 2.4, d: 2.6, h: 0.5 }, halfwall: { w: 0.3, d: 3, h: 2 },
-  bags: { w: 1.4, d: 1.4, h: 0.65 }, garden: { w: 2, d: 3, h: 0.3 }, tarp: { w: 0.3, d: 3, h: 1.8 },
+  bags: { w: 1.4, d: 1.4, h: 0.65 }, garden: { w: 2, d: 3, h: 0.3 }, tarp: { w: 2.4, d: 3, h: 1.3 }, boxes: { w: 1.2, d: 1.2, h: 0.5 },
   dumpster: { w: 1.9, d: 1.15, h: 1.3 }, drum: { w: 1.0, d: 1.0, h: 1.25 },
 };
 

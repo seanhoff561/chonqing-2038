@@ -5,6 +5,7 @@ import type { Solid } from '../world/geom';
 import { buildSolidMeshes, ChunkMerger, CASTER_LAYER } from './world-mesh';
 import { buildGroundMeshes, buildFarGround } from './ground-mesh';
 import { buildStreetMeshes } from './streets';
+import { lineMeshes } from './lines';
 import { buildLabels } from './labels';
 import { material, lodRadius } from './materials';
 import { MAT } from '../world/mats';
@@ -103,6 +104,8 @@ export class View {
       m.position.set((b.x0 + b.x1) / 2, b.y1, (b.z0 + b.z1) / 2);
       this.world.add(m);
     }
+    // The cables over the streets (M3-52).
+    for (const m of lineMeshes(w.lines)) this.world.add(m);
     // Pipes and ladders merge into chunk meshes.
     const merger = new ChunkMerger();
     for (const c of w.climbables) {

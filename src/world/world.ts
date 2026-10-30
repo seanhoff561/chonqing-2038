@@ -7,6 +7,9 @@ import { buildIndex, type Box, type Solid, type SolidIndex } from './geom';
 export interface Climbable { kind: 'pipe' | 'ladder'; x: number; z: number; y0: number; y1: number; nx: number; nz: number }
 
 /** A box he can curl up in. The interior box is what must fit him. */
+/** A line he can ride hanging from it (M3-52): a cable strung between buildings, live with power or dead. */
+export interface Line { a: { x: number; y: number; z: number }; b: { x: number; y: number; z: number }; live?: boolean }
+
 /** A place to curl up in: inner is its space, centred where it is with its own width (x) and depth (z) before
  *  it's turned by yaw (as a prop's: three's rotation.y). */
 export interface HideSpot { id: number; inner: Box; kind: string; yaw?: number }
@@ -60,6 +63,8 @@ export interface World {
   streets: StreetLine[];
   /** what the open ground should become, for filling it (M3-56a); real-map worlds only */
   marks?: Marks;
+  /** cables strung between buildings, to ride (M3-52) */
+  lines: Line[];
   /** holds, hide spots and alley pieces as built (Yuzhong), for tests and tools */
   features: Feature[];
   index: SolidIndex;
@@ -89,6 +94,7 @@ export interface WorldParts {
   plots?: Plot[];
   streets?: StreetLine[];
   marks?: Marks;
+  lines?: Line[];
   features?: Feature[];
   spawn: World['spawn'];
 }
@@ -102,6 +108,7 @@ export function makeWorld(p: WorldParts): World {
     plots: p.plots ?? [],
     streets: p.streets ?? [],
     marks: p.marks,
+    lines: p.lines ?? [],
     features: p.features ?? [],
     index: buildIndex(p.solids, p.ground),
     water: p.water ?? [],

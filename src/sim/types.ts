@@ -74,6 +74,9 @@ export interface SimState {
   task: { id: string; t: number; dur: number } | null;
   /** dynamic world state: searched containers, opened doors, removed things */
   wstate: { searched: Record<string, true>; open: Record<string, boolean>; gone: Record<string, true>; unlocked?: Record<string, true>; benches?: Record<string, true> };
+  /** lines he has rigged with rope and hooks (M3-52), and the first hook of one he's rigging */
+  lines?: import('../world/world').Line[];
+  rig?: Vec3 | null;
   /** cause of death, or null while alive */
   dead: string | null;
   /** events emitted during the latest tick */

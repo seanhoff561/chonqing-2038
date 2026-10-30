@@ -75,7 +75,7 @@ function tree(p: Prop, big: boolean): THREE.Object3D {
   // The crown is leaves only (U-028): clusters of leaf cards, no solid core showing through.
   for (let i = 0; i < 7; i++) {
     const a = r() * Math.PI * 2, d = r() * 1.4 * s, y = h + (r() - 0.3) * 1.4 * s;
-    for (let j = 0; j < 9; j++) cards.push({ x: Math.cos(a) * d + (r() - 0.5) * 2 * s, y: y + (r() - 0.5) * 1.4 * s, z: Math.sin(a) * d + (r() - 0.5) * 2 * s, s: (0.9 + r() * 0.6) * s, ry: r() * Math.PI });
+    for (let j = 0; j < 6; j++) cards.push({ x: Math.cos(a) * d + (r() - 0.5) * 2 * s, y: y + (r() - 0.5) * 1.4 * s, z: Math.sin(a) * d + (r() - 0.5) * 2 * s, s: (0.9 + r() * 0.6) * s, ry: r() * Math.PI });
   }
   // Fig trees drop aerial roots.
   if (big) for (let i = 0; i < 5; i++) { const a = r() * Math.PI * 2, d = 0.4 + r() * 1.2, l = h * (0.3 + r() * 0.3); k.cyl(0.025, 0.015, l, 0x9a8c74, Math.cos(a) * d, h * 0.85 - l, Math.sin(a) * d, 4); }
@@ -376,8 +376,9 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
     k.box(0.08, 0.08, 1.0, 0x3a3a3a, 0, h - 0.2, 0.5).box(0.08, 0.08, 1.0, 0x3a3a3a, 0, 0.2, 0.5);
     (lit ? glow : k).box(0.24, h, 0.8, face, 0, 0, 0.6);
     const s = 0.52, t = lit ? 0.07 : 0.035, pen = lit ? k : glow;
-    for (let y = h - 0.22 - s; y > 0.15; y -= s + 0.1) for (const [z0, y0, z1, y1] of glyph(r)) for (const x of [-0.13, 0.13])
-      pen.box(0.02, Math.max(t, (y1 - y0) * s), Math.max(t, (z1 - z0) * s), lit ? ink : tube, x, y + y0 * s - (y1 === y0 ? t / 2 : 0), 0.6 + ((z0 + z1) / 2 - 0.5) * s);
+    // Each stroke one box through the blade, showing on both faces.
+    for (let y = h - 0.22 - s; y > 0.15; y -= s + 0.1) for (const [z0, y0, z1, y1] of glyph(r))
+      pen.box(0.28, Math.max(t, (y1 - y0) * s), Math.max(t, (z1 - z0) * s), lit ? ink : tube, 0, y + y0 * s - (y1 === y0 ? t / 2 : 0), 0.6 + ((z0 + z1) / 2 - 0.5) * s);
     for (const x of [-0.13, 0.13]) glow.box(0.02, 0.03, 0.8, tube, x, h - 0.05, 0.6).box(0.02, 0.03, 0.8, tube, x, 0.02, 0.6).box(0.02, h - 0.04, 0.03, tube, x, 0.02, 0.215).box(0.02, h - 0.04, 0.03, tube, x, 0.02, 0.985);
     return group([{ geo: k.geometry(), mat: PROP_MAT }, { geo: glow.geometry(), mat: GLOW_MAT }]);
   },

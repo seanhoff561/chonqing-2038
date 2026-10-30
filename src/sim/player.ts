@@ -2,7 +2,7 @@
 import type { Vec3 } from './types';
 
 export type Posture = 'stand' | 'crouch' | 'crawl' | 'hidden';
-export type Mode = 'ground' | 'air' | 'action' | 'grip' | 'cling' | 'wallrun' | 'wallclimb' | 'swim' | 'hidden' | 'dead' | 'noclip';
+export type Mode = 'ground' | 'air' | 'action' | 'grip' | 'cling' | 'wallrun' | 'wallclimb' | 'swim' | 'hidden' | 'zip' | 'dead' | 'noclip';
 
 /** A timed scripted move (mantle, vault, climb-up, entering a box): lerps the feet from a to b. */
 export interface Action { kind: string; t: number; dur: number; a: Vec3; b: Vec3; then: Mode; posture: Posture; speed: number }
@@ -49,6 +49,8 @@ export interface Player {
   stepAcc: number;
   crawlToggle: boolean;
   hideId: number;
+  /** riding a line (M3-52): which (the world's first, then his own), how far from its high end, how fast */
+  zip?: { line: number; s: number; v: number } | null;
   /** seconds left in which a jump still counts after walking off an edge */
   coyote: number;
   /** seconds into a slide, or -1 */

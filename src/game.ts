@@ -1,7 +1,10 @@
 // The browser game: fixed-step sim, input, rendering with interpolation.
+import * as THREE from 'three';
 import { HideView } from './render/hideview';
 import { Underwater } from './render/underwater';
+import { lineMeshes } from './render/lines';
 import { hideNear } from './sim/hide';
+import { lineInReach } from './sim/zip';
 import { createState, step } from './sim/sim';
 import { DT, type SimState, type Vec3 } from './sim/types';
 import type { World } from './world/world';
@@ -59,6 +62,7 @@ export class Game {
   readonly hideView = new HideView();
   /** Murk, silt and dull sound with his head under water (M3-48). */
   readonly underwater: Underwater;
+  private readonly rigged = new THREE.Group();
   readonly sleep: SleepUI;
   readonly death = new DeathScreen(this);
   readonly pause: PauseMenu;
@@ -83,6 +87,8 @@ export class Game {
     this.hands = new Hands3D(this.view.fp.cam);
     this.view.scene.add(this.hideView.group);
     this.underwater = new Underwater(this.view);
+    this.rigged.userData.n = 0;
+    this.view.scene.add(this.rigged);
     this.view.scene.add(this.furniture.group);
     this.rain = new Rain(this.view.scene);
     this.bodyFx = new BodyFx(this.view.renderer.domElement);
@@ -181,6 +187,13 @@ export class Game {
     const cam = this.view.fp.cam.position;
     this.sky.update(this.state.time, cam, this.hazeDistance(), this.underAmount(dt), this.state.weather);
     const wet = this.underwater.update(this.world, this.state.tick / 60);
+    // The lines he has rigged (M3-52).
+    const rigged = this.state.lines ?? [];
+    if (rigged.length !== this.rigged.userData.n) {
+      this.rigged.clear();
+      this.rigged.add(...lineMeshes(rigged));
+      this.rigged.userData.n = rigged.length;
+    }
     this.audio.setUnderwater(wet);
     // Rain stops at a roof, underground or under water.
     const covered = wet || this.under > 0.5 || !!raycast(this.world.index, cam.x, cam.y, cam.z, 0, 1, 0, 40);
@@ -206,7 +219,9 @@ export class Game {
     // Hiding spots get a prompt like everything else he can use (U-021).
     const hide = !it && s.player.mode === 'ground' ? hideNear(this.world, s.player) : -1;
     const hk = hide >= 0 ? HIDE_NAMES[this.world.hides[hide].kind] ?? ['躲进去', 'Hide'] : null;
-    this.hud.setPrompt(this.input.uiOpen ? '' : it ? `E  ${it.zh}  ${it.en}` : hk ? `E  ${hk[0]}  ${hk[1]}` : '');
+    // A line to ride in reach of empty hands (M3-52).
+    const line = !it && !hk && s.inv.held === 0 && (s.player.mode === 'ground' || s.player.mode === 'air') && lineInReach(s, this.world).line >= 0;
+    this.hud.setPrompt(this.input.uiOpen ? '' : it ? `E  ${it.zh}  ${it.en}` : hk ? `E  ${hk[0]}  ${hk[1]}` : line ? 'LMB  抓住缆绳  Take the line' : '');
   }
 
   private updateHands(dt: number) {

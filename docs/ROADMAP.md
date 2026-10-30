@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 45 of 64 done
+## M3: 46 of 64 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -464,7 +464,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
 - [ ] **M3-51** Sandbox parkour areas (U-021)
   - Skatepark-style areas in the plain parts of the city: dense, varied geometry (roofs at mixed heights, walls, poles, bars, slopes, scaffolds, cables) built to the envelope, with many lines through and no single solution; riskier (more patrols, less cover)
   - A bot test finds at least three different routes across each area
-- [ ] **M3-52** Ziplines (U-021)
+- [x] **M3-52** Ziplines (U-021)
   - With a rope and two hooks he rigs a line between two anchors in reach (railings, poles, roof edges, up to 40 m, falling at least 1 in 10); hanging from it by a hook, pulley or gloved hands he rides down it, faster on steeper lines, and lets go with Ctrl
   - Existing cables strung between buildings ride the same way; a live power line shocks him
   - Sim tests: rig and ride, ride a cable, fall off at the end, the shock

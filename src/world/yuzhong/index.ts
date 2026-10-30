@@ -12,6 +12,7 @@ import { findMarks } from './marks';
 import { greenery } from './green';
 import { ruins } from './ruins';
 import { fill } from './fill';
+import { cables } from './cables';
 import { GEO } from '../geo';
 import { heightAt, type Heightfield } from '../heightfield';
 import { buildGround, streets, onGround, WATER_Y, type Street } from './ground';
@@ -69,21 +70,22 @@ export function buildYuzhong(): World {
   // Then the green and the ruins on the marked open ground, round all that.
   const marks = findMarks(g, land, plots, block), idx = buildIndex(solids, g), green = greenery(idx, g, marks), rubble = ruins(idx, g, marks);
   solids.push(...green.solids, ...rubble.solids);
-  // And the rest of the open ground filled, round all of it.
-  const filled = fill(buildIndex(solids, g), g, marks, plots);
-  solids.push(...filled.solids);
+  // And the rest of the open ground filled, round all of it; cables strung over the streets.
+  const filled = fill(buildIndex(solids, g), g, marks, plots), strung = cables(plans, buildIndex(solids, g));
+  solids.push(...filled.solids, ...strung.masts);
   const world = makeWorld({
     name: 'yuzhong', solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? [], filled.decor),
     props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(line.climbables, site?.climbables ?? []),
     hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones,
-    far: out.far, ground: g, plots, features: out.features, marks, streets: sts.filter(onGround).map(s => ({ kind: s.kind, w: s.w, steps: s.steps, pts: s.pts })), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
+    far: out.far, ground: g, plots, features: out.features, marks, lines: strung.lines, streets: sts.filter(onGround).map(s => ({ kind: s.kind, w: s.w, steps: s.steps, pts: s.pts })), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
     teleports, spawn: hide,
   });
   // Nothing floats or sinks (M3-56): whatever stands on something above ground settles onto what's under it, or
   // comes up out of the ground onto it (the set pieces' props below ground are where they are on purpose).
-  // (Props with collision were placed on their support with it.)
+  // (Props placed with collision were set on their support; the buildings' and alleys' props carry none.)
+  const placed = new Set(dress.props.concat(green.props, rubble.props, filled.props));
   for (const p of out.props.concat(dress.props, green.props, rubble.props, filled.props)) {
-    if (HUNG.has(p.kind) || PROP_BOX[p.kind]) continue;
+    if (HUNG.has(p.kind) || (PROP_BOX[p.kind] && placed.has(p))) continue;
     const from = Math.max(p.y, heightAt(g, p.x, p.z) ?? p.y) + 0.5, hit = raycast(world.index, p.x, from, p.z, 0, -1, 0, 30);
     if (hit && hit.t > 0.01) p.y = from - hit.t;
   }

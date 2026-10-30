@@ -12,6 +12,7 @@ import { stepHands, stepGrip } from './grip';
 import { startCling } from './parkour';
 import { hideNear, enterHide, stepHidden } from './hide';
 import { checkWater, stepSwim } from './swim';
+import { tryZip, stepZip } from './zip';
 import { limits, type Limits } from './body';
 
 let L: Limits;
@@ -59,8 +60,11 @@ export function stepPlayer(state: SimState, world: World, input: InputFrame): vo
   if (p.mode === 'noclip') p.mode = 'air';
   p.crouchAge += DT;
   if ((input.pressed & B.CROUCH) && !p.onGround) p.crouchAge = 0;
+  // Empty hands reaching for a line take it (M3-52).
+  if ((p.mode === 'air' || p.mode === 'ground') && (input.pressed & B.USE) && state.inv.held === 0 && tryZip(state, world)) return;
   stepHands(state, world, input);
   switch (p.mode) {
+    case 'zip': stepZip(state, world, input); return;
     case 'action': stepAction(state, world); return;
     case 'grip': stepGrip(state, world, input); return;
     case 'cling': stepCling(state, world, input); return;
