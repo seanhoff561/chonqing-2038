@@ -21,6 +21,10 @@ export interface Plan {
   far: boolean;
   /** the ground round it rises above its base (a higher street beside it): solid only, never hollowed */
   noEnter?: boolean;
+  /** a climbing line up one of its sides from a neighbour's roof (vertical.ts, U-032) */
+  climb?: { face: number; at: number; y0: number };
+  /** its roof runs out to its walls (a plank meets its edge, vertical.ts) */
+  edge?: boolean;
   /** the district it stands in, and whether that was a crowded centre now gone cyberpunk (U-011, U-020) */
   district: string; cyber: boolean;
   /** infill: the row along one side of one street segment it stands in, in order along the street */

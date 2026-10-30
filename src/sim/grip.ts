@@ -37,7 +37,7 @@ export function findGrab(world: World, p: Player): Grip | null {
     const px = ex + d.x * t, pz = ez + d.z * t, py = ey + d.y * t;
     if (Math.hypot(px - cx, pz - cz) > G.pipeRadius || py < c.y0 || py > c.y1) continue;
     bestT = t;
-    best = { x: cx, y: py, z: cz, nx: c.nx, nz: c.nz, kind: c.kind === 'ladder' ? 'rung' : 'pipe', top: c.y1 };
+    best = { x: cx, y: py, z: cz, nx: c.nx, nz: c.nz, kind: c.kind === 'pipe' ? 'pipe' : 'rung', top: c.y1 };
   }
   const h = raycast(world.index, ex, ey, ez, d.x, d.y, d.z, bestT);
   if (h) {

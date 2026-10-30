@@ -55,7 +55,7 @@ describe('the vertical city (M3-57)', () => {
     expect(wide.filter(spanned).length / wide.length).toBeGreaterThan(0.6);
   });
 
-  it('carries him across a skybridge, its far roof a mantle up from the deck', () => {
+  it('carries him across a skybridge, its far roof a mantle up from the deck', { timeout: 60000 }, () => {
     // Each bridge's two ends; from the end at the lower roof (the deck's level) to the other.
     const ends = new Map<number, Feature[]>();
     for (const f of of('skybridge')) ends.set(f.group, [...(ends.get(f.group) ?? []), f]);

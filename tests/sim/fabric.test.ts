@@ -54,12 +54,15 @@ describe('fabric climbables and hiding spots (M3-05)', () => {
     expect(fabric.features.filter(f => ['pipe', 'ladder', 'sill', 'ac', 'balcony'].includes(f.kind) && near(f.x, f.z)).length).toBe(0);
   });
   it('climbs a generated drain pipe hand over hand onto the roof', () => {
-    const pipe = w.climbables.find(c => c.kind === 'pipe' && c.y1 - c.y0 <= 15 && c.y1 - c.y0 >= 6 && free(w.index, c.x + c.nx * 0.9, c.y0 + 0.05, c.z + c.nz * 0.9, 1.7, 0.4) && free(w.index, c.x - c.nx * 1.5, c.y1 + 0.3, c.z - c.nz * 1.5, 1.7, 0.3))!;
+    const pipe = w.climbables.find(c => c.kind === 'pipe' && c.y1 - c.y0 <= 9 && c.y1 - c.y0 >= 5 && free(w.index, c.x + c.nx * 0.65, c.y0 - 1.2, c.z + c.nz * 0.65, 1.7, 0.4) && free(w.index, c.x - c.nx * 1.5, c.y1 + 0.3, c.z - c.nz * 1.5, 1.7, 0.3))!;
     expect(pipe).toBeTruthy();
     const s = createState(1, w);
-    teleport(s.player, pipe.x + pipe.nx * 0.65, pipe.y0 + 0.05, pipe.z + pipe.nz * 0.65);
+    // (Broken off high over the street, U-032: he starts hanging from its foot, as if off a pole or a roof.)
+    teleport(s.player, pipe.x + pipe.nx * 0.65, pipe.y0 - 1.2, pipe.z + pipe.nz * 0.65);
     s.player.yaw = Math.atan2(pipe.nx, pipe.nz);
-    run(s, w, 20, { yaw: s.player.yaw });
+    aim(s, pipe.x + pipe.nx * 0.08, pipe.y0 + 0.5, pipe.z + pipe.nz * 0.08);
+    run(s, w, 3, { buttons: LMB });
+    expect(s.player.hands[0].grip).not.toBeNull();
     const bits: number[] = [LMB, RMB];
     let hand = 0;
     for (let step = 0; step < 50 && !(s.player.mode === 'ground' && s.player.pos.y > pipe.y1 - 1); step++) {

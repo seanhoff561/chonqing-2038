@@ -5,7 +5,8 @@ import { buildIndex, solid, turn, type Box, type Solid, type SolidIndex } from '
 import { MAT } from './mats';
 
 /** Vertical climbable. (nx, nz) points from the wall out toward where the climber hangs. */
-export interface Climbable { kind: 'pipe' | 'ladder'; x: number; z: number; y0: number; y1: number; nx: number; nz: number }
+/** pole: a street pole with step bolts up it (U-032), climbed like a ladder; its post stands behind the grip line. */
+export interface Climbable { kind: 'pipe' | 'ladder' | 'pole'; x: number; z: number; y0: number; y1: number; nx: number; nz: number }
 
 /** A box he can curl up in. The interior box is what must fit him. */
 /** A line he can ride hanging from it (M3-52): a cable strung between buildings, live with power or dead. */
@@ -41,7 +42,9 @@ export interface StreetLine { kind: string; w: number; steps: boolean; pts: [num
 export interface Feature { kind: string; x: number; y: number; z: number; group: number; /** out of the wall it's on */ nx?: number; nz?: number }
 
 /** A built lot as laid out on the map (Yuzhong): its corners, base and walking route, for tests and tools. */
-export interface Plot { corners: [number, number][]; base: number; wall: number; /** roof top (ridge or parapet) */ top: number; kind: string; /** its infill row, if any */ row?: string; /** foundation bottom */ found: number; route?: { x: number; y: number; z: number }[]; far: boolean; osm: boolean }
+export interface Plot { corners: [number, number][]; base: number; wall: number; /** roof top (ridge or parapet) */ top: number; kind: string; /** its infill row, if any */ row?: string; /** foundation bottom */ found: number; route?: { x: number; y: number; z: number }[]; far: boolean; osm: boolean;
+  /** what it built itself: its ranges of the world's solids and climbables (first in each list), [from, to) */
+  own?: { solids: [number, number]; climbables: [number, number] } }
 
 export interface Teleport { name: string; x: number; y: number; z: number; yaw: number }
 

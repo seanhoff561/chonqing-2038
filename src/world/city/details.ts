@@ -4,7 +4,7 @@
 import { solid } from '../geom';
 import { MAT } from '../mats';
 import { rand, randInt, makeRng, hashString, type Rng } from '../../sim/rng';
-import { sides } from './climb';
+import { sides, footOf, BARE } from './climb';
 import type { Lot, Fabric } from './buildings';
 
 const FLOOR = 3;
@@ -17,11 +17,12 @@ const onFace = (s: Side, c0: number, c1: number, d0: number, d1: number, y0: num
 export function details(l: Lot, r: Rng, out: Fabric, roof: number) {
   if (l.kind !== 'res') return;
   const all = sides(l), n = Math.round((l.wall - l.base) / FLOOR);
-  // Balcony bands across one front, a parapet of render on each, laundry on some.
-  if (rand(r) < 0.35 && n >= 3) {
+  // Balcony bands across one front from the third floor (the ones below were walled in), a parapet of render on
+  // each, laundry on some.
+  if (rand(r) < 0.35 && n >= 5) {
     const s = all.find(x => x.street) ?? all[randInt(r, 4)];
     const a = s.a + 1.5, b = s.b - 1.5;
-    if (b - a > 3) for (let f = 1; f < n; f++) {
+    if (b - a > 3) for (let f = Math.max(3, Math.ceil((footOf(l, s) + BARE - l.base) / FLOOR)); f < n; f++) {
       const y = l.base + f * FLOOR;
       if (y > roof - 1) break;
       out.solids.push(onFace(s, a, b, 0, 1.0, y - 0.15, y, MAT.concrete), onFace(s, a, b, 0.88, 1.0, y, y + 1.0, MAT.plaster));

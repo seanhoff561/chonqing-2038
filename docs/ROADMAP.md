@@ -481,11 +481,15 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Every ladder has something behind it (a wall or its own frame) so he can climb it; a unit test climbs one of each kind
   - The red and blue plastic stools are gone
   - Interact and sleep are on F (E and Q free for leaning, M4-21); prompts and the help say so
-- [x] **M3-66** The layered city, filled with buildings (U-032, U-033)
+- [ ] **M3-66** The layered city, filled with buildings, evened (U-032, U-033, U-034)
   - Everything purposeful (U-033): M3-60's grid-cell parks, plazas and parking lots replaced; the open ground filled with buildings (blocks, low layers, fillers) right up to each other and the streets; green only in the few real parks, laid inside their real outlines; what open ground is left is hardscape shaped to the buildings and streets round it (paving to the building lines, forecourts, steps, a parking court between buildings) with its walkways running from somewhere to somewhere (street to entrance, street to stair) like the roads; nothing on the cell grid, nothing jagged or repeated
   - Short and medium buildings about twice as tall; between them half-height layers (low blocks, decks, scaffolding, platforms) and short fillers as low as today's short ones, so the city stands in layers to be crossed by parkour; bridges between buildings, beams sticking out, vertical alleys (narrow slots between tall walls to climb or wall-run up)
   - A unit test measures the layers (heights spread across bands) and the vertical alleys; screenshots
-- [ ] **M3-67** Climbing reworked (U-032)
+  - U-034: the parks cut to the few big real ones, the rest built over; many more 1-3 floor fillers in the open ground left
+  - U-034: the short buildings among tall ones 60-80% of their tall neighbours' height, and no building far over those round it: a test bounds each building's height against its neighbours'
+  - U-034: Shibati's traditional houses rebuilt as apartment blocks like the rest of the city
+  - U-034: raised blocks (megastructures) only low over roofs of near one height, on thick columns: a test bounds their columns' height and thickness
+- [x] **M3-67** Climbing reworked (U-032)
   - No building can be climbed to its top by itself: its holds (vents, sills, short ladders, pipes, beams) are scarce and scattered, ground floors bare; reaching a roof takes crossing from other buildings and things beside them (climbable street poles, kiosks, walls, scaffolding) using the whole envelope (wall-runs, kicks, long jumps, items)
   - A unit test finds no building whose own holds chain from the ground to its roof, and a bot reaches three roofs over 20 m by crossing from others
 - [ ] **M3-68** The underground reworked (U-032)

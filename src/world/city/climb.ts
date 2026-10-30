@@ -1,6 +1,6 @@
-// Climbing and hiding in the city fabric (M3-05, U-002, U-005). Facades get drain pipes, fire-escape ladders,
-// columns of sills and AC units (1.4-1.9 m apart, now and then a 2.3-2.6 m gap that needs a push-off) or
-// balconies; glass towers and the rest stay smooth. Alleys inside a block get hide crates and dumpsters,
+// Climbing and hiding in the city fabric (M3-05, U-002, U-005, U-032). Facades get a few holds high up: broken
+// downpipes, short ladders, runs of sills and AC units (1.4-1.9 m apart, now and then a 2.3-2.6 m gap that needs
+// a push-off), beam ends, balconies; glass towers and the rest stay smooth; poles in the street to start from. Alleys inside a block get hide crates and dumpsters,
 // scaffold bars to swing and lache along, or a fence with a crawl hole under it.
 import { solid, carve } from '../geom';
 import { MAT } from '../mats';
@@ -28,60 +28,81 @@ export const onFace = (s: Side, c0: number, c1: number, d0: number, d1: number, 
   s.nz !== 0 ? solid(c0, y0, s.f + s.nz * d0, c1, y1, s.f + s.nz * d1, mat) : solid(s.f + s.nx * d0, y0, c0, s.f + s.nx * d1, y1, c1, mat);
 export const faceXZ = (s: Side, c: number, d: number) => (s.nz !== 0 ? { x: c, z: s.f + s.nz * d } : { x: s.f + s.nx * d, z: c });
 
+/** Bare to this high over its foot (U-032): no hold on a building a wall kick from the street reaches, nor a hang
+ *  from a sign's bar or a stand on an awning; the first is a crossing from something else away. */
+export const BARE = 7.2;
+
+/** The highest ground along a side, within 2 m outside it: where BARE counts from (on a slope the ground beside a
+ *  wall may stand well over the lot's base). */
+export function footOf(l: Lot, s: Side): number {
+  let y = l.base;
+  if (l.ground) for (let k = 0, n = Math.ceil(s.b - s.a); k <= n; k++) for (const d of [0.8, 2.2]) { const p = faceXZ(s, s.a + ((s.b - s.a) * k) / n, d); y = Math.max(y, l.ground(p.x, p.z)); }
+  return y;
+}
+
+/** A street pole with step bolts (U-032): its grip line at (x, z) facing n, its post behind it, from y0 to y1. */
+export function pole(x: number, z: number, nx: number, nz: number, y0: number, y1: number, out: Pick<Fabric, 'climbables' | 'solids' | 'features'>) {
+  out.climbables.push({ kind: 'pole', x, z, y0, y1, nx, nz });
+  out.solids.push(solid(x - nx * 0.12 - 0.11, y0 - 0.5, z - nz * 0.12 - 0.11, x - nx * 0.12 + 0.11, y1, z - nz * 0.12 + 0.11, MAT.hidden));
+  out.features.push({ kind: 'pole', x, y: y0, z, group: out.features.length, nx, nz });
+}
+
+/** The holds a facade offers (U-032): few, scattered, none in reach of the street. Most walls hold nothing; the
+ *  rest a patch or two somewhere over BARE: a downpipe from the roof broken off partway down, a short ladder, a
+ *  run of sills and AC units, a beam end left sticking out. Getting onto one takes something else: a neighbour's
+ *  roof, a pole, scaffolding, a wall-run. Balconies start on the third floor; a shop sign's bar hangs low. */
 export function facades(l: Lot, r: Rng, out: Fabric) {
   if (l.kind === 'tower') return;
   // The roof edge he pulls over: a parapet, or the eave plate of a tiled roof.
   const top = l.kind === 'trad' ? l.wall : l.top;
   const door = l.route?.[0];
-  let ladder = false;
   for (const s of sides(l)) {
     if (s.b - s.a < 3) continue;
-    const low = rand(r) < 0.5, x = rand(r), sign = rand(r) < 0.3;
-    // Corners are solid piers on every building, clear of windows.
-    const c = low ? s.a + 0.8 : s.b - 0.8;
-    const at = faceXZ(s, c, 0);
-    if (door && Math.hypot(door.x - at.x, door.z - at.z) < 2.5) continue;
-    if (x < 0.3) {
-      const p = faceXZ(s, low ? s.a + 0.3 : s.b - 0.3, 0.06);
-      out.climbables.push({ kind: 'pipe', x: p.x, z: p.z, y0: l.base, y1: top, nx: s.nx, nz: s.nz });
-      out.features.push({ kind: 'pipe', x: p.x, y: l.base, z: p.z, group: out.features.length });
-      // A downpipe on its brackets, a hopper head under the roof edge.
-      const pc = low ? s.a + 0.3 : s.b - 0.3;
-      for (let y = l.base + 1.2; y < top - 0.8; y += 3) out.decor.push(onFace(s, pc - 0.1, pc + 0.1, 0, 0.16, y, y + 0.05, MAT.metal));
-      out.decor.push(onFace(s, pc - 0.16, pc + 0.16, 0, 0.3, top - 0.7, top - 0.35, MAT.metal));
-    } else if (x < 0.42 && l.kind === 'res' && !ladder) {
-      // Fire escape: the drop section is pulled up, so it takes a jump to reach.
-      ladder = true;
-      const p = faceXZ(s, low ? s.a + 1.4 : s.b - 1.4, 0.06);
-      out.climbables.push({ kind: 'ladder', x: p.x, z: p.z, y0: l.base + 2.3, y1: top, nx: s.nx, nz: s.nz });
-      out.features.push({ kind: 'ladder', x: p.x, y: l.base + 2.3, z: p.z, group: out.features.length });
-    } else if (x < 0.8) {
-      const group = out.features.length;
-      let y = l.base + 1.5 + rand(r) * 0.3;
-      while (top - y > 1.2) {
-        const ac = rand(r) < (l.kind === 'trad' ? 0.3 : 0.45);
-        out.solids.push(ac
-          ? onFace(s, c - 0.375, c + 0.375, 0, 0.4, y - 0.5, y, MAT.metal)
-          : onFace(s, c - 0.5, c + 0.5, 0, 0.14, y - 0.1, y, l.kind === 'trad' ? MAT.wood : MAT.concrete));
-        out.features.push({ kind: ac ? 'ac' : 'sill', ...faceXZ(s, c, 0), y, group });
-        // What the hold is (U-022): an AC unit with its grille, or a stairwell window on its sill.
-        if (ac) out.decor.push(onFace(s, c - 0.28, c + 0.12, 0.4, 0.42, y - 0.44, y - 0.06, MAT.tealMetal));
-        else {
-          // Bars on the windows within reach of the street.
-          const h = Math.min(1.1, top - y - 0.1);
-          out.decor.push(onFace(s, c - 0.4, c + 0.4, 0, 0.02, y, y + h, MAT.glass));
-          if (y < l.base + 8) for (const b of [c - 0.14, c + 0.14]) out.decor.push(onFace(s, b - 0.015, b + 0.015, 0.08, 0.11, y, y + h, MAT.metal));
+    const foot = footOf(l, s), high = top - foot;
+    const n = high < BARE + 2.5 ? 0 : rand(r) < 0.5 ? 0 : rand(r) < 0.75 ? 1 : 2;
+    for (let k = 0; k < n; k++) {
+      const c = s.a + 0.8 + rand(r) * (s.b - s.a - 1.6), y0 = foot + BARE + rand(r) * (high - BARE - 2.5), x = rand(r);
+      if (door && Math.hypot(door.x - faceXZ(s, c, 0).x, door.z - faceXZ(s, c, 0).z) < 2.5) continue;
+      if (x < 0.25) {
+        // A downpipe from the gutter, its lower length torn away: a hopper head under the edge, brackets down it.
+        const p = faceXZ(s, c, 0.06);
+        out.climbables.push({ kind: 'pipe', x: p.x, z: p.z, y0, y1: top, nx: s.nx, nz: s.nz });
+        out.features.push({ kind: 'pipe', x: p.x, y: y0, z: p.z, group: out.features.length });
+        for (let y = top - 1.8; y > y0 + 0.3; y -= 3) out.decor.push(onFace(s, c - 0.1, c + 0.1, 0, 0.16, y, y + 0.05, MAT.metal));
+        out.decor.push(onFace(s, c - 0.16, c + 0.16, 0, 0.3, top - 0.7, top - 0.35, MAT.metal));
+      } else if (x < 0.37 && l.kind === 'res') {
+        // A short ladder left bolted to the wall: a fire escape's last flight, a maintenance ladder.
+        const p = faceXZ(s, c, 0.06), y1 = Math.min(top, y0 + 3 + rand(r) * 3);
+        out.climbables.push({ kind: 'ladder', x: p.x, z: p.z, y0, y1, nx: s.nx, nz: s.nz });
+        out.features.push({ kind: 'ladder', x: p.x, y: y0, z: p.z, group: out.features.length });
+      } else if (x < 0.85) {
+        // Two to five sills and AC units, each a hand's reach over the last (now and then a push-off past it), not
+        // in a column: they wander along the wall as the windows do.
+        const group = out.features.length;
+        let y = y0, cc = c;
+        for (let m = 2 + randInt(r, 4); m > 0 && top - y > 1.2; m--) {
+          const ac = rand(r) < (l.kind === 'trad' ? 0.3 : 0.45);
+          out.solids.push(ac
+            ? onFace(s, cc - 0.375, cc + 0.375, 0, 0.4, y - 0.5, y, MAT.metal)
+            : onFace(s, cc - 0.5, cc + 0.5, 0, 0.14, y - 0.1, y, l.kind === 'trad' ? MAT.wood : MAT.concrete));
+          out.features.push({ kind: ac ? 'ac' : 'sill', ...faceXZ(s, cc, 0), y, group });
+          // What the hold is (U-022): an AC unit with its grille, or a stairwell window on its sill.
+          if (ac) out.decor.push(onFace(s, cc - 0.28, cc + 0.12, 0.4, 0.42, y - 0.44, y - 0.06, MAT.tealMetal));
+          else out.decor.push(onFace(s, cc - 0.4, cc + 0.4, 0, 0.02, y, y + Math.min(1.1, top - y - 0.1), MAT.glass));
+          y += rand(r) < 0.15 ? E.mantleStanding.max + 0.1 + rand(r) * 0.3 : 1.4 + rand(r) * (E.mantleStanding.comfortable - 1.5);
+          cc = Math.max(s.a + 0.6, Math.min(s.b - 0.6, cc + (rand(r) - 0.5) * 1.2));
         }
-        // Holds within a hand's reach of each other (under a standing mantle, M3-50), now and then one past it
-        // that takes a push-off.
-        y += rand(r) < 0.15 ? E.mantleStanding.max + 0.1 + rand(r) * 0.3 : 1.4 + rand(r) * (E.mantleStanding.comfortable - 1.5);
+      } else {
+        // The end of a steel beam left sticking out of the wall: a hold, and a perch to stand on.
+        const reach = 0.6 + rand(r) * 0.6;
+        out.solids.push(onFace(s, c - 0.13, c + 0.13, 0, reach, y0 - 0.3, y0, MAT.metal));
+        out.features.push({ kind: 'beamEnd', ...faceXZ(s, c, reach), y: y0, group: out.features.length });
       }
-      // The units drain down a pipe beside the stack.
-      out.decor.push(onFace(s, c + 0.55, c + 0.6, 0.02, 0.07, l.base, top - 0.3, MAT.metal));
-    } else if (x < 0.9 && l.kind === 'res' && !l.route && s.street) {
-      // Balconies on a street front: the slab edge and the rail top are holds 1 and 2 m apart.
+    }
+    if (rand(r) < 0.1 && l.kind === 'res' && !l.route && s.street) {
+      // Balconies on a street front, from the third floor: the slab edge and the rail top are holds 1 and 2 m apart.
       const m = (s.a + s.b) / 2, n = Math.round((l.wall - l.base) / FLOOR);
-      for (let f = 1; f < n; f++) {
+      for (let f = Math.max(3, Math.ceil((foot + BARE - l.base) / FLOOR)); f < n; f++) {
         const y = l.base + f * FLOOR;
         out.solids.push(
           onFace(s, m - 1.2, m + 1.2, 0, 1.1, y - 0.15, y, MAT.concrete),
@@ -92,10 +113,11 @@ export function facades(l: Lot, r: Rng, out: Fabric) {
       }
       continue;
     }
-    // A shop sign's frame over the street: a bar 0.6 m out from the wall to swing from.
+    // A shop sign's frame over the street: a bar 0.6 m out from the wall to swing from, low (from it a first-floor
+    // window sill is past a dyno).
     const m = (s.a + s.b) / 2, mid = faceXZ(s, m, 0);
-    if (sign && s.street && l.kind !== 'trad' && !(door && Math.hypot(door.x - mid.x, door.z - mid.z) < 2)) {
-      const y = l.base + 3.6 + rand(r) * 0.6;
+    if (rand(r) < 0.3 && s.street && l.kind !== 'trad' && !(door && Math.hypot(door.x - mid.x, door.z - mid.z) < 2)) {
+      const under = faceXZ(s, m, 0.8), y = Math.max(l.base, l.ground?.(under.x, under.z) ?? l.base) + 3.25 + rand(r) * 0.2;
       out.solids.push(onFace(s, m - 1.25, m + 1.25, 0.57, 0.63, y - 0.06, y, MAT.metal));
       out.decor.push(onFace(s, m - 1.25, m - 1.2, 0, 0.6, y - 0.05, y, MAT.metal), onFace(s, m + 1.2, m + 1.25, 0, 0.6, y - 0.05, y, MAT.metal),
         onFace(s, m - 1.2, m + 1.2, 0.55, 0.6, y + 0.1, y + 1.0, MAT.wood));

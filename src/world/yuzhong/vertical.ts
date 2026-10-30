@@ -12,6 +12,7 @@ import { ENVELOPE as E } from '../../data/envelope';
 import type { Heightfield } from '../heightfield';
 import type { Climbable, Feature } from '../world';
 import { ROAD, streetCells, type Street } from './ground';
+import { BARE } from '../city/climb';
 import type { Plan } from './lots';
 
 const FLOOR = 3, PARAPET = 0.6;
@@ -174,21 +175,35 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
       out.decor.push(box(a, Math.min(e0, e1), Math.max(e0, e1), d + 0.46, d + 0.5, y, y + 1.0, MAT.metal));
       feature('bridge', a, mid, d, y);
     }
+    // A way up the taller one from the lower one's roof (U-032): a plank from the top of its parapet across the gap
+    // to the taller wall, and a climbing line up that wall from it (built with the lot, routes.ts).
+    const tall = a.wall >= b.wall ? a : b, low = tall === a ? b : a, sd = tall === a ? k : -k, ld = local(tall, low.obb.cx, low.obb.cz)[1];
+    const o0 = Math.max(-tall.obb.hd, ld - low.obb.hd), o1 = Math.min(tall.obb.hd, ld + low.obb.hd), d = Math.max(-tall.obb.hd + 3.5, Math.min(tall.obb.hd - 3.5, (o0 + o1) / 2));
+    // (The plank out of reach of the ground in the gap: BARE over it, as every hold on the wall.)
+    const gapFoot = Math.max(...[-1, -0.5, 0, 0.5, 1].map(t => yAt(...world(tall, sd * (tall.obb.hw + 0.8), t * tall.obb.hd))));
+    if (gap >= 1.2 && gap <= 4 && low.kind === 'res' && !tall.climb && tall.wall - low.wall >= 12 && low.wall + PARAPET - gapFoot >= BARE && d > o0 + 0.8 && d < o1 - 0.8 && rand(r) < 0.35) {
+      const deck = low.wall + PARAPET, ua = sd * tall.obb.hw, ub = sd * (tall.obb.hw + gap), f = frame(tall), [x, z] = world(tall, ua, d);
+      out.solids.push(box(tall, Math.min(ua, ub), Math.max(ua, ub), d - 0.6, d + 0.6, deck - 0.15, deck, MAT.wood));
+      out.features.push({ kind: 'crossing', x, y: deck, z, group: out.features.length, nx: sd * f.ux, nz: sd * f.uz });
+      tall.climb = { face: sd > 0 ? 3 : 2, at: tall.obb.cz + d, y0: deck };
+      tall.noEnter = true; low.edge = true;
+      continue;
+    }
     // Beams out of the taller one's side into the gap, at odd heights.
-    const tall = a.wall >= b.wall ? a : b;
     if (gap >= 2.5 && tall.wall - tall.base >= 20 && rand(r) < 0.3) for (let n = 1 + randInt(r, 3); n > 0; n--) {
-      const y = tall.base + 6 + rand(r) * (tall.wall - tall.base - 9), d = (rand(r) - 0.5) * (tall.obb.hd * 2 - 3), reach = Math.min(gap - 0.6, 2 + rand(r) * 2);
+      const y = tall.base + BARE + 1 + rand(r) * (tall.wall - tall.base - BARE - 4), d = (rand(r) - 0.5) * (tall.obb.hd * 2 - 3), reach = Math.min(gap - 0.6, 2 + rand(r) * 2);
       // (The row's buildings face the same way, so toward the other one is +k from a and -k from b.)
       const sd = tall === a ? k : -k, ua = sd * tall.obb.hw, ub = sd * (tall.obb.hw + reach);
       out.solids.push(box(tall, Math.min(ua, ub), Math.max(ua, ub), d - 0.13, d + 0.13, y - 0.3, y, MAT.metal));
       feature('beam', tall, (ua + ub) / 2, d, y);
     }
   }
-  // Scaffolding hung on one front in eight of the taller buildings, from 6-10 m up to half its height.
+  // Scaffolding hung on one front in eight of the taller buildings, from 8-12 m up (out of reach of the street) to
+  // half its height.
   for (const p of plans) {
     if (p.far || p.kind !== 'res' || p.wall - p.base < 20 || !p.row || rand(r) > 0.12) continue;
     const w = Math.min(p.obb.hw * 2 - 2, 6 + rand(r) * 4), u0 = (rand(r) - 0.5) * (p.obb.hw * 2 - w - 1) - w / 2, u1 = u0 + w, f = p.obb.hd;
-    const y0 = p.base + 6 + rand(r) * 4, y1 = Math.max(y0 + 6, p.base + (p.wall - p.base) * 0.5);
+    const y0 = p.base + BARE + 1 + rand(r) * 4, y1 = Math.max(y0 + 6, p.base + (p.wall - p.base) * 0.5);
     for (let y = y0; y <= y1 + 0.01; y += 2) out.solids.push(box(p, u0, u1, f + 0.1, f + 1.2, y - 0.05, y, MAT.wood));
     for (const u of [u0, u1]) for (const d of [f + 0.15, f + 1.15]) {
       out.solids.push(box(p, u - 0.03, u + 0.03, d - 0.03, d + 0.03, y0 - 0.6, y1 + 1.1, MAT.metal));

@@ -8,6 +8,7 @@ import { pick, GLASS } from './palette';
 import { PARAPET, type Lot, type Fabric } from './buildings';
 import { lobby } from './fronts';
 import { climbLine, type Block } from './routes';
+import { BARE, footOf, sides } from './climb';
 
 export function tower(l: Lot, r: Rng, out: Fabric) {
   const { base, wall } = l;
@@ -58,6 +59,9 @@ export function tower(l: Lot, r: Rng, out: Fabric) {
   out.solids.push(solid(x0, wall, z0, x1, wall + PARAPET, z0 + 0.2, MAT.concrete), solid(x0, wall, z1 - 0.2, x1, wall + PARAPET, z1, MAT.concrete),
     solid(x0, wall, z0 + 0.2, x0 + 0.2, wall + PARAPET, z1 - 0.2, MAT.concrete), solid(x1 - 0.2, wall, z0 + 0.2, x1, wall + PARAPET, z1 - 0.2, MAT.concrete));
   l.top = wall + PARAPET;
-  // Over half the tall ones have a line up a north or south face, all the way from the street.
-  if (wall - base >= 40 && rand(r) < 0.6) climbLine(l, blocks, randInt(r, 2), (x0 + x1) / 2 + (rand(r) - 0.5) * (x1 - x0 - 6), r, out);
+  // Over half the tall ones have a line up a north or south face, from a street pole beside it (U-032).
+  if (wall - base >= 40 && rand(r) < 0.6) {
+    const face = randInt(r, 2);
+    climbLine(l, [{ ...blocks[0], y0: footOf(l, sides(l)[face]) + BARE }, ...blocks.slice(1)], face, (x0 + x1) / 2 + (rand(r) - 0.5) * (x1 - x0 - 6), r, out, 'pole');
+  }
 }

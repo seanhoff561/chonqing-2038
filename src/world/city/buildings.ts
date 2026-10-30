@@ -6,6 +6,7 @@ import { makeRng, rand, randInt, hashString, type Rng } from '../../sim/rng';
 import type { Prop, Inter, Climbable, HideSpot, Site, Feature } from '../world';
 import { canEnter, hollow } from './interiors';
 import { facades } from './climb';
+import { climbLine } from './routes';
 import { details } from './details';
 import { fronts, shopHouse } from './fronts';
 import { tower } from './towers';
@@ -26,6 +27,12 @@ export interface Lot {
   podium?: number;
   /** enterable buildings: a walking route from outside the door up the stairs and out onto the roof */
   route?: { x: number; y: number; z: number }[];
+  /** a climbing line up one side (north, south, west, east) at `at` along it, from a neighbour's roof at y0 (U-032) */
+  climb?: { face: number; at: number; y0: number };
+  /** its roof runs out to its walls (a plank or a bridge meets its edge): no setback at the top */
+  edge?: boolean;
+  /** the ground height at a point of its own frame (Yuzhong, where the ground round a lot may rise over its base) */
+  ground?: (x: number, z: number) => number;
 }
 export interface Fabric { solids: Solid[]; decor: Solid[]; props: Prop[]; lots: Lot[]; inter: Inter[]; climbables: Climbable[]; hides: HideSpot[]; features: Feature[]; sites: Site[]; far: Solid[] }
 
@@ -38,6 +45,7 @@ export function buildLot(l: Lot, r: Rng, out: Fabric) {
   const s0 = out.solids.length, f0 = out.far.length;
   l.tint ??= tintFor(l.mat, makeRng(hashString(`tint:${l.x0}:${l.z0}`)));
   if (l.kind === 'tower') tower(l, r, out); else { mass(l, r, out); facades(l, r, out); }
+  if (l.climb && l.kind !== 'tower') climbLine(l, [{ x0: l.x0, z0: l.z0, x1: l.x1, z1: l.z1, y0: l.climb.y0, y1: l.wall, top: l.top }], l.climb.face, l.climb.at, r, out, 'deck');
   for (const list of [out.solids.slice(s0), out.far.slice(f0)]) for (const s of list) if (s.tint === undefined && PAINTED.has(s.mat)) s.tint = l.tint;
 }
 
@@ -55,7 +63,7 @@ function mass(l: Lot, r: Rng, out: Fabric) {
   const open = canEnter(l) && rand(r) < 0.9;
   const look = open ? (l.mat === MAT.tile ? MAT.facadeTile : MAT.facade) : paint(l, r);
   // Some tall solid blocks step their top two floors back from the edge.
-  const step = !open && l.kind === 'res' && wall - base >= 24 && rand(r) < 0.25 ? 1.6 : 0;
+  const step = !open && !l.climb && !l.edge && l.kind === 'res' && wall - base >= 24 && rand(r) < 0.25 ? 1.6 : 0;
   // Half of Shibati's shop houses on flat ground stand open (M3-55).
   const shop = l.kind === 'trad' && !l.noEnter && wall - base >= 5 && Math.min(x1 - x0, z1 - z0) >= 3.5 && rand(r) < 0.5 ? l.street.findIndex(Boolean) : -1;
   if (open) hollow(l, r, out);

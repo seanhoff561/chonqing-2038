@@ -10,7 +10,8 @@ import { MAT } from '../mats';
 import { makeRng, hashString, rand, randInt, type Rng } from '../../sim/rng';
 import { PROP_BOX } from '../../data/props';
 import { heightAt, type Heightfield } from '../heightfield';
-import type { Prop, Inter } from '../world';
+import type { Prop, Inter, Climbable, Feature } from '../world';
+import { pole } from '../city/climb';
 import { onGround, ROAD, KERB_W, PAVE, type Street } from './ground';
 import { districtAt } from './lots';
 
@@ -35,6 +36,8 @@ export function propBoxes(p: Prop): Solid[] {
 }
 
 type Put = (kind: string, x: number, z: number, yaw: number, extra?: Partial<Prop>) => boolean;
+/** A utility pole h m high at (x, z), its bolts facing n. */
+type PoleAt = (x: number, z: number, nx: number, nz: number, h: number) => void;
 
 /** land: 1 on the peninsula (only there is dressed); clear: places to keep free (tunnel mouths, the grate). */
 export function dressStreets(index: SolidIndex, g: Heightfield, sts: Street[], land: Uint8Array, inter: Inter[], clear: { x: number; z: number; r: number }[]) {
@@ -72,6 +75,18 @@ export function dressStreets(index: SolidIndex, g: Heightfield, sts: Street[], l
     }
     return true;
   };
+  // Utility poles (U-032): a post with step bolts, its grip line facing the street; clear of everything else.
+  const poles = { climbables: [] as Climbable[], solids: [] as Solid[], features: [] as Feature[] };
+  const poleAt: PoleAt = (x, z, nx, nz, h) => {
+    const gy = heightAt(g, x, z), k = Math.round(z / g.cell) * g.w + Math.round(x / g.cell);
+    if (gy === null || land[k] !== 1 || busy(x, z) || onRoad(x, z)) return;
+    const post = solid(x - nx * 0.12 - 0.2, gy + 0.3, z - nz * 0.12 - 0.2, x - nx * 0.12 + 0.2, gy + h, z - nz * 0.12 + 0.2, 0);
+    if (overlaps(index, post) || hitsPlaced(post)) return;
+    pole(x, z, nx, nz, gy, gy + h, poles);
+    solids.push(poles.solids[poles.solids.length - 1]);
+    const pk = key(Math.floor(x / 8), Math.floor(z / 8)), pa = placed.get(pk);
+    if (pa) pa.push(post); else placed.set(pk, [post]);
+  };
   sts.forEach((s, si) => {
     if (!onGround(s) || s.pts.length < 2) return;
     const r = makeRng(hashString(`dress${si}`));
@@ -80,7 +95,7 @@ export function dressStreets(index: SolidIndex, g: Heightfield, sts: Street[], l
       if (len < 2) continue;
       const ux = (bx - ax) / len, uz = (bz - az) / len, th = Math.atan2(uz, ux);
       const at = (t: number, off: number): [number, number] => [ax + ux * t - uz * off, az + uz * t + ux * off];
-      if (ROAD.has(s.kind)) road(s, len, at, th, r, put, g);
+      if (ROAD.has(s.kind)) road(s, len, at, th, r, put, g, poleAt);
       else if (s.steps) stairs(s, len, at, th, r, put);
       else walkway(s, len, at, th, r, put);
       // Litter, weeds and debris along the edges, more where nobody sweeps.
@@ -98,14 +113,18 @@ export function dressStreets(index: SolidIndex, g: Heightfield, sts: Street[], l
       }
     }
   });
-  return { props, solids };
+  return { props, solids, climbables: poles.climbables, features: poles.features };
 }
 
 /** Roads: the carriageway kept clear (U-030), its abandoned cars shoved onto the pavement in twos and threes;
  *  lampposts and trees at the kerb, scooters, bins and drone docks against the buildings; now and then a camera
  *  pole and a notice. */
-function road(s: Street, len: number, at: (t: number, off: number) => [number, number], th: number, r: Rng, put: Put, g: Heightfield) {
+function road(s: Street, len: number, at: (t: number, off: number) => [number, number], th: number, r: Rng, put: Put, g: Heightfield, poleAt: PoleAt) {
   const kerb = s.w / 2 + KERB_W, wall = kerb + PAVE, along = Math.PI / 2 - th;
+  // Utility poles at the building line every 40-80 m, alternating sides (U-032): a way up onto a low roof, or to
+  // the first hold of a wall, from the street.
+  const ux = Math.cos(th), uz = Math.sin(th);
+  for (let t = 8 + rand(r) * 30, side = rand(r) < 0.5 ? -1 : 1; t < len - 4; t += 40 + rand(r) * 40, side = -side) poleAt(...at(t, side * (wall - 0.5)), side * uz, -side * ux, 8 + rand(r) * 2);
   for (let t = 4 + rand(r) * 10; t < len - 2; t += 14 + rand(r) * 26) {
     const side = rand(r) < 0.5 ? -1 : 1, cyber = districtAt(...at(t, 0)).cyber;
     // On the pavement, or where a building stands on it, shoved further off into whatever space is beside the road.

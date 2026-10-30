@@ -1,4 +1,5 @@
-// Climbing lines up the towers (M3-57a, U-023): from the street to the roof, every hold a generated one. Steel
+// Climbing lines up the towers (M3-57a, U-023, U-032): from a pole or a neighbour's roof to the top, every hold a
+// generated one. Steel
 // stubs left out of the facade 1.6 to 2 m apart, a dyno each (from the envelope), swinging left and right;
 // every half-dozen a broken floor: the torn edge of a slab over a hole knocked into the building, to reach up to,
 // mantle into, crouch out of sight and get the grip back; from its edge the next stub is a jump and a grab away.
@@ -7,7 +8,7 @@
 import { carve } from '../geom';
 import { MAT } from '../mats';
 import { rand, type Rng } from '../../sim/rng';
-import { sides, onFace, faceXZ } from './climb';
+import { sides, onFace, faceXZ, pole } from './climb';
 import type { Lot, Fabric } from './buildings';
 
 /** Stubs between broken floors; the first stub out of a floor, over its hole (a jump and a grab); the floor's slab
@@ -18,8 +19,10 @@ const RUN = 6, OUT = 2.4, HOLE = 2.2, LEDGE = 0.25, REACH = 1.0;
 export interface Block { x0: number; z0: number; x1: number; z1: number; y0: number; y1: number; top: number }
 
 /** A climbing line up `face` (north, south, west, east) of each block in turn, at `u` along it; features in one
- *  group: 'route' stubs, 'rest' floors, 'vantage' (one on lines over 80 m), 'routeTop' each block's edge. */
-export function climbLine(l: Lot, blocks: Block[], face: number, at: number, r: Rng, out: Fabric) {
+ *  group: 'route' stubs, 'rest' floors, 'vantage' (one on lines over 80 m), 'routeTop' each block's edge.
+ *  Its foot (U-032: never the street): 'pole', a street pole beside the wall up to the first block's floor, the
+ *  first stub a reach over its top; 'deck', something to stand on at that floor, the first stub a jump over it. */
+export function climbLine(l: Lot, blocks: Block[], face: number, at: number, r: Rng, out: Fabric, foot: 'pole' | 'deck') {
   const group = out.features.length, tall = blocks[blocks.length - 1].y1 - blocks[0].y0 > 80;
   let vantage = !tall, n = 0;
   for (const b of blocks) {
@@ -31,6 +34,12 @@ export function climbLine(l: Lot, blocks: Block[], face: number, at: number, r: 
       out.features.push({ kind: 'route', ...faceXZ(s, c, 0.14), y, group, nx: s.nx, nz: s.nz });
     };
     let y = b.y0 + OUT, side = 1, hard = false, last = b.y0;
+    if (b === blocks[0] && foot === 'pole') {
+      // The pole a step aside from the line and clear of the wall; the first stub a reach over its top.
+      const p = faceXZ(s, u + 0.9, 0.45);
+      pole(p.x, p.z, s.nx, s.nz, l.base, b.y0 + 0.4, out);
+      y = b.y0 + 1.0;
+    }
     while (y < b.top - 1.9) {
       stub(y, u + side * 0.35);
       last = y; side = -side; n++;
