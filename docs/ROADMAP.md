@@ -390,7 +390,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Short and medium buildings about twice as tall; between them half-height layers (low blocks, decks, scaffolding, platforms) and short fillers as low as today's short ones, so the city stands in layers to be crossed by parkour; bridges between buildings, beams sticking out, vertical alleys (narrow slots between tall walls to climb or wall-run up)
   - A unit test measures the layers (heights spread across bands) and the vertical alleys; screenshots
   - U-034: the shorter buildings beside tall ones 60-80% of their height and no building far over the ones round it (a test bounds each building's height against its neighbours'); many more low fillers in the open ground and the small parks left
-  - U-034: Shibati's old houses rebuilt as apartment blocks like the rest of the city; the banded "parking garage" facades gone (Q-008)
+  - U-034: Shibati's old houses rebuilt as apartment blocks like the rest of the city
   - U-034: megastructures only low over roofs of near one height, on thick columns (a test bounds their columns' height and thickness)
 - [ ] **M3-38** Interiors with variety (U-014)
   - Room templates (flats, stairwells, corridors, shops, restaurants, offices, workshops) furnished from a furniture and clutter set in states of decay: collapsed ceilings, debris, water damage, overturned furniture
@@ -403,6 +403,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Sim tests take one way into each template and find the locked alternatives refuse him
   - U-034 procedural insides and connections: each building a number of enterable windows by its size, into rooms, stairs up to more rooms; most of it locked or collapsed, a few rooms per building open, each with a window to it (broken in, to break, locked or barred); from some windows a makeshift beam bridge to a building nearby or a short fire escape; ground doors sometimes to an unlocked stairwell; roof doors locked but breakable; walkways joining buildings to cross over
   - U-034 windows: fewer and bigger (real sizes), spread out, real openings with frames and glass close up (painted far off)
+  - U-034, Q-008: the open shells (every floor open round a stair core, empty, like a car park) are gone, replaced by these insides
 - [ ] **M3-37** The ant-hill route network (U-014, U-021, U-023)
   - Hand-designed main routes like highways across the district over roofs, through buildings, along beams and through tunnels, carrying the sites and key supplies needed to finish the game; branching neighbourhood routes off them; streets are the dangerous shortcut
   - Every gap, height and reach on a route is within the movement envelope (M3-50) and near its top (U-023): main routes demand the full movement set (chained wall kicks, a back-jump to a grab, wall-runs, swings and laches, item tricks), risky branches sit at the maximum; nothing on a route is a walk
