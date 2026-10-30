@@ -42,6 +42,9 @@ export type SimEvent =
   | { t: 'ate'; id: string; sick: boolean }
   | { t: 'msg'; text: string };
 
+/** A stack he dropped (M3-72): lying where he let it go until he picks it up. */
+export interface Dropped { stack: import('./inventory').Stack; x: number; y: number; z: number }
+
 /** A piece of furniture he placed: its item id and where it stands. */
 export interface Placed { id: string; item: string; x: number; y: number; z: number; yaw: number }
 
@@ -67,6 +70,8 @@ export interface SimState {
   shelters: Shelter[];
   /** furniture he has put down: beds, crates */
   placed: Placed[];
+  /** things he dropped, lying where they fell */
+  dropped: Dropped[];
   /** container currently open beside the backpack, or null */
   openContainer: string | null;
   /** interactable id he's looking at, and a running hold-E task */

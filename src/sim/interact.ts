@@ -9,15 +9,20 @@ export const REACH = 2.0;
 export const ROUGH = 'rough', ROUGH_HOLD = 1.2;
 
 type Handler = (s: SimState, w: World, it: Inter) => void;
-const handlers = new Map<string, { now?: Handler; done?: Handler; dur?: (s: SimState, it: Inter) => number; can?: (s: SimState, it: Inter) => string | null }>();
+interface Kind { now?: Handler; done?: Handler; dur?: (s: SimState, it: Inter) => number; can?: (s: SimState, it: Inter) => string | null; label?: (s: SimState, it: Inter) => [string, string]; grip?: boolean }
+const handlers = new Map<string, Kind>();
 
 /**
  * Register a kind. `dur` > 0 makes it a hold-E action that calls `done` when finished; otherwise `now` runs at once.
- * `can` returns null when allowed or a short reason shown instead of acting.
+ * `can` returns null when allowed or a short reason shown instead of acting. `label` names what E does now, if that
+ * changes; `grip` lets him work it hanging from a ladder or a hold (a grate over his head).
  */
-export function onInteract(kind: string, h: { now?: Handler; done?: Handler; dur?: (s: SimState, it: Inter) => number; can?: (s: SimState, it: Inter) => string | null }) {
+export function onInteract(kind: string, h: Kind) {
   handlers.set(kind, h);
 }
+
+/** What the prompt says for an interactable: its kind's label for the moment, else its own name. */
+export const interLabel = (s: SimState, it: Inter): [string, string] => handlers.get(it.kind)?.label?.(s, it) ?? [it.zh, it.en];
 
 /** Interactables that live in sim state rather than the static world (placed furniture). */
 export const extraInters: ((s: SimState) => Inter[])[] = [];
@@ -56,13 +61,14 @@ function near(s: SimState, w: World, x: number, z: number, d: number): Inter[] {
   return out;
 }
 
-/** The interactable he's looking at: nearest to the look ray within reach and not behind a wall. */
+/** The interactable he's looking at: nearest to the look ray within reach and not behind a wall. Hanging on, only
+ *  what can be worked from a grip. */
 export function lookTarget(s: SimState, w: World): Inter | null {
-  const p = s.player, e = eye(s);
+  const p = s.player, e = eye(s), grip = p.mode === 'grip';
   const dx = -Math.sin(p.yaw) * Math.cos(p.pitch), dy = Math.sin(p.pitch), dz = -Math.cos(p.yaw) * Math.cos(p.pitch);
   let best: Inter | null = null, bestScore = Infinity;
   for (const it of near(s, w, e.x, e.z, REACH)) {
-    if (s.wstate.gone[it.id]) continue;
+    if (s.wstate.gone[it.id] || (grip && !handlers.get(it.kind)?.grip)) continue;
     const vx = it.x - e.x, vy = it.y - e.y, vz = it.z - e.z;
     const along = vx * dx + vy * dy + vz * dz;
     if (along < 0 || along > REACH + it.r) continue;
@@ -91,13 +97,14 @@ export function stepInteract(s: SimState, w: World, input: InputFrame) {
   if (task) {
     const it = allInters(s, w).find(i => i.id === task.id);
     const still = it && lookTarget(s, w)?.id === it.id;
-    if (!(input.buttons & B.INTERACT) || !still || p.mode !== 'ground') { s.task = null; s.events.push({ t: 'msg', text: 'interrupted' }); return; }
+    const steady = p.mode === 'ground' || (p.mode === 'grip' && !!handlers.get(it!.kind)?.grip);
+    if (!(input.buttons & B.INTERACT) || !still || !steady) { s.task = null; s.events.push({ t: 'msg', text: 'interrupted' }); return; }
     task.t += DT;
     if (task.t >= task.dur) { s.task = null; handlers.get(it!.kind)?.done?.(s, w, it!); }
     input.pressed &= ~B.INTERACT;
     return;
   }
-  const it = p.mode === 'ground' || p.mode === 'swim' ? lookTarget(s, w) : null;
+  const it = p.mode === 'ground' || p.mode === 'swim' || p.mode === 'grip' ? lookTarget(s, w) : null;
   s.target = it?.id ?? null;
   // E with nothing in view starts the rough-sleep hold, leaving the press for hiding in a box.
   if (!it && (input.pressed & B.INTERACT) && p.mode === 'ground') { s.task = { id: ROUGH, t: 0, dur: ROUGH_HOLD }; return; }

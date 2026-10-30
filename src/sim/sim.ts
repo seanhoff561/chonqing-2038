@@ -18,10 +18,12 @@ import './loot';
 import { syncWorld } from './doors';
 import './food';
 import './shelter';
+import './drops';
+import './grate';
 import { survival } from '../data/survival';
 
-/** Saves of another version are dropped: 6 since runs moved to the real map (M3-41c), old saves held old-map places. */
-export const STATE_VERSION = 6;
+/** Saves of another version are dropped: 7 since he drops things (M3-72); 6 when runs moved to the real map (M3-41c). */
+export const STATE_VERSION = 7;
 
 export function createState(seed: number, world: World): SimState {
   const s = world.spawn;
@@ -38,6 +40,7 @@ export function createState(seed: number, world: World): SimState {
     nextUid: 0,
     shelters: [],
     placed: [],
+    dropped: [],
     openContainer: null,
     target: null,
     task: null,

@@ -81,7 +81,9 @@ gore, blood spray, lens-flare spam, motion smear, low detail`
 - **Jiaochangkou subway station:** concourse, screen doors, dead escalators, Line 1 red and Line 2 green signs
   (ref: monorail-line2-3, xiaoshizi-1).
 - **The Grand Tunnel and the vent junction:** arched rock corridors from the war, old lamps, damp; a chamber under
-  a vertical shaft capped by a metal grate (refs: air-raid-tunnels-1..3).
+  a vertical shaft with an iron ladder up to a metal grate, bolted from below, in the paving of a narrow alley
+  between two old blocks, a heap of black rubbish bags over it, shop neon on the alley walls (U-038; refs:
+  air-raid-tunnels-1..3).
 
 ## Scene 0: Cold open (night, 2038)
 
@@ -108,9 +110,9 @@ gore, blood spray, lens-flare spam, motion smear, low detail`
 ### S00-03 Feet over the grate
 - Duration: 6 s
 - Camera: from below, looking straight up through a metal grate, 24 mm, static
-- Action: a [HUMANOID]'s feet cross the grate; cyan light slides across the bars; neon bleeds pink and cyan through drifting fog; drops of water fall toward the lens.
-- Light: neon and cyan from above, black below
-- Prompt: view from underground looking up through a rusted metal grate, the feet of a tall faceless robot walking across it, pink and cyan neon glow and fog above, water dripping down toward camera
+- Action: black rubbish bags lie over the grate; through the gaps between them a [HUMANOID]'s feet pass along the alley beside it; cyan light slides across the bars; neon bleeds pink and cyan through drifting fog; drops of water fall toward the lens.
+- Light: neon and cyan from above in slivers between the bags, black below
+- Prompt: view from underground looking up through a rusted metal grate half covered by black rubbish bags, through the gaps the feet of a tall faceless robot walking past in a narrow alley, pink and cyan neon glow and fog above, water dripping down toward camera
 - Negative: default; visible robot face
 - Consistency: the same grate as S06-02
 - Line: 广播 | 请居民留在室内。 | Residents, remain indoors.
@@ -586,19 +588,30 @@ gore, blood spray, lens-flare spam, motion smear, low detail`
 ### S06-01 The old place
 - Duration: 8 s
 - Camera: 24 mm, slow reveal
-- Action: the vent junction: a chamber under a vertical shaft with a grate at the top; their old hideout: a mattress, crates, candle stubs, posters, friends' drawings and names on the rock (张浩, 陈静, 李伟, a date in 2036).
-- Light: grey-blue light falling from the grate, a candle
-- Prompt: small rock chamber in an old tunnel under a vertical shaft capped by a metal grate, a worn mattress, wooden crates, candle stubs, old posters, teenage drawings and Chinese names chalked on the rock wall, cold light falling from above
+- Action: the vent junction: a chamber under a vertical shaft, an iron ladder up it to a grate; their old hideout: a mattress, crates, candle stubs, posters, friends' drawings and names on the rock (张浩, 陈静, 李伟, a date in 2036).
+- Light: thin slivers of neon falling from the grate between the bags over it, a candle
+- Prompt: small rock chamber in an old tunnel under a vertical shaft with an iron ladder up to a metal grate, a worn mattress, wooden crates, candle stubs, old posters, teenage drawings and Chinese names chalked on the rock wall, thin pink and cyan light falling from above
 - Negative: default
 - Consistency: this is the game's start hideout; [CHEN_JING]'s drawings on the wall
 - Sound: water, the city faint above
 
+### S06-01a The bolts (U-038)
+- Duration: 8 s
+- Camera: 35 mm from the ladder, looking up past his hands
+- Action: [LI_WEI] climbs the ladder to the grate. Two iron bolts shot through its frame from below; cords tied through the bars run up to the black bin bags heaped over it. Chalked on the shaft beside it in [HAOZI]'s hand: 关好 · 盖好 · 别留痕迹. He tests each bolt with his thumb and climbs down.
+- Light: neon slivers between the bags, his phone torch
+- Prompt: a teenage boy on an iron ladder at the top of a narrow concrete shaft checking two heavy iron bolts on a rusted grate overhead, cords tied through its bars to black rubbish bags heaped on top, chalk writing on the shaft wall, slivers of pink neon between the bags
+- Negative: default
+- Consistency: the grate, bolts and bags as in the game; the friends' rule the player keeps
+- Line: 字幕 | 关好 · 盖好 · 别留痕迹 | Shut it. Cover it. Leave no trace.
+- Sound: the bolts' iron, the bags' plastic shifting, the alley's hum above
+
 ### S06-02 The view up
 - Duration: 8 s
 - Camera: POV straight up through the grate, 24 mm
-- Action: neon from Shibati's shop signs bleeding pink and cyan, searchlights crossing in fog; a patrol's feet pass over the grate; dust sifts down.
-- Light: neon and white cones
-- Prompt: looking straight up a vertical shaft through a metal grate at night, pink and cyan neon glow and crossing white searchlight beams in fog, the feet of a robot patrol passing over the grate, dust falling
+- Action: between the bags over the grate, the alley's neon (a noodle shop's sign down one wall, a cheap hotel's on the other) bleeding pink and cyan, searchlights crossing the strip of sky; a patrol's feet pass along the alley beside the grate and on; dust sifts down.
+- Light: neon and white cones in slivers
+- Prompt: looking straight up a vertical shaft through a metal grate at night, black rubbish bags heaped over it, through the gaps pink and cyan neon signs on the walls of a narrow alley and crossing white searchlight beams in fog, the feet of a robot patrol passing by, dust falling
 - Negative: default
 - Consistency: matches S00-03; the in-game view from the hideout
 - Sound: footsteps overhead, the speaker far away

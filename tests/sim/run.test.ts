@@ -25,9 +25,9 @@ describe('starting supplies', () => {
     expect(Math.hypot(s.shelters[0].x - sc.x, s.shelters[0].z - sc.z)).toBeLessThan(3);
     for (const [id, n] of FRIENDS_CRATE) expect(count(s.containers[START_CRATE], id), id).toBe(n);
     expect(stashIds(s, w, s.shelters[0])).toContain(START_CRATE);
-    // The grate is straight above the chamber, open to the street.
+    // The grate is up a shaft off the chamber (M3-72: set off the roads, in an alley).
     const g = w.props.find(p => p.kind === 'grate')!;
-    expect(Math.hypot(g.x - sc.x, g.z - sc.z)).toBeLessThan(10);
+    expect(Math.hypot(g.x - sc.x, g.z - sc.z)).toBeLessThan(30);
     expect(g.y - sc.y).toBeGreaterThan(8);
   });
   it('the furnished test shelter: the stash holds a day of food and water; the car battery is at 60%', () => {

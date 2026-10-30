@@ -37,6 +37,13 @@ export const MOVE_SOUNDS: Record<string, Play> = {
   'door-open': (a, t) => { a.noise(t, 0.3, 0.08, 'bandpass', 700, 3, 350); a.tone(t + 0.04, 0.28, 0.04, 240, 190, 'sawtooth'); },
   'door-close': (a, t) => { a.tone(t, 0.14, 0.3, 95, 55); a.noise(t, 0.1, 0.2, 'lowpass', 500); },
   force: (a, t) => { a.tone(t, 0.18, 0.5, 130, 45); a.noise(t, 0.25, 0.4, 'bandpass', 1100, 1, 300); a.noise(t + 0.2, 0.15, 0.3, 'highpass', 2500); },
+  // The start hideout's grate (M3-72): iron bolts shot or drawn and the grate grinding over its frame; a lighter
+  // clang lifting or lowering it; bin bags dragged; something let fall.
+  'grate-bolt': (a, t) => { for (let i = 0; i < 2; i++) { a.tone(t + i * 0.35, 0.12, 0.35, 420, 260, 'square'); a.noise(t + i * 0.35, 0.08, 0.3, 'highpass', 2500); } a.noise(t + 0.8, 0.7, 0.3, 'bandpass', 500, 2, 250); a.tone(t + 1.5, 0.3, 0.45, 110, 60); },
+  'grate-open': (a, t) => { a.noise(t, 0.5, 0.22, 'bandpass', 600, 2, 300); a.tone(t + 0.45, 0.25, 0.3, 140, 80); },
+  'grate-shut': (a, t) => { a.noise(t, 0.3, 0.18, 'bandpass', 700, 2, 350); a.tone(t + 0.25, 0.3, 0.4, 120, 60); },
+  bags: (a, t) => { a.noise(t, 0.6, 0.12, 'bandpass', 1400, 0.6, 600); a.noise(t + 0.5, 0.5, 0.1, 'bandpass', 1100, 0.6, 500); },
+  drop: (a, t) => { a.noise(t, 0.08, 0.12, 'lowpass', 900); a.tone(t, 0.05, 0.05, 160, 90); },
   glass: (a, t) => { a.noise(t, 0.5, 0.45, 'highpass', 3500, 0.7, 7000); for (let i = 0; i < 5; i++) a.tone(t + 0.05 + i * 0.04, 0.06, 0.08, 3800 + i * 600, 3000, 'sine'); },
   dyno: (a, t) => { a.tone(t, 0.1, 0.35, 130, 60, 'triangle'); breath(a, t, 0.14, 0.22, 800); },
 };

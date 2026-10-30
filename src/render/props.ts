@@ -203,7 +203,23 @@ const builders: Record<string, Builder> = {
     const n = Math.round(p.w! / 0.12);
     for (let i = 0; i <= n; i++) parts.push(new THREE.BoxGeometry(0.03, 0.06, p.w!).translate(-p.w! / 2 + (i / n) * p.w!, 0, 0));
     for (const z of [-p.w! / 2, 0, p.w! / 2]) parts.push(new THREE.BoxGeometry(p.w!, 0.07, 0.05).translate(0, 0, z));
-    return new THREE.Mesh(mergeGeometries(parts), lam(0x2c2e30));
+    const m = new THREE.Mesh(mergeGeometries(parts), lam(0x2c2e30));
+    if (!p.text) return m;
+    // One that opens (M3-72): it swings up on its hinges along its -x edge as its interactable opens.
+    const g = new THREE.Group(), hinge = new THREE.Group();
+    hinge.position.x = -p.w! / 2;
+    m.position.x = p.w! / 2;
+    hinge.add(m);
+    g.add(hinge);
+    g.userData.tick = (_t: number, open: Record<string, boolean>) => { const want = open[p.text!] ? 1.75 : 0; hinge.rotation.z += (want - hinge.rotation.z) * 0.12; };
+    return g;
+  },
+  // Rubbish bags heaped over the start hideout's grate (M3-72): shoved off to its +x side while it's open.
+  cover: p => {
+    const g = new THREE.Group(), heap = libProp({ ...p, kind: 'bags' })!;
+    g.add(heap);
+    g.userData.tick = (_t: number, open: Record<string, boolean>) => { const want = open[p.text!] ? 2.4 : 0; heap.position.x += (want - heap.position.x) * 0.12; };
+    return g;
   },
   graffiti: p => {
     const { tex, aspect } = textTexture(p.text!, { fg: 'rgba(210,205,190,0.75)', size: 44, font: '"Noto Sans CJK SC", sans-serif' });

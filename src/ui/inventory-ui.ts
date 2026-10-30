@@ -1,4 +1,4 @@
-// The backpack (Tab) and an open container side by side. Drag to move, R rotates while dragging,
+// The backpack (Tab) and an open container side by side. Drag to move (out of the grids drops it), R rotates while dragging,
 // 1-5 over an item binds it to the hotbar. Moves go to the sim as commands.
 import { hideoutList } from '../sim/shelter';
 import type { Game } from '../game';
@@ -149,6 +149,9 @@ export class InventoryUI {
       const r = area.getBoundingClientRect();
       const x = Math.floor((e.clientX - r.left) / CELL) - d.ox, y = Math.floor((e.clientY - r.top) / CELL) - d.oy;
       this.game.input.cmds.push({ c: 'move', from: d.from, to: area.dataset.ref!, uid: d.uid, x, y, rot: d.rot });
+    } else if (d.from === 'pack') {
+      // Let go outside the grids: dropped at his feet (M3-72).
+      this.game.input.cmds.push({ c: 'drop', uid: d.uid });
     }
     this.sig = '';
   }

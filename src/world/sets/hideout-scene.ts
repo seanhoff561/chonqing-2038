@@ -13,8 +13,9 @@ export function buildHideoutScene(): World {
   solids = carve(solids, { x0: 26, y0: 0, z0: -1, x1: 44, y1: 2.4, z1: 1 });
   for (let i = 0; i < 9; i++) solids = carve(solids, { x0: 44 + i * 2, y0: i * 1, z0: -1, x1: 46 + i * 2, y1: 9.1, z1: 1 });
   solids.push(rampSolid(44, -0.5, -1, 62, 1, 0, 9, 1, MAT.stone));
-  // A few buildings around the grate for the view up the shaft.
-  solids.push(solid(-4, 9, -14, 6, 37, -6, MAT.tile), solid(13, 9, -6, 22, 23, 4, MAT.tile), solid(14, 9, -16, 24, 31, -7, MAT.plaster), solid(-2, 9, 7, 8, 27, 16, MAT.tile));
+  // A few buildings around the grate for the view up the shaft, two of them close either side of its alley.
+  solids.push(solid(-4, 9, -14, 6, 37, -6, MAT.tile), solid(13, 9, -6, 22, 23, 4, MAT.tile), solid(14, 9, -16, 24, 31, -7, MAT.plaster), solid(-2, 9, 7, 8, 27, 16, MAT.tile),
+    solid(2, 9, -8, 18, 22, -2, MAT.tile), solid(2, 9, 2, 13, 19, 8, MAT.plaster));
   const props = [...h.props,
     { kind: 'neon', x: 1, y: 19, z: -5.95, yaw: 0, w: 1.4, h: 8, text: '重庆小面' },
     { kind: 'neon', x: 12.95, y: 16.5, z: 0.5, yaw: -Math.PI / 2, w: 1.1, h: 6, text: '十八梯旅馆' },
@@ -31,7 +32,7 @@ export function buildHideoutScene(): World {
     teleports: [
       { name: 'mattress', ...h.at.spawn, yaw: -Math.PI / 2 },
       { name: 'passage', x: 30, y: 0, z: 0, yaw: -Math.PI / 2 },
-      { name: 'street above', x: 10, y: 9, z: 3, yaw: 0 },
+      { name: 'street above', x: 6, y: 9, z: 0, yaw: 0 },
     ],
   });
 }

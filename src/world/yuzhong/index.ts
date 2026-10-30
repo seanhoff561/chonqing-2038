@@ -34,7 +34,7 @@ const empty = (): Fabric => ({ solids: [], decor: [], props: [], lots: [], inter
 export function buildYuzhong(): World {
   const g = buildGround(), sts = streets();
   // The set pieces cut and level the ground first; lots keep clear of them.
-  const tun = buildTunnels(g), site = buildSite(g), line = buildLine2(g);
+  const tun = buildTunnels(g, sts), site = buildSite(g), line = buildLine2(g);
   const land = landMask(g), metro = stationEntrances(g, sts.filter(onGround), land), block = new Uint8Array(g.y.length), mark = (poly: [number, number][], m = block) => rasterPoly(poly, 0, 0, g.cell, g.w, g.h, (i0, i1, j) => m.fill(1, j * g.w + i0, j * g.w + i1 + 1));
   // The underground network off the Grand Tunnel (M3-58), its ways in kept clear of lots.
   const { W: tw } = tunnelFrame(), gtAt = (uu: number, vv: number) => { const [x, z] = tw(uu, vv); return { x, y: tun.frame.floor, z }; };
@@ -49,8 +49,12 @@ export function buildYuzhong(): World {
   const pod = podiumMask(g, block), unblocked = block.slice();
   for (let k = 0; k < pod.length; k++) block[k] |= pod[k];
   const plans = planLots(g, sts, land, block);
+  // The start hideout's alley keeps its levelled paving: the lots' aprons stop at it.
+  const lane: [number, number][] = [];
+  rasterPoly(corners(tun.alley), 0, 0, g.cell, g.w, g.h, (i0, i1, j) => { for (let k = j * g.w + i0; k <= j * g.w + i1; k++) lane.push([k, g.y[k]]); });
   levelLots(g, plans);
   markEnterable(g, plans);
+  for (const [k, y] of lane) g.y[k] = y;
   const fac = buildFactory(g, pod, sts);
   // What its halls leave of the podium is open ground like any other, to fill.
   if (fac) for (let k = 0; k < pod.length; k++) block[k] = unblocked[k] | fac.under[k];
@@ -130,7 +134,7 @@ export function buildYuzhong(): World {
   solids.push(...filled.solids);
   const world = makeWorld({
     name: 'yuzhong', routes: net.routes, patrols: net.patrols, gates, solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? [], fac?.decor ?? [], vert.decor, cross.decor, under.decor, laid.decor, filled.decor),
-    props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], fac?.props ?? [], under.props, laid.props, dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(line.climbables, site?.climbables ?? [], vert.climbables, under.climbables, dress.climbables),
+    props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], fac?.props ?? [], under.props, laid.props, dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(tun.climbables, line.climbables, site?.climbables ?? [], vert.climbables, under.climbables, dress.climbables),
     hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones.concat(under.zones),
     far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(fac?.features ?? [], vert.features, cross.features, rubble.features, under.features, laid.features, dress.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n })), under.descents.flatMap((d, i) => d.map((q, n) => ({ kind: 'descentRoute', ...q, group: i * 100 + n })))), marks, lawns: laid.lawns, convoys: fac?.convoys, streets: drawn.concat(laid.paths, doorWays), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }],
     teleports, spawn: hide,

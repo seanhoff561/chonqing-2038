@@ -71,5 +71,11 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 - Pick a few enterable blocks (`?dev=1`, the teleport list) and try to get in and through them: windows to break or find broken, doors locked, jammed or chained, vents to pry, holes and ladders between floors. Does each feel like its own puzzle? Too easy, too hard?
 - Do the rooms look real enough close up (furniture, wallpaper, clutter, ceiling lights, decay)? What looks worst?
 - Cross a street on a plank, a beam and a cable; walk a cable bundle between close buildings; swing the bars across a narrow gap. Do they read, and do the cables sway?
-- Follow a main route (look for the red rags and worn paths on roofs) from Shibati toward Jiefangbei: is it a way across the city off the streets? Where does it break?
+- (The route marks on roofs go in M3-76, U-043: the routes move into the buildings, unmarked.)
 - Find a grappling cache (a bare block with a crate and a post on its roof): is there really no other way up?
+
+## M3-72: the start hideout under the alley
+- `?scenario=run`: climb the shaft's ladder and hold F on the grate overhead. Does drawing the bolts feel slow and loud enough to make you wait for the alley to be quiet? Climb out over the rails.
+- Up in the alley at night: does it read as a back alley (neon, bags over the grate, bins, washing)? Is the grate hard enough to spot under the bags?
+- Go back down and shut it from below (it bolts and drags the bags back). Then try sleeping once with it open: found in your sleep. Fair warning from the intro's chalked rule?
+- Drag something out of the backpack to drop it, and pick it back up with F.

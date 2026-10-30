@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 68 of 84 done
+## M3: 69 of 88 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -445,12 +445,34 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Every street a dangerous gap to cross, not a way to walk: the ways across are over (buildings, crossings), under (basements, the underground) or a quick dash between cover
   - Nooks on the sides of buildings to hide in from a passing patrol
   - Not tested for being possible (U-037): data checks of what's there and screenshots; the director plays the ways
-- [ ] **M3-72** The start hideout under the alley (U-038)
+- [x] **M3-72** The start hideout under the alley (U-038)
   - The start hideout is underground under an alleyway (the neon still over the alley), reached by a ladder up to a grate hidden under rubbish bags
   - The grate takes time to unlock and open (and to shut and lock from below), and is loud doing it (noise events heard by what's near)
   - Left open, or a trace left (a dropped item, the bags moved off it), it's found: he is killed in his sleep there
   - The intro screenplay (M8-25) and the intro cutscene's feature (M8-05) rewritten to match
   - Sim tests: the grate's open and close times and noise; sleeping with it open, or a trace, kills him; shut and clean, he wakes
+- [ ] **M3-79** Monotone buildings (U-043)
+  - Building facades muted to near monotone like the rest of the visual overhaul: paint faded to greys, off-whites and dirty concrete, colour left only as faint tints and stains; tile, brick and render read by texture and grime, not hue
+  - The colour in the city is its light: neon, screens, lamps and the machines' lights stand out against the buildings
+  - Screenshots of the same street views by day and night before and after
+- [ ] **M3-77** Buildings as warrens: many rooms, a structure to explore (U-043)
+  - Enterable buildings have many rooms over their floors (flats, corridors, stairwells, shops, offices, service rooms, storerooms), with a building's structure to explore: corridors, stairs, landings, rooms off rooms
+  - Still a maze: doors in every room but many locked, jammed or chained; stairs collapsed or blocked in places; the way on through holes in floors, vents, broken walls; rarely the whole building from one way in
+  - Inner rooms without windows, reached only through other rooms
+  - Squeeze passages between rooms and floors (a gap in a broken wall, behind a fallen cabinet, a crawl under a collapsed slab)
+  - Vertical thin shafts (light wells, service and chimney shafts) and sloped passages (chutes, collapsed slabs, stair voids) between floors, narrow enough to chimney (M3-78)
+  - Broken windows to climb in and out through; rooms with things to scavenge
+  - Sim tests: rooms per building and per floor, windowless rooms, locked doors, squeezes and shafts present; draw calls and triangles within budget near a dense block (perf e2e)
+- [ ] **M3-78** Chimneying (U-043)
+  - In a gap between two facing walls 0.6 to 1.2 m apart, vertical or sloped, he braces back and feet against them and works up or down it slowly, stopping anywhere; jumping or a wider gap ends it
+  - Sloped passages (a chute, a duct, a collapsed slab against a wall) climbed and descended the same way
+  - A gym station: a vertical shaft and a sloped one
+  - Sim tests: up and down a 6 m shaft 0.8 m wide, up a 40-degree sloped passage, none in a 1.6 m gap
+- [ ] **M3-76** The anthill: routes through buildings, unmarked (U-043)
+  - Nothing marks the way: the worn paths and rags on the roofs are gone; the player finds the way himself
+  - The routes run mostly through buildings (room to room, floor to floor by doors, holes, vents, squeezes, shafts, stairs) and now and then out of them: out of a broken window, up or along a wall, along a building's side on ledges and sills, across into the next building, down into basements and the underground, only sometimes over a roof (roofs are dangerous, U-038)
+  - Planned against what he can do: the unaided moves (jumps, drops, climbs) and, for the tool-gated legs, what his tools reach (the grappling hook's rise and the larger gaps crossed with rope and line); a data table of those reaches drives the plan
+  - Sim tests: most of each route's length inside buildings or underground, little over roofs; every leg within the reach table for the moves or tools it needs; no route marks
 - [ ] **M3-73** Basements and the underground maze (U-038)
   - Some buildings have basements, joined to the underground layer by grates, vents and broken walls
   - Under the city an ant hill of sewers, vents and tunnels, some only crawl-high, some flooded to swim through fully under water; vents to pry open into buildings; grates up into basements
@@ -571,7 +593,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - The sky from photographic reference: fine pinpoint stars, natural cloud (no orange cast), the sky running down to a visible horizon; rain from reference: streaks, splashes, wet sheen, mist
   - At night only a few windows lit (the city is emptied), lights where people or machines are
   - Screenshots by day, dusk, night and in rain
-  - The visual overhaul (U-032): the ground, props and doors muted, worn and near monotone (pavement aged, paint faded, sediment and grime, cars dull) so robots, crates and things to grab stand out; the sky cloudier; nights dark enough to need the headlamp; the cyberpunk light (signs, screens, robots' lights) stronger against it; building colours kept, the light changed
+  - The visual overhaul (U-032): the ground, props and doors muted, worn and near monotone (pavement aged, paint faded, sediment and grime, cars dull) so robots, crates and things to grab stand out; the sky cloudier; nights dark enough to need the headlamp; the cyberpunk light (signs, screens, robots' lights) stronger against it; the buildings muted to near monotone too (U-043, M3-79), the light carrying the colour
 - [ ] **M3-64** The far ground drawn properly (U-031)
   - The far view carries the roads, pavements, grass and ground textures, matching the near view at the seam
   - Screenshots across the seam; perf stays in budget
@@ -1014,7 +1036,7 @@ M8 Story and sound: the intro cutscene, endings, the voice system with subtitles
   - The scripted intro from DESIGN section 13 and docs/cinematics/INTRO.md (news of the AI, the city fighting back and the rubble it left, the factory and the convoys out (U-030), Li Wei at the construction site, his father's call, the attack, the flight through Shibati, the subway and the underground city, Anna wakes) ending on day 1 at 06:00 in the grate hideout under Shibati (U-018)
   - The smoke test plays it to the end
   - Plays the generated clips in public/cinematics when present (subtitled, zh and en), else the in-engine version
-  - U-038: the intro shows the start hideout under the alley: the ladder, the grate under the rubbish bags
+  - U-038: the intro shows the start hideout under the alley: the ladder, the grate under the rubbish bags, its bolts and the friends' rule chalked by it (shut it, cover it, leave no trace; INTRO.md S06-01a)
 - [ ] **M8-06** Intro skip after the first run
   - After a first run the intro can be skipped with a key; the first run can't skip it
   - The smoke test covers both

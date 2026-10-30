@@ -5,7 +5,8 @@ import { dayOf, clockText } from '../sim/clock';
 
 const CAUSES: Record<string, [string, string]> = {
   fall: ['坠落', 'Fell'], bleeding: ['失血', 'Bled out'], drown: ['溺水', 'Drowned'], starvation: ['饥饿', 'Starved'],
-  thirst: ['脱水', 'Died of thirst'], shot: ['中弹', 'Shot'], raid: ['睡梦中被杀', 'Killed in his sleep'], test: ['测试', 'Test'],
+  thirst: ['脱水', 'Died of thirst'], shot: ['中弹', 'Shot'], raid: ['睡梦中被杀', 'Killed in his sleep'],
+  found: ['藏身处暴露 睡梦中被杀', 'Found in his sleep: the hideout gave itself away'], test: ['测试', 'Test'],
 };
 
 export class DeathScreen {

@@ -1,5 +1,7 @@
-// Furniture he puts down (U-013): beds, crates, and the toolbox that turns a table into a workbench.
+// Furniture he puts down (U-013): beds, crates, and the toolbox that turns a table into a workbench; and what he
+// drops, lying where it fell (M3-72).
 import * as THREE from 'three';
+import { itemModel } from './items3d';
 import type { SimState } from '../sim/types';
 import type { World } from '../world/world';
 
@@ -20,7 +22,7 @@ export class Furniture {
   /** Rebuild when what's placed changes. */
   sync(s: SimState, w: World) {
     const benches = Object.keys(s.wstate.benches ?? {});
-    const sig = s.placed.map(p => p.id).join() + '|' + benches.join();
+    const sig = s.placed.map(p => p.id).join() + '|' + benches.join() + '|' + s.dropped.map(d => d.stack.uid).join();
     if (sig === this.sig) return;
     this.sig = sig;
     this.group.clear();
@@ -29,6 +31,12 @@ export class Furniture {
       if (!m) continue;
       m.position.set(p.x, p.y, p.z);
       m.rotation.y = p.yaw;
+      this.group.add(m);
+    }
+    for (const d of s.dropped) {
+      const m = itemModel(d.stack.id);
+      m.position.set(d.x, d.y + 0.05, d.z);
+      m.rotation.set(Math.PI / 2, 0, d.stack.uid * 2.4);
       this.group.add(m);
     }
     for (const id of benches) {

@@ -6,6 +6,7 @@ import { teleport } from '../../src/sim/player';
 import { stashIds } from '../../src/sim/shelter';
 import { loot } from '../../src/data/loot';
 import { run, aim } from './helpers';
+import { free } from '../../src/sim/physics';
 import { B } from '../../src/sim/types';
 
 const w = getWorld('yuzhong');
@@ -31,11 +32,17 @@ describe('shelter sites (M3-29, U-013)', () => {
     const site = local.find(s => s.bed && s.containers.length)!;
     const bed = w.inter.find(i => i.id === site.bed)!;
     const s = createState(1, w);
-    // Stand a metre from the bed toward the middle of the room and look at it.
-    const dx = site.x - bed.x, dz = site.z - bed.z, l = Math.hypot(dx, dz) || 1;
-    teleport(s.player, bed.x + (dx / l) * 1.1, site.y + 0.05, bed.z + (dz / l) * 1.1);
-    run(s, w, 10);
-    aim(s, bed.x, bed.y, bed.z);
+    // Stand a metre from the bed on its own floor (a site's rooms span floors since M3-36, its bed may not be on the
+    // first room's) where he can see it, and look at it.
+    const floor = bed.y - 0.5;
+    for (let a = 0; a < 16 && s.target !== bed.id; a++) {
+      const x = bed.x + Math.cos(a * Math.PI / 8) * 1.1, z = bed.z + Math.sin(a * Math.PI / 8) * 1.1;
+      if (!free(w.index, x, floor + 0.05, z, 1.75)) continue;
+      teleport(s.player, x, floor + 0.05, z);
+      run(s, w, 10);
+      aim(s, bed.x, bed.y, bed.z);
+      run(s, w, 1);
+    }
     run(s, w, 1, { pressed: B.INTERACT });
     expect(s.shelters.map(h => h.id)).toContain(bed.id);
     expect(stashIds(s, w)).toEqual(expect.arrayContaining(site.containers));
