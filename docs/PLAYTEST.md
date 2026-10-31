@@ -121,3 +121,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M3-43: the subway way in
 - Teleport to 'Jiaochangkou metro': walk the platform past the screen doors, up the dead escalators to the concourse, then down onto the tracks, east along the running tunnel and through the cross passage into the Grand Tunnel and on to the friends' chamber. Does it feel like an abandoned metro?
+
+## M3-35: Shibati and Jiaochangkou from the references
+- Walk down Shibati's stair among the old pitched-roof houses and along Jiaochangkou's ridge junction (logs/places-shibati.png, places-jiaochangkou.png): do they read like the reference photos made 2038? Worth adding: Jiaochangkou's old timber house squeezed between slab blocks, its metro entrance sign box.

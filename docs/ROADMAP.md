@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 85 of 93 done
+## M3: 86 of 93 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -629,7 +629,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Terrain, streets and buildings of the play area follow the geo data at real size: real street widths, stairs and footprints, building heights from levels (typical by kind where untagged)
   - Every set piece, tunnel, district and spawn moves to its real place; tests follow
   - Boot, draw-call and triangle budgets hold (DESIGN 16); screenshots of Jiefangbei, Shibati and Chaotianmen beside their reference photos
-- [ ] **M3-35** Shibati and Jiaochangkou from the references (U-014)
+- [x] **M3-35** Shibati and Jiaochangkou from the references (U-014)
   - Terrain, street layout and building placement follow the real places in docs/reference (photos and notes): organic, not a grid; buildings sit on the slope with stepped bases and retaining walls
   - The streets look like the real ones, made futuristic and dystopian (U-024): dressing per M3-34, the ASI's marks
   - Screenshots beside reference photos of the same spots

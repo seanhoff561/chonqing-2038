@@ -1,5 +1,5 @@
-// M3-41 (U-017): the city at 1:1 beside the real places. Jiefangbei from its pedestrian street, Shibati looking down
-// its stair, Chaotianmen's point from the river; each shot laid beside its reference photo in docs/reference/places
+// M3-41 (U-017), M3-35: the city at 1:1 beside the real places. Jiefangbei from its pedestrian street, Shibati looking
+// down its stair, Jiaochangkou's junction on the ridge, Chaotianmen's point from the river; each shot laid beside its reference photo in docs/reference/places
 // (logs/places-<name>.png), the draw-call and triangle budgets holding at each.
 import fs from 'node:fs';
 
@@ -21,6 +21,8 @@ const PLACES = [
     const hs = st.pts.map(([x, z]) => hy(x, z)), top = st.pts[hs.indexOf(Math.max(...hs))], foot = st.pts[hs.indexOf(Math.min(...hs))], l = Math.hypot(foot[0] - top[0], foot[1] - top[1]) || 1;
     const dx = (foot[0] - top[0]) / l, dz = (foot[1] - top[1]) / l;
     return { x: top[0] - dx * 2, y: hy(top[0], top[1]) + 0.2, z: top[1] - dz * 2, yaw: Math.atan2(-dx, -dz), pitch: -0.2 }; }`],
+  // (Jiaochangkou: on the ridge's junction, looking down the road to Shibati, M3-35.)
+  ['jiaochangkou', 'jiaochangkou-1.jpg', ALONG('jiaochangkou', "s.kind === 'primary' || s.kind === 'secondary' || s.kind === 'tertiary'", 90)],
   // (Chaotianmen: out over the river off the point, looking back at it.)
   ['chaotianmen', 'chaotianmen-2.jpg', `(w, hy) => { const t = w.teleports.find(q => q.name === 'chaotianmen'), wy = w.water[0].y1;
     for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8, dx = Math.cos(a), dz = Math.sin(a);

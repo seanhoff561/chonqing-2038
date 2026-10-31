@@ -9,9 +9,9 @@ import type { Feature } from '../../src/world/world';
 
 const w = getWorld('yuzhong');
 // The buildings without the connections: the members are wood or cable, or thin steel, concrete or glass (beams,
-// bars, walkways, decks), or sloped.
+// bars, walkways, decks), or sloped (but a pitched tile roof is a building's, M3-35).
 const MEMBER = new Set<number>([MAT.wood, MAT.cable, MAT.metal, MAT.concrete, MAT.glass]);
-const walls = buildIndex(w.solids.filter(s => s.mat !== MAT.wood && s.mat !== MAT.cable && !s.ramp && !(MEMBER.has(s.mat) && s.y1 - s.y0 <= 0.5)), w.ground);
+const walls = buildIndex(w.solids.filter(s => s.mat !== MAT.wood && s.mat !== MAT.cable && (!s.ramp || s.mat === MAT.roofTile) && !(MEMBER.has(s.mat) && s.y1 - s.y0 <= 0.5)), w.ground);
 const KINDS = ['crossPlank', 'crossBeam', 'crossCord', 'cord', 'gapBar', 'walkway', 'skybridge', 'bridge', 'winPlank', 'routeLink'];
 
 /** The connections of a kind, as their two ends. */
@@ -34,7 +34,7 @@ function meets(e: Feature, o: Feature) {
 
 describe('connections meet the walls (M3-81)', () => {
   it('has each kind, both ends recorded', () => {
-    for (const k of KINDS) expect(pairs(k).length, k).toBeGreaterThan(k === 'routeLink' || k === 'crossBeam' || k === 'crossCord' ? 2 : 10);
+    for (const k of KINDS) expect(pairs(k).length, k).toBeGreaterThan(k === 'crossCord' ? 0 : k === 'routeLink' || k === 'crossBeam' ? 2 : 10);
   });
   it("every connection's two ends touch a building, none floating", () => {
     for (const k of KINDS) {

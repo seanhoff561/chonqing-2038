@@ -47,7 +47,7 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
   const yAt = (x: number, z: number) => g.y[Math.max(0, Math.min(g.h - 1, Math.round(z / g.cell))) * g.w + Math.max(0, Math.min(g.w - 1, Math.round(x / g.cell)))];
   const feature = (kind: string, p: Plan, a: number, d: number, y: number, group = out.features.length) => { const [x, z] = world(p, a, d), f = frame(p); out.features.push({ kind, x, y, z, group, nx: f.nx, nz: f.nz }); };
   const rows = new Map<string, Plan[]>();
-  for (const p of plans) if (p.row && /^\d+:/.test(p.row) && !p.far && p.kind === 'res' && !p.sheer) { const a = rows.get(p.row); if (a) a.push(p); else rows.set(p.row, [p]); }
+  for (const p of plans) if (p.row && /^\d+:/.test(p.row) && !p.far && p.kind === 'res' && !p.sheer && !p.pitched) { const a = rows.get(p.row); if (a) a.push(p); else rows.set(p.row, [p]); }
 
   // Across the street: buildings facing each other, overlapping along it.
   let bridges = 0, lanes = 0;

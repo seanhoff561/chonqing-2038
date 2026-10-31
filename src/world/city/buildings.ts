@@ -1,6 +1,6 @@
 // The ordinary city fabric: one lot's building by kind (walk-ups, slabs, towers, Shibati's traditional houses),
 // parapets, pitched roofs, roof clutter, facade climbing and interiors.
-import { solid, carve, type Solid } from '../geom';
+import { solid, carve, rampSolid, type Solid } from '../geom';
 import { MAT } from '../mats';
 import { makeRng, rand, randInt, hashString, type Rng } from '../../sim/rng';
 import type { Prop, Inter, Climbable, HideSpot, Site, Feature } from '../world';
@@ -36,6 +36,8 @@ export interface Lot {
   edge?: boolean;
   /** its roof kept clear (a rooftop route runs over it): no clutter */
   bare?: boolean;
+  /** an old house's pitched roof of grey tile, its ridge along x (Shibati, M3-35), in place of a parapet */
+  pitched?: boolean;
   /** the ground height at a point of its own frame (Yuzhong, where the ground round a lot may rise over its base) */
   ground?: (x: number, z: number) => number;
   /** its basement (M3-73a), in its own frame: the space under the ground floor (the foundation is cut for it and the
@@ -117,6 +119,15 @@ function mass(l: Lot, r: Rng, out: Fabric) {
   if (!open && !l.sheer) details(l, r, out, wall - (step ? 2 * FLOOR : 0));
   if (!l.sheer) fronts(l, look, open, step > 0, out);
   const px0 = x0 + step, pz0 = z0 + step, px1 = x1 - step, pz1 = z1 - step;
+  // (An enterable one keeps a flat roof: its stairs and hatches come out on it.)
+  if (l.pitched && !open) {
+    // Two slopes of grey tile at 25 degrees meeting at a ridge along its length, the eaves out over the walls.
+    const zm = (z0 + z1) / 2, h = (zm - z0) * 0.47;
+    out.solids.push(rampSolid(x0 - 0.3, wall, z0 - 0.4, x1 + 0.3, zm, wall + 0.12, wall + h, 3, MAT.roofTile), rampSolid(x0 - 0.3, wall, zm, x1 + 0.3, z1 + 0.4, wall + 0.12, wall + h, 4, MAT.roofTile));
+    out.far.push(solid(x0, wall, z0, x1, wall + h * 0.6, z1, MAT.roofTile));
+    l.top = wall + h;
+    return;
+  }
   out.solids.push(
     solid(px0, wall, pz0, px1, wall + p, pz0 + w, MAT.concrete), solid(px0, wall, pz1 - w, px1, wall + p, pz1, MAT.concrete),
     solid(px0, wall, pz0 + w, px0 + w, wall + p, pz1 - w, MAT.concrete), solid(px1 - w, wall, pz0 + w, px1, wall + p, pz1 - w, MAT.concrete),

@@ -65,14 +65,15 @@ export function fitEnd(index: SolidIndex, e: V3, o: V3, ext = 6): V3 | null {
 }
 
 /** A connection laid out before the buildings stand: its two ends, and how it's built between two. */
-export interface Link { a: V3; b: V3; make: (a: V3, b: V3) => void; /** b hangs free (a beam out over a gap): only a meets a wall, b moved with it */ free?: boolean }
+export interface Link { a: V3; b: V3; make: (a: V3, b: V3) => void; /** b hangs free (a beam out over a gap): only a meets a wall, b moved with it */ free?: boolean;
+  /** still fit to build between its fitted ends (a cable's sag kept out of reach of the ground under it) */ ok?: (a: V3, b: V3) => boolean }
 
 /** Build the connections now the buildings stand (M3-81, U-044): each end fitted to the wall it meets, run on to
  *  it where the building stands back above (a tower's shaft, a stepped top), left out where there's no wall. */
 export function layLinks(out: Vertical, index: SolidIndex) {
   for (const l of out.links ?? []) {
     const a = fitEnd(index, l.a, l.b), b = a && (l.free ? ([l.b[0] + a[0] - l.a[0], l.b[1], l.b[2] + a[2] - l.a[2]] as V3) : fitEnd(index, l.b, l.a));
-    if (a && b) l.make(a, b);
+    if (a && b && (!l.ok || l.ok(a, b))) l.make(a, b);
   }
   out.links = [];
 }
@@ -85,9 +86,12 @@ export function crossings(plans: Plan[], g: Heightfield, sts: Street[], used: Se
     const l = Math.hypot(b[0] - a[0], b[2] - a[2]) || 1;
     out.features.push({ kind, x: a[0], y: a[1], z: a[2], group, nx: (b[0] - a[0]) / l, nz: (b[2] - a[2]) / l }, { kind, x: b[0], y: b[1], z: b[2], group, nx: (a[0] - b[0]) / l, nz: (a[2] - b[2]) / l });
   };
-  const live = plans.filter(p => !p.far && !p.sheer && (p.kind === 'res' || p.kind === 'tower'));
+  // (Not the old houses' pitched roofs, M3-35: nothing to lay a plank on.)
+  const live = plans.filter(p => !p.far && !p.sheer && !p.pitched && (p.kind === 'res' || p.kind === 'tower'));
   // (Built once the buildings stand, layLinks: each end on the wall it meets.)
-  const links: Link[] = out.links = [], link = (a: V3, b: V3, make: Link['make']) => links.push({ a, b, make });
+  const links: Link[] = out.links = [], link = (a: V3, b: V3, make: Link['make'], ok?: Link['ok']) => links.push({ a, b, make, ok });
+  /** A cable from a to b sagging `sag`: its low point stays out of reach over the ground along it, ends fitted. */
+  const hangs = (sag: number) => (a: V3, b: V3) => [0.1, 0.3, 0.5, 0.7, 0.9].every(t => a[1] + (b[1] - a[1]) * t - 4 * sag * t * (1 - t) - yAt(a[0] + (b[0] - a[0]) * t, a[2] + (b[2] - a[2]) * t) >= BARE + 0.5);
 
   // Across the streets: each street's rows, facing each other, a crossing one pair in three.
   const rows = new Map<string, Plan[]>();
@@ -113,7 +117,7 @@ export function crossings(plans: Plan[], g: Heightfield, sts: Street[], used: Se
         out.decor.push(member([A[0], A[1] - 0.04, A[2]], [Bp[0], Bp[1] - 0.04, Bp[2]], 0.04, 0.28, MAT.metal), member([A[0], A[1] - 0.32, A[2]], [Bp[0], Bp[1] - 0.32, Bp[2]], 0.3, 0.04, MAT.metal));
         feat('crossBeam', A, Bp);
       });
-      else { const junk = rand(r) < 0.5; link(A, Bp, (A, Bp) => { cord(A, Bp, 0.25 + gap * 0.02, r, out, junk); feat('crossCord', A, Bp); }); }
+      else { const junk = rand(r) < 0.5; link(A, Bp, (A, Bp) => { cord(A, Bp, 0.25 + gap * 0.02, r, out, junk); feat('crossCord', A, Bp); }, hangs(0.25 + gap * 0.02)); }
       used.add(a); used.add(b);
       // (Both built straight up to their roofs: no stepped top, no tower's shaft set back, M3-81.)
       a.edge = b.edge = true;
@@ -151,7 +155,7 @@ export function crossings(plans: Plan[], g: Heightfield, sts: Street[], used: Se
       if (y0 > lo - 0.5) continue;
       const A = at(o, x0, y0), Bp = at(o + (rand(r) - 0.5) * 1.5, x1, y1);
       const junk = rand(r) < 0.7;
-      link(A, Bp, (A, Bp) => { cord(A, Bp, sag, r, out, junk); feat('cord', A, Bp); });
+      link(A, Bp, (A, Bp) => { cord(A, Bp, sag, r, out, junk); feat('cord', A, Bp); }, hangs(sag));
     }
     // A steel walkway roof to roof, railed, where the roofs meet (or can).
     if (gap >= 2 && gap <= 8 && rand(r) < 0.12 && (Math.abs(a.wall - b.wall) <= 1.2 || (!used.has(b) && refloor(b, a.wall, 1.2)))) {

@@ -31,6 +31,8 @@ export interface Plan {
   edge?: boolean;
   /** its roof kept clear, a rooftop route running over it (Shibati's terraces): nothing on it, never hollowed */
   bare?: boolean;
+  /** an old house's pitched tile roof (Shibati's terraces, M3-35) */
+  pitched?: boolean;
   /** the district it stands in, and whether that was a crowded centre now gone cyberpunk (U-011, U-020) */
   district: string; cyber: boolean;
   /** infill: the row along one side of one street segment it stands in, in order along the street */
@@ -44,6 +46,17 @@ export const DISTRICT_NAMES: Record<string, [string, string]> = {
   jiefangbei: ['解放碑', 'Jiefangbei'], jiaochangkou: ['较场口', 'Jiaochangkou'], hongyadong: ['洪崖洞', 'Hongyadong'], xiaoshizi: ['小什字', 'Xiaoshizi'],
   chaotianmen: ['朝天门', 'Chaotianmen'], shibati: ['十八梯', 'Shibati'], yuzhong: ['渝中', 'Yuzhong'],
 };
+
+/** Shibati's quarter as in the references (M3-35): what isn't on the map there is an old house, three or four floors
+ *  of grey brick or render under a pitched tile roof (not those in `keep`: the caches the grappling hook reaches and
+ *  what's round them, chosen at their heights). */
+export function oldQuarter(plans: Plan[], keep: Set<Plan>) {
+  for (const p of plans) {
+    if (p.osm || p.far || p.kind !== 'res' || p.pitched || keep.has(p) || districtAt(p.obb.cx, p.obb.cz).district !== 'shibati') continue;
+    const rr = makeRng(hashString(`${p.seed}:old`));
+    Object.assign(p, { wall: p.base + (3 + randInt(rr, 2)) * FLOOR, flex: [3, 4], pitched: true, mat: rand(rr) < 0.4 ? MAT.brick : MAT.plaster });
+  }
+}
 
 /** Districts round the landmarks, nearest first within their reach; the old crowded centres are cyberpunk. */
 const DISTRICTS: [string, number, boolean][] = [['jiefangbei', 380, true], ['jiaochangkou', 200, true], ['hongyadong', 170, true], ['xiaoshizi', 220, true], ['chaotianmen', 320, false], ['shibati', 160, false]];
@@ -164,10 +177,10 @@ export function planLots(g: Heightfield, sts: Street[], land: Uint8Array, block 
     add({ obb: o, base, wall: base + fl * (tower ? 3.3 : business ? 4 : FLOOR), flex: tower || business ? undefined : known ? [Math.max(1, floors - 1), floors + 1] : [2, 20], kind: tower ? 'tower' : 'res', mat, seed: `osm${n}`, street, across: [0, 0, 0, 0], osm: true, name, far, noEnter: business, ...districtAt(o.cx, o.cz) });
   });
 
-  // The Eighteen Stairs (U-018, M3-41c, U-034): both flights and the lane below lined with terraces of apartment
-  // blocks (the old shop houses rebuilt) fronting the steps, 6-9 m wide with 1.6-2.4 m alleys between them (the old
-  // footpaths through the quarter run in those alleys), each roof stepping down the hill from the one above within
-  // a running jump.
+  // The Eighteen Stairs (U-018, M3-41c, U-034, M3-35): both flights and the lane below lined with terraces of old
+  // houses fronting the steps as in the references (two to four floors of grey brick or render under pitched grey
+  // tile roofs), 6-9 m wide with 1.6-2.4 m alleys between them (the old footpaths through the quarter run in those
+  // alleys), each roof stepping down the hill from the one above within a running jump.
   for (const [si, s] of sts.entries()) {
     if (!onGround(s) || s.name !== '十八梯' || s.pts.length < 2) continue;
     const r = makeRng(hashString(`shibati${si}`)), half = s.w / 2 + 0.4, lane = (x: Street) => x !== s && !x.steps && !MAIN.has(x.kind);
@@ -195,11 +208,11 @@ export function planLots(g: Heightfield, sts: Street[], land: Uint8Array, block 
         }
         if (!ok) { prev = null; t += f + 1.6; continue; }
         const n = plans.length, base = edgeHeight(ok, 1, hAt);
-        // Four to seven floors; more where the hill drops away below the block above.
-        let fl = 4 + randInt(r, 4);
-        if (prev) { const want = Math.floor((prev.wall - base + 0.3) / FLOOR - rand(r) * 0.4); if (want >= 3 && want <= 10) fl = want; }
+        // Two to four floors; more where the hill drops away below the house above.
+        let fl = 2 + randInt(r, 3);
+        if (prev) { const want = Math.floor((prev.wall - base + 0.3) / FLOOR - rand(r) * 0.4); if (want >= 2 && want <= 6) fl = want; }
         // (Their heights and clear roofs are the route down the hill: not evened, nor moved to meet another roof.)
-        const p: Plan = { obb: ok, base, wall: base + fl * FLOOR, row: `shibati${si}:${side}`, bare: true, noEnter: true, kind: 'res', mat: [MAT.tile, MAT.plaster, MAT.concrete][randInt(r, 3)], seed: `lot${n}`, street: [false, true, false, false], across: [0, s.w + 3, 0, 0], osm: false, name: '', far: false, ...districtAt(ok.cx, ok.cz) };
+        const p: Plan = { obb: ok, base, wall: base + fl * FLOOR, row: `shibati${si}:${side}`, bare: true, noEnter: true, pitched: true, kind: 'res', mat: [MAT.brick, MAT.plaster, MAT.plaster][randInt(r, 3)], seed: `lot${n}`, street: [false, true, false, false], across: [0, s.w + 3, 0, 0], osm: false, name: '', far: false, ...districtAt(ok.cx, ok.cz) };
         add(p);
         prev = p;
         t += f + 1.6 + rand(r) * 0.8;

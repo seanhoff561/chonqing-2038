@@ -16,7 +16,7 @@ import { fill } from './fill';
 import { GEO } from '../geo';
 import { heightAt, type Heightfield } from '../heightfield';
 import { buildGround, streets, onGround, WATER_Y, streetCells, type Street } from './ground';
-import { planLots, levelLots, markEnterable, type Plan } from './lots';
+import { planLots, levelLots, markEnterable, oldQuarter, type Plan } from './lots';
 import { corners, rasterPoly, obbOverlap, type Obb } from './shapes';
 import { alleys } from '../city/climb';
 import { buildTunnels, tunnelFrame, JUNCTION, METRO } from './tunnels';
@@ -66,6 +66,8 @@ export function buildYuzhong(): World {
   const out = empty(), plots: Plot[] = [];
   // A few caches only a grappling hook reaches (M3-37, U-037): chosen first, so nothing gives them a hold.
   const gatePairs = pickGates(plans, makeRng(hashString('gates')));
+  // (Round the caches nothing changes: what keeps them out of reach was judged at these heights.)
+  oldQuarter(plans, new Set(plans.filter(p => gatePairs.some(([c]) => Math.hypot(p.obb.cx - c.obb.cx, p.obb.cz - c.obb.cz) < 60)).concat(gatePairs.flat())));
   // Bridged, stacked and built over (M3-57): it may set roofs to meet, so before the lots are built.
   const vert = verticalCity(plans, g, sts);
   // The connections across the streets and between close buildings (M3-37a): roofs may still be set to meet.
@@ -260,7 +262,7 @@ function landMask(g: Heightfield): Uint8Array {
 
 /** Build one lot in its own frame and turn everything it made into place. */
 function buildPlan(p: Plan, n: number, out: Fabric, g: Heightfield): Plot {
-  const o = p.obb, l: Lot = { id: n, x0: o.cx - o.hw, z0: o.cz - o.hd, x1: o.cx + o.hw, z1: o.cz + o.hd, base: p.base, wall: p.wall, top: p.wall, kind: p.kind, mat: p.mat, street: p.street, across: p.across, noEnter: p.noEnter, edge: p.edge, sky: p.sky, bare: p.bare, sheer: p.sheer,
+  const o = p.obb, l: Lot = { id: n, x0: o.cx - o.hw, z0: o.cz - o.hd, x1: o.cx + o.hw, z1: o.cz + o.hd, base: p.base, wall: p.wall, top: p.wall, kind: p.kind, mat: p.mat, street: p.street, across: p.across, noEnter: p.noEnter, edge: p.edge, sky: p.sky, bare: p.bare, pitched: p.pitched, sheer: p.sheer,
     ground: (x, z) => { const c = Math.cos(o.yaw), s = Math.sin(o.yaw); return heightAt(g, o.cx + c * (x - o.cx) - s * (z - o.cz), o.cz + s * (x - o.cx) + c * (z - o.cz)) ?? p.base; } };
   const f = empty(), r = makeRng(hashString(p.seed));
   if (p.far) {
@@ -276,7 +278,10 @@ function buildPlan(p: Plan, n: number, out: Fabric, g: Heightfield): Plot {
   // wall, or the slope falls away, no gap shows under the walls.
   let low = l.base;
   rasterPoly(corners({ ...o, hw: o.hw + 4.5, hd: o.hd + 4.5 }), 0, 0, g.cell, g.w, g.h, (i0, i1, j) => { for (let k = j * g.w + i0; k <= j * g.w + i1; k++) low = Math.min(low, g.y[k]); });
-  f.solids.push(solid(l.x0, low - 1, l.z0, l.x1, l.base, l.z1, MAT.concrete));
+  // On a slope it stands on a retaining wall of rough stone, stepped at half its height (M3-35, the references).
+  const drop = l.base - low;
+  f.solids.push(solid(l.x0, low - 1, l.z0, l.x1, l.base, l.z1, drop > 1.5 ? MAT.stone : MAT.concrete));
+  if (drop > 3) f.decor.push(solid(l.x0 - 0.3, low + drop / 2 - 0.3, l.z0 - 0.3, l.x1 + 0.3, low + drop / 2, l.z1 + 0.3, MAT.concrete));
   // A basement (M3-73a): the foundation cut away under it, the ground's shell holed over it (2 m past it, all under
   // the building).
   const bs = l.basement;

@@ -34,16 +34,20 @@ const JOINS = ['crossPlank', 'crossBeam', 'crossCord', 'cord', 'walkway', 'gapBa
  *  roofs reach (none within a running jump that isn't 4 m and more below it), with a roof 7-16 m off to shoot from.
  *  Marked sheer: no holds, nothing joining it. Returns [cache, from]. */
 export function pickGates(plans: Plan[], r: Rng, count = 5): [Plan, Plan][] {
-  const live = plans.filter(p => !p.far && p.kind !== 'tower'), out: [Plan, Plan][] = [];
+  // (Its neighbours towers too, as isolated() counts them; the cache and its launch roof not.)
+  const live = plans.filter(p => !p.far), out: [Plan, Plan][] = [];
   const cands = live.filter(p => p.kind === 'res' && !p.osm && p.wall - p.base >= 15 && p.wall - p.base <= 45 && Math.min(p.obb.hw, p.obb.hd) >= 3);
   for (let t = 0; t < 4000 && out.length < count; t++) {
     const p = cands[Math.floor(rand(r) * cands.length)];
     if (!p || p.sheer || out.some(([c]) => Math.hypot(c.obb.cx - p.obb.cx, c.obb.cz - p.obb.cz) < 250)) continue;
     const near = live.filter(q => q !== p && Math.hypot(q.obb.cx - p.obb.cx, q.obb.cz - p.obb.cz) < 60);
     if (near.some(q => obbOverlap(p.obb, q.obb, E.runningJump.max / 2 + 0.3) && q.wall > p.wall - 4.5)) continue;
-    const from = near.find(q => obbOverlap(p.obb, q.obb, 8) && !obbOverlap(p.obb, q.obb, E.runningJump.max / 2 + 0.3) && Math.abs(q.wall - p.wall) <= 4);
+    // (Its hook's flight from there to the cache's edge within the hook's reach.)
+    const from = near.find(q => q.kind !== 'tower' && obbOverlap(p.obb, q.obb, 8) && !obbOverlap(p.obb, q.obb, E.runningJump.max / 2 + 0.3) && Math.abs(q.wall - p.wall) <= 4 && grappleSpan([p, q]) <= REACH.grapple.across + 2);
     if (!from) continue;
     p.sheer = true; p.noEnter = true;
+    // (Its neighbours keep their heights: no connection sets one to meet a roof and so brings it into reach.)
+    for (const q of near) if (obbOverlap(p.obb, q.obb, E.runningJump.max / 2 + 0.3)) q.flex = undefined;
     out.push([p, from]);
   }
   return out;
@@ -56,6 +60,13 @@ export const isolated = ([p]: [Plan, Plan], plans: Plan[]) =>
 
 /** Each cache, once built: a crate on its roof (key supplies, a container), a steel post on its parapet toward the
  *  roof it's reached from, to hook. */
+/** How far the hook flies from where it's shot (the edge of the roof it's shot from) to the cache's anchor (its own
+ *  edge facing that roof): placeGates' two points. */
+export function grappleSpan([p, q]: [Plan, Plan]): number {
+  const dx = q.obb.cx - p.obb.cx, dz = q.obb.cz - p.obb.cz, l = Math.hypot(dx, dz), ux = dx / l, uz = dz / l, a = exit(p.obb, ux, uz) - 0.25, b = exit(q.obb, ux, uz) - 0.5;
+  return Math.hypot(dx - ux * (a + b), dz - uz * (a + b));
+}
+
 export function placeGates(pairs: [Plan, Plan][], out: Vertical & { inter: Inter[]; props: Prop[] }): Gate[] {
   return pairs.map(([p, q], n) => {
     const dx = q.obb.cx - p.obb.cx, dz = q.obb.cz - p.obb.cz, l = Math.hypot(dx, dz), ux = dx / l, uz = dz / l;
