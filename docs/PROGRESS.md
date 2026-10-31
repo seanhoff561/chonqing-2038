@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-08 Patrol drones and docks.
-Features done: 164 / 296 | Last done: M4-07
+**Status:** building M4. Next: M4-09 Quadrupeds.
+Features done: 165 / 296 | Last done: M4-08
 <!-- /status -->
 
 ## Log
@@ -21,3 +21,4 @@ Features done: 164 / 296 | Last done: M4-07
 - M4-05 Hearing: Hearing: noises heard within radius x hearing, x0.6 through walls; heard noises send units to look, hostile ones are remembered by the hive
 - M4-06 Thermal senses at night: Thermal sight at night: heat seen whatever the light within thermal range; the mylar blanket, wetness and deep water hide it
 - M4-07 Cameras: Cameras: fixed, sweeping and smart-lamppost cameras all over the city, sweepers that can be timed, beeping
+- M4-08 Patrol drones and docks: Patrol drones and docks: 6-minute flights from rooftop docks, 2 minutes charging, a learnable gap in their cover

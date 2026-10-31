@@ -71,7 +71,7 @@ export interface Convoy { pts: { x: number; y: number; z: number }[]; spurs: { s
 /** A machine's beat (M3-37, M4-01): along streets (into alleys and buildings off them), over the roofs, or under the
  *  ground; who walks it, where it pauses (real seconds at each point), between the hours it keeps (game clock). Out
  *  to its last point and back. Its points are where the walker's feet go (a drone's, where it flies). */
-export interface Patrol { kind: 'street' | 'drone' | 'under'; unit: import('../data/units').UnitKind; pts: { x: number; y: number; z: number }[]; dwell: number[]; hours: [number, number] }
+export interface Patrol { kind: 'street' | 'drone' | 'under'; unit: import('../data/units').UnitKind; pts: { x: number; y: number; z: number }[]; dwell: number[]; hours: [number, number]; /** a drone's rooftop dock (world docks, M4-08) */ dock?: number }
 /** A place reached only one way, with a tool (U-037): where, what it takes, and where that's used from. */
 export interface Gate { tool: string; x: number; y: number; z: number; from: { x: number; y: number; z: number } }
 
@@ -85,6 +85,8 @@ export interface World {
   nav?: Nav;
   /** the cameras (M4-07) */
   cameras: Camera[];
+  /** the drones' rooftop docks, where they charge (M4-08) */
+  docks: { x: number; y: number; z: number }[];
   /** render-only boxes (visible stair steps over invisible ramps, trims) */
   decor: Solid[];
   teleports: Teleport[];
@@ -123,7 +125,7 @@ export interface World {
 
 export interface WorldParts {
   name: string;
-  routes?: Route[]; patrols?: Patrol[]; gates?: Gate[]; links?: Link[]; cameras?: Camera[];
+  routes?: Route[]; patrols?: Patrol[]; gates?: Gate[]; links?: Link[]; cameras?: Camera[]; docks?: World['docks'];
   solids: Solid[];
   decor?: Solid[];
   water?: Box[];
@@ -162,7 +164,7 @@ export function makeWorld(p: WorldParts): World {
   if (parts.size) for (const it of p.inter ?? []) if (typeof it.data?.part === 'string' && parts.has(it.data.part)) it.data.solid = parts.get(it.data.part);
   return {
     name: p.name,
-    routes: p.routes ?? [], patrols: p.patrols ?? [], gates: p.gates ?? [], links: p.links ?? [], cameras: p.cameras ?? [],
+    routes: p.routes ?? [], patrols: p.patrols ?? [], gates: p.gates ?? [], links: p.links ?? [], cameras: p.cameras ?? [], docks: p.docks ?? [],
     decor: p.decor ?? [],
     solids,
     ground: p.ground,

@@ -96,7 +96,7 @@ export function stepSight(s: SimState, w: World, every = 6) {
   for (const u of s.units) {
     if ((u.id + s.tick) % every) continue;
     const at = unitPose(w, u, s.time);
-    const v = at.active ? visibility(s, w, u.kind, at) : 0;
+    const v = at.active && !at.docked ? visibility(s, w, u.kind, at) : 0;
     u.aware = v >= SIGHT.min ? Math.min(1.5, (u.aware ?? 0) + SIGHT.rate * v * dt) : Math.max(0, (u.aware ?? 0) - SIGHT.decay * dt);
     if (v >= SIGHT.min) u.seen = { ...s.player.pos };
   }
@@ -112,7 +112,7 @@ export function stepHearing(s: SimState, w: World) {
     const hostile = HEARING.hostile.has(e.kind);
     for (const u of s.units) {
       const at = unitPose(w, u, s.time);
-      if (!at.active) continue;
+      if (!at.active || at.docked) continue;
       const S = SENSES[u.kind], ear = { x: at.x, y: at.y + Math.max(0.3, S.eye), z: at.z }, d = Math.hypot(e.x - ear.x, e.y + 0.5 - ear.y, e.z - ear.z), r = e.r * S.hear;
       if (d > r) continue;
       if (d > r * HEARING.occluded && raycast(w.index, e.x, e.y + 0.5, e.z, (ear.x - e.x) / d, (ear.y - e.y - 0.5) / d, (ear.z - e.z) / d, d - 0.1)) continue;

@@ -50,10 +50,11 @@ describe('units and their beats (M4-01)', () => {
       still = Math.hypot(q.x - p.pts[k].x, q.y - p.pts[k].y, q.z - p.pts[k].z) < 1e-6 ? still + 0.25 : 0;
     }
     expect(still).toBeGreaterThanOrEqual(DWELL.alley - 0.5);
-    // A night drone is parked by day and out at night.
+    // A night drone is docked by day and out at night.
     const d = s.units.find(q => !q.convoy && q.kind === 'drone' && P[q.patrol].hours[0] >= 19)!;
-    expect(unitPose(w, d, 12 * 3600).active).toBe(false);
-    expect(unitPose(w, d, 23 * 3600).active).toBe(true);
+    // (Since M4-08 a drone waits on its dock out of hours, and charges there between flights.)
+    expect(unitPose(w, d, 12 * 3600).docked).toBe(true);
+    expect([0, 1, 2, 3, 4, 5, 6, 7].some(m => !unitPose(w, d, 23 * 3600 + m * 60 * SCALE).docked)).toBe(true);
   });
   it('runs beats under the ground', () => {
     const under = P.filter(p => p.kind === 'under');

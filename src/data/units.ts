@@ -15,6 +15,10 @@ export const UNITS: Record<UnitKind, { patrol: number; chase: number; stairs: bo
   lamppost: { patrol: 0, chase: 0, stairs: false, fly: 0, zh: '智慧灯杆', en: 'Smart lamppost' },
 };
 
+/** A patrol drone's battery (M4-08, DESIGN section 7): 6 real minutes in the air, the first and last 20 s of them
+ *  flying out from its rooftop dock and home again, then 2 minutes on the dock charging: the gap in its cover. */
+export const DRONE = { flight: 360, charge: 120, launch: 20 };
+
 /** A sweeping camera pans 45 degrees either side, 10 s each way (M4-07). */
 export const SWEEP = { arc: 45, pass: 10 };
 

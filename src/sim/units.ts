@@ -4,7 +4,7 @@
 // (parked at the beat's start otherwise). So sleeping skips time for free and he can learn exact timings. Movement
 // runs in real seconds, the hours on the game clock.
 import type { World, Patrol, Convoy } from '../world/world';
-import { UNITS, PHASE, COLUMN, SWEEP, type UnitKind } from '../data/units';
+import { UNITS, PHASE, COLUMN, SWEEP, DRONE, type UnitKind } from '../data/units';
 import { makeRng, rand, hashString } from './rng';
 import { SCALE, hourOf, dayOf } from './clock';
 
@@ -27,7 +27,7 @@ export interface Unit {
 /** A trip off the beat: the way there (or back), how far along it, where it is and faces, the look-about left there,
  *  and where and when it left its beat. */
 export interface Trip { kind: 'look' | 'check'; path: { x: number; y: number; z: number }[]; i: number; pos: { x: number; y: number; z: number }; yaw: number; scan: number; back: boolean; left: { x: number; y: number; z: number }; leftAt: number }
-export interface Pose { x: number; y: number; z: number; yaw: number; active: boolean }
+export interface Pose { x: number; y: number; z: number; yaw: number; active: boolean; /** a drone on its dock, charging: sees nothing */ docked?: boolean }
 
 /** A beat as a timeline, out and back: pauses and walks, each from t0 for dur real seconds. */
 type Leg = { t0: number; dur: number; a: number; b: number; yaw: number };
@@ -132,8 +132,23 @@ export function unitPose(w: World, u: Unit, time: number): Pose {
     return { x: c.x, y: c.y, z: c.z, yaw: c.yaw + pan, active: true };
   }
   if (u.convoy) return columnPose(w, u, time / SCALE);
-  const p = w.patrols[u.patrol], start = p.pts[0];
-  if (!keeps(p.hours, hourOf(time))) return { x: start.x, y: start.y, z: start.z, yaw: 0, active: false };
+  const p = w.patrols[u.patrol], start = p.pts[0], dock = p.dock !== undefined ? w.docks[p.dock] : null;
+  const home: Pose | null = dock && { x: dock.x, y: dock.y, z: dock.z, yaw: 0, active: true, docked: true };
+  if (!keeps(p.hours, hourOf(time))) return home ?? { x: start.x, y: start.y, z: start.z, yaw: 0, active: false };
+  if (home) {
+    // A drone on its battery (M4-08): out from its dock, its beat, home again, charging.
+    // (Each drone's battery somewhere else in its cycle.)
+    const C = DRONE.flight + DRONE.charge, c = (((time / SCALE + u.phase + ((u.id * 97) % C)) % C) + C) % C;
+    if (c >= DRONE.flight) return home;
+    const f = c < DRONE.launch ? 1 - c / DRONE.launch : c > DRONE.flight - DRONE.launch ? (c - DRONE.flight + DRONE.launch) / DRONE.launch : 0;
+    if (f > 0) { const b = beatPose(w, u, time), e = f * f * (3 - 2 * f); return { x: b.x + (home.x - b.x) * e, y: b.y + (home.y - b.y) * e, z: b.z + (home.z - b.z) * e, yaw: Math.atan2(home.x - b.x, home.z - b.z) + (c < DRONE.launch ? Math.PI : 0), active: true }; }
+  }
+  return beatPose(w, u, time);
+}
+
+/** Where a unit is along its beat at a time (its hours aside). */
+function beatPose(w: World, u: Unit, time: number): Pose {
+  const p = w.patrols[u.patrol];
   // Each day from 06:00 a beat runs to other timings (M4-04, U-021): yesterday's gaps aren't today's.
   const { legs, T } = timeline(p, UNITS[u.kind].patrol), day = dayOf(time - 6 * 3600), shift = day > 1 ? ((hashString(`day${u.id}:${day}`) % 1000) / 1000) * T : 0;
   const t = (((time / SCALE + u.phase + shift) % T) + T) % T;

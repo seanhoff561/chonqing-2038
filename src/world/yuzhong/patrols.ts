@@ -17,6 +17,9 @@ const SIDE = new Set(['residential', 'service', 'footway', 'path', 'pedestrian',
 
 type V3 = { x: number; y: number; z: number };
 
+/** A building's middle. */
+const centre = (q: { corners: [number, number][] }) => ({ x: q.corners.reduce((a, c) => a + c[0], 0) / q.corners.length, z: q.corners.reduce((a, c) => a + c[1], 0) / q.corners.length });
+
 /** Whether nothing stands between a and b, up off them by `up`. */
 function clear(w: World, a: V3, b: V3, up: number) {
   const d = Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z);
@@ -63,8 +66,12 @@ export function walkedBeats(w: World, base: Patrol[], tunnel: [V3, V3]): Patrol[
   }
   let street = 0;
   const out = base.concat(district).map((p): Patrol => {
-    // A drone drops into an alley now and then, to 6 m over the bins, hangs there, and climbs back to its line.
+    // A drone drops into an alley now and then, to 6 m over the bins, hangs there, and climbs back to its line. It
+    // charges on a dock on the tallest roof within 150 m of where its beat starts (M4-08).
     if (p.kind === 'drone') {
+      const s0 = p.pts[0], roof = w.plots.filter(q => !q.far && Math.hypot(centre(q).x - s0.x, centre(q).z - s0.z) < 150).sort((a, b) => b.top - a.top)[0];
+      let dock: number | undefined;
+      if (roof) { const c = centre(roof); dock = w.docks.length; w.docks.push({ x: c.x, y: roof.top + 2.3, z: c.z }); w.props.push({ kind: 'dronedock', x: c.x, y: roof.top, z: c.z, yaw: 0 }); }
       const pts: V3[] = [], dwell: number[] = [];
       let dips = 0;
       p.pts.forEach((q, i) => {
@@ -75,7 +82,7 @@ export function walkedBeats(w: World, base: Patrol[], tunnel: [V3, V3]): Patrol[
         pts.push({ x: h.x, y: h.y + 6, z: h.z }, q); dwell.push(DWELL.alley, 0);
         dips++;
       });
-      return { ...p, pts, dwell };
+      return { ...p, pts, dwell, dock };
     }
     if (p.kind !== 'street') return p;
     // Flat and long: a delivery robot's (no stairs, no detours). Otherwise quadrupeds and humanoids by turns.

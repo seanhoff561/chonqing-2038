@@ -659,7 +659,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Four key points of the district (hideout gate, Shibati top, Jiaochangkou, the riverfront) are linked by a street route, a rooftop or beam route and an underground or interior route
   - A sim test checks each link with the nav and movement limits
 
-## M4: 8 of 36 done
+## M4: 9 of 36 done
 
 M4 The machines: cameras, drones and their docks, ground robots, turrets; perception (light, distance, motion, posture, cover, sound, thermal); patrol schedules; alert states, the hivemind broadcast, convergence, drone launches, the search and the heightened district; combat and damage; tracking home and the hideout raid; death and restart. After M4 the core loop is playable start to finish.
 
@@ -695,7 +695,7 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
   - Fixed, sweeping and lamppost cameras with FOV and ranges from data; sweepers pan on a fixed period
   - A sim test: walking through a cone engages; timing the sweep gets past
   - U-038: security cameras commonplace, so he's always on edge; each beeps audibly like any other machine
-- [ ] **M4-08** Patrol drones and docks
+- [x] **M4-08** Patrol drones and docks
   - Drones fly loop routes at altitude with a searchlight cone at night and go home to recharge (6 min flight, 2 min charge)
   - Rooftop docks launch and recall them
   - A sim test shows the coverage gap while a drone recharges
