@@ -21,6 +21,8 @@ export const MAT = {
   wallpaper: 30,
   /** cables and cable bundles (M3-37): drawn swaying in the wind */
   cable: 31,
+  /** neon tube (M3-73): glows in the colour its solid is tinted */
+  neon: 32,
   /** collision only and soft (a prop draws it): bags, bins, cardboard; landing on it breaks a fall (U-024) */
   soft: 98,
   /** collision only: a prop draws it */

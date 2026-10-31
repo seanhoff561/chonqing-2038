@@ -12,6 +12,7 @@ import { makeRng, hashString, rand } from '../../sim/rng';
 import type { Heightfield } from '../heightfield';
 import type { Climbable, Feature, Inter, Prop, Zone } from '../world';
 import { cover } from '../city/access';
+import type { UnderLot } from './undercity';
 import { stair } from '../steps';
 import { streetCells } from './ground';
 import { districtAt } from './lots';
@@ -21,6 +22,8 @@ import { run, fit, room, tubes, station, descent, TUBE, type Dig } from './under
 type V3 = { x: number; y: number; z: number };
 export interface Under {
   solids: Solid[]; decor: Solid[]; props: Prop[]; climbables: Climbable[]; zones: Zone[]; features: Feature[]; inter: Inter[];
+  /** the underground city's buildings, to build like the city's (undercity.ts) */
+  lots: UnderLot[];
   /** what the lots keep clear of: the open cuts of stairways and culverts, the grates */
   keep: Obb[];
   /** a walk from the Grand Tunnel under Jiaochangkou through both levels of the city to Xiaoshizi */
@@ -41,7 +44,7 @@ const TW = 3.6, TH = 3.4;
 /** gt: the Grand Tunnel's floor, the end of its passage north (the junction), its ways in, and a walk along it
  *  from under Jiaochangkou into the passage. */
 export function buildUnder(g: Heightfield, gt: { floor: number; junction: V3; ways: V3[]; walk: V3[] }): Under {
-  const u: Under = { solids: [], decor: [], props: [], climbables: [], zones: [], features: [], inter: [], keep: [], route: [], descents: [], at: {} };
+  const u: Under = { solids: [], decor: [], props: [], climbables: [], zones: [], features: [], inter: [], lots: [], keep: [], route: [], descents: [], at: {} };
   const lining: Solid[] = [], bores: Box[] = [], kept: Solid[] = [], r = makeRng(hashString('under')), lr = makeRng(hashString('under-grates'));
   const k = (x: number, z: number) => Math.max(0, Math.min(g.h - 1, Math.round(z / g.cell))) * g.w + Math.max(0, Math.min(g.w - 1, Math.round(x / g.cell)));
   const gy = (x: number, z: number) => g.y[k(x, z)], street = (x: number, z: number) => streetCells[k(x, z)] !== 0;
@@ -204,31 +207,23 @@ export function buildUnder(g: Heightfield, gt: { floor: number; junction: V3; wa
     for (const [x0, z0, x1, z1] of [[v.x0, v.z0, v.x1, v.z0 + 0.1], [v.x0, v.z0, v.x0 + 0.1, v.z1], [v.x1 - 0.1, v.z0, v.x1, v.z1], [v.x0, v.z1 - 0.1, v.x0 + 4, v.z1], [v.x1 - 4, v.z1 - 0.1, v.x1, v.z1]]) kept.push(solid(x0, LA, z0, x1, LA + 1.1, z1, MAT.metal));
     for (let x = v.x0 + 5; x < v.x1 - 4; x += 1.4) u.props.push({ kind: 'bags', x, y: LB, z: v.z1 - 2 - rand(r) * 2, yaw: rand(r) * 6.28 });
   }
-  // Columns under the deck on a 16 m grid, clear of the concourse's streets.
-  for (let x = X0 + 8; x < X1 - 4; x += 16) for (let z = Z0 + 8; z < Z1 - 4; z += 16) {
-    if (Math.abs(z - C.z) < 6 || Math.abs(x - C.x) < 6 || [...voids, ...wells].some(b => x > b.x0 - 1 && x < b.x1 + 1 && z > b.z0 - 1 && z < b.z1 + 1)) continue;
-    kept.push(solid(x - 0.6, LB, z - 0.6, x + 0.6, LA - 0.6, z + 0.6, MAT.concrete));
-  }
-  // Shops in rows along both levels' streets (the deck's along x, the concourse's along z), screens over their
-  // fronts and a strip light under each; one in three open, a room inside its front.
-  const shop = (x0: number, z0: number, x1: number, z1: number, y: number, h: number, face: 'x0' | 'x1' | 'z0' | 'z1') => {
-    let s: Solid[] = [solid(x0, y, z0, x1, y + h, z1, MAT.facadeBand)];
-    const fz = face === 'z0' ? z0 : face === 'z1' ? z1 : 0, fx = face === 'x0' ? x0 : face === 'x1' ? x1 : 0, out = face.endsWith('1') ? 1 : -1;
-    const sign = (a0: number, a1: number, b: number, y0: number, y1: number, mat: number) => (fz ? solid(a0, y0, Math.min(b, b + out * 0.05), a1, y1, Math.max(b, b + out * 0.05), mat) : solid(Math.min(b, b + out * 0.05), y0, a0, Math.max(b, b + out * 0.05), y1, a1, mat));
-    const [a0, a1] = fz ? [x0, x1] : [z0, z1], m = (a0 + a1) / 2;
-    u.decor.push(sign(a0 + 0.4, a1 - 0.4, fz || fx, y + h - 1.6, y + h - 0.4, MAT.screen), sign(a0 + 0.4, a1 - 0.4, fz || fx, y + h - 1.75, y + h - 1.65, MAT.lamp));
-    if (rand(r) < 0.34) s = carve(s, fz ? { x0: m - 1.6, y0: y, z0: fz - (out > 0 ? 3 : 0), x1: m + 1.6, y1: y + 2.6, z1: fz + (out > 0 ? 0 : 3) } : { x0: fx - (out > 0 ? 3 : 0), y0: y, z0: m - 1.6, x1: fx + (out > 0 ? 0 : 3), y1: y + 2.6, z1: m + 1.6 });
-    kept.push(...s);
-  };
+  // The underground city's buildings (M3-73): in rows along both levels' streets (the deck's along x, the
+  // concourse's along z), two floors each, on the deck or under it, built like the city's above (undercity.ts).
+  const shop = (x0: number, z0: number, x1: number, z1: number, y: number, face: UnderLot['face']) => u.lots.push({ x0, z0, x1, z1, base: y, wall: y + 6, face });
   const free = (x0: number, z0: number, x1: number, z1: number) => ![...voids, ...wells].some(b => x1 > b.x0 - 2 && x0 < b.x1 + 2 && z1 > b.z0 - 2 && z0 < b.z1 + 2) && !(x1 > ladderAt.x - 3 && x0 < ladderAt.x + 3 && z1 > ladderAt.z - 3 && z0 < ladderAt.z + 3);
   for (const s of [-1, 1]) for (let x = X0 + 4; x < X1 - 12;) {
     const w = 8 + rand(r) * 6, [z0, z1] = s < 0 ? [C.z - 18, C.z - 6] : [C.z + 6, C.z + 18];
     // Where one won't fit, try 2 m on.
-    if (Math.abs(x + w / 2 - C.x) > w / 2 + 5 && free(x, z0, x + w, z1)) { shop(x, z0, x + w, z1, LA, 4.5 + rand(r) * 2.5, s < 0 ? 'z1' : 'z0'); x += w + 2 + rand(r) * 2; } else x += 2;
+    if (Math.abs(x + w / 2 - C.x) > w / 2 + 5 && free(x, z0, x + w, z1)) { shop(x, z0, x + w, z1, LA, s < 0 ? 1 : 0); x += w + 2 + rand(r) * 2; } else x += 2;
   }
   for (const s of [-1, 1]) for (let z = Z0 + 4; z < Z1 - 10;) {
     const w = 7 + rand(r) * 5, [x0, x1] = s < 0 ? [C.x - 16, C.x - 6] : [C.x + 6, C.x + 16];
-    if (Math.abs(z + w / 2 - C.z) > w / 2 + 5 && free(x0, z, x1, z + w)) { shop(x0, z, x1, z + w, LB, 3.4 + rand(r) * 1.2, s < 0 ? 'x1' : 'x0'); z += w + 2 + rand(r) * 2; } else z += 2;
+    if (Math.abs(z + w / 2 - C.z) > w / 2 + 5 && free(x0, z, x1, z + w)) { shop(x0, z, x1, z + w, LB, s < 0 ? 3 : 2); z += w + 2 + rand(r) * 2; } else z += 2;
+  }
+  // Columns under the deck on a 16 m grid, clear of the concourse's streets and its buildings (they hold it up).
+  for (let x = X0 + 8; x < X1 - 4; x += 16) for (let z = Z0 + 8; z < Z1 - 4; z += 16) {
+    if (Math.abs(z - C.z) < 6 || Math.abs(x - C.x) < 6 || [...voids, ...wells, ...u.lots].some(b => x > b.x0 - 1 && x < b.x1 + 1 && z > b.z0 - 1 && z < b.z1 + 1)) continue;
+    kept.push(solid(x - 0.6, LB, z - 0.6, x + 0.6, LA - 0.6, z + 0.6, MAT.concrete));
   }
   // Light strips along the cavern's ceiling and under the deck.
   for (let x = X0 + 6; x < X1 - 6; x += 12) u.decor.push(solid(x - 3, CEIL - 0.08, C.z - 0.15, x + 3, CEIL, C.z + 0.15, MAT.glare), solid(C.x - 0.15, LA - 0.68, Z0 + 4, C.x + 0.15, LA - 0.6, Z1 - 4, MAT.glare));

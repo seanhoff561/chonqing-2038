@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 78 of 93 done
+## M3: 79 of 93 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -494,7 +494,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Under the city an ant hill of sewers, vents and tunnels, some only crawl-high, some flooded to swim through fully under water; vents to pry open into buildings; grates up into basements
   - Now and then they open through grates into the underground city's patrolled parts
   - Data checks and screenshots; not tested for being possible (U-037)
-- [ ] **M3-73** The underground city's buildings (U-038)
+- [x] **M3-73** The underground city's buildings (U-038)
   - The underground city's buildings built like the city's above (fronts, rooms, insides), heavily neon and cyberpunk
   - Screenshots
 - [ ] **M3-43** The subway way in (U-018)

@@ -190,6 +190,16 @@ export function material(id: number, vc = false, lod: Lod = 'all'): THREE.MeshPh
     const cold = id === MAT.glare;
     m = new THREE.MeshPhongMaterial({ color: cold ? 0xe8f2ff : 0xfff1c0, emissive: cold ? 0xc4ddff : 0xffd890, emissiveIntensity: 1.2, vertexColors: vc });
     lodCut(m, lod);
+  } else if (id === MAT.neon) {
+    // Neon tube (M3-73): no lit colour of its own, it glows in its vertex colour (the solid's tint).
+    m = new THREE.MeshPhongMaterial({ color: 0x000000, emissive: 0xffffff, emissiveIntensity: 1.5, vertexColors: vc });
+    lodCut(m, lod);
+    const before = m.onBeforeCompile, key0 = m.customProgramCacheKey;
+    m.onBeforeCompile = (sh, rr) => {
+      before.call(m, sh, rr);
+      sh.fragmentShader = sh.fragmentShader.replace('vec3 totalEmissiveRadiance = emissive;', '#ifdef USE_COLOR\nvec3 totalEmissiveRadiance = emissive * vColor.rgb;\n#else\nvec3 totalEmissiveRadiance = emissive;\n#endif');
+    };
+    m.customProgramCacheKey = () => `${key0.call(m)}:neon`;
   } else if (id === MAT.screen) {
     const tex = canvasTexture(`mat${id}`, 512, 512, drawScreen);
     m = new THREE.MeshPhongMaterial({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.85, vertexColors: vc, ...DRY });

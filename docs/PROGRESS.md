@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-73 The underground city's buildings (U-038).
-Features done: 141 / 295 | Last done: M3-81
+**Status:** building M3. Next: M3-61 Ruins that look fallen (U-031).
+Features done: 142 / 295 | Last done: M3-73
 <!-- /status -->
 
 ## Log
@@ -89,3 +89,4 @@ Features done: 141 / 295 | Last done: M3-81
 - M3-80 Urban rooftops, not green (U-044): urban rooftops: tanks, drums, condensers, sheds, crates and heaters instead of gardens, hiding places among them; opening props, pools and inside faces drawn near only (U-044)
 - M3-83 Every grate, vent and trapdoor opens with F (U-044): Every grate, vent, trapdoor and hatch starts shut and opens with F
 - M3-81 Connections meet the walls (U-044): Connections meet the walls: ends fitted to the built walls, extended or left out; joined buildings built flush; window planks in the route network
+- M3-73 The underground city's buildings (U-038): The underground city's buildings: real lots with rooms and fronts, heavy neon (tube, blade signs, screens)

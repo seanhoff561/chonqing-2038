@@ -8,6 +8,8 @@ import { createState } from '../../src/sim/sim';
 import { teleport } from '../../src/sim/player';
 import { heightAt } from '../../src/world/heightfield';
 import { districtAt } from '../../src/world/yuzhong/lots';
+import { GEO } from '../../src/world/geo';
+import { MAT } from '../../src/world/mats';
 import { run, secs, settle } from './helpers';
 
 const w = getWorld('yuzhong');
@@ -91,5 +93,23 @@ describe('the underground city (M3-58)', () => {
       expect(Math.abs(p.pos.y - q.y)).toBeLessThan(0.6);
     }
     expect(s.dead).toBeFalsy();
+  });
+});
+
+// M3-73 (U-038): the underground city's buildings built like the city's above, heavy with neon.
+describe("the underground city's buildings (M3-73)", () => {
+  const C = GEO.landmarks.jiefangbei, deep = (p: { x: number; y: number; z: number }) => Math.abs(p.x - C.x) < 72 && Math.abs(p.z - C.z) < 52 && p.y > 88 && p.y < 105;
+  it('has rooms behind doors, furnished, with windows on the streets', () => {
+    expect(w.features.filter(f => f.kind.startsWith('inside:') && deep(f)).length).toBeGreaterThan(60);
+    expect(w.inter.filter(i => i.kind === 'door' && deep(i)).length).toBeGreaterThan(40);
+    expect(w.features.filter(f => f.kind.startsWith('win:') && deep(f)).length).toBeGreaterThan(40);
+    expect(w.props.filter(p => p.kind.startsWith('f:') && deep(p)).length).toBeGreaterThan(200);
+  });
+  it('hangs them with neon: tube round the fronts and windows, blade signs, screens, gantry signs', () => {
+    expect(w.decor.filter(s => s.mat === MAT.neon && deep({ x: s.x0, y: s.y0, z: s.z0 })).length).toBeGreaterThan(150);
+    const of = (k: string) => w.props.filter(p => p.kind === k && deep(p)).length;
+    expect(of('neonblade')).toBeGreaterThan(60);
+    expect(of('ledscreen')).toBeGreaterThan(4);
+    expect(of('neonsign')).toBeGreaterThan(8);
   });
 });

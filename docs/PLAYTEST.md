@@ -103,3 +103,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M3-83: covers on every opening
 - In a basement, at a roof hatch, at a warren shaft's foot, over a street grate down to the tunnels: is each one shut until you open it with F, and does lifting, prying or forcing it feel right (and the bolted ones plainly bolted)?
+
+## M3-73: the underground city's buildings
+- Teleport to 'Underground city deck' and 'Underground city concourse': does it read as a dense cyberpunk underground street (neon tube, blade signs, screens) without being garish? Go into a few of the buildings: rooms, doors, stairs, furniture where they should be?

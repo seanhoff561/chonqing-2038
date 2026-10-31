@@ -25,6 +25,7 @@ import { buildSite } from './site';
 import { podiumMask, buildFactory } from './factory';
 import { verticalCity } from './vertical';
 import { crossings, layLinks, windowBridges } from './crossings';
+import { underLot } from './undercity';
 import { pickGates, placeGates, network, isolated } from './network';
 import { buildLine2, stationEntrances, BEAM } from './line2';
 import { dressStreets } from './dressing';
@@ -88,6 +89,9 @@ export function buildYuzhong(): World {
   const net = network(plots, out.features.concat(vert.features, cross.features, under.features, sew.features), out.sites, sts, g,
     [['jiaochangkou', 'shibati', 'jiefangbei', 'cablewayNorth', 'xiaoshizi', 'chaotianmen'].map(lm), ['jiefangbei', 'xinhuaIntl', 'hongyadong', 'chaotianmen'].map(lm)],
     { x: tun.at.grate.x, y: tun.at.grate.y, z: tun.at.grate.z }, cross, gates, buildIndex(out.solids));
+  // The underground city's buildings (M3-73), as they stand (after the routes: the surface's network doesn't run
+  // through the cavern under it).
+  under.lots.forEach((s, k) => { const { l, f } = underLot(s, k); place(f, { cx: (l.x0 + l.x1) / 2, cz: (l.z0 + l.z1) / 2, hw: (l.x1 - l.x0) / 2, hd: (l.z1 - l.z0) / 2, yaw: 0 }, `under${k}`, out); });
   // The streets as drawn, and paths from the doors set back from them to them (U-033).
   const drawn = drawnStreets(sts.filter(onGround), plots), doorWays = doorPaths(g, plots, drawn);
   const decor: Solid[] = [];
@@ -154,7 +158,8 @@ export function buildYuzhong(): World {
   const placed = new Set(dress.props.concat(green.props, rubble.props, filled.props));
   for (const p of out.props.concat(dress.props, green.props, rubble.props, filled.props)) {
     if (HUNG.has(p.kind) || (PROP_BOX[p.kind] && placed.has(p))) continue;
-    const from = Math.max(p.y, heightAt(g, p.x, p.z) ?? p.y) + 0.5, hit = raycast(world.index, p.x, from, p.z, 0, -1, 0, 30);
+    // (Well under the ground, in a basement or the underground city, onto what's under it there.)
+    const gy = heightAt(g, p.x, p.z) ?? p.y, from = (p.y < gy - 2.5 ? p.y : Math.max(p.y, gy)) + 0.5, hit = raycast(world.index, p.x, from, p.z, 0, -1, 0, 30);
     if (hit && hit.t > 0.01) p.y = from - hit.t;
   }
   // Signs and screens only where they face a street with nothing in front of them; laundry only where both ends of
@@ -167,6 +172,8 @@ export function buildYuzhong(): World {
     }
     if (!SIGNS.has(p.kind)) return true;
     const dx = Math.sin(p.yaw), dz = Math.cos(p.yaw), y = p.y + 0.5;
+    // Under the ground (the underground city's streets): nothing in front of it across the street.
+    if (p.y < (heightAt(g, p.x, p.z) ?? -Infinity) - 4) return !raycast(world.index, p.x + dx * 1.2, y, p.z + dz * 1.2, dx, 0, dz, 4);
     for (let d = 1.5; d <= 14; d += 1) {
       const x = p.x + dx * d, z = p.z + dz * d, k = Math.round(z / g.cell) * g.w + Math.round(x / g.cell);
       if (streetCells[k]) return !raycast(world.index, p.x + dx * 1.2, y, p.z + dz * 1.2, dx, 0, dz, d - 1.2);

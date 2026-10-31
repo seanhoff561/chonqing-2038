@@ -4,6 +4,7 @@
 import { describe, it, expect } from 'vitest';
 import { getWorld } from '../../src/world/build';
 import { raycast } from '../../src/world/geom';
+import { heightAt } from '../../src/world/heightfield';
 import { buildLine2 } from '../../src/world/yuzhong/line2';
 import { buildGround, streetCells } from '../../src/world/yuzhong/ground';
 
@@ -33,6 +34,8 @@ describe('props that make sense (M3-59)', () => {
     expect(most / signs.length).toBeLessThan(0.1);
     const blind = w.props.filter(p => p.kind === 'neonblade' || p.kind === 'ledscreen').filter(p => {
       const dx = Math.sin(p.yaw), dz = Math.cos(p.yaw);
+      // (In the underground city, M3-73, its streets are the cavern's: clear across them in front.)
+      if (p.y < (heightAt(g, p.x, p.z) ?? -Infinity) - 4) return !!raycast(w.index, p.x + dx * 1.2, p.y + 0.5, p.z + dz * 1.2, dx, 0, dz, 4);
       for (let d = 1.5; d <= 14; d += 1) {
         const x = p.x + dx * d, z = p.z + dz * d;
         if (streetCells[Math.round(z / g.cell) * g.w + Math.round(x / g.cell)]) return !!raycast(w.index, p.x + dx * 1.2, p.y + 0.5, p.z + dz * 1.2, dx, 0, dz, d - 1.2);
