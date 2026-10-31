@@ -1,7 +1,8 @@
 // The sky (M3-49, U-021), painted in code on a dome round the camera: a gradient from the haze at the horizon to
 // the zenith, the sun's disc and its warm glow at dawn and dusk, layers of cloud drifting on the wind (broken
 // on a fair day, closing to a grey lid when it's overcast, dark and low in rain), fog banks along the horizon,
-// stars on a clear night, and the city's orange glow on the underside of low cloud at night.
+// stars on a clear night, and a faint grey on the underside of low cloud at night (the city's emptied: no orange
+// glow, U-031).
 import * as THREE from 'three';
 
 const VERT = `
@@ -30,9 +31,10 @@ void main() {
   // Dawn and dusk: warm light round the sun, low down.
   sky += uDusk * vec3(1.0, 0.42, 0.18) * pow(sd, 5.0) * (1.0 - h) * (1.0 - 0.7 * uCover);
   sky += vec3(1.0, 0.92, 0.8) * (pow(sd, 900.0) * 6.0 + pow(sd, 40.0) * 0.25) * uDay * (1.0 - uCover) * step(0.0, uSun.y);
-  // Stars, where the night is clear.
-  vec2 sp = d.xz / (d.y + 0.3) * 90.0;
-  sky += vec3(0.85, 0.88, 1.0) * step(0.9975, hash(floor(sp))) * (1.0 - uDay) * (1.0 - uCover) * smoothstep(0.08, 0.35, d.y);
+  // Stars, where the night is clear: pinpoints of differing brightness, fewer toward the hazy horizon.
+  vec2 sp = d.xz / (d.y + 0.3) * 260.0, cell = floor(sp);
+  float star = step(0.9978, hash(cell)) * (0.4 + 1.1 * hash(cell + 7.3)) * smoothstep(0.35, 0.05, length(fract(sp) - 0.5));
+  sky += vec3(0.85, 0.88, 1.0) * star * (1.0 - uDay) * (1.0 - uCover) * smoothstep(0.1, 0.45, d.y);
   // Cloud on a layer overhead, drifting.
   vec2 uv = d.xz / (d.y + 0.12) * 0.9 + vec2(uTime * 0.0035, uTime * 0.0015);
   float n = fbm(uv * 1.4), cover = smoothstep(1.0 - uCover - 0.18, 1.0 - uCover + 0.22, n);
@@ -49,7 +51,7 @@ void main() {
 export class SkyDome {
   readonly mesh: THREE.Mesh;
   private readonly u = {
-    uSun: { value: new THREE.Vector3(0, 1, 0) }, uHorizon: { value: new THREE.Color() }, uZenith: { value: new THREE.Color() }, uGlow: { value: new THREE.Color(0x5a3a22) },
+    uSun: { value: new THREE.Vector3(0, 1, 0) }, uHorizon: { value: new THREE.Color() }, uZenith: { value: new THREE.Color() }, uGlow: { value: new THREE.Color(0x1c2026) },
     uDay: { value: 1 }, uDusk: { value: 0 }, uCover: { value: 0.4 }, uRain: { value: 0 }, uFog: { value: 0 }, uTime: { value: 0 },
   };
 

@@ -195,22 +195,32 @@ export function drawFacade(id: number, g: CanvasRenderingContext2D, S: number) {
   blotches(g, S, S, st.seed + 3, 30, '40,50,32', 0.12, px * 0.2, px * 0.8);
 }
 
-/** The lit windows only, warm on black: the emissive map for night. */
+/** The night mask spans this many facade tiles each way (the material samples it that much larger): the lit windows
+ *  repeat only every 72 m. */
+export const LIGHT_TILES = 6;
+
+/** The lit windows only, warm on black: the emissive map for night. The city's emptied (U-031, M3-63): a flat here
+ *  and there where someone's holed up, a few of its windows lit, most of the facade dark; the machines' works lit
+ *  all along. */
 export function drawFacadeLights(id: number, g: CanvasRenderingContext2D, S: number) {
-  const st = STYLES[id], px = S / FACADE_M;
+  const st = STYLES[id], T = S / LIGHT_TILES, px = T / FACADE_M;
   g.fillStyle = '#000'; g.fillRect(0, 0, S, S);
-  if (st.works) {
-    // Every band lit, the machines' cold white, the mullions dark against it.
-    for (const y of ribbons(st, px)) {
-      g.fillStyle = '#d6e8ff'; g.fillRect(0, y + 2, S, st.win[1] * px - 4);
-      g.fillStyle = '#000'; for (let x = 0; x < S; x += px * 1.5) g.fillRect(x, y, px * 0.08, st.win[1] * px);
+  for (let ti = 0; ti < LIGHT_TILES; ti++) for (let tj = 0; tj < LIGHT_TILES; tj++) {
+    const ox = ti * T, oy = tj * T, r = mulberry(st.seed * 7 + ti * 31 + tj * 977);
+    if (st.works) {
+      // Every band lit, the machines' cold white, the mullions dark against it.
+      for (const y of ribbons(st, px)) {
+        g.fillStyle = '#d6e8ff'; g.fillRect(ox, oy + y + 1, T, st.win[1] * px - 2);
+        g.fillStyle = '#000'; for (let x = 0; x < T; x += px * 1.5) g.fillRect(ox + x, oy + y, Math.max(1, px * 0.08), st.win[1] * px);
+      }
+      continue;
     }
-    return;
-  }
-  for (const w of layout(st, px)) {
-    if (!w.lit) continue;
-    const grd = g.createLinearGradient(0, w.y, 0, w.y + w.h);
-    grd.addColorStop(0, '#ffcf8a'); grd.addColorStop(1, '#c98a48');
-    g.fillStyle = grd; g.fillRect(w.x + 3, w.y + 3, w.w - 6, w.h - 6);
+    if (r() > 0.3) continue;
+    for (const w of layout(st, px)) {
+      if (w.kind >= 0.45 || r() > 0.35) continue;
+      const grd = g.createLinearGradient(0, oy + w.y, 0, oy + w.y + w.h);
+      grd.addColorStop(0, '#ffcf8a'); grd.addColorStop(1, '#c98a48');
+      g.fillStyle = grd; g.fillRect(ox + w.x + 1, oy + w.y + 1, w.w - 2, w.h - 2);
+    }
   }
 }

@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 81 of 93 done
+## M3: 82 of 93 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -607,7 +607,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Several tree species of varied size and shape (camphor, banyan, palm, bamboo, ginkgo), shrubs, hedges, ferns and potted plants (rooftop gardens dropped by U-044: no green on the roofs, which carry urban props instead, M3-80)
   - Screenshots of a park and a street (the rooftop shot went with the rooftop gardens, U-044)
   - U-035: trees, vines on walls and other foliage he can climb
-- [ ] **M3-63** A realistic sky, rain and night; the visual overhaul (U-031, U-032)
+- [x] **M3-63** A realistic sky, rain and night; the visual overhaul (U-031, U-032)
   - The sky from photographic reference: fine pinpoint stars, natural cloud (no orange cast), the sky running down to a visible horizon; rain from reference: streaks, splashes, wet sheen, mist
   - At night only a few windows lit (the city is emptied), lights where people or machines are
   - Screenshots by day, dusk, night and in rain

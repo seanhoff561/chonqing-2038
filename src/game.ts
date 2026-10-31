@@ -198,7 +198,7 @@ export class Game {
     this.audio.setUnderwater(wet);
     // Rain stops at a roof, underground or under water.
     const covered = wet || this.under > 0.5 || !!raycast(this.world.index, cam.x, cam.y, cam.z, 0, 1, 0, 40);
-    this.rain.update(this.state.tick / 60, cam, this.state.weather.rain, covered);
+    this.rain.update(this.state.tick / 60, cam, this.state.weather.rain, covered, this.state.player.pos.y);
     this.view.setLamp(this.state.player.lamp);
     this.view.render(this.state.tick / 60, this.state.wstate.open);
     this.frames++;

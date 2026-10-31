@@ -56,7 +56,8 @@ export class Sky {
     v.sun.castShadow = d > 0.05 && under < 0.5;
     v.sun.intensity = 1.7 * d * (1 - under) * (1 - 0.7 * flat) * (1 - 0.5 * weather.rain);
     v.sun.color.setHSL(0.09, 0.5 - 0.3 * d, 0.85 + 0.1 * d);
-    v.hemi.intensity = (1.4 - 0.15 * d) * (1 - under * 0.85) * (1 + 0.1 * flat) * (1 - 0.3 * weather.rain);
+    // (Night's dark enough to need the headlamp, U-032: a little moonlight, less under cloud.)
+    v.hemi.intensity = (0.55 + 0.7 * d - 0.15 * flat * (1 - d)) * (1 - under * 0.85) * (1 + 0.1 * flat * d) * (1 - 0.3 * weather.rain);
     v.hemi.color.copy(NIGHT_SKY).lerp(new THREE.Color(0xc8d4e0), d).lerp(new THREE.Color(0x5f74a8), (1 - d) * 0.9);
     v.hemi.groundColor.copy(NIGHT_GROUND).lerp(DAY_GROUND, d);
     if (lit > 0) {
@@ -65,7 +66,8 @@ export class Sky {
     }
     setNight(Math.max(0, 1 - d * 1.6));
     // Cloud: some every day (how much, by the day), closing in with overcast, rain and fog.
-    const day = Math.floor(time / 86400), base = 0.25 + 0.4 * Math.abs(Math.sin(day * 12.9898) * 43758.5453 % 1);
+    // (Cloudier than not, U-032: Chongqing's sky is rarely clear.)
+    const day = Math.floor(time / 86400), base = 0.45 + 0.35 * Math.abs(Math.sin(day * 12.9898) * 43758.5453 % 1);
     const cover = Math.min(1, Math.max(base, this.overcast * 0.95, weather.rain * 0.9 + 0.1, weather.fog * 0.7));
     this.dome.update(camPos, sunDir.copy(v.sun.position).sub(v.sun.target.position), d, duskness, cover, weather.rain, weather.fog, fog.color, performance.now() / 1000);
     const ma = ((h - 18) / 12) * Math.PI;

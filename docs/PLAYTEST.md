@@ -112,3 +112,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M3-62: foliage
 - In a park, a wood and along a street: do the species read as different trees (camphor, banyan, palm, bamboo, ginkgo)? Climb a big tree's trunk and a vine to a first-floor window: does it feel right?
+
+## M3-63: sky, rain, night, the muted city
+- Play through a dusk into night on a real GPU: is the night dark enough to need the headlamp but still readable (lit windows, stars, neon)? In rain: do the streaks, splashes and mist read as rain? By day: does the muted city let the robots, crates and loot stand out?

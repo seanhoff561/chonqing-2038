@@ -6,6 +6,8 @@ import { mulberry } from './rand';
 import { TEX_SCALE, tileOf, type Tex } from './prop-atlas';
 
 const DUST = new THREE.Color(0x9a9282);
+/** How far a muted part's colour goes toward its grey. */
+const MUTE = 0.5;
 
 export class Kit {
   private pos: number[] = [];
@@ -16,6 +18,9 @@ export class Kit {
   private c = new THREE.Color();
   private tex: Tex = 'plain';
   readonly r: () => number;
+  /** Faded toward grey (U-032, M3-63): the city's things near monotone, so what matters stands out. Leaves keep
+   *  their green; furniture and what he can take stay as they are. */
+  muted = true;
 
   constructor(seed: number) { this.r = mulberry(seed); }
 
@@ -28,6 +33,7 @@ export class Kit {
     ng.computeVertexNormals();
     const p = ng.getAttribute('position'), n = ng.getAttribute('normal');
     this.c.setHex(color).multiplyScalar(1 - this.r() * vary);
+    if (this.muted && this.tex !== 'leaves') { const l = this.c.r * 0.3 + this.c.g * 0.59 + this.c.b * 0.11; this.c.r += (l - this.c.r) * MUTE; this.c.g += (l - this.c.g) * MUTE; this.c.b += (l - this.c.b) * MUTE; }
     const k = 1 / TEX_SCALE[this.tex], t = tileOf(this.tex), ou = this.r() * 7, ov = this.r() * 7;
     for (let i = 0; i < p.count; i += 3) {
       // One projection per triangle, along its face normal: the texture's up stays up on the sides.

@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { canvasTexture, noise, blotches, streaks } from './textures';
 import { mulberry } from './rand';
 import { MAT } from '../world/mats';
-import { drawFacade, drawFacadeLights, isFacade, FACADE_M, FACADE_BAY } from './facades';
+import { drawFacade, drawFacadeLights, isFacade, FACADE_M, FACADE_BAY, LIGHT_TILES } from './facades';
 
 export { isFacade, FACADE_BAY };
 
@@ -130,12 +130,13 @@ const draws: Record<number, [Draw, number]> = {
   [MAT.blossom]: [(g, w, h) => { noise(g, w, h, '#cfb2b6', 0.3, 201); blotches(g, w, h, 202, 60, '190,120,140', 0.4, 6, 26); blotches(g, w, h, 203, 50, '60,45,40', 0.5, 4, 14); }, 2],
   [MAT.leaves]: [(g, w, h) => { noise(g, w, h, '#7a7a3a', 0.3, 211); blotches(g, w, h, 212, 60, '205,175,40', 0.45, 6, 24); blotches(g, w, h, 213, 40, '40,50,25', 0.4, 5, 20); }, 2],
   [MAT.tealMetal]: [(g, w, h) => {
-    noise(g, w, h, '#3f7f86', 0.12, 221);
+    // (Faded to a grey-green, U-032: the light carries the colour.)
+    noise(g, w, h, '#5a6a68', 0.12, 221);
     for (let x = 0; x < w; x += 16) { g.fillStyle = 'rgba(255,255,255,0.08)'; g.fillRect(x, 0, 6, h); g.fillStyle = 'rgba(0,0,0,0.15)'; g.fillRect(x + 10, 0, 4, h); }
     blotches(g, w, h, 222, 14, '120,90,60', 0.25, 10, 40);
   }, 2],
   [MAT.cloth]: [(g, w, h) => {
-    const r = mulberry(231), cols = ['#8a2a22', '#3c5a7a', '#c9b98a', '#6a6f4a', '#d8d4c8', '#5a3d5c'];
+    const r = mulberry(231), cols = ['#6e4a44', '#4e5a66', '#a8a08a', '#5e6152', '#b8b4aa', '#544a56'];
     for (let x = 0; x < w; x += 32) { g.fillStyle = cols[Math.floor(r() * cols.length)]; g.fillRect(x, 0, 32, h); }
     blotches(g, w, h, 232, 20, '30,25,20', 0.3, 10, 40);
   }, 1],
@@ -145,6 +146,8 @@ draws[MAT.cable] = draws[MAT.metal];
 
 const mats = new Map<string, THREE.MeshPhongMaterial>();
 const glowing: THREE.MeshPhongMaterial[] = [];
+/** Screens and neon (M3-63): brighter after dark, against the dark city; their day intensity in userData.day. */
+const signs: THREE.MeshPhongMaterial[] = [];
 
 /** A dull grey sky to reflect when surfaces are wet (M3-13). */
 let skyEnv: THREE.CubeTexture | null = null;
@@ -193,6 +196,8 @@ export function material(id: number, vc = false, lod: Lod = 'all'): THREE.MeshPh
   } else if (id === MAT.neon) {
     // Neon tube (M3-73): no lit colour of its own, it glows in its vertex colour (the solid's tint).
     m = new THREE.MeshPhongMaterial({ color: 0x000000, emissive: 0xffffff, emissiveIntensity: 1.5, vertexColors: vc });
+    m.userData.day = 1.5;
+    signs.push(m);
     lodCut(m, lod);
     const before = m.onBeforeCompile, key0 = m.customProgramCacheKey;
     m.onBeforeCompile = (sh, rr) => {
@@ -203,13 +208,19 @@ export function material(id: number, vc = false, lod: Lod = 'all'): THREE.MeshPh
   } else if (id === MAT.screen) {
     const tex = canvasTexture(`mat${id}`, 512, 512, drawScreen);
     m = new THREE.MeshPhongMaterial({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.85, vertexColors: vc, ...DRY });
+    m.userData.day = 0.85;
+    signs.push(m);
     lodCut(m, lod);
   } else if (isFacade(id)) {
     const map = canvasTexture(`facade${id}`, 1024, 1024, (g, w) => drawFacade(id, g, w));
-    const lights = canvasTexture(`facadeLit${id}`, 512, 512, (g, w) => drawFacadeLights(id, g, w));
+    const lights = canvasTexture(`facadeLit${id}`, 1024, 1024, (g, w) => drawFacadeLights(id, g, w));
     m = new THREE.MeshPhongMaterial({ map, vertexColors: vc, emissive: 0xffffff, emissiveMap: lights, emissiveIntensity: 0, ...DRY });
     glowing.push(m);
     lodCut(m, lod);
+    // (The night mask covers LIGHT_TILES facade tiles each way: sampled that much larger.)
+    const cut = m.onBeforeCompile, key0 = m.customProgramCacheKey, mm = m;
+    m.onBeforeCompile = (sh, rr) => { cut.call(mm, sh, rr); sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', `vec4 emissiveColor = texture2D( emissiveMap, vEmissiveMapUv / ${LIGHT_TILES}.0 );\ntotalEmissiveRadiance *= emissiveColor.rgb;`); };
+    m.customProgramCacheKey = () => `${key0.call(mm)}:lights`;
   } else {
     const [draw] = draws[id] ?? draws[MAT.concrete];
     const tex = canvasTexture(`mat${id}`, 512, 512, draw);
@@ -278,7 +289,11 @@ export function setWet(k: number, day = 1) {
 let wetR = 0;
 
 /** 0 by day to 1 at night: lit windows glow. */
-export function setNight(k: number) { night.k = k; for (const m of glowing) m.emissiveIntensity = k * 0.9; }
+export function setNight(k: number) {
+  night.k = k;
+  for (const m of glowing) m.emissiveIntensity = k * 1.25;
+  for (const m of signs) m.emissiveIntensity = m.userData.day * (1 + 0.7 * k);
+}
 /** 0 by day to 1 at night, for lights that only burn after dark (searchlights, floodlit beams). */
 export const night = { k: 0 };
 

@@ -229,6 +229,8 @@ function piece(p: Prop): THREE.BufferGeometry | null {
   const kind = p.kind.slice(2), m = MODELS[kind];
   if (!m) return null;
   const k = new Kit((Math.round(p.x * 31) * 73856093) ^ (Math.round(p.z * 17) * 19349663) ^ Math.round(p.y * 7));
+  // (Furniture and what's in it as it is: it stands out against the faded city, M3-63.)
+  k.muted = false;
   m(k, p.w ?? 0.5, p.h ?? 0.5, p.d ?? 0.5);
   const g = k.geometry(), M = new THREE.Matrix4();
   // On its back: its front up, lying where its footprint now runs out from the wall.
