@@ -5,7 +5,7 @@
 // thick enough to walk (a balance walk along their curve), hung with junk (cables, rags, shoes, a lamp, a sign);
 // bars across the narrow gaps at height; now and then a steel walkway roof to roof. And once the buildings stand,
 // a plank out of an open window to a window or a roof across the way.
-import { solid, rampSolid, turn, raycast, type Solid, type SolidIndex } from '../geom';
+import { solid, rampSolid, turn, raycast, query, xzHit, type Solid, type SolidIndex } from '../geom';
 import { MAT } from '../mats';
 import { makeRng, hashString, rand, randInt, type Rng } from '../../sim/rng';
 import type { Heightfield } from '../heightfield';
@@ -64,16 +64,32 @@ export function fitEnd(index: SolidIndex, e: V3, o: V3, ext = 6): V3 | null {
   return t < Infinity ? [px + dx * (t + 0.3), e[1], pz + dz * (t + 0.3)] : null;
 }
 
+/** Whether a plank's end e (o the other) rests on a building's mass, not a window sill, a trim or another plank:
+ *  something more than half a metre tall, not timber or cable or a slope, just under it, within a metre and a half
+ *  back toward o or 0.76 m on past it. */
+export function onWall(index: SolidIndex, e: V3, o: V3) {
+  const l = Math.hypot(e[0] - o[0], e[2] - o[2]), dx = (e[0] - o[0]) / l, dz = (e[2] - o[2]) / l;
+  for (let s = -1.55; s <= 0.76; s += 0.1) for (const dy of [0.05, 0.25, 0.45]) {
+    const x = e[0] + dx * s, y = e[1] - dy, z = e[2] + dz * s;
+    for (const i of query(index, x - 0.02, z - 0.02, x + 0.02, z + 0.02)) {
+      const q = index.solids[i];
+      if (q.y1 - q.y0 > 0.5 && q.mat !== MAT.wood && q.mat !== MAT.cable && (!q.ramp || q.mat === MAT.roofTile) && y > q.y0 && y < q.y1 && x > q.x0 && x < q.x1 && z > q.z0 && z < q.z1 && (!q.rot || xzHit(q, x - 0.02, z - 0.02, x + 0.02, z + 0.02))) return true;
+    }
+  }
+  return false;
+}
+
 /** A connection laid out before the buildings stand: its two ends, and how it's built between two. */
 export interface Link { a: V3; b: V3; make: (a: V3, b: V3) => void; /** b hangs free (a beam out over a gap): only a meets a wall, b moved with it */ free?: boolean;
-  /** still fit to build between its fitted ends (a cable's sag kept out of reach of the ground under it) */ ok?: (a: V3, b: V3) => boolean }
+  /** still fit to build between its fitted ends (a cable's sag kept out of reach of the ground under it; a plank's ends
+   *  on wall, not a sill) */ ok?: (a: V3, b: V3, index: SolidIndex) => boolean }
 
 /** Build the connections now the buildings stand (M3-81, U-044): each end fitted to the wall it meets, run on to
  *  it where the building stands back above (a tower's shaft, a stepped top), left out where there's no wall. */
 export function layLinks(out: Vertical, index: SolidIndex) {
   for (const l of out.links ?? []) {
     const a = fitEnd(index, l.a, l.b), b = a && (l.free ? ([l.b[0] + a[0] - l.a[0], l.b[1], l.b[2] + a[2] - l.a[2]] as V3) : fitEnd(index, l.b, l.a));
-    if (a && b && (!l.ok || l.ok(a, b))) l.make(a, b);
+    if (a && b && (!l.ok || l.ok(a, b, index))) l.make(a, b);
   }
   out.links = [];
 }
@@ -198,7 +214,7 @@ export function windowBridges(wins: Feature[], index: SolidIndex, out: Vertical)
     const end: V3 | null = other ? [other.x - nx * 0.1, other.y, other.z - nz * 0.1] : Number.isFinite(top) && top < y + 0.6 && top > y - 2.2 ? [hx + nx * 0.6, top, hz + nz * 0.6] : null;
     const A: V3 = [w.x - nx * 0.15, y, w.z - nz * 0.15];
     // (Both ends on a wall: under the sills, the roof's edge, M3-81.)
-    if (!end || !fitEnd(index, A, end, 0.8) || !fitEnd(index, end, A, 0.8)) continue;
+    if (!end || !fitEnd(index, A, end, 0.8) || !fitEnd(index, end, A, 0.8) || !onWall(index, A, end) || !onWall(index, end, A)) continue;
     out.solids.push(member(A, end, 0.35, 0.06, MAT.wood));
     out.features.push({ kind: 'winPlank', x: A[0], y, z: A[2], group: out.features.length, nx, nz }, { kind: 'winPlank', x: end[0], y: end[1], z: end[2], group: out.features.length, nx: -nx, nz: -nz });
   }

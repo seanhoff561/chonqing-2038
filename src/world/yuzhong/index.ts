@@ -38,19 +38,21 @@ import { streetRoute } from './streetroute';
 import { buildNav, walksOf } from './nav';
 import { walkedBeats, columnSpurs, placeCameras, placeGarages } from './patrols';
 import { placeSensors } from './sensors';
+import { chooseAlley, buildHome } from './home';
 
 const empty = (): Fabric => ({ solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [], sites: [], far: [] });
 
 export function buildYuzhong(): World {
   const g = buildGround(), sts = streets();
   // The set pieces cut and level the ground first; lots keep clear of them.
-  const tun = buildTunnels(g, sts), site = buildSite(g), line = buildLine2(g);
+  const tun = buildTunnels(g), site = buildSite(g), line = buildLine2(g);
   const land = landMask(g), metro = stationEntrances(g, sts.filter(onGround), land), block = new Uint8Array(g.y.length), mark = (poly: [number, number][], m = block) => rasterPoly(poly, 0, 0, g.cell, g.w, g.h, (i0, i1, j) => m.fill(1, j * g.w + i0, j * g.w + i1 + 1));
   // The underground network off the Grand Tunnel (M3-58), its ways in kept clear of lots.
   const { W: tw } = tunnelFrame(), gtAt = (uu: number, vv: number) => { const [x, z] = tw(uu, vv); return { x, y: tun.frame.floor, z }; };
-  const under = buildUnder(g, { floor: tun.frame.floor, junction: tun.at.junction, ways: [tun.at.entrance, tun.at.exit, tun.at.grate], walk: [gtAt(195, 0), gtAt(JUNCTION.u, 0), gtAt(JUNCTION.u, 8)],
-    // (M3-43: the metro's stub, and from it along the Grand Tunnel and down the side tunnel into the chamber.)
-    metro: tun.at.metro, toHideout: [gtAt(METRO.u, 8), gtAt(METRO.u, 0), gtAt(130, 0), gtAt(90, 0), tun.at.sideTop, tun.at.sideFoot, tun.at.mattress] });
+  const under = buildUnder(g, { floor: tun.frame.floor, junction: tun.at.junction, ways: [tun.at.entrance, tun.at.exit], walk: [gtAt(195, 0), gtAt(JUNCTION.u, 0), gtAt(JUNCTION.u, 8)],
+    // (M3-43: the metro's stub, and from it along the Grand Tunnel to the underground's junction; the friends' chamber is
+    // sealed off, U-047.)
+    metro: tun.at.metro, toJunction: [gtAt(METRO.u, 8), gtAt(METRO.u, 0), gtAt(130, 0), gtAt(90, 0), gtAt(JUNCTION.u, 0)] });
   for (const o of tun.keep.concat(metro.keep, under.keep)) mark(corners({ ...o, hw: o.hw + KEEP, hd: o.hd + KEEP }));
   for (const b of line.beams) for (let k = 0; k + 1 < b.pts.length; k++) {
     const [[ax, az], [bx, bz]] = [b.pts[k], b.pts[k + 1]];
@@ -61,16 +63,28 @@ export function buildYuzhong(): World {
   const pod = podiumMask(g, block), unblocked = block.slice();
   for (let k = 0; k < pod.length; k++) block[k] |= pod[k];
   const plans = planLots(g, sts, land, block);
-  // The start hideout's alley keeps its levelled paving: the lots' aprons stop at it.
-  const lane: [number, number][] = [];
-  rasterPoly(corners(tun.alley), 0, 0, g.cell, g.w, g.h, (i0, i1, j) => { for (let k = j * g.w + i0; k <= j * g.w + i1; k++) lane.push([k, g.y[k]]); });
   levelLots(g, plans);
   markEnterable(g, plans);
-  for (const [k, y] of lane) g.y[k] = y;
   const fac = buildFactory(g, pod, sts);
   // What its halls leave of the podium is open ground like any other, to fill.
   if (fac) for (let k = 0; k < pod.length; k++) block[k] = unblocked[k] | fac.under[k];
   const out = empty(), plots: Plot[] = [];
+  // Shibati's stair (M3-18): the stepped street nearest the landmark, its top and its foot. The district's key points
+  // (M3-21): the hideout's grate, Jiaochangkou, the top of the stair, the riverfront; three layers of routes join them.
+  const SB = GEO.landmarks.shibati, near = (s: Street) => Math.min(...s.pts.map(([x, z]) => Math.hypot(x - SB.x, z - SB.z)));
+  const stair = sts.filter(s => s.steps && onGround(s)).sort((a, b) => near(a) - near(b))[0], sh = stair.pts.map(([x, z]) => hAt(g, x, z));
+  const [top, foot] = [stair.pts[sh.indexOf(Math.max(...sh))], stair.pts[sh.indexOf(Math.min(...sh))]], JK = GEO.landmarks.jiaochangkou;
+  // The friends' hideout (U-047, U-048): under the real alley nearest the middle of the district's other key points,
+  // 60 m from any way down and clear of everything dug; its alley left as it is, the hideout's parts the city's.
+  const riverAt = riverRoad(g, sts, { x: foot[0], z: foot[1] });
+  const heart = { x: (JK.x + top[0] + riverAt.x) / 3, y: 0, z: (JK.z + top[1] + riverAt.z) / 3 };
+  const downs = [tun.at.entrance, tun.at.exit, ...metro.at, ...under.features.filter(f => f.kind.startsWith('way:'))].map(q => ({ x: q.x, y: 0, z: q.z }));
+  const spot = chooseAlley(g, plans, heart, { points: downs, boxes: tun.zones.concat(under.zones).map(z => z.box) });
+  if (!spot) throw new Error('no alley for the hideout');
+  const home = buildHome(g, plans, spot);
+  out.solids.push(...home.solids); out.props.push(...home.props); out.inter.push(...home.inter); out.climbables.push(...home.climbables); out.sites.push(...home.sites); out.features.push(...home.features);
+  const keys = [{ name: 'hideout gate', at: home.at.grate }, { name: 'jiaochangkou', at: { x: JK.x, y: hAt(g, JK.x, JK.z), z: JK.z } },
+    { name: 'shibati top', at: { x: top[0], y: hAt(g, top[0], top[1]), z: top[1] } }, { name: 'riverfront', at: riverAt }], joins: [number, number][] = [[0, 1], [0, 3], [1, 2], [2, 3]];
   // A few caches only a grappling hook reaches (M3-37, U-037): chosen first, so nothing gives them a hold.
   const gatePairs = pickGates(plans, makeRng(hashString('gates')));
   // (Round the caches nothing changes: what keeps them out of reach was judged at these heights.)
@@ -85,7 +99,7 @@ export function buildYuzhong(): World {
     for (const q of plans) if (q !== p && !q.far && q.wall > p.sky && Math.hypot(q.obb.cx - p.obb.cx, q.obb.cz - p.obb.cz) < p.obb.hw + p.obb.hd + q.obb.hw + q.obb.hd + 25 && obbOverlap(p.obb, q.obb, 12.5)) p.sky = q.wall;
   }
   plans.forEach((p, n) => plots.push(buildPlan(p, n, out, g)));
-  rowAlleys(plans, out, g);
+  rowAlleys(plans, out, g, home.pair[0]);
   // Holes knocked through from one building into the next where their floors meet (M3-76).
   breaches(out);
   // The connections between them, each end on its wall (M3-81); planks out of windows across to a window or a roof.
@@ -94,19 +108,12 @@ export function buildYuzhong(): World {
   layLinks(cross, built);
   windowBridges(out.features.filter(f => f.kind.startsWith('win:')), built, cross);
   // The sewer maze under the basements (M3-73a).
-  const sew = sewers(out.features.filter(f => f.kind === 'sewer'), plots, g, under.route, tun.zones.map(z => z.box), under.solids, under.zones.map(z => z.box));
-  // Shibati's stair (M3-18): the stepped street nearest the landmark, its top and its foot. The district's key points
-  // (M3-21): the hideout's grate, Jiaochangkou, the top of the stair, the riverfront; three layers of routes join them.
-  const SB = GEO.landmarks.shibati, near = (s: Street) => Math.min(...s.pts.map(([x, z]) => Math.hypot(x - SB.x, z - SB.z)));
-  const stair = sts.filter(s => s.steps && onGround(s)).sort((a, b) => near(a) - near(b))[0], sh = stair.pts.map(([x, z]) => hAt(g, x, z));
-  const [top, foot] = [stair.pts[sh.indexOf(Math.max(...sh))], stair.pts[sh.indexOf(Math.min(...sh))]], JK = GEO.landmarks.jiaochangkou;
-  const keys = [{ name: 'hideout gate', at: tun.at.grate }, { name: 'jiaochangkou', at: { x: JK.x, y: hAt(g, JK.x, JK.z), z: JK.z } },
-    { name: 'shibati top', at: { x: top[0], y: hAt(g, top[0], top[1]), z: top[1] } }, { name: 'riverfront', at: riverRoad(g, sts, { x: foot[0], z: foot[1] }) }], joins: [number, number][] = [[0, 1], [1, 2], [2, 3]];
+  const sew = sewers(out.features.filter(f => f.kind === 'sewer'), plots, g, under.route, tun.zones.concat(home.zones).map(z => z.box), under.solids, under.zones.map(z => z.box));
   // The caches, and the route network over everything that joins the roofs (M3-37).
   const gates = placeGates(gatePairs.filter(q => isolated(q, plans)), out), L0 = GEO.landmarks, lm = (k: string) => ({ x: L0[k].x, y: 0, z: L0[k].z });
   const net = network(plots, out.features.concat(vert.features, cross.features, under.features, sew.features), out.sites, sts, g,
     [['jiaochangkou', 'shibati', 'jiefangbei', 'cablewayNorth', 'xiaoshizi', 'chaotianmen'].map(lm), ['jiefangbei', 'xinhuaIntl', 'hongyadong', 'chaotianmen'].map(lm)],
-    { x: tun.at.grate.x, y: tun.at.grate.y, z: tun.at.grate.z }, cross, gates, buildIndex(out.solids), keys, joins);
+    { ...home.at.grate }, cross, gates, buildIndex(out.solids), keys, joins);
   // The underground city's buildings (M3-73), as they stand (after the routes: the surface's network doesn't run
   // through the cavern under it).
   under.lots.forEach((s, k) => { const { l, f } = underLot(s, k); place(f, { cx: (l.x0 + l.x1) / 2, cz: (l.z0 + l.z1) / 2, hw: (l.x1 - l.x0) / 2, hd: (l.z1 - l.z0) / 2, yaw: 0 }, `under${k}`, out); });
@@ -117,7 +124,7 @@ export function buildYuzhong(): World {
   for (const s of sts) if (onGround(s) && s.steps) surface(s, g, decor); else if (s.bridge && s.layer > 0) bridge(s, g, out.solids);
   const [W, H] = GEO.size;
   const L = GEO.landmarks, at = (k: string, yaw = 0): Teleport => ({ name: k, x: L[k].x, y: hAt(g, L[k].x, L[k].z) + 1.5, z: L[k].z, yaw });
-  const hide = { name: "Friends' hideout (vent grate)", x: tun.at.spawn.x, y: tun.at.spawn.y + 0.05, z: tun.at.spawn.z, yaw: -Math.PI / 2 - tun.frame.yaw };
+  const hide = { name: "Friends' hideout (vent grate)", x: home.at.spawn.x, y: home.at.spawn.y + 0.05, z: home.at.spawn.z, yaw: -Math.PI / 2 - home.yaw };
   // (Looking down the stepped street from its mouth.)
   const dw = under.features.find(f => f.kind === 'way:descent'), descentYaw = dw ? Math.atan2(-dw.nx!, -dw.nz!) : 0;
   // Shibati's stair from its top looking down and from its foot looking up (M3-18); the beam of Line 2 a third of the
@@ -130,7 +137,7 @@ export function buildYuzhong(): World {
     { name: 'Line 2 beam', x: run.pts[bi][0], y: run.top[bi] + 0.3, z: run.pts[bi][1], yaw: look(run.pts[bi], bn) },
     hide,
     // The Grand Tunnel's junctions: the friends' stub and the metro's (M3-18).
-    { name: 'Tunnel junction (hideout)', x: tun.at.junction.x, y: tun.at.junction.y + 0.3, z: tun.at.junction.z, yaw: 0 },
+    { name: 'Tunnel junction (north passage)', x: tun.at.junction.x, y: tun.at.junction.y + 0.3, z: tun.at.junction.z, yaw: 0 },
     { name: 'Tunnel junction (metro)', x: tun.at.metro.x, y: tun.at.metro.y + 0.3, z: tun.at.metro.z, yaw: 0 },
     { name: 'Grand Tunnel entrance', x: tun.at.entrance.x, y: tun.at.entrance.y + 0.05, z: tun.at.entrance.z, yaw: Math.PI / 2 - tun.frame.yaw },
     { name: 'Grand Tunnel exit', x: tun.at.exit.x, y: tun.at.exit.y + 0.05, z: tun.at.exit.z, yaw: 0 },
@@ -159,7 +166,7 @@ export function buildYuzhong(): World {
   // The tunnel gate's door switches its own collision solid, the tunnels' last.
   tun.inter.find(i => i.id === 'shibati-gate')!.data!.solid = solids.length - 1;
   // Street dressing goes last, round everything else (its solids append, so the gate's index holds).
-  const clear = [tun.at.entrance, tun.at.exit, tun.at.grate, ...metro.at].map(q => ({ x: q.x, z: q.z, r: 9 })).concat(site ? [{ x: site.frame.x, z: site.frame.z, r: 50 }] : [],
+  const clear = [tun.at.entrance, tun.at.exit, home.at.grate, ...metro.at].map(q => ({ x: q.x, z: q.z, r: 9 })).concat(site ? [{ x: site.frame.x, z: site.frame.z, r: 50 }] : [],
     plots.filter(p => p.route).map(p => ({ x: p.route![0].x, z: p.route![0].z, r: 2.5 })),
     (fac?.gates ?? []).map(q => ({ x: q.x + q.nx * 8, z: q.z + q.nz * 8, r: 13 })), under.features.map(f => ({ x: f.x, z: f.z, r: 6 })));
   const dress = dressStreets(buildIndex(solids, g), g, sts, land, inter, clear);
@@ -180,7 +187,7 @@ export function buildYuzhong(): World {
   const world = makeWorld({
     name: 'yuzhong', routes: net.routes, patrols: net.patrols, gates, solids, decor: decor.concat(river.decor, out.decor, tun.decor, line.decor, site?.decor ?? [], fac?.decor ?? [], vert.decor, cross.decor, under.decor, sew.decor, laid.decor, filled.decor),
     props: out.props.concat(river.props, tun.props, line.props, metro.props, site?.props ?? [], fac?.props ?? [], under.props, sew.props, laid.props, dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(sew.climbables, tun.climbables, line.climbables, site?.climbables ?? [], vert.climbables, under.climbables, dress.climbables),
-    hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones.concat(under.zones, sew.zones),
+    hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones.concat(home.zones, under.zones, sew.zones),
     far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(river.features, fac?.features ?? [], vert.features, cross.features, rubble.features, under.features, sew.features, laid.features, dress.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n })), under.metroRoute.map((q, n) => ({ kind: 'metroRoute', ...q, group: n })), under.descents.flatMap((d, i) => d.map((q, n) => ({ kind: 'descentRoute', ...q, group: i * 100 + n })))), marks, lawns: laid.lawns, convoys: fac?.convoys.map(pts => ({ pts, spurs: [] })), streets: drawn.concat(laid.paths, doorWays), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }, ...sew.water],
     teleports, spawn: hide,
   });
@@ -230,7 +237,7 @@ export function buildYuzhong(): World {
   world.patrols = walkedBeats(world, net.patrols, [tun.at.junction, tun.at.metro]);
   for (const c of world.convoys ?? []) c.spurs = columnSpurs(world, c.pts);
   world.cameras = placeCameras(world).concat(placeSensors(world, gtAt));
-  world.garages = placeGarages(world, tun.at.spawn);
+  world.garages = placeGarages(world, home.at.spawn);
   world.links = net.links.concat(joins.flatMap(([i, j]) => { const rt = streetRoute(world.nav!, `link:${keys[i].name}-${keys[j].name}:street`, keys[i].at, keys[j].at); return rt ? [{ from: keys[i].name, to: keys[j].name, layer: 'street' as const, route: rt }] : []; }));
   return world;
 }
@@ -360,7 +367,7 @@ function place(f: Fabric, o: Obb, prefix: string, out: Fabric): (x: number, z: n
 
 /** The alleys between neighbours in each row of infill (U-005): hide spots, scaffold bars, fences and litter,
  *  laid out in the first one's frame. */
-function rowAlleys(plans: Plan[], out: Fabric, g: Heightfield) {
+function rowAlleys(plans: Plan[], out: Fabric, g: Heightfield, skip: number) {
   // Along each row the alleys take turns, the first one first: something to hide in, bars to swing from, a fence
   // to get over, a hide again, a squeeze to crawl (M3-71).
   const turn = new Map<string, number>();
@@ -375,9 +382,10 @@ function rowAlleys(plans: Plan[], out: Fabric, g: Heightfield) {
     // Its floor: the ground between them (a lane may keep it higher than either, a slope lower).
     const y = heightAt(g, (o.cx + b.obb.cx) / 2, (o.cz + b.obb.cz) / 2) ?? Math.min(a.base, b.base);
     // Seeded by where it is, so what's in it doesn't change when lots elsewhere come or go.
+    // (The hideout's alley gets scaffold bars overhead: nothing over its grate, U-047.)
     const k = turn.get(a.row) ?? 0;
     turn.set(a.row, k + 1);
-    alleys([lot(o.cx, o.cz, o.hw, o.hd, y, a.wall), lot(bx, bz, b.obb.hw, b.obb.hd, y, b.wall)], makeRng(hashString(`alley${Math.round(o.cx)},${Math.round(o.cz)}`)), f, [0.1, 0.5, 0.9, 0.3, 0.8][k % 5], Math.abs(Math.sin(a.obb.yaw - b.obb.yaw)) < 0.01);
+    alleys([lot(o.cx, o.cz, o.hw, o.hd, y, a.wall), lot(bx, bz, b.obb.hw, b.obb.hd, y, b.wall)], makeRng(hashString(`alley${Math.round(o.cx)},${Math.round(o.cz)}`)), f, n === skip ? 0.5 : [0.1, 0.5, 0.9, 0.3, 0.8][k % 5], Math.abs(Math.sin(a.obb.yaw - b.obb.yaw)) < 0.01);
     place(f, o, `${a.seed}a`, out);
   }
 }

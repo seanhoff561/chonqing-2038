@@ -1,34 +1,25 @@
 // The tunnels under Shibati and Jiaochangkou on the real map (M3-41c, D-016): the wartime Grand Tunnel from its
 // real entrance by the Shibati stairs (十八梯大隧道遗址), down a stairway cut between retaining walls and level
-// into the hill toward Jiaochangkou, deep enough that the ground's shell clears it; a side tunnel to the friends'
-// air-raid chamber, whose vent shaft rises to a grate in a paved patch of the street above; a stairway up to the
-// street at the far end; the hotpot restaurant's cool room as a dead end. Laid out square in its own frame along
-// the tunnel (u along, v across), then turned onto the map. The ground is holed over the open stairways and the
-// shaft, with walls and slabs covering the holes' ragged cell edges.
+// into the hill toward Jiaochangkou, deep enough that the ground's shell clears it; a stairway up to the street at
+// the far end; the hotpot restaurant's cool room as a dead end. Laid out square in its own frame along the tunnel
+// (u along, v across), then turned onto the map. The ground is holed over the open stairways, with walls and slabs
+// covering the holes' ragged cell edges. (The friends' chamber is sealed away from it under an alley: home.ts.)
 import { solid, carve, turn, type Solid, type Box } from '../geom';
 import { MAT } from '../mats';
 import { GEO } from '../geo';
 import type { Heightfield } from '../heightfield';
 import type { Inter, Prop, Zone, Site, Climbable } from '../world';
-import { hideoutParts, HIDEOUT } from '../sets/hideout';
-import { alley, alleySpot, alleyObb } from './alley';
-import { sitePoly } from './site';
-import type { Street } from './ground';
 import { stair } from '../steps';
 import type { Obb } from './shapes';
 
-export interface Tunnels { solids: Solid[]; decor: Solid[]; props: Prop[]; inter: Inter[]; climbables: Climbable[]; alley: Obb; zones: Zone[]; sites: Site[]; frame: { px: number; pz: number; yaw: number; floor: number }; at: Record<string, { x: number; y: number; z: number }>; keep: Obb[] }
+export interface Tunnels { solids: Solid[]; decor: Solid[]; props: Prop[]; inter: Inter[]; climbables: Climbable[]; zones: Zone[]; sites: Site[]; frame: { px: number; pz: number; yaw: number; floor: number }; at: Record<string, { x: number; y: number; z: number }>; keep: Obb[] }
 
 const hAt = (g: Heightfield, x: number, z: number) => g.y[Math.max(0, Math.min(g.h - 1, Math.round(z / g.cell))) * g.w + Math.max(0, Math.min(g.w - 1, Math.round(x / g.cell)))];
 
 /** Stairways climb at 35 degrees; a stair is 3 m wide between walls reaching 4.4 m out from its middle, wider than
  *  the ground cells the holes over it take (a cell's diagonal past its edge). */
 const T35 = Math.tan(0.61), HALF = 1.5, WALL = 4.4, HEAD = 3.2;
-/** The friends' chamber (hideoutParts) lies south of the Grand Tunnel near its mouth, under an alley (U-038, M3-72):
- *  the shaft over its middle rises to the grate in the first spot along here whose alley stands off the roads (the
- *  machines keep them clear) and the building site. Its east stub meets a side tunnel up to the Grand Tunnel; its
- *  collapsed side passage runs south into the rock. */
-const CHAMBER_U = [24, 44], SIDE = 4;
+/** (The friends' chamber was off the Grand Tunnel's mouth until U-047 sealed it away under a real alley: home.ts.) */
 /** The way out: a stairway south off the Grand Tunnel near its end, up to the street below Jiaochangkou. */
 const EXIT_U = 202;
 /** Where a passage leaves the Grand Tunnel's north side for the underground network (M3-58), and how far it runs. */
@@ -52,7 +43,7 @@ export function tunnelFrame() {
   return { px, pz, yaw, W: (u: number, v: number): [number, number] => [px + c * u - s * v, pz + s * u + c * v] };
 }
 
-export function buildTunnels(g: Heightfield, sts: Street[]): Tunnels {
+export function buildTunnels(g: Heightfield): Tunnels {
   const { px, pz, yaw, W } = tunnelFrame();
   const P = (x: number, z: number): [number, number] => W(x - px, z - pz);
   const surface = (u: number, v: number) => hAt(g, ...W(u, v));
@@ -60,13 +51,10 @@ export function buildTunnels(g: Heightfield, sts: Street[]): Tunnels {
   // Deep enough everywhere that the ground's shell clears the bores: 8.5 m under the entrance, more under higher
   // ground, never less than 8.4 m under the lowest ground over the tunnels.
   const top = surface(0, 0);
-  const spot = alleySpot(sts, [sitePoly() ?? []].filter(p => p.length), (u, v) => W(u, -v), CHAMBER_U[0], CHAMBER_U[1], 4.5) ?? { u: 30, v: 8, ang: 0 };
-  const gu = spot.u, gv = -spot.v, CHAMBER = { u: gu - HIDEOUT.shaftX, v: gv };
   let lowest = Infinity;
   for (let u = 0; u <= 224; u += 2) for (const v of [-3, 0, 3]) lowest = Math.min(lowest, surface(u, v));
-  for (let u = CHAMBER.u; u <= CHAMBER.u + 28; u += 2) for (let v = CHAMBER.v - SIDE - 4; v <= 0; v += 2) lowest = Math.min(lowest, surface(u, v));
   const floor = Math.min(top - 8.5, lowest - 8.4), inRun = (top - floor) / T35;
-  const out: Tunnels = { solids: [], decor: [], props: [], inter: [], climbables: [], alley: { cx: 0, cz: 0, hw: 0, hd: 0, yaw: 0 }, zones: [], sites: [], frame: { px, pz, yaw, floor }, at: {}, keep: [] };
+  const out: Tunnels = { solids: [], decor: [], props: [], inter: [], climbables: [], zones: [], sites: [], frame: { px, pz, yaw, floor }, at: {}, keep: [] };
   const keep = (u0: number, u1: number, v0: number, v1: number) => { const [cx, cz] = W((u0 + u1) / 2, (v0 + v1) / 2); out.keep.push({ cx, cz, hw: (u1 - u0) / 2, hd: (v1 - v0) / 2, yaw }); };
   const under = (x0: number, z0: number, x1: number, z1: number, y0: number, y1: number) => {
     const cs = [P(x0, z0), P(x1, z0), P(x0, z1), P(x1, z1)], xs = cs.map(q => q[0]), zs = cs.map(q => q[1]);
@@ -76,8 +64,6 @@ export function buildTunnels(g: Heightfield, sts: Street[]): Tunnels {
   // Bores (the space) and their linings (floor, ceiling, walls, end caps) in the frame: local x = u + px, z = v + pz.
   const runs = [
     { u0: inRun, u1: 212, v: 0, w: 5, h: 4, alongU: true },
-    // The side tunnel from the chamber's stub up to the Grand Tunnel (its far end in the chamber's rock).
-    { u0: CHAMBER.v - 1.5, u1: -2.5, v: CHAMBER.u + HIDEOUT.length + 6, w: 2.4, h: 3, alongU: false, open: true },
     { u0: 212, u1: 222, v: 0, w: 9, h: 3, alongU: true },
     // Open at its far end, where the underground network's junction room takes it (under.ts).
     { u0: 2.5, u1: JUNCTION.v, v: JUNCTION.u, w: 3, h: 3.2, alongU: false, open: true },
@@ -132,24 +118,6 @@ export function buildTunnels(g: Heightfield, sts: Street[]): Tunnels {
   stairway({ ox: X(EXIT_U + 1.5), oz: Z(-2.5 - eRun), alongX: false, sa: 1 }, eRun, floor + eRun * T35, 'exit');
   bores.push({ x0: X(EXIT_U), y0: floor, z0: Z(-3.1), x1: X(EXIT_U + 3), y1: floor + 3, z1: Z(-2.4) });
 
-  // The chamber, its shaft up to the grate in the alley over it (U-038), levelled round the grate, a slab round it
-  // covering the hole's cell edges; the rock round the chamber up to the Grand Tunnel's wall.
-  const gy = surface(gu, gv), shaftTop = gy - floor, hs = HIDEOUT.shaftHalf, ang = -spot.ang;
-  level(g, W, gu, gv, 6, gy);
-  const h = hideoutParts(X(CHAMBER.u), floor, Z(CHAMBER.v), { shaftTop, kit: 'start', prefix: 'airraid-', side: SIDE + 2 });
-  const rock: Solid[] = [solid(X(CHAMBER.u) - 1, floor - 1, Z(CHAMBER.v - SIDE - 3), X(CHAMBER.u) + HIDEOUT.length + 7.5, floor + 3.6, Z(-2.5), MAT.stone)];
-  const sx = X(gu), sz = Z(gv), sh = floor + shaftTop - 0.4, t = hs + 0.3;
-  rock.push(solid(sx - t, floor + 3, sz - t, sx + t, sh, sz - hs, MAT.stone), solid(sx - t, floor + 3, sz + hs, sx + t, sh, sz + t, MAT.stone),
-    solid(sx - t, floor + 3, sz - hs, sx - hs, sh, sz + hs, MAT.stone), solid(sx + hs, floor + 3, sz - hs, sx + t, sh, sz + hs, MAT.stone));
-  // (A ring round the shaft, not a slab over it: its top was left lying across the opened grate, U-046.)
-  const r = hs + 1.3;
-  rock.push(solid(sx - r, gy - 0.4, sz - r, sx + r, gy + 0.02, sz - hs, MAT.concrete), solid(sx - r, gy - 0.4, sz + hs, sx + r, gy + 0.02, sz + r, MAT.concrete),
-    solid(sx - r, gy - 0.4, sz - hs, sx - hs, gy + 0.02, sz + hs, MAT.concrete), solid(sx + hs, gy - 0.4, sz - hs, sx + r, gy + 0.02, sz + hs, MAT.concrete));
-  hole(g, P, sx - hs, sz - hs, sx + hs, sz + hs);
-  const [gx, gz] = W(gu, gv), lane = alley(gx, gz, gy, yaw + ang, (x, z) => hAt(g, x, z));
-  out.alley = alleyObb(gx, gz, yaw + ang);
-  out.keep.push(out.alley);
-  out.solids.push(...lane.solids);
 
   // The rusted gate across the foot of the way in, and the cool room's fittings: shelves, a chest freezer,
   // crates and a table, a good place to hide.
@@ -170,29 +138,16 @@ export function buildTunnels(g: Heightfield, sts: Street[]): Tunnels {
   out.inter.push({ id: 'cool-table', kind: 'table', ...pt(X(217.25), Z(2.5)), y: floor + 0.78, r: 0.8, zh: '桌子', en: 'Table' });
   out.sites.push({ id: 'coolroom', kind: 'cellar', ...pt(X(217), Z(0)), y: floor, bed: null, table: 'cool-table', containers: fit.map(f => f.id), exits: 1, windows: 0, streetSides: 0 });
 
-  let all = lining.concat(rock);
-  for (const b of bores.concat(h.cuts)) all = carve(all, b);
-  out.solids.push(...turn(all.concat(h.solids, kept), yaw, px, pz));
+  let all = lining;
+  for (const b of bores) all = carve(all, b);
+  out.solids.push(...turn(all.concat(kept), yaw, px, pz));
   // The gate's door switches its own collision solid: the last one.
   out.solids.push(...turn([gate], yaw, px, pz));
   out.decor.push(...turn(decor, yaw, px, pz));
-  out.props.push(...lane.props, ...h.props.map(q => { const [x, z] = P(q.x, q.z); return { ...q, x, z, yaw: q.yaw - yaw }; }));
-  out.inter.push(...h.inter.map(q => { const [x, z] = P(q.x, q.z); return { ...q, x, z }; }));
-  out.climbables.push(...h.climbables.map(c => { const [x, z] = P(c.x, c.z), [ax, az] = P(c.x + c.nx, c.z + c.nz); return { ...c, x, z, nx: ax - x, nz: az - z }; }));
-  out.zones.push(...h.zones.map(zn => {
-    const cs = [P(zn.box.x0, zn.box.z0), P(zn.box.x1, zn.box.z0), P(zn.box.x0, zn.box.z1), P(zn.box.x1, zn.box.z1)], xs = cs.map(q => q[0]), zs = cs.map(q => q[1]);
-    return { ...zn, box: { ...zn.box, x0: Math.min(...xs), z0: Math.min(...zs), x1: Math.max(...xs), z1: Math.max(...zs) } };
-  }));
-  for (const [k, q] of Object.entries(h.at)) { const [x, z] = P(q.x, q.z); out.at[k] = { x, y: q.y, z }; }
-  out.sites.push({ id: 'airraid', kind: 'cellar', x: out.at.mattress.x, y: floor, z: out.at.mattress.z, bed: 'airraid-mattress', table: null, containers: ['airraid-stash'], exits: 1, windows: 0, streetSides: 0 });
   const [jx, jz] = W(JUNCTION.u, JUNCTION.v);
-  out.at.grate = { x: gx, y: gy, z: gz };
   out.at.junction = { x: jx, y: floor, z: jz };
-  const [mx, mz] = W(METRO.u, METRO.v), side = CHAMBER.u + HIDEOUT.length + 6, [ax, az] = W(side, 0), [bx, bz] = W(side, CHAMBER.v);
+  const [mx, mz] = W(METRO.u, METRO.v);
   out.at.metro = { x: mx, y: floor, z: mz };
-  // (The way from the Grand Tunnel down the side tunnel into the chamber's stub.)
-  out.at.sideTop = { x: ax, y: floor, z: az };
-  out.at.sideFoot = { x: bx, y: floor, z: bz };
   return out;
 }
 
@@ -201,12 +156,5 @@ function hole(g: Heightfield, P: (x: number, z: number) => [number, number], x0:
   for (let x = x0; x <= x1 + 1e-6; x += 0.25) for (let z = z0; z <= z1 + 1e-6; z += 0.25) {
     const [mx, mz] = P(Math.min(x, x1), Math.min(z, z1)), i = Math.floor(mx / g.cell), j = Math.floor(mz / g.cell);
     if (i >= 0 && j >= 0 && i < g.w - 1 && j < g.h - 1) g.hole[j * (g.w - 1) + i] = 1;
-  }
-}
-/** Level the ground within r of a frame point to y. */
-function level(g: Heightfield, W: (u: number, v: number) => [number, number], u: number, v: number, r: number, y: number) {
-  const [cx, cz] = W(u, v);
-  for (let j = Math.floor((cz - r) / g.cell); j <= Math.ceil((cz + r) / g.cell); j++) for (let i = Math.floor((cx - r) / g.cell); i <= Math.ceil((cx + r) / g.cell); i++) {
-    if (i >= 0 && j >= 0 && i < g.w && j < g.h && Math.hypot(i * g.cell - cx, j * g.cell - cz) <= r) g.y[j * g.w + i] = y;
   }
 }

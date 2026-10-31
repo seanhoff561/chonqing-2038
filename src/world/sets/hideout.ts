@@ -21,9 +21,10 @@ export const HIDEOUT = { length: 20, width: 4, height: 3, shaftX: 10, shaftTop: 
 
 /** shaftTop: the vent's height above the floor; kit: 'full' is the test scene's bed, bench, stash and power,
  *  'start' the friends' old hideout where a run begins (U-018): their mattress and their crate, no bench or
- *  power; prefix keeps the city's ids apart; side: how far the collapsed side passage runs north. */
-export function hideoutParts(ox: number, oy: number, oz: number, o: { shaftTop?: number; kit?: 'full' | 'start'; prefix?: string; side?: number } = {}): HideoutParts {
-  const H = { ...HIDEOUT, shaftTop: o.shaftTop ?? HIDEOUT.shaftTop }, furnished = (o.kit ?? 'full') === 'full', id = (s: string) => (o.prefix ?? '') + s;
+ *  power; prefix keeps the city's ids apart; side: how far the collapsed side passage runs north; shaftHalf: a
+ *  narrower vent for an alley (U-047). */
+export function hideoutParts(ox: number, oy: number, oz: number, o: { shaftTop?: number; kit?: 'full' | 'start'; prefix?: string; side?: number; shaftHalf?: number } = {}): HideoutParts {
+  const H = { ...HIDEOUT, shaftTop: o.shaftTop ?? HIDEOUT.shaftTop, shaftHalf: o.shaftHalf ?? HIDEOUT.shaftHalf }, furnished = (o.kit ?? 'full') === 'full', id = (s: string) => (o.prefix ?? '') + s;
   const sx = ox + H.shaftX, sz = oz, hs = H.shaftHalf;
   const cuts: Box[] = [
     { x0: ox, y0: oy, z0: oz - 2, x1: ox + H.length, y1: oy + H.height, z1: oz + 2 }, // chamber
@@ -38,7 +39,7 @@ export function hideoutParts(ox: number, oy: number, oz: number, o: { shaftTop?:
     solid(ox + 3.55, oy, oz - 5.95, ox + 4.95, oy + 2.2, oz - 2.05, MAT.hidden), // rubble plug (cleared with a crowbar)
     { ...solid(sx - hs, oy + H.shaftTop - 0.08, sz - hs, sx + hs, oy + H.shaftTop, sz + hs, MAT.hidden), part: id('grate') }, // vent grate
   ];
-  const grate: Inter = { id: id('grate'), kind: 'grate', x: sx, y: oy + H.shaftTop - 0.04, z: sz, r: 1.5, zh: '铁栅', en: 'Grate', data: { part: id('grate') } };
+  const grate: Inter = { id: id('grate'), kind: 'grate', x: sx, y: oy + H.shaftTop - 0.04, z: sz, r: 1.5, zh: '铁栅', en: 'Grate', data: { part: id('grate'), half: hs } };
   const props: Prop[] = [
     { kind: 'arches', x: ox, y: oy, z: oz, yaw: 0, w: H.length, h: H.height, d: H.width, gap: [H.shaftX - hs - 0.05, H.shaftX + hs + 0.05] },
     { kind: 'mattress', x: ox + 2.2, y: oy + 0.22, z: oz + 1.3, yaw: 0 },

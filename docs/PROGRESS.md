@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-23 Tracking home.
-Features done: 181 / 298 | Last done: M4-22
+**Status:** building M4. Next: M4-22d Visual pass: roofs, QR codes, paving, road paint, grates (U-049).
+Features done: 182 / 301 | Last done: M4-22b
 <!-- /status -->
 
 ## Log
@@ -39,3 +39,4 @@ Features done: 181 / 298 | Last done: M4-22
 - M4-21b Guns made real (U-032): guns made real: the QSZ-92, aiming down the sights with a zoom, recoil, slide and flash; leaning with Q and E
 - U-045 fix (a8754f5): the black screen at start (since M4-11 the machines' mesh batch threw at boot) fixed and pushed to main; every page boots clean.
 - M4-22 Tracking tags: quadrupeds' tag launchers stick tracking tags that stay until found with an SDR dongle
+- M4-22b The hideout in a real alley at the heart of the routes (U-047, U-048): the hideout under a real alley at the heart of the routes, sealed from the underground, a drainpipe up to the roofs

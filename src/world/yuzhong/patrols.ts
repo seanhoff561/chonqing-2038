@@ -38,7 +38,7 @@ export function walkedBeats(w: World, base: Patrol[], tunnel: [V3, V3]): Patrol[
   const hides = w.hides.filter(h => h.kind === 'crate' || h.kind === 'dumpster' || h.kind === 'drum').map(h => ({ x: (h.inner.x0 + h.inner.x1) / 2, y: h.inner.y0, z: (h.inner.z0 + h.inner.z1) / 2 }));
   const doors = w.plots.filter(p => !p.far && p.route && p.route.length > 1).map(p => [p.route![0], p.route![1]] as [V3, V3]);
   const g = w.ground!, sides = w.streets.filter(st => SIDE.has(st.kind));
-  /** From a point on a side street: beside the bins in an alley within 15 m, or in at a door within 15 m. */
+  /** From a point on a side street: beside the bins in an alley within 15 m, or in at a door within 20 m. */
   const toAlley = (q: V3): V3[] | null => {
     for (const h of hides) {
       const d = Math.hypot(q.x - h.x, q.z - h.z);
@@ -48,7 +48,7 @@ export function walkedBeats(w: World, base: Patrol[], tunnel: [V3, V3]): Patrol[
     }
     return null;
   };
-  const toDoor = (q: V3): V3[] | null => { for (const [door, inside] of doors) if (Math.hypot(door.x - q.x, door.z - q.z) < 15 && straight(w, q, door) && straight(w, door, inside)) return [door, inside]; return null; };
+  const toDoor = (q: V3): V3[] | null => { for (const [door, inside] of doors) if (Math.hypot(door.x - q.x, door.z - q.z) < 20 && straight(w, q, door) && straight(w, door, inside)) return [door, inside]; return null; };
   // The districts' own beats: their two longest main streets within 300 m of their centres.
   const district: Patrol[] = [];
   for (const k of DISTRICTS) {
@@ -99,29 +99,32 @@ export function walkedBeats(w: World, base: Patrol[], tunnel: [V3, V3]): Patrol[
     line.forEach((q, i) => {
       pts.push(q); dwell.push(rest[i]);
       since += i ? Math.hypot(q.x - line[i - 1].x, q.z - line[i - 1].z) : 0;
-      if (since < 100 || spurs >= 4 || i === line.length - 1) return;
+      if (since < 80 || spurs >= 5 || i === line.length - 1) return;
       // Off along a side street (up to 60 m of it), into an alley beside the bins or in at a door to the floor
       // inside, by turns (the other if there's none of the one); out the same way.
       const near = (x: number, z: number, r: number) => Math.hypot(x - q.x, z - q.z) < r;
-      let way: V3[] | null = null, alley = false;
-      for (const side of sides) {
-        const k = side.pts.findIndex(([x, z]) => near(x, z, 12));
-        if (k < 0) continue;
-        for (const dir of [1, -1]) {
-          const walk: V3[] = [];
-          let from = q;
-          for (let j = k, run = 0; j >= 0 && j < side.pts.length && run < 60; j += dir) {
-            const [x, z] = side.pts[j], v = { x, y: heightAt(g, x, z) ?? q.y, z };
-            if (!straight(w, from, v)) break;
-            run += Math.hypot(v.x - from.x, v.z - from.z); walk.push(v); from = v;
-            const goes = spurs % 2 === 0 ? [toAlley, toDoor] : [toDoor, toAlley];
-            for (const go of goes) { const t = go(from); if (t) { way = [...walk, ...t]; alley = go === toAlley; break; } }
-            if (way) break;
+      // (Looked for all along first, the other only where there's none of it.)
+      const find = (go: typeof toAlley): V3[] | null => {
+        for (const side of sides) {
+          const k = side.pts.findIndex(([x, z]) => near(x, z, 12));
+          if (k < 0) continue;
+          for (const dir of [1, -1]) {
+            const walk: V3[] = [];
+            let from = q;
+            for (let j = k, run = 0; j >= 0 && j < side.pts.length && run < 60; j += dir) {
+              const [x, z] = side.pts[j], v = { x, y: heightAt(g, x, z) ?? q.y, z };
+              if (!straight(w, from, v)) break;
+              run += Math.hypot(v.x - from.x, v.z - from.z); walk.push(v); from = v;
+              const t = go(from);
+              if (t) return [...walk, ...t];
+            }
           }
-          if (way) break;
         }
-        if (way) break;
-      }
+        return null;
+      };
+      const [first, then] = spurs % 2 === 0 ? [toAlley, toDoor] : [toDoor, toAlley];
+      let way = find(first), alley = first === toAlley;
+      if (!way) { way = find(then); alley = then === toAlley; }
       if (!way) return;
       way.forEach((v, k) => { pts.push(v); dwell.push(k === way.length - 1 ? (alley ? DWELL.alley : DWELL.inside) : 0); });
       for (let k = way.length - 2; k >= 0; k--) { pts.push(way[k]); dwell.push(0); }

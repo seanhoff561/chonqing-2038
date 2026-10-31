@@ -154,3 +154,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M4-18 to M4-21b: fighting back
 - Take the pistol (give it with the dev panel) and a couple of magazines into the gym: does aiming down the sights (right mouse) feel right, the sights where your eye expects, the zoom comfortable? Does each shot's kick and slide read? Lean round a wall with Q and E: natural, or too far? Knife a drone; sneak up behind a humanoid and hold the knife on it for the takedown: is 2 s tense? Stand in a turret's view and sprint away from a humanoid: does the danger feel fair? (The sleeves fill the bottom of the view aimed: say if that bothers you.)
+
+## M4-22b: the hideout in a real alley (U-047, U-048)
+- Start a run: climb the shaft ladder, open the grate and come out: does the alley in Shibati's old quarter feel like a real back lane at the heart of things? Is the drainpipe up to the roofs easy to find and climb, and do the roof ways from there feel like a good start? Anything about the grate or shaft still in the way?

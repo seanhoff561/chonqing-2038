@@ -32,7 +32,7 @@ const PARAPET = 0.6;
 const JOINS = ['crossPlank', 'crossBeam', 'crossCord', 'cord', 'walkway', 'gapBar', 'skybridge'];
 /** Ways under the ground, and ways over the roofs (the crossings built or to build among them). */
 const UNDER_WAYS = new Set(['tunnel', 'sewer', 'manhole', 'way']);
-const ROOF_WAYS = new Set(['jump', 'drop', 'climb', 'line', 'build', 'crossPlank', 'crossBeam', 'gapBar', 'walkway', 'skybridge', 'winPlank']);
+const ROOF_WAYS = new Set(['jump', 'drop', 'climb', 'pipe', 'line', 'build', 'crossPlank', 'crossBeam', 'gapBar', 'walkway', 'skybridge', 'winPlank']);
 
 /** Caches reached only by grappling hook (U-037), chosen before anything is built: a block none of its neighbours'
  *  roofs reach (none within a running jump that isn't 4 m and more below it), with a roof 7-16 m off to shoot from.
@@ -171,6 +171,9 @@ export function network(plots: Plot[], features: Feature[], sites: Site[], sts: 
     ground.push(k); link(k, inside[i], 3, 'burrow', nodes[k], f);
   }
   lots.forEach((p, i) => { if (inside[i] >= 0 && p.route?.length) { const k = add({ place: 'ground', ...p.route[0] }); ground.push(k); link(k, inside[i], 3, 'door', nodes[k], p.route[1] ?? p.route[0]); } });
+  // Up a drainpipe from the hideout's alley onto the roof over it (U-048).
+  const pipe = features.filter(f => f.kind === 'climbUp').sort((a, b) => a.y - b.y);
+  if (pipe.length === 2) { const i = owner(pipe[1].x, pipe[1].z, 0); if (i >= 0) { const k = add({ place: 'ground', x: pipe[0].x, y: pipe[0].y, z: pipe[0].z }); ground.push(k); link(k, i, 2, 'pipe', nodes[k], pipe[1]); } }
   const unders: number[] = [];
   for (const f of features) if (f.kind.startsWith('way:')) {
     const k = add({ place: 'ground', x: f.x, y: f.y, z: f.z }), u = add({ place: 'under', x: f.x, y: f.y - 6, z: f.z });

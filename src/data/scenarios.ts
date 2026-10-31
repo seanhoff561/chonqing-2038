@@ -22,7 +22,7 @@ export const scenarios: Scenario[] = [
   { name: 'run', world: 'yuzhong', desc: "a new run: day 1, 06:00, in the friends' hideout under the vent grate", run: true, overcast: 0.6 },
   { name: 'hideout', world: 'hideout', desc: 'the furnished air-raid shelter (test scene)', run: true, furnished: true },
   { name: 'yuzhong', world: 'yuzhong', desc: 'Yuzhong at 1:1 from the real ground and map, from Jiefangbei', overcast: 0.6, at: 'jiefangbei' },
-  { name: 'tunnels', world: 'yuzhong', desc: "the Grand Tunnel under Yuzhong, at the junction of the friends' stub", overcast: 0.6, at: 'Tunnel junction (hideout)' },
+  { name: 'tunnels', world: 'yuzhong', desc: 'the Grand Tunnel under Yuzhong, at the junction of its north passage', overcast: 0.6, at: 'Tunnel junction (north passage)' },
   { name: 'reference', world: 'reference', desc: 'the reference hillside (docs/reference/look-01.jpg) from the vantage roof', draw: 700, overcast: 1 },
 ];
 

@@ -46,6 +46,7 @@ describe('the route network (M3-37, M3-76)', () => {
         : k === 'window' ? across <= Math.max(R.window.across, R.drop.across) + 0.1 && Math.abs(dy) <= Math.max(R.window.rise, R.jump.rise) + 0.05
           : k === 'drop' ? -dy <= R.drop.down + 0.05 && dy <= 0.05
             : k === 'climb' ? dy <= R.climb.up + 0.05
+            : k === 'pipe' ? w.climbables.some(c => c.kind === 'pipe' && Math.hypot(c.x - a.x, c.z - a.z) < 1.5 && c.y0 <= a.y + 0.5 && c.y1 >= b.y - 0.5)
               : k === 'grapple' ? dy <= R.grapple.rise && across <= R.grapple.across + 2
                 : k === 'line' ? across <= R.line.across
                   : ['crossPlank', 'crossBeam', 'gapBar', 'walkway', 'skybridge', 'winPlank'].includes(k) ? across <= R.span.across

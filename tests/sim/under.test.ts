@@ -29,7 +29,8 @@ describe('the underground city (M3-58)', () => {
     await settle();
     const route = w.features.filter(f => f.kind === 'underRoute').sort((a, b) => a.group - b.group);
     const s = createState(1, w), p = s.player;
-    s.flags.clear = true;
+    // (No machines: this is about the way; since M4-18 they'd shoot him on it.)
+    s.flags.clear = true; s.units.length = 0;
     teleport(p, route[0].x, route[0].y + 0.05, route[0].z);
     run(s, w, 10);
     const districts = new Set<string>(), ys: number[] = [];
@@ -116,7 +117,8 @@ describe("the underground city's buildings (M3-73)", () => {
 });
 
 // M3-43 (U-018): the subway way in. Jiaochangkou's Line 1/2 station (platform, concourse, dead escalators, screen
-// doors) and its running tunnels joined to the Grand Tunnel; a bot walks from the platform to the friends' chamber.
+// doors) and its running tunnels joined to the Grand Tunnel; a bot walks from the platform along the Grand Tunnel
+// toward its mouth (the friends' chamber is sealed off from it since U-047).
 describe('the subway way in (M3-43)', () => {
   const J = GEO.landmarks.jiaochangkou, of = (k: string) => w.features.filter(f => f.kind === k);
   const station = of('station').find(f => Math.hypot(f.x - J.x, f.z - J.z) < 60)!;
@@ -151,7 +153,7 @@ describe('the subway way in (M3-43)', () => {
     const top = { x: e.x - dx * 12 + (dz ? 0.6 : 0), y: c.y, z: e.z - dz * 12 + (dx ? 0.6 : 0) };
     expect(walk(s, [top]), `he is at ${p.pos.x.toFixed(1)},${p.pos.y.toFixed(1)},${p.pos.z.toFixed(1)}`).toBe(1);
   });
-  it("walks from the platform through the running tunnel and the Grand Tunnel to the friends' chamber", async () => {
+  it('walks from the platform through the running tunnel and along the Grand Tunnel toward its mouth', async () => {
     await settle();
     const route = of('metroRoute').sort((a, b) => a.group - b.group);
     const s = createState(1, w), p = s.player;
@@ -160,9 +162,8 @@ describe('the subway way in (M3-43)', () => {
     run(s, w, 10);
     const reached = walk(s, route.slice(1));
     expect(reached, `stopped short of ${JSON.stringify(route[reached + 1])}, he is at ${p.pos.x.toFixed(1)},${p.pos.y.toFixed(1)},${p.pos.z.toFixed(1)}`).toBe(route.length - 1);
-    // Underground all the way: the chamber's mattress at the end.
-    const bed = w.props.find(q => q.kind === 'mattress')!;
-    expect(Math.hypot(p.pos.x - bed.x, p.pos.z - bed.z)).toBeLessThan(1.5);
+    // Underground all the way, in the Grand Tunnel at the end.
+    expect(w.zones.some(z => z.kind === 'under' && p.pos.x >= z.box.x0 && p.pos.x <= z.box.x1 && p.pos.z >= z.box.z0 && p.pos.z <= z.box.z1 && p.pos.y >= z.box.y0 - 0.5 && p.pos.y <= z.box.y1)).toBe(true);
     expect(s.dead).toBeFalsy();
   });
 });

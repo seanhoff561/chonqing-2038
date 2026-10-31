@@ -14,7 +14,7 @@ import type { Climbable, Feature } from '../world';
 import { ROAD, streetCells, type Street } from './ground';
 import { BARE } from '../city/climb';
 import type { Plan } from './lots';
-import { member, type Link } from './crossings';
+import { member, onWall, type Link } from './crossings';
 
 const FLOOR = 3, PARAPET = 0.6;
 type V3 = [number, number, number];
@@ -189,6 +189,10 @@ export function verticalCity(plans: Plan[], g: Heightfield, sts: Street[]): Vert
         out.decor.push(member(on(A, 0.4, 0.48, y + 1.0), on(B, -0.4, 0.48, y + 1.0), 0.04, 1.0, MAT.metal));
         const p = on(A, 0.8), q = on(B, -0.8), g = out.features.length;
         out.features.push({ kind: 'bridge', x: p[0], y, z: p[2], group: g, nx: f.nx, nz: f.nz }, { kind: 'bridge', x: q[0], y, z: q[2], group: g, nx: f.nx, nz: f.nz });
+      }, ok: (A, B, index) => {
+        // (Judged at its ends' marks, 0.8 m in from each, as M3-81 checks them.)
+        const l = Math.hypot(B[0] - A[0], B[2] - A[2]), ux = (B[0] - A[0]) / l, uz = (B[2] - A[2]) / l, p: V3 = [A[0] + ux * 0.8, y, A[2] + uz * 0.8], q: V3 = [B[0] - ux * 0.8, y, B[2] - uz * 0.8];
+        return onWall(index, p, q) && onWall(index, q, p);
       } });
       a.edge = b.edge = true;
     }

@@ -1,6 +1,7 @@
-// M3-41c (D-016): the Grand Tunnel on the real map: from the friends' chamber along the side tunnel and the
-// Grand Tunnel to its rusted gate and up the stairway to the Shibati street; out the far stairway to the street
-// below Jiaochangkou; deep enough everywhere for the ground over it; the cool room a shelter site.
+// M3-41c (D-016): the Grand Tunnel on the real map: from its junction along it to its rusted gate and up the
+// stairway to the Shibati street; out the far stairway to the street below Jiaochangkou; deep enough everywhere for
+// the ground over it; the cool room a shelter site. (The friends' chamber is sealed away from it since U-047:
+// tests/sim/home.test.ts.) No machines: this is about the way.
 import { describe, it, expect } from 'vitest';
 import { getWorld } from '../../src/world/build';
 import { heightAt } from '../../src/world/heightfield';
@@ -13,7 +14,7 @@ import type { World } from '../../src/world/world';
 
 const w = getWorld('yuzhong'), g = w.ground!, F = tunnelFrame();
 const tp = (n: string) => w.teleports.find(t => t.name === n)!;
-const hide = tp("Friends' hideout (vent grate)"), floor = hide.y - 0.05, top = tp('Grand Tunnel entrance').y - 0.05, inRun = (top - floor) / Math.tan(0.61);
+const junction = tp('Tunnel junction (north passage)'), floor = junction.y - 0.3, top = tp('Grand Tunnel entrance').y - 0.05, inRun = (top - floor) / Math.tan(0.61);
 
 function walk(s: SimState, world: World, pts: [number, number][]): boolean {
   for (const [x, z] of pts) {
@@ -28,16 +29,21 @@ function walk(s: SimState, world: World, pts: [number, number][]): boolean {
   return true;
 }
 const uv = (...p: [number, number][]) => p.map(([u, v]) => F.W(u, v));
-// The chamber in the frame, from where a run starts in it (hideoutParts' spawn, 3.6 m along and 0.2 m across).
-const c = Math.cos(F.yaw), sn = Math.sin(F.yaw), dx = hide.x - F.px, dz = hide.z - F.pz, CU = c * dx + sn * dz - 3.6, CV = -sn * dx + c * dz - 0.2, SU = CU + 26;
+/** A run's state in the Grand Tunnel at its junction, with no machines about. */
+function there() {
+  const s = createState(1, w);
+  s.units.length = 0;
+  const [x, z] = F.W(40, 0);
+  teleport(s.player, x, floor, z);
+  run(s, w, 10);
+  return s;
+}
 
 describe('the Grand Tunnel under Shibati (M3-41c)', () => {
-  it('walks from the chamber to the rusted gate, opens it and climbs the stairway to the Shibati street', async () => {
+  it('walks from its junction to the rusted gate, opens it and climbs the stairway to the Shibati street', async () => {
     await settle();
-    const s = createState(1, w);
-    teleport(s.player, hide.x, hide.y, hide.z);
-    run(s, w, 10);
-    expect(walk(s, w, uv([CU + 21, CV], [SU, CV], [SU, 0], [inRun + 0.6, 0]))).toBe(true);
+    const s = there();
+    expect(walk(s, w, uv([inRun + 0.6, 0]))).toBe(true);
     expect(walk(s, w, uv([inRun - 1.5, 0]))).toBe(false);
     const gate = w.inter.find(i => i.id === 'shibati-gate')!;
     aim(s, gate.x, gate.y, gate.z);
@@ -46,13 +52,11 @@ describe('the Grand Tunnel under Shibati (M3-41c)', () => {
     expect(walk(s, w, uv([inRun - 2, 0], [-1.5, 0]))).toBe(true);
     expect(s.player.pos.y).toBeCloseTo(top, 0);
   });
-  it('walks from the chamber along the Grand Tunnel and up the far stairway to the street', async () => {
+  it('walks from its junction along it and up the far stairway to the street', async () => {
     await settle();
-    const s = createState(1, w);
-    teleport(s.player, hide.x, hide.y, hide.z);
-    run(s, w, 10);
+    const s = there();
     const exit = tp('Grand Tunnel exit');
-    expect(walk(s, w, [...uv([CU + 21, CV], [SU, CV], [SU, 0], [203.5, 0], [203.5, -4]), [exit.x, exit.z]])).toBe(true);
+    expect(walk(s, w, [...uv([203.5, 0], [203.5, -4]), [exit.x, exit.z]])).toBe(true);
     expect(s.player.pos.y).toBeCloseTo(exit.y - 0.05, 0);
     expect(Math.abs(s.player.pos.y - heightAt(g, ...F.W(203.5, -40))!)).toBeLessThan(6);
   });
@@ -62,14 +66,10 @@ describe('the Grand Tunnel under Shibati (M3-41c)', () => {
       if (y !== null) expect(y - g.thick, `u ${u} v ${v}`).toBeGreaterThan(floor + 1.9);
     }
   });
-  it("has the friends' chamber under a grate in an alley, and the cool room as a shelter site", () => {
+  it('has the cool room as a shelter site, and no way off it to the friends\' chamber', () => {
+    // The chamber well off it, in its own rock (U-047).
     const site = w.sites.find(x => x.id === 'airraid')!;
-    expect(site.bed).toBe('airraid-mattress');
-    expect(w.inter.find(i => i.id === 'airraid-mattress')?.kind).toBe('mattress');
-    // Flush with the alley's levelled paving round it (3 m off: the lane is 3.4 m wide since M3-72).
-    const grate = w.props.find(p => p.kind === 'grate' && p.text === 'airraid-grate')!, ground = heightAt(g, grate.x + 3, grate.z)!;
-    expect(grate.y - floor).toBeGreaterThan(8);
-    expect(Math.abs(ground - grate.y)).toBeLessThan(0.1);
+    for (let u = 0; u <= 222; u += 4) { const [x, z] = F.W(u, 0); expect(Math.hypot(site.x - x, site.z - z), `u ${u}`).toBeGreaterThan(30); }
     const cool = w.sites.find(x => x.id === 'coolroom')!;
     expect(cool.containers.length).toBe(3);
     expect(w.zones.filter(z => z.kind === 'under').length).toBeGreaterThan(40);

@@ -101,7 +101,7 @@ export function sewers(manholes: Feature[], plots: Plot[], g: Heightfield, walks
   });
   // Now and then into the underground city: a run from a manhole to its walk, a grate to pry open where it comes in.
   let n = 0;
-  for (const w of walks.filter((_, k) => k % 3 === 0)) {
+  for (const w of walks.filter((_, k) => k % 2 === 0)) {
     const near = nodes.map((b, j) => [j, Math.hypot(b.x - w.x, b.z - w.z)] as const).filter(([, d]) => d < 70).sort((p, q) => p[1] - q[1])[0];
     // (At the walk's own level: deep enough there under everything along the way and the manhole's basement.)
     if (!near || level(nodes[near[0]], { ...w, y: Infinity }) < w.y - 0.05 || !dig(near[0], w, w.y, 'sewer')) continue;

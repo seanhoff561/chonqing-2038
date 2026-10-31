@@ -1,7 +1,9 @@
 // M3-21: three layers of routes. The district's four key points (the hideout's grate, Jiaochangkou, the top of
-// Shibati's stair, the riverfront) are joined one to the next by a way along the streets, a way over the roofs and a
-// way underground or through the buildings; each checked leg by leg against what he can do (data/reach.ts) and, on
-// the streets, a clear way at body height as the world stands.
+// Shibati's stair, the riverfront) are joined by a way along the streets, a way over the roofs and a way underground
+// or through the buildings; the hideout at their heart joined to the far ones (U-048: the stair top is a short walk
+// from it); each checked leg by leg against what
+// he can do (data/reach.ts: a drainpipe climbed where there's one) and, on the streets, a clear way at body height as
+// the world stands.
 import { describe, it, expect } from 'vitest';
 import { getWorld } from '../../src/world/build';
 import { REACH } from '../../src/data/reach';
@@ -9,7 +11,7 @@ import { clearAcross } from '../../src/world/yuzhong/nav';
 import type { Route } from '../../src/world/world';
 
 const w = getWorld('yuzhong'), key = (n: string) => w.features.find(f => f.kind === `key:${n}`)!;
-const JOINS = [['hideout gate', 'jiaochangkou'], ['jiaochangkou', 'shibati top'], ['shibati top', 'riverfront']];
+const JOINS = [['hideout gate', 'jiaochangkou'], ['hideout gate', 'riverfront'], ['jiaochangkou', 'shibati top'], ['shibati top', 'riverfront']];
 const share = (r: Route, ...on: string[]) => { let a = 0, all = 0; r.pts.slice(1).forEach((q, k) => { const d = Math.hypot(q.x - r.pts[k].x, q.z - r.pts[k].z); all += d; if (on.includes(r.on[k])) a += d; }); return a / all; };
 
 /** Every leg within reach (as the network's: tests/sim/network.test.ts). */
@@ -20,6 +22,7 @@ function legsOk(r: Route) {
       : k === 'window' ? across <= Math.max(R.window.across, R.drop.across) + 0.1 && Math.abs(dy) <= Math.max(R.window.rise, R.jump.rise) + 0.05
         : k === 'drop' ? -dy <= R.drop.down + 0.05 && dy <= 0.05
           : k === 'climb' ? dy <= R.climb.up + 0.05
+          : k === 'pipe' ? w.climbables.some(c => c.kind === 'pipe' && Math.hypot(c.x - a.x, c.z - a.z) < 1.5 && c.y0 <= a.y + 0.5 && c.y1 >= b.y - 0.5)
             : k === 'line' ? across <= R.line.across
               : ['crossPlank', 'crossBeam', 'gapBar', 'walkway', 'skybridge', 'winPlank'].includes(k) ? across <= R.span.across
                 : ['stairs', 'burrow', 'door', 'way', 'tunnel', 'street', 'breach', 'sewer', 'manhole'].includes(k);
@@ -29,7 +32,7 @@ function legsOk(r: Route) {
 }
 
 describe('three layers of routes (M3-21)', () => {
-  it('joins the four key points one to the next, three ways each', () => {
+  it('joins the hideout to Jiaochangkou and the riverfront, and those by the top of the stair, three ways each', () => {
     for (const [a, b] of JOINS) for (const layer of ['street', 'roof', 'under']) {
       const l = w.links.find(q => q.from === a && q.to === b && q.layer === layer);
       expect(l, `${a} - ${b} ${layer}`).toBeTruthy();

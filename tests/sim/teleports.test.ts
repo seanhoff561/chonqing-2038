@@ -8,7 +8,7 @@ import { heightAt } from '../../src/world/heightfield';
 import { run, secs } from './helpers';
 
 const w = getWorld('yuzhong'), tp = (n: string) => w.teleports.find(t => t.name === n)!;
-const NAMES = ['Shibati top', 'Shibati bottom', 'jiaochangkou', 'Line 2 beam', "Friends' hideout (vent grate)", 'Tunnel junction (hideout)', 'Tunnel junction (metro)'];
+const NAMES = ['Shibati top', 'Shibati bottom', 'jiaochangkou', 'Line 2 beam', "Friends' hideout (vent grate)", 'Tunnel junction (north passage)', 'Tunnel junction (metro)'];
 
 describe('district teleports (M3-18)', () => {
   it('covers the places to test from', () => {
@@ -28,6 +28,6 @@ describe('district teleports (M3-18)', () => {
     const top = tp('Shibati top'), foot = tp('Shibati bottom'), beam = tp('Line 2 beam');
     expect(top.y - foot.y).toBeGreaterThan(10);
     expect(beam.y - heightAt(w.ground!, beam.x, beam.z)!).toBeGreaterThan(5);
-    for (const n of ['Tunnel junction (hideout)', 'Tunnel junction (metro)']) expect(tp(n).y, n).toBeLessThan(heightAt(w.ground!, tp(n).x, tp(n).z)! - 5);
+    for (const n of ['Tunnel junction (north passage)', 'Tunnel junction (metro)']) expect(tp(n).y, n).toBeLessThan(heightAt(w.ground!, tp(n).x, tp(n).z)! - 5);
   });
 });

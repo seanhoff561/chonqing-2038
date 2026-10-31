@@ -46,7 +46,7 @@ const TW = 3.6, TH = 3.4;
 
 /** gt: the Grand Tunnel's floor, the end of its passage north (the junction), its ways in, and a walk along it
  *  from under Jiaochangkou into the passage. */
-export function buildUnder(g: Heightfield, gt: { floor: number; junction: V3; ways: V3[]; walk: V3[]; metro: V3; toHideout: V3[] }): Under {
+export function buildUnder(g: Heightfield, gt: { floor: number; junction: V3; ways: V3[]; walk: V3[]; metro: V3; toJunction: V3[] }): Under {
   const u: Under = { solids: [], decor: [], props: [], climbables: [], zones: [], features: [], inter: [], lots: [], metroRoute: [], keep: [], route: [], descents: [], at: {} };
   const lining: Solid[] = [], bores: Box[] = [], kept: Solid[] = [], r = makeRng(hashString('under')), lr = makeRng(hashString('under-grates'));
   const k = (x: number, z: number) => Math.max(0, Math.min(g.h - 1, Math.round(z / g.cell))) * g.w + Math.max(0, Math.min(g.w - 1, Math.round(x / g.cell)));
@@ -334,7 +334,7 @@ export function buildUnder(g: Heightfield, gt: { floor: number; junction: V3; wa
   kept.splice(k0, kept.length - k0, ...carve(kept.slice(k0), pass));
   u.features.push({ kind: 'metroPassage', x: M.x, y: F, z: M.z - 2, group: u.features.length });
   u.metroRoute = [SR.pt(JL - 12, 1.5), SR.pt(5, 1.5), SR.pt(5, 0)].map(([x, z]) => ({ x, y: F + TUBE.walk, z }))
-    .concat([SR.pt(1.5, 0), SR.pt(1.5, TUBE.off), TR.pt(M.x - S0[0], TUBE.off), [M.x, M.z - 1]].map(([x, z]) => ({ x, y: F, z })), gt.toHideout);
+    .concat([SR.pt(1.5, 0), SR.pt(1.5, TUBE.off), TR.pt(M.x - S0[0], TUBE.off), [M.x, M.z - 1]].map(([x, z]) => ({ x, y: F, z })), gt.toJunction);
 
   // The route: along the Grand Tunnel from under Jiaochangkou to the junction, north through the shelters, up the
   // flight, east through the market into the concourse, up the west well onto the deck, along it, down the east
