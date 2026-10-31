@@ -2,7 +2,9 @@
 // backpack, their crate and nothing else (DESIGN section 9). The furnished shelter stays as a test scene (furnish).
 import type { SimState } from './types';
 import type { World } from '../world/world';
-import { grid, addItem, type Grid } from './inventory';
+import { grid, addItem, newUid, type Grid } from './inventory';
+import { onUseId } from './use';
+import { VOICEMAIL } from '../data/dialogue';
 import { CONTAINER } from './containers';
 import { claimBed } from './shelter';
 
@@ -28,8 +30,20 @@ export function startRun(s: SimState, w: World) {
     for (const [id, n, charge] of FRIENDS_CRATE) addItem(s, g, id, n, charge ? { charge } : {});
     s.wstate.searched[START_CRATE] = true;
   }
+  // In the family flat in upper Shibati (M3-19): his father's badge, and the phone, nearly flat, with its voicemail.
+  for (const f of w.features) if (f.kind === 'li:badge' || f.kind === 'li:phone') {
+    const id = f.kind.slice(3);
+    s.dropped.push({ stack: { uid: newUid(s), id, n: 1, x: 0, y: 0, rot: false, ...(id === 'phone' ? { charge: 6 } : {}) }, x: f.x, y: f.y, z: f.z });
+  }
   s.events.length = 0;
 }
+
+/** The phone plays its one voicemail, while it has charge. */
+onUseId('phone', (s, _w, st) => {
+  if ((st.charge ?? 0) <= 0) { s.events.push({ t: 'msg', text: 'the phone is dead' }); return; }
+  st.charge = Math.max(0, (st.charge ?? 0) - 1);
+  for (const l of VOICEMAIL) s.events.push({ t: 'say', id: l.id });
+});
 
 /** The furnished test shelter: supplies in its stash and a car battery at 60%. */
 export function furnish(s: SimState, w: World) {

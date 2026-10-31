@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 90 of 93 done
+## M3: 91 of 93 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -649,7 +649,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
 - [x] **M3-18** District teleports and scenarios
   - The teleport list covers Shibati top and bottom, Jiaochangkou, the beam, the hideout and tunnel junctions
   - ?scenario=shibati and ?scenario=tunnels load in the smoke test
-- [ ] **M3-19** The Li family flat
+- [x] **M3-19** The Li family flat
   - A ransacked upper-Shibati flat holding his father's substation badge and a cracked phone with a voicemail
   - A screenshot
 - [ ] **M3-20** Shibati's Yangtze riverfront

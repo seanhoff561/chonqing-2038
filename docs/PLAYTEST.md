@@ -130,3 +130,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M3-17: graphics presets
 - Pause (=) and try 低 Low, 中 Medium and 高 High in Jiefangbei and on a high roof: is each smooth on your machine (Medium should hold 150 fps on a decent GPU), does Low still read as the city, and is High worth it (longer detail, sharper shadows, all the litter)?
+
+## M3-19: the Li family flat
+- On a run, teleport to 'Li family flat' (pause menu): does the room read as his family's home gone through, and do the badge and phone on the floor find you? Pick up the phone, hold it and click: does the voicemail land (logs/liflat.png, liflat-voicemail.png)? Is the subtitle timing readable?

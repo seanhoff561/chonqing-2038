@@ -13,6 +13,7 @@ import { scenarioByName, scenarios, type Scenario } from './data/scenarios';
 import { Input } from './input/input';
 import { View, PRESETS, type Preset } from './render/view';
 import { Hud } from './ui/hud';
+import { lineById, SPEAKERS } from './data/dialogue';
 import { Sky } from './render/sky';
 import { BodyFx } from './render/body-fx';
 import { InventoryUI } from './ui/inventory-ui';
@@ -180,6 +181,8 @@ export class Game {
       else if (e.t === 'open') this.inv.toggle(true);
       else if (e.t === 'sleep-menu') this.sleep.toggle(true, e.id === 'rough');
       else if (e.t === 'slept' && this.scenario.run && !this.state.dead) writeSave(localStorage, this.scenario.name, this.state);
+      else if (e.t === 'msg') this.hud.say(e.text, '');
+      else if (e.t === 'say') { const l = lineById.get(e.id); if (l) this.hud.say(l.zh, l.en, SPEAKERS[l.speaker]?.[0]); }
     }
     if (this.state.dead) this.death.show();
   }
@@ -193,6 +196,7 @@ export class Game {
     this.inv.update();
     this.updatePrompt();
     this.updateHeld();
+    this.hud.tick(dt);
     this.furniture.sync(this.state, this.world);
     this.status.update(this.state, dt);
     const cam = this.view.fp.cam.position;

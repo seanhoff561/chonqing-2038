@@ -5,6 +5,8 @@ canvas { display: block; }
 #hud .prompt { position: absolute; left: 50%; top: 56%; transform: translateX(-50%); font-size: 13px; color: rgba(230,225,210,0.85); text-shadow: 0 0 3px #000; }
 #hud .held { position: absolute; right: 18px; bottom: 14px; font-size: 12px; color: rgba(200,195,180,0.6); }
 #hud .subs { position: absolute; left: 50%; bottom: 9%; transform: translateX(-50%); max-width: 70%; text-align: center; font-size: 18px; color: #eee; text-shadow: 0 0 4px #000, 0 0 2px #000; }
+#hud .subs b { color: #e8c070; font-weight: normal; }
+#hud .subs span { font-size: 15px; color: #bbb; }
 #dev { position: fixed; top: 8px; left: 8px; width: 230px; max-height: 92vh; overflow: auto; background: rgba(8,10,12,0.86); border: 1px solid #333; font-size: 11px; color: #9c9; padding: 6px; z-index: 10; }
 #dev button, #dev select, #dev input { font: inherit; background: #111; color: #9c9; border: 1px solid #364; margin: 1px; }
 #dev .row { margin: 3px 0; }

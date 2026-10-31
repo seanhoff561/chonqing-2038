@@ -40,7 +40,9 @@ export type SimEvent =
   | { t: 'grab'; hand: number; kind: string }
   | { t: 'sfx'; id: string }
   | { t: 'ate'; id: string; sick: boolean }
-  | { t: 'msg'; text: string };
+  | { t: 'msg'; text: string }
+  /** a line of dialogue (src/data/dialogue) */
+  | { t: 'say'; id: string };
 
 /** A stack he dropped (M3-72): lying where he let it go until he picks it up. */
 export interface Dropped { stack: import('./inventory').Stack; x: number; y: number; z: number }

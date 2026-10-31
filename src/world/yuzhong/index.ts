@@ -32,6 +32,7 @@ import { dressStreets } from './dressing';
 import { sewers } from './sewers';
 import { breaches } from './breach';
 import { signage } from './signage';
+import { liFlat } from './liflat';
 
 const empty = (): Fabric => ({ solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [], sites: [], far: [] });
 
@@ -207,6 +208,7 @@ export function buildYuzhong(): World {
     const x = p.x + Math.sin(p.yaw) * h.z, z = p.z + Math.cos(p.yaw) * h.z;
     world.hides.push({ id: world.hides.length, kind: h.kind, yaw: p.yaw, inner: { x0: x - h.w / 2, y0: p.y + h.y, z0: z - h.d / 2, x1: x + h.w / 2, y1: p.y + h.y + h.h, z1: z + h.d / 2 } });
   }
+  liFlat(world);
   return world;
 }
 
