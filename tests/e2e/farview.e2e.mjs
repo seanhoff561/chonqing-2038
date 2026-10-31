@@ -10,5 +10,10 @@ export default async function ({ open, fail, screenshot }) {
   await screenshot(page, 'whole-city');
   const street = await look(`const s = g.world.teleports.find(t => t.name === 'jiaochangkou'); Object.assign(p.pos, { x: s.x, y: s.y + 0.5, z: s.z }); g.input.yaw = 0; g.input.pitch = 0`);
   if (street.calls > 300 || street.tris > 1.5e6) fail('farview', `street: ${street.calls} calls, ${street.tris} triangles`);
+  // M3-64: across the seam where the near view gives way to the far: from 160 m over the street by Jiefangbei the
+  // 1:1 check frames, looking out over the city past the draw distance; the streets carry on into the far ground.
+  const seam = await look(`Object.assign(p.pos, { x: 906, y: 290, z: 1510 }); g.input.yaw = 0.6; g.input.pitch = -0.5`);
+  if (seam.calls > 300 || seam.tris > 1.5e6) fail('farview', `seam: ${seam.calls} calls, ${seam.tris} triangles`);
+  await screenshot(page, 'farview-seam');
   await page.close();
 }

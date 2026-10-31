@@ -43,6 +43,36 @@ export function buildStreetMeshes(g: Heightfield, streets: StreetLine[], lod: Lo
   return out;
 }
 
+/** The streets far off (M3-64): carriageways and pavements every 12 m on the coarse field the far ground draws
+ *  (coarseField), a little over it, one mesh a material; cut inside the near radius where the near streets take
+ *  over. */
+export function buildFarStreets(gc: Heightfield, streets: StreetLine[]): THREE.Mesh[] {
+  const bufs = [new Buf(), new Buf()], asph = 1 / texScale(MAT.asphalt), pave = 1 / texScale(MAT.stone);
+  for (const s of streets) {
+    if (s.pts.length < 2) continue;
+    const all = sample(s.pts), pts = all.filter((_, i) => i % 6 === 0 || i === all.length - 1), h = s.w / 2;
+    const strip = (o0: number, o1: number, b: 0 | 1) => {
+      for (let k = 0; k + 1 < pts.length; k++) {
+        const v = [[pts[k], o0], [pts[k], o1], [pts[k + 1], o1], [pts[k + 1], o0]].map(([p, o]) => {
+          const q = p as Pt, x = q.x + q.nx * q.m * (o as number), z = q.z + q.nz * q.m * (o as number), y = heightAt(gc, x, z);
+          return y === null ? null : [x, y + 0.25, z];
+        });
+        if (v.some(c => c === null) || Math.max(...v.map(c => c![1])) - Math.min(...v.map(c => c![1])) > 4) continue;
+        const [a, bb, c, d] = (o1 > o0 ? v : [v[0], v[3], v[2], v[1]]) as number[][], sc = b ? pave : asph;
+        for (const t of [a, bb, c, a, c, d]) bufs[b].push(t, UP, [t[0] * sc, t[2] * sc], 1);
+      }
+    };
+    if (ROAD.has(s.kind) && !s.steps) { strip(-h, h, 0); for (const side of [-1, 1]) strip(side * h, side * (h + KERB_W + PAVE), 1); }
+    else strip(-h, h, 1);
+  }
+  const out: THREE.Mesh[] = [];
+  for (const [b, mat] of [[0, MAT.asphalt], [1, MAT.stone]] as const) {
+    const base = material(mat, true, 'far'), m = bufs[b].mesh(Object.assign(base.clone(), { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4, onBeforeCompile: base.onBeforeCompile, customProgramCacheKey: base.customProgramCacheKey }));
+    if (m) out.push(m);
+  }
+  return out;
+}
+
 /** The streets' vertices per chunk (key) and material: asphalt, paving or (the parks' lawns) grass. */
 export function streetBuffers(g: Heightfield, streets: StreetLine[], lawns?: [number, number][][]): { k: number; mat: number; buf: Buf }[] {
   // Carriageways by 16 m cell, to leave kerbs, pavements and lines off other streets.

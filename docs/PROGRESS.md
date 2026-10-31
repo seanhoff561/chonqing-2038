@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-64 The far ground drawn properly (U-031).
-Features done: 145 / 295 | Last done: M3-63
+**Status:** building M3. Next: M3-41 The city at 1:1 (U-017).
+Features done: 146 / 295 | Last done: M3-64
 <!-- /status -->
 
 ## Log
@@ -93,3 +93,4 @@ Features done: 145 / 295 | Last done: M3-63
 - M3-61 Ruins that look fallen (U-031): Ruins that look fallen: facade sections in the neighbouring building's material and colour, columns, beams, boulders, rubble in the hollows
 - M3-62 Foliage (U-031): Foliage: camphor, banyan, palm, bamboo, ginkgo, hedges, ferns, potted plants; climbable trunks and vines
 - M3-63 A realistic sky, rain and night; the visual overhaul (U-031, U-032): A realistic sky, rain and night; the muted city: sparse lit flats, pinpoint stars, slanted rain with splashes, dark nights, props faded
+- M3-64 The far ground drawn properly (U-031): The far ground drawn properly: streets and pavements carry on past the near radius

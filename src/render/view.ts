@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import type { World } from '../world/world';
 import type { Solid } from '../world/geom';
 import { buildSolidMeshes, ChunkMerger, CASTER_LAYER } from './world-mesh';
-import { buildGroundMeshes, buildFarGround } from './ground-mesh';
-import { buildStreetMeshes } from './streets';
+import { buildGroundMeshes, buildFarGround, coarseField } from './ground-mesh';
+import { buildStreetMeshes, buildFarStreets } from './streets';
 import { lineMeshes } from './lines';
 import { Convoys } from './convoys';
 import { buildLabels } from './labels';
@@ -106,7 +106,8 @@ export class View {
     this.world.add(meshes, buildLabels(w.labels), props);
     if (this.hasFar) {
       const far = buildSolidMeshes(w.far, 'far', 1e6);
-      if (w.ground) far.add(...buildFarGround(w.ground, w.marks));
+      // (The ground far off with its streets on it, M3-64.)
+      if (w.ground) far.add(...buildFarGround(w.ground, w.marks), ...buildFarStreets(coarseField(w.ground), w.streets));
       far.traverse(o => { o.castShadow = false; });
       this.world.add(far);
     }

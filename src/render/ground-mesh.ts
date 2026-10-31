@@ -21,8 +21,16 @@ export function buildGroundMeshes(g: Heightfield, lod: Lod, marks?: Marks, chunk
   return out;
 }
 
+/** The far ground's resolution: every this many samples. */
+export const FAR_K = 8;
 /** One coarse mesh of the whole field for the far view (detail cut inside the near radius). */
-export const buildFarGround = (g: Heightfield, marks?: Marks) => surface(g, 0, 0, g.w - 1, g.h - 1, 8, 'far', marks);
+export const buildFarGround = (g: Heightfield, marks?: Marks) => surface(g, 0, 0, g.w - 1, g.h - 1, FAR_K, 'far', marks);
+/** The field as the far ground draws it (every FAR_K-th sample), for what lies on it far off (M3-64). */
+export function coarseField(g: Heightfield): Heightfield {
+  const w = Math.floor((g.w - 1) / FAR_K) + 1, h = Math.floor((g.h - 1) / FAR_K) + 1, y = new Float32Array(w * h);
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) y[j * w + i] = g.y[j * FAR_K * g.w + i * FAR_K];
+  return { x0: g.x0, z0: g.z0, cell: g.cell * FAR_K, w, h, y, hole: new Uint8Array((w - 1) * (h - 1)), thick: g.thick };
+}
 
 function surface(g: Heightfield, i0: number, j0: number, i1: number, j1: number, k: number, lod: Lod, marks?: Marks): THREE.Mesh[] {
   const W = g.w, Y = g.y;

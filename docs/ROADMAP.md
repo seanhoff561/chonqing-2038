@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 82 of 93 done
+## M3: 83 of 93 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -612,7 +612,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - At night only a few windows lit (the city is emptied), lights where people or machines are
   - Screenshots by day, dusk, night and in rain
   - The visual overhaul (U-032): the ground, props and doors muted, worn and near monotone (pavement aged, paint faded, sediment and grime, cars dull) so robots, crates and things to grab stand out; the sky cloudier; nights dark enough to need the headlamp; the cyberpunk light (signs, screens, robots' lights) stronger against it; the buildings muted to near monotone too (U-043, M3-79), the light carrying the colour
-- [ ] **M3-64** The far ground drawn properly (U-031)
+- [x] **M3-64** The far ground drawn properly (U-031)
   - The far view carries the roads, pavements, grass and ground textures, matching the near view at the seam
   - Screenshots across the seam; perf stays in budget
 - [x] **M3-51** Sandbox parkour areas (U-021)
