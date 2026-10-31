@@ -74,6 +74,8 @@ export interface SimState {
   placed: Placed[];
   /** things he dropped, lying where they fell */
   dropped: Dropped[];
+  /** the machines on their beats (M4-01) */
+  units: import('./units').Unit[];
   /** container currently open beside the backpack, or null */
   openContainer: string | null;
   /** interactable id he's looking at, and a running hold-E task */

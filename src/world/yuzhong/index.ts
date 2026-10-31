@@ -34,7 +34,9 @@ import { breaches } from './breach';
 import { signage } from './signage';
 import { liFlat } from './liflat';
 import { riverfront, riverRoad } from './riverfront';
-import { streetGraph } from './streetroute';
+import { streetRoute } from './streetroute';
+import { buildNav, walksOf } from './nav';
+import { walkedBeats, columnSpurs } from './patrols';
 
 const empty = (): Fabric => ({ solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [], sites: [], far: [] });
 
@@ -178,7 +180,7 @@ export function buildYuzhong(): World {
     name: 'yuzhong', routes: net.routes, patrols: net.patrols, gates, solids, decor: decor.concat(river.decor, out.decor, tun.decor, line.decor, site?.decor ?? [], fac?.decor ?? [], vert.decor, cross.decor, under.decor, sew.decor, laid.decor, filled.decor),
     props: out.props.concat(river.props, tun.props, line.props, metro.props, site?.props ?? [], fac?.props ?? [], under.props, sew.props, laid.props, dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(sew.climbables, tun.climbables, line.climbables, site?.climbables ?? [], vert.climbables, under.climbables, dress.climbables),
     hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones.concat(under.zones, sew.zones),
-    far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(river.features, fac?.features ?? [], vert.features, cross.features, rubble.features, under.features, sew.features, laid.features, dress.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n })), under.metroRoute.map((q, n) => ({ kind: 'metroRoute', ...q, group: n })), under.descents.flatMap((d, i) => d.map((q, n) => ({ kind: 'descentRoute', ...q, group: i * 100 + n })))), marks, lawns: laid.lawns, convoys: fac?.convoys, streets: drawn.concat(laid.paths, doorWays), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }, ...sew.water],
+    far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(river.features, fac?.features ?? [], vert.features, cross.features, rubble.features, under.features, sew.features, laid.features, dress.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n })), under.metroRoute.map((q, n) => ({ kind: 'metroRoute', ...q, group: n })), under.descents.flatMap((d, i) => d.map((q, n) => ({ kind: 'descentRoute', ...q, group: i * 100 + n })))), marks, lawns: laid.lawns, convoys: fac?.convoys.map(pts => ({ pts, spurs: [] })), streets: drawn.concat(laid.paths, doorWays), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }, ...sew.water],
     teleports, spawn: hide,
   });
   // Nothing floats or sinks (M3-56): whatever stands on something above ground settles onto what's under it, or
@@ -219,10 +221,14 @@ export function buildYuzhong(): World {
     world.hides.push({ id: world.hides.length, kind: h.kind, yaw: p.yaw, inner: { x0: x - h.w / 2, y0: p.y + h.y, z0: z - h.d / 2, x1: x + h.w / 2, y1: p.y + h.y + h.h, z1: z + h.d / 2 } });
   }
   liFlat(world);
-  // The street layer between the key points, along the streets as they stand now (M3-21).
-  const along = streetGraph(sts, g, world.index);
+  // The machines' ways about on foot as the world stands now (M4-02); the street layer between the key points along
+  // them (M3-21).
+  world.nav = buildNav(sts, g, world.index, walksOf(world.features));
   world.features.push(...keys.map((k, n) => ({ kind: `key:${k.name}`, x: k.at.x, y: k.at.y, z: k.at.z, group: n })));
-  world.links = net.links.concat(joins.flatMap(([i, j]) => { const rt = along(`link:${keys[i].name}-${keys[j].name}:street`, keys[i].at, keys[j].at); return rt ? [{ from: keys[i].name, to: keys[j].name, layer: 'street' as const, route: rt }] : []; }));
+  // The beats as walked, off the streets and under the ground (M4-01).
+  world.patrols = walkedBeats(world, net.patrols, [tun.at.junction, tun.at.metro]);
+  for (const c of world.convoys ?? []) c.spurs = columnSpurs(world, c.pts);
+  world.links = net.links.concat(joins.flatMap(([i, j]) => { const rt = streetRoute(world.nav!, `link:${keys[i].name}-${keys[j].name}:street`, keys[i].at, keys[j].at); return rt ? [{ from: keys[i].name, to: keys[j].name, layer: 'street' as const, route: rt }] : []; }));
   return world;
 }
 

@@ -7,12 +7,14 @@ import { hideNear } from './sim/hide';
 import { lineInReach } from './sim/zip';
 import { createState, step } from './sim/sim';
 import { DT, type SimState, type Vec3 } from './sim/types';
+import { GAME_PER_TICK } from './sim/clock';
 import type { World } from './world/world';
 import { getWorld } from './world/build';
 import { scenarioByName, scenarios, type Scenario } from './data/scenarios';
 import { Input } from './input/input';
 import { View, PRESETS, type Preset } from './render/view';
 import { Hud } from './ui/hud';
+import { UnitView } from './render/units';
 import { lineById, SPEAKERS } from './data/dialogue';
 import { Sky } from './render/sky';
 import { BodyFx } from './render/body-fx';
@@ -71,6 +73,7 @@ export class Game {
   readonly rain: Rain;
   readonly status = new StatusIndicator();
   drawDistance = 160;
+  private units: UnitView | null = null;
   scenario!: Scenario;
   private heldId = '';
   private prev: Vec3 = { x: 0, y: 0, z: 0 };
@@ -115,6 +118,9 @@ export class Game {
     this.sky.overcast = sc.overcast ?? 0;
     this.applyDraw();
     this.view.setWorld(this.world);
+    this.units?.dispose();
+    this.units = new UnitView(this.state.units.length);
+    this.view.scene.add(this.units.group);
   }
 
   /** The draw distance: the scenario's, or the graphics preset's. With far stand-ins the whole city shows through
@@ -215,6 +221,7 @@ export class Game {
     const covered = wet || this.under > 0.5 || !!raycast(this.world.index, cam.x, cam.y, cam.z, 0, 1, 0, 40);
     this.rain.update(this.state.tick / 60, cam, this.state.weather.rain, covered, this.state.player.pos.y);
     this.view.setLamp(this.state.player.lamp);
+    this.units?.update(this.world, this.state.units, this.state.time + alpha * GAME_PER_TICK, this.view.fp.cam.position);
     this.view.render(this.state.tick / 60, this.state.wstate.open);
     this.frames++;
   }

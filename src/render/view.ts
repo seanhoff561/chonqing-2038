@@ -6,7 +6,6 @@ import { buildSolidMeshes, ChunkMerger, CASTER_LAYER } from './world-mesh';
 import { buildGroundMeshes, buildFarGround, coarseField } from './ground-mesh';
 import { buildStreetMeshes, buildFarStreets } from './streets';
 import { lineMeshes } from './lines';
-import { Convoys } from './convoys';
 import { buildLabels } from './labels';
 import { material, lodRadius, swayTime } from './materials';
 import { MAT } from '../world/mats';
@@ -36,7 +35,6 @@ export class View {
   private shadowKey = '';
   private visAt = new THREE.Vector3();
   private visFar = -1;
-  private convoys: Convoys | null = null;
   private shadowAge = 0;
 
   constructor(container: HTMLElement) {
@@ -121,9 +119,6 @@ export class View {
     }
     // The cables over the streets (M3-52).
     for (const m of lineMeshes(w.lines)) this.world.add(m);
-    // The machines' columns marching out of the factory (M3-57b).
-    this.convoys = w.convoys?.length ? new Convoys(w.convoys) : null;
-    if (this.convoys) this.world.add(...this.convoys.meshes);
     // Pipes and ladders merge into chunk meshes.
     const merger = new ChunkMerger();
     for (const c of w.climbables) {
@@ -204,7 +199,6 @@ export class View {
     tickProps(t, open);
     swayTime.value = t;
     if (this.rooms) { this.rooms.update(c); if (this.rooms.group.parent !== this.scene) this.scene.add(this.rooms.group); }
-    this.convoys?.update(t, c);
     for (const o of this.scene.children) if (o === this.world) liveWalk(o, false); else o.updateMatrixWorld();
     const r = this.renderer;
     r.info.reset();

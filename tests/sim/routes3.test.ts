@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import { getWorld } from '../../src/world/build';
 import { REACH } from '../../src/data/reach';
-import { clearAcross } from '../../src/world/yuzhong/streetroute';
+import { clearAcross } from '../../src/world/yuzhong/nav';
 import type { Route } from '../../src/world/world';
 
 const w = getWorld('yuzhong'), key = (n: string) => w.features.find(f => f.kind === `key:${n}`)!;

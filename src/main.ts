@@ -1,5 +1,6 @@
 import './style.css';
 import { Game } from './game';
+import { unitPose } from './sim/units';
 import { scenarios } from './data/scenarios';
 import { DevPanel } from './dev/panel';
 import { addItem } from './sim/inventory';
@@ -29,4 +30,5 @@ game.start();
   cues: () => Object.keys(MOVE_SOUNDS),
   playCue: (id: string) => playMove(game.audio, id),
   give: (id: string, n = 1) => addItem(game.state, game.state.inv.pack, id, n),
+  unitPose,
 };

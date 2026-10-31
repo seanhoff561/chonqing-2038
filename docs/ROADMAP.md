@@ -659,19 +659,20 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Four key points of the district (hideout gate, Shibati top, Jiaochangkou, the riverfront) are linked by a street route, a rooftop or beam route and an underground or interior route
   - A sim test checks each link with the nav and movement limits
 
-## M4: 0 of 35 done
+## M4: 3 of 36 done
 
 M4 The machines: cameras, drones and their docks, ground robots, turrets; perception (light, distance, motion, posture, cover, sound, thermal); patrol schedules; alert states, the hivemind broadcast, convergence, drone launches, the search and the heightened district; combat and damage; tracking home and the hideout raid; death and restart. After M4 the core loop is playable start to finish.
 
-- [ ] **M4-01** Unit framework and scheduled patrols
+- [x] **M4-01** Unit framework and scheduled patrols
   - Units are plain data (type, route, schedule, state); while Unaware a unit's pose is a pure function of game time plus its run-seed phase offset (at most 8% of its loop)
   - Routes have dwell times and units have active hours
   - A unit test: the same pose for the same time however that time was reached
   - Patrol routes run underground too: the tunnels and the underground layer (U-024)
   - Main patrol lines run the clear streets; robots and drones break off them into side alleys and buildings (U-028)
+- [x] **M4-01b** Convoys as units (split from M4-01)
   - Convoys (U-030): the main roads carry the machines' columns (humanoids, quadrupeds, carriers, drones overhead) out of the city at all hours from the factory, so streets and open ground are where he gets seen; they start on the factory's convoy paths (world.convoys, M3-57b) and replace its decor columns (render/convoys.ts)
   - Columns move like a military unit (U-031): squads in loose staggered formation crossing streets by bounds, not single-file lines; patrols peel off the columns into alleys and buildings and rejoin them
-- [ ] **M4-02** Navigation graph and pathing
+- [x] **M4-02** Navigation graph and pathing
   - A nav graph built from streets, stairs and tunnels with levels; A* between any two reachable nodes
   - Unit types filter edges (delivery robots avoid stairs)
   - A sim test: a quadruped paths from Shibati's bottom to Jiaochangkou over the stairs

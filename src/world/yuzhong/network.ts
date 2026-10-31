@@ -16,6 +16,7 @@ import { MAT } from '../mats';
 import { makeRng, hashString, rand, type Rng } from '../../sim/rng';
 import { ENVELOPE as E } from '../../data/envelope';
 import { REACH } from '../../data/reach';
+import { DWELL } from '../../data/units';
 import { heightAt, type Heightfield } from '../heightfield';
 import type { Feature, Plot, Site, Route, Patrol, Gate, Inter, Prop, Link } from '../world';
 import { ROAD, type Street } from './ground';
@@ -376,16 +377,18 @@ function edgeTo(a: Obb, b: Obb) {
  *  drone corridors over the main routes by night, and one of each over the start hideout's grate at night (U-018). */
 function beats(routes: Route[], sts: Street[], g: Heightfield, grate: V3): Patrol[] {
   const out: Patrol[] = [], gy = (x: number, z: number) => heightAt(g, x, z) ?? 0;
+  /** A beat, pausing at its two ends. */
+  const beat = (kind: Patrol['kind'], unit: Patrol['unit'], pts: V3[], hours: [number, number]): Patrol => ({ kind, unit, pts, dwell: pts.map((_, i) => (i === 0 || i === pts.length - 1 ? DWELL.end : 0)), hours });
   const roads = sts.filter(s => ROAD.has(s.kind) && s.pts.length > 1).map(s => ({ s, len: s.pts.reduce((a, p, i) => (i ? a + Math.hypot(p[0] - s.pts[i - 1][0], p[1] - s.pts[i - 1][1]) : 0), 0) })).sort((a, b) => b.len - a.len);
-  for (const { s } of roads.slice(0, 10)) out.push({ kind: 'street', pts: s.pts.map(([x, z]) => ({ x, y: gy(x, z) + 1, z })), hours: [0, 24] });
+  for (const { s } of roads.slice(0, 10)) out.push(beat('street', 'quadruped', s.pts.map(([x, z]) => ({ x, y: gy(x, z), z })), [0, 24]));
   for (const rt of routes.filter(q => q.kind === 'main')) {
     const top = Math.max(...rt.pts.map(p => p.y));
-    out.push({ kind: 'drone', pts: rt.pts.filter((_, i) => i % 4 === 0).map(p => ({ x: p.x, y: top + 12, z: p.z })), hours: [19, 6] });
+    out.push(beat('drone', 'drone', rt.pts.filter((_, i) => i % 4 === 0).map(p => ({ x: p.x, y: top + 12, z: p.z })), [19, 6]));
   }
   // Over the grate: the nearest road's patrol turned down past it, and a drone line across it.
   let near: [number, number] = [grate.x + 40, grate.z], bd = Infinity;
   for (const { s } of roads) for (const [x, z] of s.pts) { const d = Math.hypot(x - grate.x, z - grate.z); if (d < bd) { bd = d; near = [x, z]; } }
-  out.push({ kind: 'street', pts: [{ x: near[0], y: gy(near[0], near[1]) + 1, z: near[1] }, { x: grate.x, y: grate.y + 1, z: grate.z }, { x: 2 * grate.x - near[0], y: gy(2 * grate.x - near[0], 2 * grate.z - near[1]) + 1, z: 2 * grate.z - near[1] }], hours: [21, 5] });
-  out.push({ kind: 'drone', pts: [{ x: grate.x - 120, y: grate.y + 25, z: grate.z - 40 }, { x: grate.x, y: grate.y + 18, z: grate.z }, { x: grate.x + 120, y: grate.y + 25, z: grate.z + 40 }], hours: [20, 6] });
+  out.push(beat('street', 'quadruped', [{ x: near[0], y: gy(near[0], near[1]), z: near[1] }, { x: grate.x, y: grate.y, z: grate.z }, { x: 2 * grate.x - near[0], y: gy(2 * grate.x - near[0], 2 * grate.z - near[1]), z: 2 * grate.z - near[1] }], [21, 5]));
+  out.push(beat('drone', 'drone', [{ x: grate.x - 120, y: grate.y + 25, z: grate.z - 40 }, { x: grate.x, y: grate.y + 18, z: grate.z }, { x: grate.x + 120, y: grate.y + 25, z: grate.z + 40 }], [20, 6]));
   return out;
 }

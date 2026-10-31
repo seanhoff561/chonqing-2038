@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-01 Unit framework and scheduled patrols.
-Features done: 156 / 295 | Last done: M3-21
+**Status:** building M4. Next: M4-03 Vision perception.
+Features done: 159 / 296 | Last done: M4-02
 <!-- /status -->
 
 ## Log
@@ -13,3 +13,6 @@ Features done: 156 / 295 | Last done: M3-21
 - M8-25 Intro screenplay for AI video (U-018): intro screenplay and shot list for AI video, with trailer cut
 - CI: the site deploys every build that compiles, tests in their own job (the M3-57/58/66/67 deploys had failed on time limits); U-034 withdrawn by the director pending their testing.
 - U-034 logged (playtest of M3-67): M3-66 reopened, M3-36 and M3-37 amended, M5-33 player-set ziplines added, Q-008 asked.
+- M4-01 Unit framework and scheduled patrols: units as plain data on beats with pauses and hours, poses a pure function of the game time; beats under the ground and off the streets into alleys and buildings
+- M4-01b Convoys as units: squads out of the factory gates in staggered formation, bounding, a pair peeling off into an alley
+- M4-02 Navigation graph and pathing: Units on their beats, columns out of the factory as units, and the machines' nav graph with A*

@@ -21,9 +21,10 @@ import './shelter';
 import './drops';
 import './grate';
 import { survival } from '../data/survival';
+import { createUnits } from './units';
 
-/** Saves of another version are dropped: 7 since he drops things (M3-72); 6 when runs moved to the real map (M3-41c). */
-export const STATE_VERSION = 7;
+/** Saves of another version are dropped: 8 since the machines walk their beats (M4-01); 7 since he drops things (M3-72). */
+export const STATE_VERSION = 8;
 
 export function createState(seed: number, world: World): SimState {
   const s = world.spawn;
@@ -41,6 +42,7 @@ export function createState(seed: number, world: World): SimState {
     shelters: [],
     placed: [],
     dropped: [],
+    units: createUnits(seed, world),
     openContainer: null,
     target: null,
     task: null,

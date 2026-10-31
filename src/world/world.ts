@@ -60,8 +60,16 @@ export interface Route { id: string; kind: 'main' | 'branch' | 'link'; pts: { x:
 /** One of the three ways between two of a district's key points (M3-21): along the streets, over the roofs, or
  *  underground and through the buildings. */
 export interface Link { from: string; to: string; layer: 'street' | 'roof' | 'under'; route: Route }
-/** A machine's beat (M3-37, laid for M4): along streets or over the roofs, between the hours it keeps. */
-export interface Patrol { kind: 'street' | 'drone'; pts: { x: number; y: number; z: number }[]; hours: [number, number] }
+/** The machines' ways about on foot (M4-02): points on the streets, the stairs and the walks under the ground, and
+ *  the stretches between them: [the other end, its length, its kind (NAV)]. */
+export interface Nav { pts: { x: number; y: number; z: number }[]; adj: [number, number, number][][] }
+export const NAV = { street: 0, stairs: 1, tunnel: 2 } as const;
+/** A column's way out of the city (M3-57b), and its detours: how far along it, and the alley point gone to. */
+export interface Convoy { pts: { x: number; y: number; z: number }[]; spurs: { s: number; at: { x: number; y: number; z: number } }[] }
+/** A machine's beat (M3-37, M4-01): along streets (into alleys and buildings off them), over the roofs, or under the
+ *  ground; who walks it, where it pauses (real seconds at each point), between the hours it keeps (game clock). Out
+ *  to its last point and back. Its points are where the walker's feet go (a drone's, where it flies). */
+export interface Patrol { kind: 'street' | 'drone' | 'under'; unit: import('../data/units').UnitKind; pts: { x: number; y: number; z: number }[]; dwell: number[]; hours: [number, number] }
 /** A place reached only one way, with a tool (U-037): where, what it takes, and where that's used from. */
 export interface Gate { tool: string; x: number; y: number; z: number; from: { x: number; y: number; z: number } }
 
@@ -71,6 +79,8 @@ export interface World {
   routes: Route[]; patrols: Patrol[]; gates: Gate[];
   /** the three layers of routes between the district's key points (M3-21) */
   links: Link[];
+  /** the machines' ways about on foot (M4-02); none for small worlds */
+  nav?: Nav;
   /** render-only boxes (visible stair steps over invisible ramps, trims) */
   decor: Solid[];
   teleports: Teleport[];
@@ -95,7 +105,8 @@ export interface World {
   /** cables strung between buildings, to ride (M3-52) */
   lines: Line[];
   /** the machines' columns' ways out of the factory along the roads, at ground level (M3-57b) */
-  convoys?: { x: number; y: number; z: number }[][];
+  /** the machines' columns' ways out of the factory, and where on each a pair peels off into an alley (M4-01b) */
+  convoys?: Convoy[];
   /** holds, hide spots and alley pieces as built (Yuzhong), for tests and tools */
   features: Feature[];
   index: SolidIndex;
