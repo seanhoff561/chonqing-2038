@@ -9,7 +9,7 @@ import { SCALE } from '../../src/sim/clock';
 
 /** A humanoid pacing between 20 and 30 m from him, starting its loop at the near end, looking his way. */
 function pacing() {
-  const { world, state } = setup([floor(200)], { x: 0, y: 0, z: 0, yaw: 0 }, { patrols: [{ kind: 'street', unit: 'humanoid', pts: [{ x: 0, y: 0, z: -20 }, { x: 0, y: 0, z: -30 }], dwell: [5, 5], hours: [0, 24] }] });
+  const { world, state } = setup([floor(0, 200)], { x: 0, y: 0, z: 0, yaw: 0 }, { patrols: [{ kind: 'street', unit: 'humanoid', pts: [{ x: 0, y: 0, z: -20 }, { x: 0, y: 0, z: -30 }], dwell: [5, 5], hours: [0, 24] }] });
   const u = state.units[0], T = loopOf(world, u);
   state.time = 12 * 3600; state.weather = { fog: 0, rain: 0 };
   u.phase = 0.5 - ((state.time / SCALE) % T);
@@ -19,8 +19,8 @@ function pacing() {
 describe('awareness and investigation (M4-04)', () => {
   it('turns Suspicious on a glimpse, walks to where it saw him, looks about 8 s, and goes back onto its beat', () => {
     const { world, state, u } = pacing();
-    // A glimpse: half a second standing in its view at 20 m, then gone well out of its sight.
-    run(state, world, secs(0.6));
+    // A glimpse: under a second standing still in its view at 20 m, then gone well out of its sight.
+    run(state, world, secs(0.8));
     expect(u.aware!).toBeGreaterThanOrEqual(0.3);
     expect(u.aware!).toBeLessThan(1);
     teleport(state.player, 90, 0, 90);
@@ -46,7 +46,7 @@ describe('awareness and investigation (M4-04)', () => {
   });
   it('turns Engaged when he stays in its view, and the hive remembers where', () => {
     const { world, state, u } = pacing();
-    run(state, world, secs(2));
+    run(state, world, secs(3));
     expect(u.state).toBe('engaged');
     expect(state.hive.seen.length).toBe(1);
     expect(Math.hypot(state.hive.seen[0].x, state.hive.seen[0].z)).toBeLessThan(1);

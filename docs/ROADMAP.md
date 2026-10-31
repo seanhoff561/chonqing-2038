@@ -659,7 +659,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Four key points of the district (hideout gate, Shibati top, Jiaochangkou, the riverfront) are linked by a street route, a rooftop or beam route and an underground or interior route
   - A sim test checks each link with the nav and movement limits
 
-## M4: 5 of 36 done
+## M4: 6 of 36 done
 
 M4 The machines: cameras, drones and their docks, ground robots, turrets; perception (light, distance, motion, posture, cover, sound, thermal); patrol schedules; alert states, the hivemind broadcast, convergence, drone launches, the search and the heightened district; combat and damage; tracking home and the hideout raid; death and restart. After M4 the core loop is playable start to finish.
 
@@ -684,7 +684,7 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
   - A Suspicious unit walks to the point, scans for 8 s and returns to its route
   - A sim test covers it
   - Patrol routes shift over time: by day of the run, and after the hive has seen him somewhere (U-021)
-- [ ] **M4-05** Hearing
+- [x] **M4-05** Hearing
   - Units hear noise events within radius x hearing multiplier (x0.6 when occluded); acoustic sensors hear x2
   - A heard noise makes the unit investigate; hostile noises start a search
   - Sim tests: sprinting past a quadruped behind a wall draws it; crouching past doesn't

@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-05 Hearing.
-Features done: 161 / 296 | Last done: M4-04
+**Status:** building M4. Next: M4-06 Thermal senses at night.
+Features done: 162 / 296 | Last done: M4-05
 <!-- /status -->
 
 ## Log
@@ -18,3 +18,4 @@ Features done: 161 / 296 | Last done: M4-04
 - M4-02 Navigation graph and pathing: Units on their beats, columns out of the factory as units, and the machines' nav graph with A*
 - M4-03 Vision perception: Vision perception: five body points in a unit's cone with clear sight, light with night-vision floors, posture, motion, falloff and weather
 - M4-04 Awareness and investigation: Awareness and investigation: Suspicious units walk to where they saw him, look about and go back; beats shift by day and after sightings
+- M4-05 Hearing: Hearing: noises heard within radius x hearing, x0.6 through walls; heard noises send units to look, hostile ones are remembered by the hive

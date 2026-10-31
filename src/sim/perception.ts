@@ -5,7 +5,7 @@
 // and its awareness of him climbs while he's visible and falls away when he isn't.
 import type { SimState } from './types';
 import type { World } from '../world/world';
-import { SENSES, SIGHT, type UnitKind } from '../data/units';
+import { SENSES, SIGHT, HEARING, type UnitKind } from '../data/units';
 import { movement as M } from '../data/movement';
 import { raycast } from '../world/geom';
 import { lightAt, LAMP_LIGHT } from './light';
@@ -78,3 +78,23 @@ export function stepSight(s: SimState, w: World, every = 6) {
   }
 }
 
+
+/** Every tick: the noises he made, heard by the units within each one's radius times their hearing (x0.6 through
+ *  walls). A unit that hears one is at least Suspicious, and goes to look where it came from; a hostile noise (a shot,
+ *  a blast) sends every unit that heard it, and the hive remembers where (its search is M4-15's). */
+export function stepHearing(s: SimState, w: World) {
+  for (const e of s.events) {
+    if (e.t !== 'noise') continue;
+    const hostile = HEARING.hostile.has(e.kind);
+    for (const u of s.units) {
+      const at = unitPose(w, u, s.time);
+      if (!at.active) continue;
+      const S = SENSES[u.kind], ear = { x: at.x, y: at.y + Math.max(0.3, S.eye), z: at.z }, d = Math.hypot(e.x - ear.x, e.y + 0.5 - ear.y, e.z - ear.z), r = e.r * S.hear;
+      if (d > r) continue;
+      if (d > r * HEARING.occluded && raycast(w.index, e.x, e.y + 0.5, e.z, (ear.x - e.x) / d, (ear.y - e.y - 0.5) / d, (ear.z - e.z) / d, d - 0.1)) continue;
+      u.aware = Math.max(u.aware ?? 0, 0.3 + 1e-6);
+      u.seen = { x: e.x, y: e.y, z: e.z };
+    }
+    if (hostile) s.hive.seen.push({ x: e.x, y: e.y, z: e.z, t: s.time });
+  }
+}

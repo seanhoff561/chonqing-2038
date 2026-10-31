@@ -22,7 +22,7 @@ import './drops';
 import './grate';
 import { survival } from '../data/survival';
 import { createUnits } from './units';
-import { stepSight } from './perception';
+import { stepSight, stepHearing } from './perception';
 import { stepAlert } from './alert';
 
 /** Saves of another version are dropped: 9 since the hive remembers where it saw him (M4-04); 8 since the machines
@@ -66,6 +66,7 @@ export function step(state: SimState, world: World, input: InputFrame): void {
   stepInteract(state, world, input);
   stepPlayer(state, world, input);
   stepSight(state, world);
+  stepHearing(state, world);
   stepAlert(state, world);
   stepHeld(state, world, input);
   stepLamp(state, input);
