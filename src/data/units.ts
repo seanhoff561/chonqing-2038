@@ -50,6 +50,11 @@ export const WEAPONS = {
 };
 export type Weapon = keyof typeof WEAPONS;
 
+/** His blades and bars (DESIGN section 6, M4-20): damage a blow, reach, seconds between blows, how far a blow on a
+ *  machine is heard; a takedown's reach, the rear arc it's made from (degrees), how long it takes, how far it's heard. */
+export const MELEE = { knife: { damage: 40, reach: 1.6, every: 0.5, noise: 4 }, crowbar: { damage: 55, reach: 1.9, every: 1.1, noise: 20 } };
+export const TAKEDOWN = { reach: 1.5, rear: 120, time: 2, noise: 6 };
+
 /** How long after a machine has him (Engaged) it tells the network (DESIGN section 5), real seconds: the wired
  *  sensors at once nearly, the cameras in a second, the walkers slowest. */
 export const BROADCAST: Record<UnitKind, number> = { turret: 0.5, pir: 0.5, tripwire: 0.5, acoustic: 0.5, camera: 1, sweeper: 1, lamppost: 1, hunter: 1, drone: 1.5, quadruped: 2, delivery: 2, carrier: 2, humanoid: 2.5 };

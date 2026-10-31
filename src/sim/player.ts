@@ -61,8 +61,9 @@ export interface Player {
   lamp: 0 | 1 | 2;
   /** wrapped in a mylar blanket (M4-06): his heat hidden from thermal sight */
   mylar: boolean;
-  /** seconds he's stunned for, a prod's (M4-18) */
+  /** seconds he's stunned for, a prod's (M4-18); till his next blow (M4-20) */
   stun: number;
+  swing: number;
   /** where he climbs back out of a hiding spot */
   hideExit: Vec3 | null;
 }
@@ -72,7 +73,7 @@ export function createPlayer(x: number, y: number, z: number, yaw: number): Play
     pos: { x, y, z }, vel: { x: 0, y: 0, z: 0 }, yaw, pitch: 0,
     mode: 'air', posture: 'stand', onGround: false, fallFrom: y, crouchAge: 99,
     endurance: 100, exhausted: false, hands: [{ grip: null }, { grip: null }], pull: 1.5, regrab: 0, kicks: 0, strain: 0, muscle: 0, side: 0, jumpHeld: false, clung: false, act: null,
-    wall: { nx: 0, nz: 0, t: 0, y: 0, id: -1 }, breath: 40, wetUntil: 0, stepAcc: 0, crawlToggle: false, hideId: -1, coyote: 0, slide: -1, hideExit: null, lamp: 0, mylar: false, stun: 0,
+    wall: { nx: 0, nz: 0, t: 0, y: 0, id: -1 }, breath: 40, wetUntil: 0, stepAcc: 0, crawlToggle: false, hideId: -1, coyote: 0, slide: -1, hideExit: null, lamp: 0, mylar: false, stun: 0, swing: 0,
   };
 }
 

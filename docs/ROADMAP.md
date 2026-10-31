@@ -659,7 +659,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Four key points of the district (hideout gate, Shibati top, Jiaochangkou, the riverfront) are linked by a street route, a rooftop or beam route and an underground or interior route
   - A sim test checks each link with the nav and movement limits
 
-## M4: 21 of 37 done
+## M4: 22 of 37 done
 
 M4 The machines: cameras, drones and their docks, ground robots, turrets; perception (light, distance, motion, posture, cover, sound, thermal); patrol schedules; alert states, the hivemind broadcast, convergence, drone launches, the search and the heightened district; combat and damage; tracking home and the hideout raid; death and restart. After M4 the core loop is playable start to finish.
 
@@ -739,7 +739,7 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
 - [x] **M4-19** Unit damage and weak points
   - Units have HP and hit zones with multipliers, and states blinded, immobilised, shut down and destroyed
   - Unit tests per unit type
-- [ ] **M4-20** Knife, crowbar and takedowns
+- [x] **M4-20** Knife, crowbar and takedowns
   - Knife and crowbar melee; one knife hit downs a patrol drone; a takedown from behind (1.5 m, rear 120 degrees, unit not Engaged) shuts a robot down in 2 s
   - A sim test covers both
 - [ ] **M4-21** Pistol

@@ -29,11 +29,7 @@ export function stepSilent(s: SimState, w: World) {
       // (A mounted one's silence is looked into from the ground under it.)
       const down = STATIC.has(u.kind) ? raycast(w.index, p.x, p.y - 0.3, p.z, 0, -1, 0, 30) : null, y = down ? p.y - 0.3 - down.t : p.y;
       if (u.state !== 'unaware' || (u.cast !== undefined && s.time < u.cast)) s.hive.silent.push({ x: p.x, y, z: p.z, t: s.time });
-    } else if (!off && u.out) {
-      // Back on, knowing nothing: on with its trip, or its beat from where it stopped (its loop shifted by the time out).
-      u.out = undefined; u.aware = 0; u.state = 'unaware';
-      if (!u.lame) { if (!u.trip) u.phase -= (s.time - u.stop!.t) / SCALE; u.stop = undefined; }
-    }
+    } else if (!off && u.out) resume(s, u);
   }
   // Silences 12 s old: someone goes to look.
   s.hive.silent = s.hive.silent.filter(q => {
@@ -59,6 +55,12 @@ export function stepSilent(s: SimState, w: World) {
 }
 
 const UNITS_FLY = new Set<string>(['drone', 'hunter']);
+
+/** Back on, knowing nothing: on with its trip, or its beat from where it stopped (its loop shifted by the time out). */
+export function resume(s: SimState, u: Unit) {
+  u.off = undefined; u.out = undefined; u.aware = 0; u.state = 'unaware';
+  if (u.stop && !u.lame) { if (!u.trip) u.phase -= (s.time - u.stop.t) / SCALE; u.stop = undefined; }
+}
 
 /** The nearest machine free to go: a drone in the air, or one on the ground on its beat. */
 function nearest(s: SimState, w: World, at: V3, fly: boolean): Unit | null {

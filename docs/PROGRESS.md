@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-20 Knife, crowbar and takedowns.
-Features done: 177 / 297 | Last done: M4-19
+**Status:** building M4. Next: M4-21 Pistol.
+Features done: 178 / 297 | Last done: M4-20
 <!-- /status -->
 
 ## Log
@@ -34,3 +34,4 @@ Features done: 177 / 297 | Last done: M4-19
 - M4-17 Silent units: silent machines draw a look after 12 s; out, a machine stays put; a wreck found starts a small search
 - M4-18 Enemy fire and wounds: machines fire: rifle bursts, SMG, prod and stun, turret; each hit bleeds and may hurt a limb
 - M4-19 Unit damage and weak points: machines' HP and hit zones: blinded, immobilised, shut down, destroyed
+- M4-20 Knife, crowbar and takedowns: knife and crowbar blows on the place aimed at; takedowns from behind in 2 s
