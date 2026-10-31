@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-04 Awareness and investigation.
-Features done: 160 / 296 | Last done: M4-03
+**Status:** building M4. Next: M4-05 Hearing.
+Features done: 161 / 296 | Last done: M4-04
 <!-- /status -->
 
 ## Log
@@ -17,3 +17,4 @@ Features done: 160 / 296 | Last done: M4-03
 - M4-01b Convoys as units: squads out of the factory gates in staggered formation, bounding, a pair peeling off into an alley
 - M4-02 Navigation graph and pathing: Units on their beats, columns out of the factory as units, and the machines' nav graph with A*
 - M4-03 Vision perception: Vision perception: five body points in a unit's cone with clear sight, light with night-vision floors, posture, motion, falloff and weather
+- M4-04 Awareness and investigation: Awareness and investigation: Suspicious units walk to where they saw him, look about and go back; beats shift by day and after sightings

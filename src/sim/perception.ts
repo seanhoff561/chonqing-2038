@@ -74,6 +74,7 @@ export function stepSight(s: SimState, w: World, every = 6) {
     const at = unitPose(w, u, s.time);
     const v = at.active ? visibility(s, w, u.kind, at) : 0;
     u.aware = v >= SIGHT.min ? Math.min(1.5, (u.aware ?? 0) + SIGHT.rate * v * dt) : Math.max(0, (u.aware ?? 0) - SIGHT.decay * dt);
+    if (v >= SIGHT.min) u.seen = { ...s.player.pos };
   }
 }
 

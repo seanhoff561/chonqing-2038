@@ -6,15 +6,25 @@
 import type { World, Patrol, Convoy } from '../world/world';
 import { UNITS, PHASE, COLUMN, type UnitKind } from '../data/units';
 import { makeRng, rand, hashString } from './rng';
-import { SCALE, hourOf } from './clock';
+import { SCALE, hourOf, dayOf } from './clock';
 
 export interface Unit {
-  id: number; kind: UnitKind; /** the beat it walks (world patrols), or -1 in a column */ patrol: number; /** real seconds into its loop it starts */ phase: number; state: 'unaware';
+  id: number; kind: UnitKind; /** the beat it walks (world patrols), or -1 in a column */ patrol: number; /** real seconds into its loop it starts */ phase: number; state: 'unaware' | 'suspicious' | 'engaged';
   /** in a column (M4-01b): which way out of the factory, which of its squads in turn, which member of the squad */
   convoy?: { path: number; slot: number; member: number };
   /** how aware of him it is (M4-03): 0.3 suspicious, 1 engaged */
   aware?: number;
+  /** where it last saw him (M4-04) */
+  seen?: { x: number; y: number; z: number };
+  /** off its beat (M4-04): going to look at a point, looking about there, coming back (sim/alert.ts) */
+  trip?: Trip;
+  /** when it last went to check a place the hive saw him (M4-04) */
+  checked?: number;
 }
+
+/** A trip off the beat: the way there (or back), how far along it, where it is and faces, the look-about left there,
+ *  and where and when it left its beat. */
+export interface Trip { kind: 'look' | 'check'; path: { x: number; y: number; z: number }[]; i: number; pos: { x: number; y: number; z: number }; yaw: number; scan: number; back: boolean; left: { x: number; y: number; z: number }; leftAt: number }
 export interface Pose { x: number; y: number; z: number; yaw: number; active: boolean }
 
 /** A beat as a timeline, out and back: pauses and walks, each from t0 for dur real seconds. */
@@ -111,10 +121,13 @@ const keeps = ([a, b]: [number, number], h: number) => (a <= b ? h >= a && h < b
 /** Where an Unaware unit is at a game time, and facing which way (its +z: yaw from +z toward +x). Columns march at
  *  all hours. */
 export function unitPose(w: World, u: Unit, time: number): Pose {
+  if (u.trip) return { ...u.trip.pos, yaw: u.trip.yaw, active: true };
   if (u.convoy) return columnPose(w, u, time / SCALE);
   const p = w.patrols[u.patrol], start = p.pts[0];
   if (!keeps(p.hours, hourOf(time))) return { x: start.x, y: start.y, z: start.z, yaw: 0, active: false };
-  const { legs, T } = timeline(p, UNITS[u.kind].patrol), t = (((time / SCALE + u.phase) % T) + T) % T;
+  // Each day from 06:00 a beat runs to other timings (M4-04, U-021): yesterday's gaps aren't today's.
+  const { legs, T } = timeline(p, UNITS[u.kind].patrol), day = dayOf(time - 6 * 3600), shift = day > 1 ? ((hashString(`day${u.id}:${day}`) % 1000) / 1000) * T : 0;
+  const t = (((time / SCALE + u.phase + shift) % T) + T) % T;
   let lo = 0, hi = legs.length - 1;
   while (lo < hi) { const m = (lo + hi + 1) >> 1; if (legs[m].t0 <= t) lo = m; else hi = m - 1; }
   const L = legs[lo], f = L.a === L.b ? 0 : Math.min(1, (t - L.t0) / L.dur), a = p.pts[L.a], b = p.pts[L.b];
