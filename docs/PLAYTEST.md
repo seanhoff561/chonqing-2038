@@ -133,3 +133,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M3-19: the Li family flat
 - On a run, teleport to 'Li family flat' (pause menu): does the room read as his family's home gone through, and do the badge and phone on the floor find you? Pick up the phone, hold it and click: does the voicemail land (logs/liflat.png, liflat-voicemail.png)? Is the subtitle timing readable?
+
+## M3-20: the Yangtze riverfront
+- From 'Shibati bottom' head down to the riverfront road (logs/riverfront.png): does the machines' wall feel like a real barrier, are the fallen panels findable, and is walking down the stone steps into the Yangtze, swimming and climbing back out right?
