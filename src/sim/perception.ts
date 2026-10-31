@@ -6,13 +6,14 @@
 // and its awareness of him climbs while he's visible and falls away when he isn't.
 import type { SimState } from './types';
 import type { World } from '../world/world';
-import { SENSES, SIGHT, HEARING, THERMAL, type UnitKind } from '../data/units';
+import { SENSES, SIGHT, HEARING, THERMAL, SENSORS, type UnitKind } from '../data/units';
 import { movement as M } from '../data/movement';
 import { raycast } from '../world/geom';
 import { lightAt, LAMP_LIGHT } from './light';
 import { daylight } from './clock';
 import { unitPose, type Pose } from './units';
 import { onUseId } from './use';
+import { remember } from './hive';
 
 type V3 = { x: number; y: number; z: number };
 
@@ -59,6 +60,22 @@ const wrapped = (s: SimState) => s.player.mylar && s.inv.pack.items.some(i => i.
 // The mylar blanket (M4-06): used, he wraps it round himself, or takes it off again.
 onUseId('mylar', s => { s.player.mylar = !wrapped(s); s.events.push({ t: 'msg', text: s.player.mylar ? 'wrapped in the mylar blanket' : 'mylar blanket off' }); });
 
+/** A motion sensor (M4-11): him within its 10 m cone in clear sight, moving faster than it notices by how his
+ *  posture shows him (a crawl, 0.8 m/s x 0.3, slides under it; a crouch-walk doesn't). */
+function pirTrips(s: SimState, w: World, at: Pose) {
+  const p = s.player, P = SENSORS.pir, c = { x: p.pos.x, y: p.pos.y + 0.5, z: p.pos.z }, dx = c.x - at.x, dy = c.y - at.y, dz = c.z - at.z, d = Math.hypot(dx, dy, dz);
+  if (d > P.range || d < 0.01 || (dx * Math.sin(at.yaw) + dz * Math.cos(at.yaw)) / Math.hypot(dx, dz) < Math.cos((P.fov * Math.PI) / 360)) return false;
+  if (raycast(w.index, at.x, at.y, at.z, dx / d, dy / d, dz / d, d - 0.3)) return false;
+  return Math.hypot(p.vel.x, p.vel.y, p.vel.z) * posture(s) > P.motion;
+}
+
+/** A tripwire (M4-11): his body, feet to head, through its beam; a running jump clears one at shin height. */
+function wireTrips(s: SimState, c: { x: number; y: number; z: number; to?: { x: number; y: number; z: number } }) {
+  const p = s.player.pos, b = c.to!, vx = b.x - c.x, vz = b.z - c.z, L = vx * vx + vz * vz || 1, t = Math.max(0, Math.min(1, ((p.x - c.x) * vx + (p.z - c.z) * vz) / L));
+  const h = M.height[s.player.posture === 'crouch' ? 'crouch' : s.player.posture === 'crawl' ? 'crawl' : 'stand'];
+  return Math.hypot(c.x + vx * t - p.x, c.z + vz * t - p.z) < 0.25 && c.y >= p.y && c.y <= p.y + h;
+}
+
 /** How far a unit sees now: its day range by day, its night range by night (between them at dusk), cut by fog and rain. */
 export function rangeOf(s: SimState, kind: UnitKind) {
   const S = SENSES[kind], d = daylight(s.time), f = s.weather.fog, r = s.weather.rain;
@@ -94,8 +111,20 @@ export function visibility(s: SimState, w: World, kind: UnitKind, at: Pose): num
 export function stepSight(s: SimState, w: World, every = 6) {
   const dt = every / 60;
   for (const u of s.units) {
+    // A tripwire's beam is watched every tick, so no running step goes through it unseen (M4-11).
+    if (u.kind === 'tripwire') {
+      if (wireTrips(s, w.cameras[u.cam!])) { u.aware = 1.2; u.seen = { ...s.player.pos }; }
+      else u.aware = Math.max(0, (u.aware ?? 0) - SIGHT.decay / 60);
+      continue;
+    }
     if ((u.id + s.tick) % every) continue;
     const at = unitPose(w, u, s.time);
+    // A motion sensor's alarm: all at once (M4-11).
+    if (u.kind === 'pir') {
+      if (pirTrips(s, w, at)) { u.aware = 1.2; u.seen = { ...s.player.pos }; }
+      else u.aware = Math.max(0, (u.aware ?? 0) - SIGHT.decay * dt);
+      continue;
+    }
     const v = at.active && !at.docked ? visibility(s, w, u.kind, at) : 0;
     u.aware = v >= SIGHT.min ? Math.min(1.5, (u.aware ?? 0) + SIGHT.rate * v * dt) : Math.max(0, (u.aware ?? 0) - SIGHT.decay * dt);
     if (v >= SIGHT.min) u.seen = { ...s.player.pos };
@@ -119,6 +148,7 @@ export function stepHearing(s: SimState, w: World) {
       u.aware = Math.max(u.aware ?? 0, 0.35);
       u.seen = { x: e.x, y: e.y, z: e.z };
     }
-    if (hostile) s.hive.seen.push({ x: e.x, y: e.y, z: e.z, t: s.time });
+    // (A turret's own fire tells the hive nothing it doesn't know already.)
+    if (hostile && e.kind !== 'gunfire') remember(s, e);
   }
 }

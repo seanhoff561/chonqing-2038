@@ -22,6 +22,9 @@ export interface Unit {
   trip?: Trip;
   /** when it last went to check a place the hive saw him (M4-04) */
   checked?: number;
+  /** a turret's rounds owed, and whether it has him in its sights (M4-11) */
+  fire?: number;
+  aim?: boolean;
 }
 
 /** A trip off the beat: the way there (or back), how far along it, where it is and faces, the look-about left there,

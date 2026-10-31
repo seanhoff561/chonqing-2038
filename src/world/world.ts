@@ -64,8 +64,9 @@ export interface Link { from: string; to: string; layer: 'street' | 'roof' | 'un
  *  the stretches between them: [the other end, its length, its kind (NAV)]. */
 export interface Nav { pts: { x: number; y: number; z: number }[]; adj: [number, number, number][][] }
 export const NAV = { street: 0, stairs: 1, tunnel: 2, jump: 3 } as const;
-/** A camera where it's mounted (M4-07): which kind, its lens, which way it faces. */
-export interface Camera { kind: 'camera' | 'sweeper' | 'lamppost'; x: number; y: number; z: number; yaw: number }
+/** A camera or another fixed sensor where it's mounted (M4-07, M4-11): which kind, its lens (a turret's gun, a
+ *  sensor's head; a tripwire's one end, `to` its other), which way it faces. */
+export interface Camera { kind: 'camera' | 'sweeper' | 'lamppost' | 'turret' | 'pir' | 'tripwire' | 'acoustic'; x: number; y: number; z: number; yaw: number; to?: { x: number; y: number; z: number } }
 /** A column's way out of the city (M3-57b), and its detours: how far along it, and the alley point gone to. */
 export interface Convoy { pts: { x: number; y: number; z: number }[]; spurs: { s: number; at: { x: number; y: number; z: number } }[] }
 /** A machine's beat (M3-37, M4-01): along streets (into alleys and buildings off them), over the roofs, or under the
@@ -83,7 +84,7 @@ export interface World {
   links: Link[];
   /** the machines' ways about on foot (M4-02); none for small worlds */
   nav?: Nav;
-  /** the cameras (M4-07) */
+  /** the cameras and the other fixed sensors (M4-07, M4-11) */
   cameras: Camera[];
   /** the drones' rooftop docks, where they charge (M4-08) */
   docks: { x: number; y: number; z: number }[];

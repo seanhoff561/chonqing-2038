@@ -16,7 +16,7 @@ import { View, PRESETS, type Preset } from './render/view';
 import { Hud } from './ui/hud';
 import { UnitView } from './render/units';
 import { lineById, SPEAKERS } from './data/dialogue';
-import { beep, servo, radio } from './audio/moves';
+import { beep, servo, radio, gunshot } from './audio/moves';
 import { unitPose } from './sim/units';
 import { Sky } from './render/sky';
 import { BodyFx } from './render/body-fx';
@@ -134,7 +134,7 @@ export class Game {
     if ((this.beepIn -= dt) <= 0) {
       this.beepIn = 2.5;
       let near = 12;
-      for (const c of this.world.cameras) near = Math.min(near, Math.hypot(c.x - p.x, c.y - p.y - 1.6, c.z - p.z));
+      for (const c of this.world.cameras) if (c.kind === 'camera' || c.kind === 'sweeper' || c.kind === 'lamppost') near = Math.min(near, Math.hypot(c.x - p.x, c.y - p.y - 1.6, c.z - p.z));
       if (near < 12) beep(this.audio, 0.12 * (1 - near / 12));
     }
     if ((this.servoIn -= dt) <= 0) {
@@ -211,6 +211,7 @@ export class Game {
       else if (e.t === 'slept' && this.scenario.run && !this.state.dead) writeSave(localStorage, this.scenario.name, this.state);
       else if (e.t === 'msg') this.hud.say(e.text, '');
       else if (e.t === 'say') { const l = lineById.get(e.id); if (l) this.hud.say(l.zh, l.en, SPEAKERS[l.speaker]?.[0]); }
+      else if (e.t === 'shot') { const d = Math.hypot(e.x - this.state.player.pos.x, e.y - this.state.player.pos.y, e.z - this.state.player.pos.z); if (d < 300) gunshot(this.audio, 0.5 * (1 - d / 300)); }
       else if (e.t === 'call') { const d = Math.hypot(e.x - this.state.player.pos.x, e.z - this.state.player.pos.z); if (d < 60) radio(this.audio, 0.25 * (1 - d / 60)); }
     }
     if (this.state.dead) this.death.show();

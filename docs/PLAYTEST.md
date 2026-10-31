@@ -145,3 +145,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M4-09, M4-10: quadrupeds and humanoids
 - Get a quadruped after you (stand in its view): does its servo whine warn you early enough, is its 8 m/s chase up the stairs frightening but escapable by a mantle? Let a humanoid notice you: do you hear the radio call, do the others come round the sides, and do they search the hiding spots like soldiers rather than wander?
+
+## M4-11: fixed sensors
+- In the Grand Tunnel past the metro's passage, find the red tripwire: is it visible enough in the lamp's light to jump, and does a running jump feel fair? Crawl past a motion sensor in a shelter store room (slowly), then crouch-walk: does the difference read? Stand in front of a factory gate's turret: does the burst sound and hurt as it should, and does it feel deadly within seconds?

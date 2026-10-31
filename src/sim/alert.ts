@@ -12,12 +12,13 @@ import { navPath } from './nav';
 import { raycast } from '../world/geom';
 import { unitPose, loopOf, type Unit } from './units';
 import { callOut, flankPoint, searchSpots, coverNear, SQUAD } from './squad';
+import { remember } from './hive';
 import { SCALE } from './clock';
 import { DT } from './types';
 
 type V3 = { x: number; y: number; z: number };
 /** How far up or down each kind steps without a stair: a quadruped's metre's jump; nothing climbs (M4-09). */
-const STEP: Record<UnitKind, number> = { quadruped: 1, humanoid: 0.5, drone: 99, delivery: 0.2, carrier: 0.3, camera: 0, sweeper: 0, lamppost: 0 };
+const STEP: Record<UnitKind, number> = { quadruped: 1, humanoid: 0.5, drone: 99, delivery: 0.2, carrier: 0.3, camera: 0, sweeper: 0, lamppost: 0, turret: 0, pir: 0, tripwire: 0, acoustic: 0 };
 export const ALERT = { suspicious: 0.3, engaged: 1, scan: 8, checkFor: 24 * 3600, checkWithin: 200 };
 
 /** The way from a to b for a kind: its nav path on the ground, then on to the point itself if that's within its step
@@ -46,9 +47,9 @@ function walk(s: SimState, w: World, u: Unit) {
     if (!t.back) {
       // Holding its cover while it can see him (M4-10).
       if (t.cover) return;
-      // Looking about, a slow sweep either way; a humanoid looks briefly and then goes through the hiding places near
-      // the place one by one, looking at each (M4-10).
-      const look = u.kind === 'humanoid' ? SQUAD.look : ALERT.scan;
+      // Looking about, a slow sweep either way, 8 s (M4-04); then a humanoid goes through the hiding places near the
+      // place one by one, looking briefly at each (M4-10).
+      const look = t.visits ? SQUAD.look : ALERT.scan;
       t.scan += DT;
       t.yaw += Math.sin((t.scan / look) * Math.PI * 4) * 0.03;
       if (t.scan >= look) {
@@ -77,7 +78,7 @@ export function stepAlert(s: SimState, w: World) {
   for (const u of s.units) {
     const a = u.aware ?? 0;
     const was = u.state;
-    if (a >= ALERT.engaged && u.state !== 'engaged') { u.state = 'engaged'; s.hive.seen.push({ ...(u.seen ?? s.player.pos), t: s.time }); }
+    if (a >= ALERT.engaged && u.state !== 'engaged') { u.state = 'engaged'; remember(s, u.seen ?? s.player.pos); }
     else if (a >= ALERT.suspicious && u.state === 'unaware') u.state = 'suspicious';
     // A humanoid that's just noticed him calls the others near it (M4-10).
     if (was === 'unaware' && u.state !== 'unaware' && u.kind === 'humanoid' && !u.convoy && u.seen) callOut(s, w, u);

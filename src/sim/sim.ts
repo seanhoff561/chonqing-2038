@@ -24,6 +24,7 @@ import { survival } from '../data/survival';
 import { createUnits } from './units';
 import { stepSight, stepHearing } from './perception';
 import { stepAlert } from './alert';
+import { stepFire } from './fire';
 
 /** Saves of another version are dropped: 9 since the hive remembers where it saw him (M4-04); 8 since the machines
  *  walk their beats (M4-01). */
@@ -66,11 +67,13 @@ export function step(state: SimState, world: World, input: InputFrame): void {
   stepInteract(state, world, input);
   stepPlayer(state, world, input);
   stepSight(state, world);
-  stepHearing(state, world);
   stepAlert(state, world);
+  stepFire(state, world);
   stepHeld(state, world, input);
   stepLamp(state, input);
   if (state.openContainer) stepContainers(state, { inter: allInters(state, world) });
+  // (Last of the noisemakers, so the machines hear all this tick's noises: his, a turret's, a dropped tin's.)
+  stepHearing(state, world);
   stepWeather(state);
   stepBody(state);
   checkCollapse(state);

@@ -23,12 +23,19 @@ const GEO: Record<UnitKind, () => THREE.BufferGeometry> = {
   sweeper: () => mergeGeometries([at(0.18, 0.18, 0.3, 0, 0, 0.12).rotateX(0.3), at(0.2, 0.08, 0.2, 0, 0.14, 0), at(0.05, 0.3, 0.05, 0, 0.3, 0)]),
   // (The smart lampposts' cameras are their props'.)
   lamppost: () => at(0.01, 0.01, 0.01, 0, 0, 0),
+  // The fixed sensors (M4-11): a turret's gun on its ring; a motion sensor's dome; an acoustic sensor's grille; a
+  // tripwire's beam, a metre long (scaled to its length).
+  turret: () => mergeGeometries([at(0.9, 0.5, 0.9, 0, -0.25, 0), at(0.5, 0.35, 0.7, 0, 0.1, 0.1), at(0.12, 0.12, 1.2, -0.12, 0.12, 0.8), at(0.12, 0.12, 1.2, 0.12, 0.12, 0.8)]),
+  pir: () => mergeGeometries([at(0.16, 0.12, 0.08, 0, 0, 0), at(0.1, 0.06, 0.06, 0, -0.04, 0.05)]),
+  acoustic: () => mergeGeometries([at(0.3, 0.3, 0.1, 0, 0, 0), ...[-0.08, 0, 0.08].map(y => at(0.26, 0.02, 0.02, 0, y, 0.06))]),
+  tripwire: () => at(0.012, 0.012, 1, 0, 0, 0.5),
 };
 /** Where each kind's eyes are, from its feet. */
 const EYE_AT: Record<UnitKind, THREE.Matrix4> = {
   humanoid: new THREE.Matrix4().makeTranslation(0, 1.8, 0.135), quadruped: new THREE.Matrix4().makeTranslation(0, 0.85, 0.755),
   drone: new THREE.Matrix4().makeTranslation(0, -0.1, 0.2), delivery: new THREE.Matrix4().makeTranslation(0, 0.5, 0.41), carrier: new THREE.Matrix4().makeTranslation(0, 1.2, 2.01),
   camera: new THREE.Matrix4().makeTranslation(0, -0.05, 0.29), sweeper: new THREE.Matrix4().makeTranslation(0, -0.05, 0.28), lamppost: new THREE.Matrix4().makeTranslation(0, 0, 0),
+  turret: new THREE.Matrix4().makeTranslation(0, 0.2, 0.46), pir: new THREE.Matrix4().makeTranslation(0, -0.04, 0.09), acoustic: new THREE.Matrix4().makeTranslation(0, 0.12, 0.06), tripwire: new THREE.Matrix4().makeTranslation(0, 0, 0),
 };
 const KINDS = Object.keys(GEO) as UnitKind[];
 
@@ -41,6 +48,8 @@ function shape(k: UnitKind): THREE.BufferGeometry {
     if (g2.attributes.uv) g2.deleteAttribute('uv');
     return g2;
   };
+  // (A tripwire is all beam: red, lit.)
+  if (k === 'tripwire') return paint(GEO[k](), 0xff2020, 1);
   return mergeGeometries([paint(GEO[k](), 0x5a6068, 0), paint(new THREE.BoxGeometry(0.2, 0.05, 0.02).applyMatrix4(EYE_AT[k]), 0xd8ecff, 1)]);
 }
 
@@ -50,6 +59,7 @@ export class UnitView {
   private batch: THREE.BatchedMesh;
   private ids: number[] = [];
   private m = new THREE.Matrix4();
+  private s = new THREE.Matrix4();
 
   constructor(units: Unit[]) {
     const shapes = Object.fromEntries(KINDS.map(k => [k, shape(k)])) as Record<UnitKind, THREE.BufferGeometry>;
@@ -73,7 +83,11 @@ export class UnitView {
       const p = unitPose(w, u, time), on = p.active && u.kind !== 'lamppost' && Math.hypot(p.x - cam.x, p.z - cam.z) <= NEAR;
       this.batch.setVisibleAt(this.ids[i], on);
       if (!on) return;
-      this.batch.setMatrixAt(this.ids[i], this.m.makeRotationY(p.yaw).setPosition(p.x, p.y, p.z));
+      this.m.makeRotationY(p.yaw).setPosition(p.x, p.y, p.z);
+      // A tripwire's beam stretched to its far end.
+      const to = u.cam !== undefined ? w.cameras[u.cam].to : undefined;
+      if (to) this.m.multiply(this.s.makeScale(1, 1, Math.hypot(to.x - p.x, to.y - p.y, to.z - p.z)));
+      this.batch.setMatrixAt(this.ids[i], this.m);
       shown++;
     });
     this.batch.visible = shown > 0;

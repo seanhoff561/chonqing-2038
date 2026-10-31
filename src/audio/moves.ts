@@ -80,3 +80,11 @@ export function radio(a: Audio, gain: number) {
   a.tone(t + 0.05, 0.12, gain, 880, 880, 'square');
   a.tone(t + 0.19, 0.12, gain, 660, 660, 'square');
 }
+
+/** A turret's round (M4-11): a hard crack and its thump, carried far. */
+export function gunshot(a: Audio, gain: number) {
+  if (!a.ready || gain < 0.005) return;
+  const t = a.ctx!.currentTime + 0.005;
+  a.noise(t, 0.06, gain, 'highpass', 1200, 0.7);
+  a.tone(t, 0.12, gain * 0.8, 140, 50, 'sine');
+}
