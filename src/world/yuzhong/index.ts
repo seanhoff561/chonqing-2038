@@ -107,8 +107,20 @@ export function buildYuzhong(): World {
   const hide = { name: "Friends' hideout (vent grate)", x: tun.at.spawn.x, y: tun.at.spawn.y + 0.05, z: tun.at.spawn.z, yaw: -Math.PI / 2 - tun.frame.yaw };
   // (Looking down the stepped street from its mouth.)
   const dw = under.features.find(f => f.kind === 'way:descent'), descentYaw = dw ? Math.atan2(-dw.nx!, -dw.nz!) : 0;
+  // Shibati's stair from its top looking down and from its foot looking up (M3-18): the stepped street nearest the
+  // landmark; the beam of Line 2 a third of the way along its longest run, looking along it.
+  const SB = L.shibati, near = (s: Street) => Math.min(...s.pts.map(([x, z]) => Math.hypot(x - SB.x, z - SB.z)));
+  const stair = sts.filter(s => s.steps && onGround(s)).sort((a, b) => near(a) - near(b))[0], sh = stair.pts.map(([x, z]) => hAt(g, x, z));
+  const [top, foot] = [stair.pts[sh.indexOf(Math.max(...sh))], stair.pts[sh.indexOf(Math.min(...sh))]], look = (a: [number, number], b: [number, number]) => Math.atan2(a[0] - b[0], a[1] - b[1]);
+  const run = line.beams.reduce((a, b) => (b.pts.length > a.pts.length ? b : a)), bi = Math.floor(run.pts.length / 3), bn = run.pts[Math.min(run.pts.length - 1, bi + 1)];
   const teleports = ['jiefangbei', 'shibati', 'jiaochangkou', 'hongyadong', 'xiaoshizi', 'chaotianmen', 'cablewayNorth'].map(k => at(k)).concat([
+    { name: 'Shibati top', x: top[0], y: hAt(g, top[0], top[1]) + 1.5, z: top[1], yaw: look(top, foot) },
+    { name: 'Shibati bottom', x: foot[0], y: hAt(g, foot[0], foot[1]) + 1.5, z: foot[1], yaw: look(foot, top) },
+    { name: 'Line 2 beam', x: run.pts[bi][0], y: run.top[bi] + 0.3, z: run.pts[bi][1], yaw: look(run.pts[bi], bn) },
     hide,
+    // The Grand Tunnel's junctions: the friends' stub and the metro's (M3-18).
+    { name: 'Tunnel junction (hideout)', x: tun.at.junction.x, y: tun.at.junction.y + 0.3, z: tun.at.junction.z, yaw: 0 },
+    { name: 'Tunnel junction (metro)', x: tun.at.metro.x, y: tun.at.metro.y + 0.3, z: tun.at.metro.z, yaw: 0 },
     { name: 'Grand Tunnel entrance', x: tun.at.entrance.x, y: tun.at.entrance.y + 0.05, z: tun.at.entrance.z, yaw: Math.PI / 2 - tun.frame.yaw },
     { name: 'Grand Tunnel exit', x: tun.at.exit.x, y: tun.at.exit.y + 0.05, z: tun.at.exit.z, yaw: 0 },
     { name: 'Line 2 stalled train', x: line.train.x, y: line.train.top + 0.45, z: line.train.z, yaw: Math.PI / 2 - line.train.yaw },
