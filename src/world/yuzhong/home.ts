@@ -101,9 +101,10 @@ export function buildHome(g: Heightfield, plans: Plan[], q: NonNullable<ReturnTy
   for (const [k, v] of Object.entries(h.at)) { const [x, z] = P(v.x, v.z); out.at[k] = { x, y: v.y, z }; }
   out.at.grate = { x: px, y: gy, z: pz };
   out.sites.push({ id: 'airraid', kind: 'cellar', x: out.at.mattress.x, y: floor, z: out.at.mattress.z, bed: 'airraid-mattress', table: null, containers: ['airraid-stash'], exits: 1, windows: 0, streetSides: 0 });
-  // The alley's dressing: neon over the grate on both walls, a bin by it.
+  // The alley's dressing: shop neon on both walls over the grate (a noodle bar's, a mahjong room's), its glow, a bin.
   const ux = -q.az, uz = q.ax, half = q.gap / 2;
-  for (const k of [-1, 1]) out.props.push({ kind: 'neon', x: px + ux * k * (half - 0.1) + q.ax * 2, y: gy + 3.2, z: pz + uz * k * (half - 0.1) + q.az * 2, yaw: Math.atan2(-ux * k, -uz * k), w: 1.2 });
+  ([[-1, '老巷小面', 1.1, 4], [1, '麻将 · 24小时', 0, 0.5]] as const).forEach(([k, text, w, h]) => out.props.push({ kind: 'neon', x: px + ux * k * (half - 0.06) + q.ax * 2, y: gy + 3.2, z: pz + uz * k * (half - 0.06) + q.az * 2, yaw: Math.atan2(-ux * k, -uz * k), ...(w ? { w } : {}), h, text }));
+  out.props.push({ kind: 'neonGlow', x: px + q.ax * 2, y: gy + 3, z: pz + q.az * 2, yaw: 0 });
   out.props.push({ kind: 'trash', x: px + ux * (half - 0.5) - q.ax * 2.5, y: gy, z: pz + uz * (half - 0.5) - q.az * 2.5, yaw: yaw });
   // The way up: a drainpipe on a wall, 4 m along from the grate, from the alley to its roof.
   const tall = climbTo(plans, q, gy)!;
