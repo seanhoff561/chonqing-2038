@@ -62,17 +62,24 @@ export function segDist(px: number, pz: number, ax: number, az: number, bx: numb
   return Math.hypot(px - ax - vx * t, pz - az - vz * t);
 }
 
-/** Whether a segment comes within r of a rectangle (sampled along both, enough at street scales). */
+/** Whether a segment comes within r of a rectangle: an end within r of it, a corner within r of the segment, or the
+ *  segment through it. (In its frame, no arrays: lot planning asks it a few million times.) */
 export function segNearObb(o: Obb, ax: number, az: number, bx: number, bz: number, r: number): boolean {
-  const c = Math.cos(o.yaw), s = Math.sin(o.yaw);
-  const local = (x: number, z: number): P2 => [c * (x - o.cx) + s * (z - o.cz), -s * (x - o.cx) + c * (z - o.cz)];
-  const n = Math.max(2, Math.ceil(Math.hypot(bx - ax, bz - az) / 1.5));
-  for (let i = 0; i <= n; i++) {
-    const [u, v] = local(ax + ((bx - ax) * i) / n, az + ((bz - az) * i) / n);
-    if (Math.hypot(Math.max(0, Math.abs(u) - o.hw), Math.max(0, Math.abs(v) - o.hd)) < r) return true;
-  }
-  for (const [x, z] of corners(o)) if (segDist(x, z, ax, az, bx, bz) < r) return true;
-  return false;
+  const c = Math.cos(o.yaw), s = Math.sin(o.yaw), hw = o.hw, hd = o.hd;
+  const u0 = c * (ax - o.cx) + s * (az - o.cz), v0 = -s * (ax - o.cx) + c * (az - o.cz);
+  const u1 = c * (bx - o.cx) + s * (bz - o.cz), v1 = -s * (bx - o.cx) + c * (bz - o.cz);
+  if (Math.min(u0, u1) > hw + r || Math.max(u0, u1) < -hw - r || Math.min(v0, v1) > hd + r || Math.max(v0, v1) < -hd - r) return false;
+  if (Math.hypot(Math.max(0, Math.abs(u0) - hw), Math.max(0, Math.abs(v0) - hd)) < r || Math.hypot(Math.max(0, Math.abs(u1) - hw), Math.max(0, Math.abs(v1) - hd)) < r) return true;
+  if (segDist(hw, hd, u0, v0, u1, v1) < r || segDist(-hw, hd, u0, v0, u1, v1) < r || segDist(hw, -hd, u0, v0, u1, v1) < r || segDist(-hw, -hd, u0, v0, u1, v1) < r) return true;
+  // Through it: the part of the segment inside each pair of sides.
+  let t0 = 0, t1 = 1;
+  const clip = (p: number, d: number, h: number) => {
+    if (Math.abs(d) < 1e-12) return Math.abs(p) <= h;
+    const a = (-h - p) / d, b = (h - p) / d;
+    t0 = Math.max(t0, Math.min(a, b)); t1 = Math.min(t1, Math.max(a, b));
+    return t0 <= t1;
+  };
+  return clip(u0, u1 - u0, hw) && clip(v0, v1 - v0, hd);
 }
 
 /** Rows of a grid (x0, z0, cell, w by h samples) covered by a polygon: calls fill(i0, i1, j) per span. */

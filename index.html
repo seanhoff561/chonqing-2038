@@ -7,9 +7,12 @@
   <style>
     html, body { margin: 0; height: 100%; background: #07080a; overflow: hidden; }
     canvas { display: block; }
+    #loading { position: fixed; inset: 0; z-index: 40; background: #07080a; color: #8f8873; font: 13px ui-monospace, Menlo, Consolas, monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+    #loading .ld-title { font-size: 28px; color: #c9c0a4; letter-spacing: 6px; }
   </style>
 </head>
 <body>
+  <div id="loading"><div class="ld-title">重庆 2038</div><div class="ld-step">载入 · Loading</div></div>
   <script type="module" src="./src/main.ts"></script>
 </body>
 </html>

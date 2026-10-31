@@ -122,7 +122,15 @@ export function planLots(g: Heightfield, sts: Street[], land: Uint8Array, block 
   const hAt = (x: number, z: number) => g.y[cellAt(x, z)];
   const [W, H] = [(g.w - 1) * g.cell, (g.h - 1) * g.cell];
   const onLand = (o: Obb) => [...corners(o), [o.cx, o.cz] as P2].every(([x, z]) => { if (x < LEVEL || z < LEVEL || x > W - LEVEL || z > H - LEVEL) return false; const k = cellAt(x, z); return land[k] === land[cellAt(o.cx, o.cz)] && land[k] > 0 && !open[k] && !block[k] && g.y[k] > WATER_Y + 1; });
-  const blocked = (o: Obb) => { let b = false; rasterPoly(corners(o), 0, 0, g.cell, g.w, g.h, (i0, i1, j) => { for (let k = j * g.w + i0; k <= j * g.w + i1 && !b; k++) b = !!block[k]; }); return b; };
+  // (Most lots are nowhere near a set piece: a summed table of the blocked cells answers for those at once.)
+  const sum = new Int32Array((g.w + 1) * (g.h + 1)), W1 = g.w + 1;
+  for (let j = 0; j < g.h; j++) for (let i = 0, row = 0; i < g.w; i++) { row += block[j * g.w + i]; sum[(j + 1) * W1 + i + 1] = sum[j * W1 + i + 1] + row; }
+  const nearBlock = (o: Obb) => {
+    const [x0, z0, x1, z1] = bounds(o), cl = (v: number, n: number) => Math.max(0, Math.min(n - 1, v));
+    const i0 = cl(Math.floor(x0 / g.cell), g.w), i1 = cl(Math.ceil(x1 / g.cell), g.w), j0 = cl(Math.floor(z0 / g.cell), g.h), j1 = cl(Math.ceil(z1 / g.cell), g.h);
+    return sum[(j1 + 1) * W1 + i1 + 1] - sum[j0 * W1 + i1 + 1] - sum[(j1 + 1) * W1 + i0] + sum[j0 * W1 + i0] > 0;
+  };
+  const blocked = (o: Obb) => { if (!nearBlock(o)) return false; let b = false; rasterPoly(corners(o), 0, 0, g.cell, g.w, g.h, (i0, i1, j) => { for (let k = j * g.w + i0; k <= j * g.w + i1 && !b; k++) b = !!block[k]; }); return b; };
   const hitsStreet = (o: Obb, pad: number, skip?: (s: Street) => boolean) => {
     const [x0, z0, x1, z1] = bounds(o, 20);
     for (const sg of segs.near(x0, z0, x1, z1)) if (!skip?.(sg.s) && segNearObb(o, sg.ax, sg.az, sg.bx, sg.bz, sg.half + pad)) return true;

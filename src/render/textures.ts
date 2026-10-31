@@ -24,12 +24,17 @@ export function canvasTexture(key: string, w: number, h: number, draw: (g: Canva
 export function noise(g: CanvasRenderingContext2D, w: number, h: number, base: string, amount: number, seed: number) {
   g.fillStyle = base;
   g.fillRect(0, 0, w, h);
-  const r = mulberry(seed);
+  // (Specks in 32 shades, each shade one path: a colour set per speck is most of a boot's texture time, U-048.)
+  const r = mulberry(seed), paths = Array.from({ length: 32 }, () => new Path2D());
   for (let i = 0; i < w * h * 0.08; i++) {
-    const v = (r() - 0.5) * amount;
-    g.fillStyle = v > 0 ? `rgba(255,255,255,${v})` : `rgba(0,0,0,${-v})`;
-    g.fillRect(r() * w, r() * h, 1 + r() * 2, 1 + r() * 2);
+    const k = Math.min(31, Math.floor(r() * 32));
+    paths[k].rect(r() * w, r() * h, 1 + r() * 2, 1 + r() * 2);
   }
+  paths.forEach((p, k) => {
+    const v = ((k + 0.5) / 32 - 0.5) * amount;
+    g.fillStyle = v > 0 ? `rgba(255,255,255,${v})` : `rgba(0,0,0,${-v})`;
+    g.fill(p);
+  });
 }
 
 /** Soft round stains: weathering blotches, damp patches, sun-bleached spots. */

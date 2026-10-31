@@ -1,7 +1,7 @@
 // Yuzhong at 1:1 (M3-41b, D-016): the real ground, streets, stairs, bridges and buildings of the eastern
 // peninsula from the geo data. Each lot is built by the city's lot code in its own unturned frame, then turned
 // into place.
-import { solid, rampSolid, turn, buildIndex, raycast, carve, type Solid } from '../geom';
+import { solid, rampSolid, turn, buildIndex, grow, raycast, carve, type Solid } from '../geom';
 import { HUNG, PROP_BOX, PROP_HIDE } from '../../data/props';
 import { makeWorld, type World, type Teleport, type Prop, type Inter, type Climbable, type HideSpot, type Site, type Plot } from '../world';
 import { MAT } from '../mats';
@@ -169,20 +169,20 @@ export function buildYuzhong(): World {
   const clear = [tun.at.entrance, tun.at.exit, home.at.grate, ...metro.at].map(q => ({ x: q.x, z: q.z, r: 9 })).concat(site ? [{ x: site.frame.x, z: site.frame.z, r: 50 }] : [],
     plots.filter(p => p.route).map(p => ({ x: p.route![0].x, z: p.route![0].z, r: 2.5 })),
     (fac?.gates ?? []).map(q => ({ x: q.x + q.nx * 8, z: q.z + q.nz * 8, r: 13 })), under.features.map(f => ({ x: f.x, z: f.z, r: 6 })));
-  const dress = dressStreets(buildIndex(solids, g), g, sts, land, inter, clear);
+  const staged = buildIndex(solids, g), dress = dressStreets(staged, g, sts, land, inter, clear);
   solids.push(...dress.solids);
   // Then the green and the ruins on the marked open ground, round all that.
   // The parks laid out first (M3-60, U-033), the green and the ruins round them.
-  const marks = findMarks(g, land, plots, block), laid = layout(buildIndex(solids, g), g, marks, land);
+  const marks = findMarks(g, land, plots, block), laid = layout(grow(staged), g, marks, land);
   solids.push(...laid.solids);
-  const idx = buildIndex(solids, g), green = greenery(idx, g, marks), rubble = ruins(idx, g, marks);
+  const green = greenery(grow(staged), g, marks), rubble = ruins(staged, g, marks);
   solids.push(...green.solids, ...rubble.solids);
   // And the rest of the open ground filled, round all of it. (No cables strung over the streets: ziplines are
   // the player's to rig, U-034.)
-  const filled = fill(buildIndex(solids, g), g, marks, plots);
+  const filled = fill(grow(staged), g, marks, plots);
   solids.push(...filled.solids);
   // The riverfront below Shibati (M3-20): the wall along the road, the steps down into the Yangtze.
-  const river = riverfront(buildIndex(solids, g), g, sts, { x: foot[0], z: foot[1] });
+  const river = riverfront(grow(staged), g, sts, { x: foot[0], z: foot[1] });
   solids.push(...river.solids);
   const world = makeWorld({
     name: 'yuzhong', routes: net.routes, patrols: net.patrols, gates, solids, decor: decor.concat(river.decor, out.decor, tun.decor, line.decor, site?.decor ?? [], fac?.decor ?? [], vert.decor, cross.decor, under.decor, sew.decor, laid.decor, filled.decor),

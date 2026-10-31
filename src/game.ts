@@ -78,6 +78,8 @@ export class Game {
   readonly status = new StatusIndicator();
   drawDistance = 160;
   private units: UnitView | null = null;
+  /** The world the view has built: a new run in it (after death, from the menu, a save resumed) keeps it (U-048). */
+  private shown: World | null = null;
   scenario!: Scenario;
   private heldId = '';
   private heldModel: THREE.Object3D | null = null;
@@ -123,7 +125,7 @@ export class Game {
     this.prev = { ...this.state.player.pos };
     this.sky.overcast = sc.overcast ?? 0;
     this.applyDraw();
-    this.view.setWorld(this.world);
+    if (this.shown !== this.world) { this.view.setWorld(this.world); this.shown = this.world; }
     this.units?.dispose();
     this.units = new UnitView(this.state.units);
     this.view.scene.add(this.units.group);

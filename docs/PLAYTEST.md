@@ -160,3 +160,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M4-22d: the visual pass (U-049)
 - Look over a district's flat roofs from a tall roof: sparse enough, and do the arrangements (tank and drums, condensers, solar heaters, shed and crates) look placed rather than scattered? Walk a main road: is the paint worn enough, the paving's repetition broken up, and do the gutter drains read as grates with dark under them? Too few QR stickers now, or right?
+
+## M4-22c: loading and new runs (U-048)
+- Open the game fresh: does the loading screen come up at once, and how long until you can play (note the time and your machine)? Then die, or New run from the pause menu: does the new run start at once, in the hideout, with nothing left over from the last one?

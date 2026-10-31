@@ -35,12 +35,11 @@ export function turn(solids: Solid[], yaw: number, px: number, pz: number): Soli
   const c = Math.cos(yaw), sn = Math.sin(yaw);
   return solids.map(s => {
     if (s.rot) throw new Error('turn: solid already turned');
-    const xs: number[] = [], zs: number[] = [];
-    for (const [x, z] of [[s.x0, s.z0], [s.x1, s.z0], [s.x0, s.z1], [s.x1, s.z1]]) {
-      const dx = x - px, dz = z - pz;
-      xs.push(px + c * dx - sn * dz); zs.push(pz + sn * dx + c * dz);
-    }
-    return { ...s, x0: Math.min(...xs), z0: Math.min(...zs), x1: Math.max(...xs), z1: Math.max(...zs), rot: { x0: s.x0, z0: s.z0, x1: s.x1, z1: s.z1, px, pz, c, s: sn } };
+    // (Its corners one by one: a city's worth of solids are turned.)
+    const ax = s.x0 - px, bx = s.x1 - px, az = s.z0 - pz, bz = s.z1 - pz;
+    const x00 = px + c * ax - sn * az, x10 = px + c * bx - sn * az, x01 = px + c * ax - sn * bz, x11 = px + c * bx - sn * bz;
+    const z00 = pz + sn * ax + c * az, z10 = pz + sn * bx + c * az, z01 = pz + sn * ax + c * bz, z11 = pz + sn * bx + c * bz;
+    return { ...s, x0: Math.min(x00, x10, x01, x11), z0: Math.min(z00, z10, z01, z11), x1: Math.max(x00, x10, x01, x11), z1: Math.max(z00, z10, z01, z11), rot: { x0: s.x0, z0: s.z0, x1: s.x1, z1: s.z1, px, pz, c, s: sn } };
   });
 }
 
@@ -128,18 +127,31 @@ export interface SolidIndex {
 
 const key = (ix: number, iz: number) => (ix + 32768) * 65536 + (iz + 32768);
 
+function enter(cells: Map<number, number[]>, s: Solid, i: number) {
+  for (let ix = Math.floor(s.x0 / CELL); ix <= Math.floor((s.x1 - 1e-6) / CELL); ix++)
+    for (let iz = Math.floor(s.z0 / CELL); iz <= Math.floor((s.z1 - 1e-6) / CELL); iz++) {
+      const k = key(ix, iz);
+      let c = cells.get(k);
+      if (!c) cells.set(k, (c = []));
+      c.push(i);
+    }
+}
+
 export function buildIndex(solids: Solid[], ground?: Heightfield): SolidIndex {
   const cells = new Map<number, number[]>();
-  solids.forEach((s, i) => {
-    for (let ix = Math.floor(s.x0 / CELL); ix <= Math.floor((s.x1 - 1e-6) / CELL); ix++)
-      for (let iz = Math.floor(s.z0 / CELL); iz <= Math.floor((s.z1 - 1e-6) / CELL); iz++) {
-        const k = key(ix, iz);
-        let c = cells.get(k);
-        if (!c) cells.set(k, (c = []));
-        c.push(i);
-      }
-  });
+  solids.forEach((s, i) => enter(cells, s, i));
   return { solids, ground, cells, off: new Uint8Array(solids.length), stamp: new Uint32Array(solids.length), stampN: 0 };
+}
+
+/** The index taking in the solids pushed onto its array since it was built (or last grown): a world built in
+ *  stages, each round the last, without indexing it all again each time. */
+export function grow(idx: SolidIndex): SolidIndex {
+  const n = idx.off.length;
+  for (let i = n; i < idx.solids.length; i++) enter(idx.cells, idx.solids[i], i);
+  const off = new Uint8Array(idx.solids.length);
+  off.set(idx.off);
+  idx.off = off; idx.stamp = new Uint32Array(idx.solids.length); idx.stampN = 0;
+  return idx;
 }
 
 /** Ids of enabled solids whose footprint touches the xz rectangle. Reuses `out`. */
