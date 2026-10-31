@@ -30,10 +30,11 @@ import { stepConverge } from './converge';
 import { stepSearch } from './search';
 import { stepSilent } from './silent';
 import { stepMelee } from './melee';
+import { stepGun } from './pistol';
 
 /** Saves of another version are dropped: 9 since the hive remembers where it saw him (M4-04); 8 since the machines
  *  walk their beats (M4-01). */
-export const STATE_VERSION = 14;
+export const STATE_VERSION = 15;
 
 export function createState(seed: number, world: World): SimState {
   const s = world.spawn;
@@ -80,6 +81,7 @@ export function step(state: SimState, world: World, input: InputFrame): void {
   stepFire(state, world);
   stepHeld(state, world, input);
   stepMelee(state, world, input);
+  stepGun(state, input);
   stepLamp(state, input);
   if (state.openContainer) stepContainers(state, { inter: allInters(state, world) });
   // (Last of the noisemakers, so the machines hear all this tick's noises: his, a turret's, a dropped tin's.)

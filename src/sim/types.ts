@@ -33,6 +33,8 @@ export type SimEvent =
   | { t: 'noise'; x: number; y: number; z: number; r: number; kind: string }
   | { t: 'land'; h: number; roll: boolean; outcome: FallOutcome }
   | { t: 'hurt'; dmg: number; cause: string }
+  /** he fired a gun (M4-21) */
+  | { t: 'fire'; id: string }
   /** he hit a machine (M4-19) */
   | { t: 'hit'; id: number; zone: string; dmg: number }
   | { t: 'slept'; from: number; to: number; where: 'bed' | 'rough' | 'collapse' }

@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-21 Pistol.
-Features done: 178 / 297 | Last done: M4-20
+**Status:** building M4. Next: M4-21b Guns made real (U-032).
+Features done: 179 / 298 | Last done: M4-21
 <!-- /status -->
 
 ## Log
@@ -35,3 +35,4 @@ Features done: 178 / 297 | Last done: M4-20
 - M4-18 Enemy fire and wounds: machines fire: rifle bursts, SMG, prod and stun, turret; each hit bleeds and may hurt a limb
 - M4-19 Unit damage and weak points: machines' HP and hit zones: blinded, immobilised, shut down, destroyed
 - M4-20 Knife, crowbar and takedowns: knife and crowbar blows on the place aimed at; takedowns from behind in 2 s
+- M4-21 Pistol: the pistol: hitscan with spread and sway, kick, magazines and reloads, a 150 m hostile noise

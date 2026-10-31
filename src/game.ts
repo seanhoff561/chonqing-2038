@@ -23,6 +23,7 @@ import { BodyFx } from './render/body-fx';
 import { InventoryUI } from './ui/inventory-ui';
 import { heldStack } from './sim/use';
 import { item } from './data/items';
+import { PISTOL } from './data/units';
 import { Audio } from './audio/audio';
 import { startRun, furnish } from './sim/run';
 import { teleport } from './sim/player';
@@ -206,6 +207,7 @@ export class Game {
     for (const e of this.state.events) {
       if (e.t === 'land') this.view.fp.landed(e.h);
       else if (e.t === 'sfx') playMove(this.audio, e.id);
+      else if (e.t === 'fire') gunshot(this.audio, 0.9);
       else if (e.t === 'open') this.inv.toggle(true);
       else if (e.t === 'sleep-menu') this.sleep.toggle(true, e.id === 'rough');
       else if (e.t === 'slept' && this.scenario.run && !this.state.dead) writeSave(localStorage, this.scenario.name, this.state);
@@ -300,11 +302,13 @@ export class Game {
 
   private updateHeld() {
     const st = heldStack(this.state), id = st?.id ?? '';
+    // The pistol's rounds, and the rounds in his magazines (M4-21).
+    const rounds = id === 'pistol' ? ` ${st!.charge ?? 0} / ${this.state.inv.pack.items.filter(i => i.id === 'mag9').reduce((a, m) => a + m.n * (m.charge ?? PISTOL.mag), 0)}${this.state.task?.id === 'reload' ? ' reloading' : ''}` : '';
+    this.hud.setHeld(id ? `${item(id).zh} ${item(id).en}${rounds}` : '');
     if (id === this.heldId || !this.hands.ready) return;
     this.heldId = id;
     const slot = this.hands.heldSlot(1);
     if (slot) { slot.clear(); if (id) { const m = itemModel(id); m.position.copy(HELD_AT); slot.add(m); } }
-    this.hud.setHeld(id ? `${item(id).zh} ${item(id).en}` : '');
   }
 
   start() {

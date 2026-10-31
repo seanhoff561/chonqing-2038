@@ -45,7 +45,8 @@ export function addItem(s: SimState, g: Grid, id: string, n = 1, extra: Partial<
   const max = itemById.get(id)?.stack ?? 1;
   if (itemById.get(id)?.food && extra.made === undefined) extra = { ...extra, made: s.time };
   if (max > 1) for (const o of g.items) {
-    if (o.id !== id || o.n >= max || n <= 0) continue;
+    // (Only alike stacks: a part-spent magazine keeps to itself, M4-21.)
+    if (o.id !== id || o.n >= max || n <= 0 || o.charge !== extra.charge) continue;
     const k = Math.min(n, max - o.n);
     o.n += k; n -= k;
   }

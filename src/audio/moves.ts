@@ -44,6 +44,8 @@ export const MOVE_SOUNDS: Record<string, Play> = {
   'grate-bolt': (a, t) => { for (let i = 0; i < 2; i++) { a.tone(t + i * 0.35, 0.12, 0.35, 420, 260, 'square'); a.noise(t + i * 0.35, 0.08, 0.3, 'highpass', 2500); } a.noise(t + 0.8, 0.7, 0.3, 'bandpass', 500, 2, 250); a.tone(t + 1.5, 0.3, 0.45, 110, 60); },
   'grate-open': (a, t) => { a.noise(t, 0.5, 0.22, 'bandpass', 600, 2, 300); a.tone(t + 0.45, 0.25, 0.3, 140, 80); },
   'grate-shut': (a, t) => { a.noise(t, 0.3, 0.18, 'bandpass', 700, 2, 350); a.tone(t + 0.25, 0.3, 0.4, 120, 60); },
+  // The pistol's magazine out and in, and the slide (M4-21).
+  reload: (a, t) => { a.tone(t, 0.05, 0.12, 900, 700, 'square'); a.noise(t + 0.9, 0.06, 0.2, 'highpass', 2500); a.tone(t + 1.8, 0.07, 0.18, 600, 400, 'square'); a.noise(t + 1.85, 0.05, 0.22, 'highpass', 3000); },
   bags: (a, t) => { a.noise(t, 0.6, 0.12, 'bandpass', 1400, 0.6, 600); a.noise(t + 0.5, 0.5, 0.1, 'bandpass', 1100, 0.6, 500); },
   drop: (a, t) => { a.noise(t, 0.08, 0.12, 'lowpass', 900); a.tone(t, 0.05, 0.05, 160, 90); },
   glass: (a, t) => { a.noise(t, 0.5, 0.45, 'highpass', 3500, 0.7, 7000); for (let i = 0; i < 5; i++) a.tone(t + 0.05 + i * 0.04, 0.06, 0.08, 3800 + i * 600, 3000, 'sine'); },
