@@ -254,12 +254,17 @@ export function tickProps(t: number, open: Record<string, boolean> = {}) {
 const SMALL = new Set(['weeds', 'trash', 'debris', 'boxes', 'bags', 'pot', 'scooter', 'bike', 'sign', 'bin', 'rebar', 'shrub', 'garden', 'bench', 'mahjong', 'drum', 'stall',
   'cablebundle', 'dish', 'antenna', 'stilts', 'laundry', 'dronewreck', 'bangbang']);
 
+/** Loose litter and clutter, nothing in the way or to hide in: the graphics preset draws a share of it (M3-17). */
+const LITTER = new Set(['weeds', 'trash', 'debris', 'pot', 'scooter', 'bike', 'sign', 'rebar', 'shrub', 'cablebundle', 'dish', 'antenna', 'laundry', 'dronewreck', 'bangbang']);
+const keep = (p: Prop, share: number) => share >= 1 || !LITTER.has(p.kind) || (((Math.round(p.x * 7) * 73856093) ^ (Math.round(p.z * 7) * 19349663)) >>> 0) % 1000 / 1000 < share;
+
 /** Props: animated ones stay separate; static meshes (and the parts of static library props) merge per chunk, the
- *  small ones on their own. */
-export function buildProps(props: Prop[]): THREE.Group {
+ *  small ones on their own; of the loose litter, `share` of it. */
+export function buildProps(props: Prop[], share = 1): THREE.Group {
   ticking.length = 0;
   const g = new THREE.Group(), big = new ChunkMerger(), small = new ChunkMerger(), swing: Prop[] = [];
   for (const p of props) {
+    if (!keep(p, share)) continue;
     if (p.kind === 'door' || p.kind === 'pane') { swing.push(p); continue; }
     const b = builders[p.kind];
     const o = b ? b(p) : libProp(p);

@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-17 Graphics presets.
-Features done: 151 / 295 | Last done: M3-16
+**Status:** building M3. Next: M3-18 District teleports and scenarios.
+Features done: 152 / 295 | Last done: M3-17
 <!-- /status -->
 
 ## Log
@@ -99,3 +99,4 @@ Features done: 151 / 295 | Last done: M3-16
 - M3-35 Shibati and Jiaochangkou from the references (U-014): Shibati and Jiaochangkou from the references: old pitched-roof houses down the stair, stone retaining walls on slopes
 - M3-14 Neon and signage: Neon and signage: real Chinese shop names, slogans on red banners, QR stickers and scrolling LED tickers, glowing at night
 - M3-16 Sim light map: Sim light map: lights as world data, lightAt combining the sky by the hour with the strongest light near
+- M3-17 Graphics presets: Graphics presets: Low, Medium and High set pixel ratio, draw distance, shadows and litter density from the pause menu

@@ -3,7 +3,7 @@
 // Settings join it in M8-13.
 import type { Game } from '../game';
 import { teleport } from '../sim/player';
-import type { Resolution } from '../render/view';
+import type { Preset } from '../render/view';
 import { deleteSave } from '../sim/save';
 
 const CONTROLS: [string, string][] = [
@@ -82,8 +82,8 @@ export class PauseMenu {
       : `<button data-a="gym">运动训练场 Movement gym</button>` +
         (g.scenario.run ? `<div class="pz-note">Leaves this run; your last sleep is saved.</div>` : '');
     const newRun = this.confirmNew ? `<button data-a="newrun" class="on">确定？ Sure? This run is lost</button>` : `<button data-a="newrun">新的一局 New run</button>`;
-    const res = g.view.resolution;
-    const quality = `<div class="pz-h">画质 Resolution</div><div class="pz-row">${(['high', 'balanced', 'fast'] as const).map(r => `<button data-res="${r}"${r === res ? ' class="on"' : ''}>${{ high: '高 High', balanced: '中 Balanced', fast: '快 Fast' }[r]}</button>`).join('')}</div>`;
+    const cur = g.view.preset;
+    const quality = `<div class="pz-h">画质 Graphics</div><div class="pz-row">${(['low', 'medium', 'high'] as const).map(p => `<button data-preset="${p}"${p === cur ? ' class="on"' : ''}>${{ low: '低 Low', medium: '中 Medium', high: '高 High' }[p]}</button>`).join('')}</div>`;
     this.el.innerHTML = `<div class="pz-col"><div class="pz-title">暂停 PAUSED</div><button data-a="resume">继续 Resume</button>${left}${newRun}${quality}<div class="pz-note pz-credit">Map data © OpenStreetMap contributors (ODbL). Elevation: SRTM via Terrain Tiles.</div></div>
       <div class="pz-col pz-keys"><div class="pz-h">操作 Controls</div>${CONTROLS.map(([k, a]) => `<div><b>${k}</b><span>${a}</span></div>`).join('')}</div>`;
     this.el.querySelectorAll<HTMLButtonElement>('button').forEach(b => { b.onclick = () => this.act(b.dataset); });
@@ -98,7 +98,7 @@ export class PauseMenu {
       g.switchTo('');
     }
     this.confirmNew = false;
-    if (d.res) { g.view.setResolution(d.res as Resolution); this.render(); return; }
+    if (d.preset) { g.setPreset(d.preset as Preset); this.render(); return; }
     if (d.tp) {
       const t = g.world.teleports[Number(d.tp)];
       teleport(g.state.player, t.x, t.y + 0.05, t.z);

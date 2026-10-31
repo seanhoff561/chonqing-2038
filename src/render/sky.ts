@@ -53,7 +53,7 @@ export class Sky {
     const as = Math.round(a / 0.0017) * 0.0017;
     v.sun.target.position.set(cx, cy, cz);
     v.sun.position.set(cx + Math.cos(as) * 160, cy + Math.max(20, Math.sin(as) * 180), cz + 60);
-    v.sun.castShadow = d > 0.05 && under < 0.5;
+    v.sun.castShadow = v.shadows && d > 0.05 && under < 0.5;
     v.sun.intensity = 1.7 * d * (1 - under) * (1 - 0.7 * flat) * (1 - 0.5 * weather.rain);
     v.sun.color.setHSL(0.09, 0.5 - 0.3 * d, 0.85 + 0.1 * d);
     // (Night's dark enough to need the headlamp, U-032: a little moonlight, less under cloud.)

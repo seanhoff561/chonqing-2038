@@ -127,3 +127,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M3-14: neon and signage
 - At night (`?dev=1`, set the clock past 21:00) walk Jiefangbei's shopping streets and down Shibati (logs/shibati-night.png, signs-close.png, signs-ticker.png): do the shop names, neon, red banners, QR stickers and the scrolling LED tickers read as Chinese street signage at a glance, and is the night glow right on a real GPU (not blown out, not dim)? Are the characters crisp at a few metres?
+
+## M3-17: graphics presets
+- Pause (=) and try 低 Low, 中 Medium and 高 High in Jiefangbei and on a high roof: is each smooth on your machine (Medium should hold 150 fps on a decent GPU), does Low still read as the city, and is High worth it (longer detail, sharper shadows, all the litter)?

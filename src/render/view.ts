@@ -41,7 +41,7 @@ export class View {
 
   constructor(container: HTMLElement) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-    this.setResolution(loadResolution());
+    this.setPreset(loadPreset());
     this.renderer.setSize(innerWidth, innerHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     // Filmic response: highlights roll off, shadows keep detail (U-012).
@@ -51,7 +51,6 @@ export class View {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.sun.castShadow = true;
-    this.sun.shadow.mapSize.set(2048, 2048);
     Object.assign(this.sun.shadow.camera, { left: -SHADOW_R, right: SHADOW_R, top: SHADOW_R, bottom: -SHADOW_R, near: 1, far: 400 });
     this.sun.shadow.bias = -0.0004;
     this.sun.shadow.normalBias = 0.04;
@@ -100,7 +99,7 @@ export class View {
     if (detail.length) meshes.add(...detail);
     if (rooms.length) meshes.add(...rooms);
     if (w.ground) meshes.add(...buildGroundMeshes(w.ground, this.hasFar ? 'near' : 'all', w.marks), ...buildStreetMeshes(w.ground, w.streets, this.hasFar ? 'near' : 'all', w.lawns));
-    const props = buildProps(w.props.filter(p => !p.kind.startsWith('f:')));
+    const props = buildProps(w.props.filter(p => !p.kind.startsWith('f:')), PRESETS[this.preset].props);
     this.rooms?.dispose();
     this.rooms = new RoomProps(w.props.filter(p => p.kind.startsWith('f:')));
     this.world.add(meshes, buildLabels(w.labels), props);
@@ -164,14 +163,26 @@ export class View {
     this.visFar = -1;
   }
 
-  /** Pixels drawn per screen pixel (M3-53): high is the display's own up to 1.5x, balanced one per CSS pixel,
-   *  fast 0.7 of that. Remembered between visits. */
-  resolution: Resolution = 'balanced';
-  setResolution(r: Resolution) {
-    this.resolution = r;
-    this.renderer.setPixelRatio(r === 'high' ? Math.min(devicePixelRatio, 1.5) : r === 'fast' ? 0.7 : 1);
+  /** The graphics preset (M3-17), remembered between visits. Returns whether the share of props drawn changed (the
+   *  world then wants building again). */
+  preset: Preset = 'medium';
+  /** Whether the sun casts shadows at all (Sky turns them off at night and underground). */
+  shadows = true;
+  setPreset(p: Preset): boolean {
+    const was = PRESETS[this.preset], q = PRESETS[p];
+    this.preset = p;
+    this.renderer.setPixelRatio(p === 'high' ? Math.min(devicePixelRatio, q.ratio) : q.ratio);
     this.renderer.setSize(innerWidth, innerHeight);
-    try { localStorage.setItem(RES_KEY, r); } catch { /* private mode: not remembered */ }
+    this.shadows = q.shadow > 0;
+    if (this.shadows && this.sun.shadow.mapSize.x !== q.shadow) {
+      this.sun.shadow.map?.dispose();
+      this.sun.shadow.map = null;
+      this.sun.shadow.mapSize.set(q.shadow, q.shadow);
+      this.shadowKey = '';
+    }
+    this.visFar = -1;
+    try { localStorage.setItem(PRESET_KEY, p); } catch { /* private mode: not remembered */ }
+    return was.props !== q.props;
   }
 
   /** 0 off, 1 white (bright, 40 m), 2 red (dim, 12 m: keeps night vision, shows less). */
@@ -187,7 +198,7 @@ export class View {
     const c = this.fp.cam.position, far = this.hasFar ? lodRadius.value : (this.scene.fog as THREE.Fog).far;
     if (far !== this.visFar || Math.hypot(c.x - this.visAt.x, c.z - this.visAt.z) > 4) {
       this.visFar = far; this.visAt.copy(c);
-      const within = (o: THREE.Object3D) => { const [x0, z0, x1, z1] = o.userData.rect; return Math.hypot(Math.max(x0 - c.x, 0, c.x - x1), Math.max(z0 - c.z, 0, c.z - z1)) < (o.userData.inner ? Math.min(far, INNER) : o.userData.detail ? Math.min(far, DETAIL) : far); };
+      const within = (o: THREE.Object3D) => { const [x0, z0, x1, z1] = o.userData.rect; return Math.hypot(Math.max(x0 - c.x, 0, c.x - x1), Math.max(z0 - c.z, 0, c.z - z1)) < (o.userData.inner ? Math.min(far, PRESETS[this.preset].inner) : o.userData.detail ? Math.min(far, PRESETS[this.preset].detail) : far); };
       for (const cell of this.cells) if ((cell.visible = within(cell))) for (const m of cell.children) m.visible = within(m);
     }
     tickProps(t, open);
@@ -231,13 +242,27 @@ function liveWalk(o: THREE.Object3D, force: boolean) {
   for (const c of o.children) liveWalk(c, force);
 }
 
-export type Resolution = 'high' | 'balanced' | 'fast';
-/** How far small trims are drawn. */
-const DETAIL = 110, INNER = 45;
-const RES_KEY = 'cq2038.resolution';
-function loadResolution(): Resolution {
-  try { const r = localStorage.getItem(RES_KEY); if (r === 'high' || r === 'fast') return r; } catch { /* default */ }
-  return 'balanced';
+export type Preset = 'low' | 'medium' | 'high';
+/** Graphics presets (M3-17): pixels drawn per CSS pixel (high: the display's own, up to 1.5), the radius detail is
+ *  drawn in (blocks beyond it are painted boxes), how far small trims and the rooms inside buildings are drawn, the
+ *  sun's shadow map (0: no shadows) and the share of loose litter and clutter drawn. Medium is what the budgets are
+ *  measured at. */
+export const PRESETS: Record<Preset, { ratio: number; draw: number; detail: number; inner: number; shadow: number; props: number }> = {
+  low: { ratio: 0.7, draw: 110, detail: 70, inner: 30, shadow: 0, props: 0.4 },
+  medium: { ratio: 1, draw: 160, detail: 110, inner: 45, shadow: 2048, props: 0.75 },
+  high: { ratio: 1.5, draw: 230, detail: 150, inner: 60, shadow: 4096, props: 1 },
+};
+const PRESET_KEY = 'cq2038.preset';
+function loadPreset(): Preset {
+  try {
+    const p = localStorage.getItem(PRESET_KEY);
+    if (p === 'low' || p === 'medium' || p === 'high') return p;
+    // (The old resolution setting.)
+    const r = localStorage.getItem('cq2038.resolution');
+    if (r === 'high') return 'high';
+    if (r === 'fast') return 'low';
+  } catch { /* default */ }
+  return 'medium';
 }
 
 /** A street pole: a concrete post (its face on the grip line, 0.08 m in front) with step bolts either side up it. */
