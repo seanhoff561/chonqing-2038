@@ -61,12 +61,13 @@ describe('the underground city (M3-58)', () => {
 
   it('runs the metro like a metro: two stations, twin tubes with cross passages and signals, a stalled train (M3-68)', () => {
     const n = (k: string) => w.features.filter(f => f.kind === k).length;
-    expect(n('station')).toBe(2);
+    // (Two on the line from Jiefangbei to Xiaoshizi, and since M3-43 Jiaochangkou's, walked on its own route.)
+    expect(n('station')).toBe(3);
     expect(n('crossPassage')).toBeGreaterThanOrEqual(6);
     expect(n('signal')).toBeGreaterThanOrEqual(8);
     expect(n('trainCar')).toBe(3);
     // The route walks it: up onto both platforms, along the tubes between.
-    const route = w.features.filter(f => f.kind === 'underRoute'), stations = w.features.filter(f => f.kind === 'station');
+    const route = w.features.filter(f => f.kind === 'underRoute' || f.kind === 'metroRoute'), stations = w.features.filter(f => f.kind === 'station');
     for (const st of stations) expect(route.some(q => Math.hypot(q.x - st.x, q.z - st.z) < 40 && q.y > st.y + 0.9)).toBe(true);
   });
 
@@ -111,5 +112,57 @@ describe("the underground city's buildings (M3-73)", () => {
     expect(of('neonblade')).toBeGreaterThan(60);
     expect(of('ledscreen')).toBeGreaterThan(4);
     expect(of('neonsign')).toBeGreaterThan(8);
+  });
+});
+
+// M3-43 (U-018): the subway way in. Jiaochangkou's Line 1/2 station (platform, concourse, dead escalators, screen
+// doors) and its running tunnels joined to the Grand Tunnel; a bot walks from the platform to the friends' chamber.
+describe('the subway way in (M3-43)', () => {
+  const J = GEO.landmarks.jiaochangkou, of = (k: string) => w.features.filter(f => f.kind === k);
+  const station = of('station').find(f => Math.hypot(f.x - J.x, f.z - J.z) < 60)!;
+  it("builds Jiaochangkou's station under it: platform, concourse over it, escalators, screen doors", () => {
+    expect(station).toBeTruthy();
+    const near = (k: string) => of(k).filter(f => Math.hypot(f.x - station.x, f.z - station.z) < 50);
+    expect(near('concourse').length).toBe(1);
+    expect(near('escalator').length).toBe(1);
+    expect(near('screendoor').length).toBeGreaterThan(3);
+    expect(near('concourse')[0].y - station.y).toBeGreaterThan(5);
+    expect(of('metroPassage').length).toBe(1);
+  });
+  const walk = (s: ReturnType<typeof createState>, pts: { x: number; y: number; z: number }[]) => {
+    const p = s.player;
+    let reached = 0;
+    for (const q of pts) {
+      for (let i = 0; i < secs(120) && Math.hypot(p.pos.x - q.x, p.pos.z - q.z) > 0.4; i++) run(s, w, 1, { my: 1, yaw: Math.atan2(-(q.x - p.pos.x), -(q.z - p.pos.z)) });
+      if (Math.hypot(p.pos.x - q.x, p.pos.z - q.z) > 0.4 || Math.abs(p.pos.y - q.y) > 0.8) break;
+      reached++;
+    }
+    return reached;
+  };
+  it('walks up a dead escalator from the platform to the concourse', async () => {
+    await settle();
+    const e = of('escalator').find(f => Math.hypot(f.x - station.x, f.z - station.z) < 50)!, c = of('concourse').find(f => Math.hypot(f.x - station.x, f.z - station.z) < 50)!;
+    const dx = Math.sign(e.x - station.x) || 0, dz = Math.sign(e.z - station.z) || 0;
+    const s = createState(1, w), p = s.player;
+    s.flags.clear = true;
+    // From the platform behind the escalator's foot, up it, onto the concourse.
+    teleport(p, e.x + dx * 2 + (dz ? 0.6 : 0), e.y + 0.05, e.z + dz * 2 + (dx ? 0.6 : 0));
+    run(s, w, 10);
+    const top = { x: e.x - dx * 12 + (dz ? 0.6 : 0), y: c.y, z: e.z - dz * 12 + (dx ? 0.6 : 0) };
+    expect(walk(s, [top]), `he is at ${p.pos.x.toFixed(1)},${p.pos.y.toFixed(1)},${p.pos.z.toFixed(1)}`).toBe(1);
+  });
+  it("walks from the platform through the running tunnel and the Grand Tunnel to the friends' chamber", async () => {
+    await settle();
+    const route = of('metroRoute').sort((a, b) => a.group - b.group);
+    const s = createState(1, w), p = s.player;
+    s.flags.clear = true;
+    teleport(p, route[0].x, route[0].y + 0.05, route[0].z);
+    run(s, w, 10);
+    const reached = walk(s, route.slice(1));
+    expect(reached, `stopped short of ${JSON.stringify(route[reached + 1])}, he is at ${p.pos.x.toFixed(1)},${p.pos.y.toFixed(1)},${p.pos.z.toFixed(1)}`).toBe(route.length - 1);
+    // Underground all the way: the chamber's mattress at the end.
+    const bed = w.props.find(q => q.kind === 'mattress')!;
+    expect(Math.hypot(p.pos.x - bed.x, p.pos.z - bed.z)).toBeLessThan(1.5);
+    expect(s.dead).toBeFalsy();
   });
 });

@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 84 of 93 done
+## M3: 85 of 93 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -497,7 +497,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
 - [x] **M3-73** The underground city's buildings (U-038)
   - The underground city's buildings built like the city's above (fronts, rooms, insides), heavily neon and cyberpunk
   - Screenshots
-- [ ] **M3-43** The subway way in (U-018)
+- [x] **M3-43** The subway way in (U-018)
   - The underground Line 1/2 station at Jiaochangkou (platforms, concourse, dead escalators, screen doors) and a running tunnel joining the Grand Tunnel system near Shibati
   - A sim test walks from the station to the vent hideout underground
 - [x] **M3-40** Rotated solids (U-017)

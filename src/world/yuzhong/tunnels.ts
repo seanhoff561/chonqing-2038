@@ -33,6 +33,8 @@ const CHAMBER_U = [24, 44], SIDE = 4;
 const EXIT_U = 202;
 /** Where a passage leaves the Grand Tunnel's north side for the underground network (M3-58), and how far it runs. */
 export const JUNCTION = { u: 40, v: 14 };
+/** And where one leaves it for the metro under Jiaochangkou (M3-43): its running tunnel's cross passage takes it. */
+export const METRO = { u: 170, v: 14 };
 
 /** A stairway in its own frame (a from its top at 0 down to its foot at len, b across) mapped onto the tunnel
  *  frame's local boxes: along x (u) or z (v), a increasing toward +sa. */
@@ -79,6 +81,8 @@ export function buildTunnels(g: Heightfield, sts: Street[]): Tunnels {
     { u0: 212, u1: 222, v: 0, w: 9, h: 3, alongU: true },
     // Open at its far end, where the underground network's junction room takes it (under.ts).
     { u0: 2.5, u1: JUNCTION.v, v: JUNCTION.u, w: 3, h: 3.2, alongU: false, open: true },
+    // And the metro's (M3-43).
+    { u0: 2.5, u1: METRO.v, v: METRO.u, w: 3, h: 3.2, alongU: false, open: true },
   ];
   const bores: Box[] = [], lining: Solid[] = [], decor: Solid[] = [], kept: Solid[] = [];
   for (const r of runs) {
@@ -181,6 +185,11 @@ export function buildTunnels(g: Heightfield, sts: Street[]): Tunnels {
   const [jx, jz] = W(JUNCTION.u, JUNCTION.v);
   out.at.grate = { x: gx, y: gy, z: gz };
   out.at.junction = { x: jx, y: floor, z: jz };
+  const [mx, mz] = W(METRO.u, METRO.v), side = CHAMBER.u + HIDEOUT.length + 6, [ax, az] = W(side, 0), [bx, bz] = W(side, CHAMBER.v);
+  out.at.metro = { x: mx, y: floor, z: mz };
+  // (The way from the Grand Tunnel down the side tunnel into the chamber's stub.)
+  out.at.sideTop = { x: ax, y: floor, z: az };
+  out.at.sideFoot = { x: bx, y: floor, z: bz };
   return out;
 }
 

@@ -118,3 +118,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M3-41: the city at 1:1 beside the real places
 - Look over logs/places-jiefangbei.png, places-shibati.png, places-chaotianmen.png (reference photo left, the game right, from tests/e2e/places.e2e.mjs). Known gaps to judge: Shibati's old low houses and lanes read as blocks of flats; Raffles City's towers have no Crystal skybridge. Which matter most?
+
+## M3-43: the subway way in
+- Teleport to 'Jiaochangkou metro': walk the platform past the screen doors, up the dead escalators to the concourse, then down onto the tracks, east along the running tunnel and through the cross passage into the Grand Tunnel and on to the friends' chamber. Does it feel like an abandoned metro?

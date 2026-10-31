@@ -17,7 +17,7 @@ import { stair } from '../steps';
 import { streetCells } from './ground';
 import { districtAt } from './lots';
 import type { Obb, P2 } from './shapes';
-import { run, fit, room, tubes, station, descent, TUBE, type Dig } from './underkit';
+import { run, fit, room, tubes, station, interchange, descent, TUBE, type Dig } from './underkit';
 
 type V3 = { x: number; y: number; z: number };
 export interface Under {
@@ -28,6 +28,9 @@ export interface Under {
   keep: Obb[];
   /** a walk from the Grand Tunnel under Jiaochangkou through both levels of the city to Xiaoshizi */
   route: V3[];
+  /** a walk from Jiaochangkou's metro platform through its running tunnel and the Grand Tunnel to the friends'
+   *  chamber (M3-43) */
+  metroRoute: V3[];
   /** walks down the stepped streets from the street into the city (M3-68) */
   descents: V3[][];
   at: Record<string, V3>;
@@ -43,8 +46,8 @@ const TW = 3.6, TH = 3.4;
 
 /** gt: the Grand Tunnel's floor, the end of its passage north (the junction), its ways in, and a walk along it
  *  from under Jiaochangkou into the passage. */
-export function buildUnder(g: Heightfield, gt: { floor: number; junction: V3; ways: V3[]; walk: V3[] }): Under {
-  const u: Under = { solids: [], decor: [], props: [], climbables: [], zones: [], features: [], inter: [], lots: [], keep: [], route: [], descents: [], at: {} };
+export function buildUnder(g: Heightfield, gt: { floor: number; junction: V3; ways: V3[]; walk: V3[]; metro: V3; toHideout: V3[] }): Under {
+  const u: Under = { solids: [], decor: [], props: [], climbables: [], zones: [], features: [], inter: [], lots: [], metroRoute: [], keep: [], route: [], descents: [], at: {} };
   const lining: Solid[] = [], bores: Box[] = [], kept: Solid[] = [], r = makeRng(hashString('under')), lr = makeRng(hashString('under-grates'));
   const k = (x: number, z: number) => Math.max(0, Math.min(g.h - 1, Math.round(z / g.cell))) * g.w + Math.max(0, Math.min(g.w - 1, Math.round(x / g.cell)));
   const gy = (x: number, z: number) => g.y[k(x, z)], street = (x: number, z: number) => streetCells[k(x, z)] !== 0;
@@ -316,6 +319,23 @@ export function buildUnder(g: Heightfield, gt: { floor: number; junction: V3; wa
     }
   }
 
+  // Jiaochangkou's Line 1/2 station (M3-43, U-018): at the Grand Tunnel's depth under Jiaochangkou, north of the
+  // tunnel's end there (30 m north of the metro stub off it, its hall 10 m clear of the tunnel); its running
+  // tunnels on east toward Shibati, a cross passage from the south one to the stub (through the walkway along the
+  // tube's wall).
+  const M = gt.metro, JL = 72, Zs = M.z - 30, S0: P2 = [M.x - 9, Zs], SR = run(S0, [S0[0] - JL, Zs]), TR = run(S0, [S0[0] + 50, Zs]);
+  interchange(dig, SR, JL, F, r);
+  const k0 = kept.length;
+  tubes(dig, TR, 0, 50, F);
+  const pass: Box = { x0: M.x - 1.5, y0: F, z0: Zs + TUBE.off + TUBE.w / 2 - 1.2, x1: M.x + 1.5, y1: F + 3.2, z1: M.z + 1.5 };
+  space(pass.x0, pass.z0, pass.x1, pass.z1, F, F + 3.2);
+  // (Its end open into the stub.)
+  bores.push({ x0: M.x - 2.2, y0: F, z0: M.z - 1, x1: M.x + 2.2, y1: F + 3.2, z1: M.z + 3 });
+  kept.splice(k0, kept.length - k0, ...carve(kept.slice(k0), pass));
+  u.features.push({ kind: 'metroPassage', x: M.x, y: F, z: M.z - 2, group: u.features.length });
+  u.metroRoute = [SR.pt(JL - 12, 1.5), SR.pt(5, 1.5), SR.pt(5, 0)].map(([x, z]) => ({ x, y: F + TUBE.walk, z }))
+    .concat([SR.pt(1.5, 0), SR.pt(1.5, TUBE.off), TR.pt(M.x - S0[0], TUBE.off), [M.x, M.z - 1]].map(([x, z]) => ({ x, y: F, z })), gt.toHideout);
+
   // The route: along the Grand Tunnel from under Jiaochangkou to the junction, north through the shelters, up the
   // flight, east through the market into the concourse, up the west well onto the deck, along it, down the east
   // well, through Jiefangbei's station (up onto the platform, along it, down off its end), along the first tube to
@@ -329,7 +349,7 @@ export function buildUnder(g: Heightfield, gt: { floor: number; junction: V3; wa
   ];
   u.at = {
     deck: { x: C.x, y: LA, z: C.z }, concourse: { x: C.x, y: LB, z: C.z + 30 }, xiaoshizi: { x: xe, y: W, z: ze + 30 }, station: { x: X1 + 30, y: W, z: C.z },
-    metro: { x: X1 + SL + east.len * 0.3, y: LB, z: C.z - off }, shelter: { x: J.x, y: F, z: J.z - north.len / 5 },
+    metro: { x: X1 + SL + east.len * 0.3, y: LB, z: C.z - off }, shelter: { x: J.x, y: F, z: J.z - north.len / 5 }, jiaochangkou: u.metroRoute[0],
     ...(u.descents[0] ? { descent: u.descents[0][0] } : {}),
   };
 

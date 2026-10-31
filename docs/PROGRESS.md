@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-43 The subway way in (U-018).
-Features done: 147 / 295 | Last done: M3-41
+**Status:** building M3. Next: M3-35 Shibati and Jiaochangkou from the references (U-014).
+Features done: 148 / 295 | Last done: M3-43
 <!-- /status -->
 
 ## Log
@@ -95,3 +95,4 @@ Features done: 147 / 295 | Last done: M3-41
 - M3-63 A realistic sky, rain and night; the visual overhaul (U-031, U-032): A realistic sky, rain and night; the muted city: sparse lit flats, pinpoint stars, slanted rain with splashes, dark nights, props faded
 - M3-64 The far ground drawn properly (U-031): The far ground drawn properly: streets and pavements carry on past the near radius
 - M3-41 The city at 1:1 (U-017): The city at 1:1: the game beside Jiefangbei, Shibati and Chaotianmen's reference photos, budgets holding
+- M3-43 The subway way in (U-018): The subway way in: Jiaochangkou's metro station (platform, screen doors, dead escalators, concourse) and its running tunnel into the Grand Tunnel

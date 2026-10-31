@@ -19,7 +19,7 @@ import { buildGround, streets, onGround, WATER_Y, streetCells, type Street } fro
 import { planLots, levelLots, markEnterable, type Plan } from './lots';
 import { corners, rasterPoly, obbOverlap, type Obb } from './shapes';
 import { alleys } from '../city/climb';
-import { buildTunnels, tunnelFrame, JUNCTION } from './tunnels';
+import { buildTunnels, tunnelFrame, JUNCTION, METRO } from './tunnels';
 import { buildUnder } from './under';
 import { buildSite } from './site';
 import { podiumMask, buildFactory } from './factory';
@@ -41,7 +41,9 @@ export function buildYuzhong(): World {
   const land = landMask(g), metro = stationEntrances(g, sts.filter(onGround), land), block = new Uint8Array(g.y.length), mark = (poly: [number, number][], m = block) => rasterPoly(poly, 0, 0, g.cell, g.w, g.h, (i0, i1, j) => m.fill(1, j * g.w + i0, j * g.w + i1 + 1));
   // The underground network off the Grand Tunnel (M3-58), its ways in kept clear of lots.
   const { W: tw } = tunnelFrame(), gtAt = (uu: number, vv: number) => { const [x, z] = tw(uu, vv); return { x, y: tun.frame.floor, z }; };
-  const under = buildUnder(g, { floor: tun.frame.floor, junction: tun.at.junction, ways: [tun.at.entrance, tun.at.exit, tun.at.grate], walk: [gtAt(195, 0), gtAt(JUNCTION.u, 0), gtAt(JUNCTION.u, 8)] });
+  const under = buildUnder(g, { floor: tun.frame.floor, junction: tun.at.junction, ways: [tun.at.entrance, tun.at.exit, tun.at.grate], walk: [gtAt(195, 0), gtAt(JUNCTION.u, 0), gtAt(JUNCTION.u, 8)],
+    // (M3-43: the metro's stub, and from it along the Grand Tunnel and down the side tunnel into the chamber.)
+    metro: tun.at.metro, toHideout: [gtAt(METRO.u, 8), gtAt(METRO.u, 0), gtAt(130, 0), gtAt(90, 0), tun.at.sideTop, tun.at.sideFoot, tun.at.mattress] });
   for (const o of tun.keep.concat(metro.keep, under.keep)) mark(corners({ ...o, hw: o.hw + KEEP, hd: o.hd + KEEP }));
   for (const b of line.beams) for (let k = 0; k + 1 < b.pts.length; k++) {
     const [[ax, az], [bx, bz]] = [b.pts[k], b.pts[k + 1]];
@@ -114,6 +116,7 @@ export function buildYuzhong(): World {
     // Down below (M3-58).
     { name: 'Underground city deck', x: under.at.deck.x, y: under.at.deck.y + 1.5, z: under.at.deck.z, yaw: 0 },
     { name: 'Underground city concourse', x: under.at.concourse.x, y: under.at.concourse.y + 1.5, z: under.at.concourse.z, yaw: 0 },
+    { name: 'Jiaochangkou metro', x: under.at.jiaochangkou.x, y: under.at.jiaochangkou.y + 1.5, z: under.at.jiaochangkou.z, yaw: -Math.PI / 2 },
     { name: 'Underground Xiaoshizi', x: under.at.xiaoshizi.x, y: under.at.xiaoshizi.y + 1.5, z: under.at.xiaoshizi.z, yaw: 0 },
     // The metro and the old tunnels (M3-68): a platform, the running tunnel, a shelter, a stepped street's mouth.
     ...([['station', 'Metro station Jiefangbei', -Math.PI / 2], ['metro', 'Metro tunnel', -Math.PI / 2], ['shelter', 'Air-raid shelter', 0], ['descent', 'Stepped street down', 0]] as const)
@@ -149,7 +152,7 @@ export function buildYuzhong(): World {
     name: 'yuzhong', routes: net.routes, patrols: net.patrols, gates, solids, decor: decor.concat(out.decor, tun.decor, line.decor, site?.decor ?? [], fac?.decor ?? [], vert.decor, cross.decor, under.decor, sew.decor, laid.decor, filled.decor),
     props: out.props.concat(tun.props, line.props, metro.props, site?.props ?? [], fac?.props ?? [], under.props, sew.props, laid.props, dress.props, green.props, rubble.props, filled.props), inter, climbables: out.climbables.concat(sew.climbables, tun.climbables, line.climbables, site?.climbables ?? [], vert.climbables, under.climbables, dress.climbables),
     hides: out.hides, sites: out.sites.concat(tun.sites), zones: tun.zones.concat(under.zones, sew.zones),
-    far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(fac?.features ?? [], vert.features, cross.features, rubble.features, under.features, sew.features, laid.features, dress.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n })), under.descents.flatMap((d, i) => d.map((q, n) => ({ kind: 'descentRoute', ...q, group: i * 100 + n })))), marks, lawns: laid.lawns, convoys: fac?.convoys, streets: drawn.concat(laid.paths, doorWays), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }, ...sew.water],
+    far: out.far.concat(fac?.far ?? [], vert.far), ground: g, plots, features: out.features.concat(fac?.features ?? [], vert.features, cross.features, rubble.features, under.features, sew.features, laid.features, dress.features, under.route.map((q, n) => ({ kind: 'underRoute', ...q, group: n })), under.metroRoute.map((q, n) => ({ kind: 'metroRoute', ...q, group: n })), under.descents.flatMap((d, i) => d.map((q, n) => ({ kind: 'descentRoute', ...q, group: i * 100 + n })))), marks, lawns: laid.lawns, convoys: fac?.convoys, streets: drawn.concat(laid.paths, doorWays), water: [{ x0: 0, y0: WATER_Y - 40, z0: 0, x1: W, y1: WATER_Y, z1: H }, ...sew.water],
     teleports, spawn: hide,
   });
   // Nothing floats or sinks (M3-56): whatever stands on something above ground settles onto what's under it, or

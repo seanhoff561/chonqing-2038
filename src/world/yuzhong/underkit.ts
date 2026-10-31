@@ -3,7 +3,7 @@
 // metro's twin running tunnels (track, walkways, cable trays, lights, signals, cross passages, a stalled train)
 // and its platform halls; and the stepped streets that go down off the street in landings into the underground
 // city, open to the sky, so ground level keeps going down. Each laid out along a straight run square to the map.
-import { solid, type Solid, type Box } from '../geom';
+import { solid, rampSolid, type Solid, type Box } from '../geom';
 import { MAT } from '../mats';
 import { rand, type Rng } from '../../sim/rng';
 import { stair } from '../steps';
@@ -156,6 +156,59 @@ export function station(d: Dig, R: ReturnType<typeof run>, L: number, y: number,
     for (let t = 0.4; t < L; t += 0.75) d.decor.push(R.box(t - 0.1, t + 0.1, c - 1.25, c + 1.25, y + 0.03, y + 0.11, MAT.concrete));
   }
   d.decor.push(R.box(2, L - 2, -0.2, 0.2, y + 6.42, y + 6.5, MAT.glare));
+}
+
+/** Jiaochangkou's Line 1/2 station along run R at y (M3-43, U-018): the hall from t 0 to L with its island
+ *  platform between the tracks, screen doors along both its edges (two in three shut, some smashed, the rest slid
+ *  open onto the tracks), and over its middle the concourse, reached by two dead escalators up through a well in the
+ *  hall's roof: fare gates across it, dead screens, its way up to the street choked with rubble. */
+export function interchange(d: Dig, R: ReturnType<typeof run>, L: number, y: number, r: Rng) {
+  const [x0, z0, x1, z1] = R.rect(0, L, -9, 9), { off, walk } = TUBE, up = y + 7;
+  d.space(x0, z0, x1, z1, y, y + 6.5, MAT.concrete, false, true);
+  d.mark('station', R.pt(L / 2, 0), y);
+  d.kept.push(R.box(4, L - 4, -2.2, 2.2, y, y + walk, MAT.concrete));
+  stair(...R.rect(2.5, 4, -1.2, 1.2), y, y + walk, R.up, d.kept, d.decor);
+  stair(...R.rect(L - 4, L - 2.5, -1.2, 1.2), y, y + walk, R.down, d.kept, d.decor);
+  for (const c of [-off, off]) {
+    for (const s of [-0.72, 0.72]) d.decor.push(R.box(0, L, c + s - 0.035, c + s + 0.035, y + 0.1, y + 0.24, MAT.metal));
+    for (let t = 0.4; t < L; t += 0.75) d.decor.push(R.box(t - 0.1, t + 0.1, c - 1.25, c + 1.25, y + 0.03, y + 0.11, MAT.concrete));
+  }
+  d.decor.push(R.box(2, L - 2, -0.2, 0.2, y + 6.42, y + 6.5, MAT.glare));
+  // The escalators, side by side up the platform's middle at 30 degrees, stopped; the well over them.
+  const e0 = L / 2 - 6, e1 = e0 + (up - y - walk) / Math.tan(Math.PI / 6);
+  for (const [s0, s1] of [[-1.15, -0.05], [0.05, 1.15]]) {
+    stair(...R.rect(e0, e1, s0, s1), y + walk, up, R.up, d.kept, d.decor);
+    // Balustrades either side, rising with it.
+    for (const b of [s0, s1 - 0.08]) { const [bx0, bz0, bx1, bz1] = R.rect(e0, e1, b, b + 0.08); d.decor.push(rampSolid(bx0, y + walk + 0.4, bz0, bx1, bz1, y + walk + 1.0, up + 1.0, R.up, MAT.metal)); }
+  }
+  const [wx0, wz0, wx1, wz1] = R.rect(e0 - 0.3, e1 + 0.3, -1.3, 1.3);
+  d.bores.push({ x0: wx0, y0: y + 5.5, z0: wz0, x1: wx1, y1: up + 0.2, z1: wz1 });
+  d.mark('escalator', R.pt(e0, 0), y + walk);
+  for (let t = 10; t < L - 8; t += 9) {
+    if (t > e0 - 2.5 && t < e1 + 2.5) continue;
+    d.kept.push(R.box(t - 0.4, t + 0.4, -0.4, 0.4, y + walk, y + 6.5, MAT.concrete));
+    if (rand(r) < 0.6 && t + 9 < L - 8 && (t + 4.5 < e0 - 2.5 || t + 4.5 > e1 + 2.5)) put(d, 'bench', R.pt(t + 4.5, 0), y + walk, R.yaw);
+    d.decor.push(R.box(t - 0.05, t + 0.05, -0.9, 0.9, y + 3.6, y + 4.4, MAT.screen));
+  }
+  // Screen doors along both edges of the platform in 2 m bays: the panels glass, the doors between them shut, slid
+  // open, or smashed out; a steel header over them all.
+  for (const s of [-2.2, 2.2]) {
+    d.decor.push(R.box(4, L - 4, s - 0.08, s + 0.08, y + walk + 2.2, y + walk + 2.55, MAT.metal));
+    for (let t = 4, k = 0; t + 2 <= L - 4; t += 2, k++) {
+      const door = k % 2 === 1, q = rand(r), gone = door ? q < 0.35 : q < 0.1;
+      if (gone) { d.mark(door ? 'screendoor' : 'smashed', R.pt(t + 1, s), y + walk); continue; }
+      d.kept.push(R.box(t + 0.04, t + 1.96, s - 0.03, s + 0.03, y + walk, y + walk + 2.2, MAT.glass));
+    }
+  }
+  // The concourse over the middle: fare gates across it beyond the escalators' heads, dead screens, rubble where
+  // its stairs went up to the street.
+  const c0 = e0 - 8, c1 = e1 + 10, [cx0, cz0, cx1, cz1] = R.rect(c0, c1, -8, 8);
+  d.space(cx0, cz0, cx1, cz1, up, up + 4, MAT.concrete, false, true);
+  d.mark('concourse', R.pt((c0 + c1) / 2, 0), up);
+  for (let s = -7.6; s < 7.6; s += 0.9) d.kept.push(R.box(e1 + 5, e1 + 6.2, s, s + 0.25, up, up + 1.0, MAT.metal));
+  for (const s of [-7.9, 7.9]) d.decor.push(R.box(c0 + 3, c1 - 3, s - 0.04, s + 0.04, up + 1.8, up + 3.2, MAT.screen));
+  for (let s = -6; s <= 6; s += 3) put(d, 'rubblepile', R.pt(c1 - 1.5, s), up, rand(r) * 6.3);
+  d.decor.push(R.box(c0 + 1, c1 - 1, -0.2, 0.2, up + 3.92, up + 4, MAT.glare));
 }
 
 /** A street stepping down off the street along (dx, dz) into the ground, in landings 4-5 m apart, to y at `at`
