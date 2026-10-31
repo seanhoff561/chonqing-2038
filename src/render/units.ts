@@ -19,11 +19,17 @@ const GEO: Record<UnitKind, () => THREE.BufferGeometry> = {
   delivery: () => mergeGeometries([at(0.6, 0.55, 0.8, 0, 0.35, 0), ...FOUR.map(([a, b]) => at(0.08, 0.2, 0.2, a * 0.32, 0.1, b * 0.28))]),
   // A carrier: a long cargo body on six legs.
   carrier: () => mergeGeometries([at(1.4, 1.0, 3.0, 0, 1.3, 0), at(1.0, 0.4, 0.6, 0, 1.1, 1.7), ...[-1, 0, 1].flatMap(b => [-1, 1].map(a => at(0.14, 0.9, 0.14, a * 0.6, 0.45, b * 1.1)))]),
+  // A camera's housing on its bracket, tipped down at the street (M4-07); a sweeper's on a turning head.
+  camera: () => mergeGeometries([at(0.2, 0.15, 0.32, 0, 0, 0.12).rotateX(0.35), at(0.05, 0.25, 0.05, 0, 0.12, -0.04)]),
+  sweeper: () => mergeGeometries([at(0.18, 0.18, 0.3, 0, 0, 0.12).rotateX(0.3), at(0.2, 0.08, 0.2, 0, 0.14, 0), at(0.05, 0.3, 0.05, 0, 0.3, 0)]),
+  // (The smart lampposts' cameras are their props'.)
+  lamppost: () => at(0.01, 0.01, 0.01, 0, 0, 0),
 };
 /** Where each kind's eyes are, from its feet. */
 const EYE_AT: Record<UnitKind, THREE.Matrix4> = {
   humanoid: new THREE.Matrix4().makeTranslation(0, 1.8, 0.135), quadruped: new THREE.Matrix4().makeTranslation(0, 0.85, 0.755),
   drone: new THREE.Matrix4().makeTranslation(0, -0.1, 0.2), delivery: new THREE.Matrix4().makeTranslation(0, 0.5, 0.41), carrier: new THREE.Matrix4().makeTranslation(0, 1.2, 2.01),
+  camera: new THREE.Matrix4().makeTranslation(0, -0.05, 0.29), sweeper: new THREE.Matrix4().makeTranslation(0, -0.05, 0.28), lamppost: new THREE.Matrix4().makeTranslation(0, 0, 0),
 };
 const KINDS = Object.keys(GEO) as UnitKind[];
 
@@ -45,7 +51,7 @@ export class UnitView {
     let eyes = 0;
     for (const u of units) {
       const p = unitPose(w, u, time);
-      if (!p.active || Math.hypot(p.x - cam.x, p.z - cam.z) > NEAR) continue;
+      if (!p.active || u.kind === 'lamppost' || Math.hypot(p.x - cam.x, p.z - cam.z) > NEAR) continue;
       this.m.makeRotationY(p.yaw).setPosition(p.x, p.y, p.z);
       this.bodies[u.kind].setMatrixAt(count[u.kind]++, this.m);
       this.eyes.setMatrixAt(eyes++, this.e.copy(this.m).multiply(EYE_AT[u.kind]));

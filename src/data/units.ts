@@ -1,6 +1,8 @@
 // The machines that move (DESIGN section 7): how fast each kind goes on its beat and when chasing, whether it takes
 // stairs, how high it flies, and the hours its beats keep by default. Speeds in real metres a second.
-export type UnitKind = 'quadruped' | 'humanoid' | 'drone' | 'delivery' | 'carrier';
+export type UnitKind = 'quadruped' | 'humanoid' | 'drone' | 'delivery' | 'carrier' | 'camera' | 'sweeper' | 'lamppost';
+/** The machines that stay where they're put (M4-07). */
+export const STATIC = new Set<UnitKind>(['camera', 'sweeper', 'lamppost']);
 
 export const UNITS: Record<UnitKind, { patrol: number; chase: number; stairs: boolean; fly: number; zh: string; en: string }> = {
   quadruped: { patrol: 3, chase: 8, stairs: true, fly: 0, zh: '四足机器人', en: 'Quadruped' },
@@ -8,7 +10,13 @@ export const UNITS: Record<UnitKind, { patrol: number; chase: number; stairs: bo
   drone: { patrol: 9, chase: 12, stairs: true, fly: 30, zh: '巡逻无人机', en: 'Patrol drone' },
   delivery: { patrol: 2, chase: 2, stairs: false, fly: 0, zh: '配送机器人', en: 'Delivery robot' },
   carrier: { patrol: 1.6, chase: 1.6, stairs: false, fly: 0, zh: '运输机器人', en: 'Carrier' },
+  camera: { patrol: 0, chase: 0, stairs: false, fly: 0, zh: '监控摄像头', en: 'Camera' },
+  sweeper: { patrol: 0, chase: 0, stairs: false, fly: 0, zh: '旋转摄像头', en: 'Sweeping camera' },
+  lamppost: { patrol: 0, chase: 0, stairs: false, fly: 0, zh: '智慧灯杆', en: 'Smart lamppost' },
 };
+
+/** A sweeping camera pans 45 degrees either side, 10 s each way (M4-07). */
+export const SWEEP = { arc: 45, pass: 10 };
 
 /** The columns out of the factory (M4-01b, U-030, U-031): their marching pace, a squad out of each gate every so
  *  often (real seconds), the bounding cycle (one fire team moves at double pace while the other holds, then they
@@ -40,6 +48,10 @@ export const SENSES: Record<UnitKind, { fov: number; pitch: number; day: number;
   drone: { fov: 100, pitch: 45, day: 35, night: 30, eye: -0.1, ir: 0, lamp: 15, thermal: 30, hear: 0.8 },
   delivery: { fov: 120, pitch: 0, day: 18, night: 10, eye: 0.5, ir: 0, lamp: 0, thermal: 0, hear: 1 },
   carrier: { fov: 120, pitch: 0, day: 25, night: 15, eye: 1.2, ir: 0.3, lamp: 0, thermal: 0, hear: 1 },
+  // The cameras (M4-07): fixed ones over doors and at junctions, sweepers at plazas and gates, the smart lampposts'.
+  camera: { fov: 70, pitch: 25, day: 30, night: 18, eye: 0, ir: 0.3, lamp: 0, thermal: 0, hear: 0 },
+  sweeper: { fov: 60, pitch: 20, day: 30, night: 18, eye: 0, ir: 0.3, lamp: 0, thermal: 0, hear: 0 },
+  lamppost: { fov: 90, pitch: 35, day: 22, night: 14, eye: 0, ir: 0, lamp: 0, thermal: 0, hear: 0 },
 };
 
 /** Hearing him (DESIGN section 5): a noise is heard within its radius times the unit's hearing (its rotors dull a

@@ -4,7 +4,7 @@
 // (parked at the beat's start otherwise). So sleeping skips time for free and he can learn exact timings. Movement
 // runs in real seconds, the hours on the game clock.
 import type { World, Patrol, Convoy } from '../world/world';
-import { UNITS, PHASE, COLUMN, type UnitKind } from '../data/units';
+import { UNITS, PHASE, COLUMN, SWEEP, type UnitKind } from '../data/units';
 import { makeRng, rand, hashString } from './rng';
 import { SCALE, hourOf, dayOf } from './clock';
 
@@ -12,6 +12,8 @@ export interface Unit {
   id: number; kind: UnitKind; /** the beat it walks (world patrols), or -1 in a column */ patrol: number; /** real seconds into its loop it starts */ phase: number; state: 'unaware' | 'suspicious' | 'engaged';
   /** in a column (M4-01b): which way out of the factory, which of its squads in turn, which member of the squad */
   convoy?: { path: number; slot: number; member: number };
+  /** a camera (M4-07): which of the world's */
+  cam?: number;
   /** how aware of him it is (M4-03): 0.3 suspicious, 1 engaged */
   aware?: number;
   /** where it last saw him (M4-04) */
@@ -52,6 +54,8 @@ export const loopOf = (w: World, u: Unit) => timeline(w.patrols[u.patrol], UNITS
 export function createUnits(seed: number, w: World): Unit[] {
   const r = makeRng(hashString(`units${seed}`));
   const out: Unit[] = w.patrols.map((p, i) => ({ id: i, kind: p.unit, patrol: i, phase: rand(r) * PHASE * timeline(p, UNITS[p.unit].patrol).T, state: 'unaware' as const }));
+  // The cameras, each sweeper somewhere else in its pan.
+  w.cameras.forEach((c, cam) => out.push({ id: out.length, kind: c.kind, patrol: -1, phase: rand(r) * 4 * SWEEP.pass, state: 'unaware', cam }));
   (w.convoys ?? []).forEach((c, path) => {
     for (let slot = 0; slot < column(c).slots; slot++) COLUMN.squad.forEach((m, member) => out.push({ id: out.length, kind: m.kind, patrol: -1, phase: 0, state: 'unaware', convoy: { path, slot, member } }));
   });
@@ -122,6 +126,11 @@ const keeps = ([a, b]: [number, number], h: number) => (a <= b ? h >= a && h < b
  *  all hours. */
 export function unitPose(w: World, u: Unit, time: number): Pose {
   if (u.trip) return { ...u.trip.pos, yaw: u.trip.yaw, active: true };
+  if (u.cam !== undefined) {
+    // A sweeper pans to and fro at a steady rate, 10 s a pass.
+    const c = w.cameras[u.cam], k = ((((time / SCALE + u.phase) / SWEEP.pass) % 2) + 2) % 2, pan = c.kind === 'sweeper' ? ((Math.abs(k - 1) * 2 - 1) * SWEEP.arc * Math.PI) / 180 : 0;
+    return { x: c.x, y: c.y, z: c.z, yaw: c.yaw + pan, active: true };
+  }
   if (u.convoy) return columnPose(w, u, time / SCALE);
   const p = w.patrols[u.patrol], start = p.pts[0];
   if (!keeps(p.hours, hourOf(time))) return { x: start.x, y: start.y, z: start.z, yaw: 0, active: false };

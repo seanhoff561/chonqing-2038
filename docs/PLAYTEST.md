@@ -139,3 +139,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## PT-013 M3 complete: Yuzhong (build after M3-21)
 - Play a run from the friends' hideout: climb out of the grate, find your way to the Li family flat near the top of Shibati's stair (badge, phone, voicemail), then down to the Yangtze riverfront and its wall. Try each of the three ways between the hideout, Jiaochangkou, Shibati top and the riverfront: along the streets, over the roofs, and underground or through the buildings. Does the district read as 2038 Chongqing by day and at night (signs, neon, banners, LED tickers), does each way feel findable without markers, and is the frame rate right on Medium (pause menu presets)? Anything that breaks, floats, blocks or looks wrong, note where (the pause menu lists the teleports).
+
+## M4-07: cameras
+- Walk a district's main street by day: do the cameras' beeps keep you on edge without grating? Try slipping past the sweeper at a district's centre by timing its pan; walk openly past a door camera and see a unit come to look.

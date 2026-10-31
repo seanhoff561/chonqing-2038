@@ -3,10 +3,11 @@
 // where it left its beat, picking it up there (its loop shifted by the time it was away, so its place stays a pure
 // function of the time). Fully aware it's Engaged (what the hive does then is M4-12 on), still going to where it last
 // saw him. And for a day after the hive has seen him somewhere, units whose beats pass within 200 m of the place go
-// to check it as they pass, once a loop. (The columns keep marching: their members only notice.)
+// to check it as they pass, once a loop. (The columns keep marching: their members only notice. A camera that sees
+// him sends the nearest unit on foot.)
 import type { SimState } from './types';
 import type { World } from '../world/world';
-import { UNITS, SIGHT, type UnitKind } from '../data/units';
+import { UNITS, SIGHT, STATIC, type UnitKind } from '../data/units';
 import { navPath } from './nav';
 import { unitPose, loopOf, type Unit } from './units';
 import { SCALE } from './clock';
@@ -59,6 +60,13 @@ export function stepAlert(s: SimState, w: World) {
     if (a >= ALERT.engaged && u.state !== 'engaged') { u.state = 'engaged'; s.hive.seen.push({ ...(u.seen ?? s.player.pos), t: s.time }); }
     else if (a >= ALERT.suspicious && u.state === 'unaware') u.state = 'suspicious';
     if (u.convoy) { if (a < ALERT.suspicious) u.state = 'unaware'; continue; }
+    if (STATIC.has(u.kind)) {
+      // A camera that's caught sight of him sends the nearest unit on foot within 150 m to look (M4-07).
+      if (a < ALERT.suspicious) u.state = 'unaware';
+      else if (u.seen && u.checked === undefined) { u.checked = s.time; sendNearest(s, w, u, u.seen); }
+      if (a < SIGHT.min) u.checked = undefined;
+      continue;
+    }
     if (u.trip) {
       // Still seeing him while it goes: on to where he is now.
       if (!u.trip.back && u.trip.kind === 'look' && u.seen && (u.id + s.tick) % 6 === 0 && a >= SIGHT.min) {
@@ -81,6 +89,18 @@ export function stepAlert(s: SimState, w: World) {
       if (nearestOnBeat(w, u, h) > Math.hypot(h.x - at.x, h.z - at.z) - 3) { u.checked = s.time; leave(s, w, u, 'check', h); break; }
     }
   }
+}
+
+/** The nearest unit on its beat within 150 m of a camera: sent to look at where the camera saw him. */
+function sendNearest(s: SimState, w: World, cam: Unit, to: V3) {
+  const c = unitPose(w, cam, s.time);
+  let best: Unit | null = null, bd = 150;
+  for (const u of s.units) {
+    if (u === cam || u.convoy || STATIC.has(u.kind) || u.trip || u.state !== 'unaware') continue;
+    const p = unitPose(w, u, s.time), d = Math.hypot(p.x - c.x, p.z - c.z);
+    if (p.active && d < bd) { bd = d; best = u; }
+  }
+  if (best) { best.aware = Math.max(best.aware ?? 0, ALERT.suspicious + 0.05); best.seen = { ...to }; }
 }
 
 /** How near its beat comes to a place. */

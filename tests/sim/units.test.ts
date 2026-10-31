@@ -15,9 +15,10 @@ const w = getWorld('yuzhong'), P = w.patrols;
 describe('units and their beats (M4-01)', () => {
   it('keeps units as plain data, each started within 8% of its loop', () => {
     const s = createState(5, w);
-    expect(s.units.filter(u => !u.convoy).length).toBe(P.length);
+    // (The beats' walkers: the columns' and the cameras' aren't on beats.)
+    expect(s.units.filter(u => u.patrol >= 0).length).toBe(P.length);
     expect(JSON.parse(JSON.stringify(s.units))).toEqual(s.units);
-    for (const u of s.units.filter(q => !q.convoy)) {
+    for (const u of s.units.filter(q => q.patrol >= 0)) {
       expect(u.state).toBe('unaware');
       expect(u.phase).toBeGreaterThanOrEqual(0);
       expect(u.phase).toBeLessThanOrEqual(PHASE * loopOf(w, u) + 1e-6);

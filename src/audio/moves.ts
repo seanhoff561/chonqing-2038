@@ -55,3 +55,11 @@ export function playMove(a: Audio, id: string) {
   if (!f || !a.ready) return;
   f(a, a.ctx!.currentTime + 0.005);
 }
+
+/** A machine's beep (M4-07, U-038): a camera's, short and high, quieter the further off it is. */
+export function beep(a: Audio, gain: number) {
+  if (!a.ready || gain < 0.005) return;
+  const t = a.ctx!.currentTime + 0.005;
+  a.tone(t, 0.05, gain, 3100, 3100, 'square');
+  a.tone(t + 0.09, 0.05, gain * 0.8, 3100, 3100, 'square');
+}

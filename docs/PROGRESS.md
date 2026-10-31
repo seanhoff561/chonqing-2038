@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-07 Cameras.
-Features done: 163 / 296 | Last done: M4-06
+**Status:** building M4. Next: M4-08 Patrol drones and docks.
+Features done: 164 / 296 | Last done: M4-07
 <!-- /status -->
 
 ## Log
@@ -20,3 +20,4 @@ Features done: 163 / 296 | Last done: M4-06
 - M4-04 Awareness and investigation: Awareness and investigation: Suspicious units walk to where they saw him, look about and go back; beats shift by day and after sightings
 - M4-05 Hearing: Hearing: noises heard within radius x hearing, x0.6 through walls; heard noises send units to look, hostile ones are remembered by the hive
 - M4-06 Thermal senses at night: Thermal sight at night: heat seen whatever the light within thermal range; the mylar blanket, wetness and deep water hide it
+- M4-07 Cameras: Cameras: fixed, sweeping and smart-lamppost cameras all over the city, sweepers that can be timed, beeping

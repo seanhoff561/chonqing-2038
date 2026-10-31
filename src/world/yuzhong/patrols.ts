@@ -6,7 +6,7 @@
 // friends' stub, waiting at the metro's end.
 import { raycast } from '../geom';
 import { DWELL } from '../../data/units';
-import type { World, Patrol } from '../world';
+import type { World, Patrol, Camera } from '../world';
 import { heightAt } from '../heightfield';
 import { GEO } from '../geo';
 
@@ -146,5 +146,29 @@ export function columnSpurs(w: World, pts: V3[]): { s: number; at: V3 }[] {
       if (straight(w, q, by)) { out.push({ s, at: by }); last = s; break; }
     }
   });
+  return out;
+}
+
+/** The cameras (M4-07, U-038: commonplace, so he's always on edge): every smart lamppost's, looking along its street;
+ *  every camera pole's at the junctions; one over every third street door in the districts, looking out from it; and
+ *  at each district's centre a sweeper, on the lamppost nearest it. */
+export function placeCameras(w: World): Camera[] {
+  const out: Camera[] = [];
+  for (const p of w.props) {
+    if (p.kind === 'lamppost') out.push({ kind: 'lamppost', x: p.x + Math.sin(p.yaw) * 0.25, y: p.y + 6.2, z: p.z + Math.cos(p.yaw) * 0.25, yaw: p.yaw });
+    else if (p.kind === 'campole') out.push({ kind: 'camera', x: p.x + Math.sin(p.yaw) * 0.2, y: p.y + 4.4, z: p.z + Math.cos(p.yaw) * 0.2, yaw: p.yaw });
+  }
+  const near = (x: number, z: number) => DISTRICTS.some(k => Math.hypot(x - GEO.landmarks[k].x, z - GEO.landmarks[k].z) < 400);
+  w.plots.filter(p => !p.far && p.route && p.route.length > 1 && near(p.route[0].x, p.route[0].z)).forEach((p, i) => {
+    if (i % 3) return;
+    const [door, inside] = p.route!, dx = door.x - inside.x, dz = door.z - inside.z, d = Math.hypot(dx, dz) || 1;
+    out.push({ kind: 'camera', x: door.x - (dx / d) * 0.6, y: door.y + 2.8, z: door.z - (dz / d) * 0.6, yaw: Math.atan2(dx, dz) });
+  });
+  for (const k of DISTRICTS) {
+    const L = GEO.landmarks[k];
+    let best = -1, bd = 150;
+    out.forEach((c, i) => { const d = Math.hypot(c.x - L.x, c.z - L.z); if (c.kind === 'lamppost' && d < bd) { bd = d; best = i; } });
+    if (best >= 0) out[best] = { ...out[best], kind: 'sweeper' };
+  }
   return out;
 }

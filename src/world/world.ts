@@ -64,6 +64,8 @@ export interface Link { from: string; to: string; layer: 'street' | 'roof' | 'un
  *  the stretches between them: [the other end, its length, its kind (NAV)]. */
 export interface Nav { pts: { x: number; y: number; z: number }[]; adj: [number, number, number][][] }
 export const NAV = { street: 0, stairs: 1, tunnel: 2 } as const;
+/** A camera where it's mounted (M4-07): which kind, its lens, which way it faces. */
+export interface Camera { kind: 'camera' | 'sweeper' | 'lamppost'; x: number; y: number; z: number; yaw: number }
 /** A column's way out of the city (M3-57b), and its detours: how far along it, and the alley point gone to. */
 export interface Convoy { pts: { x: number; y: number; z: number }[]; spurs: { s: number; at: { x: number; y: number; z: number } }[] }
 /** A machine's beat (M3-37, M4-01): along streets (into alleys and buildings off them), over the roofs, or under the
@@ -81,6 +83,8 @@ export interface World {
   links: Link[];
   /** the machines' ways about on foot (M4-02); none for small worlds */
   nav?: Nav;
+  /** the cameras (M4-07) */
+  cameras: Camera[];
   /** render-only boxes (visible stair steps over invisible ramps, trims) */
   decor: Solid[];
   teleports: Teleport[];
@@ -119,7 +123,7 @@ export interface World {
 
 export interface WorldParts {
   name: string;
-  routes?: Route[]; patrols?: Patrol[]; gates?: Gate[]; links?: Link[];
+  routes?: Route[]; patrols?: Patrol[]; gates?: Gate[]; links?: Link[]; cameras?: Camera[];
   solids: Solid[];
   decor?: Solid[];
   water?: Box[];
@@ -158,7 +162,7 @@ export function makeWorld(p: WorldParts): World {
   if (parts.size) for (const it of p.inter ?? []) if (typeof it.data?.part === 'string' && parts.has(it.data.part)) it.data.solid = parts.get(it.data.part);
   return {
     name: p.name,
-    routes: p.routes ?? [], patrols: p.patrols ?? [], gates: p.gates ?? [], links: p.links ?? [],
+    routes: p.routes ?? [], patrols: p.patrols ?? [], gates: p.gates ?? [], links: p.links ?? [], cameras: p.cameras ?? [],
     decor: p.decor ?? [],
     solids,
     ground: p.ground,

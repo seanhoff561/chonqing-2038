@@ -16,6 +16,7 @@ import { View, PRESETS, type Preset } from './render/view';
 import { Hud } from './ui/hud';
 import { UnitView } from './render/units';
 import { lineById, SPEAKERS } from './data/dialogue';
+import { beep } from './audio/moves';
 import { Sky } from './render/sky';
 import { BodyFx } from './render/body-fx';
 import { InventoryUI } from './ui/inventory-ui';
@@ -123,6 +124,17 @@ export class Game {
     this.view.scene.add(this.units.group);
   }
 
+  private beepIn = 0;
+  /** The cameras beep (M4-07, U-038): the nearest within 12 m, every 2.5 s, louder nearer. */
+  private cameraBeeps(dt: number) {
+    if ((this.beepIn -= dt) > 0) return;
+    this.beepIn = 2.5;
+    const p = this.state.player.pos;
+    let near = 12;
+    for (const c of this.world.cameras) near = Math.min(near, Math.hypot(c.x - p.x, c.y - p.y - 1.6, c.z - p.z));
+    if (near < 12) beep(this.audio, 0.12 * (1 - near / 12));
+  }
+
   /** The draw distance: the scenario's, or the graphics preset's. With far stand-ins the whole city shows through
    *  aerial haze and the draw distance is the detail radius. */
   private applyDraw() {
@@ -222,6 +234,7 @@ export class Game {
     this.rain.update(this.state.tick / 60, cam, this.state.weather.rain, covered, this.state.player.pos.y);
     this.view.setLamp(this.state.player.lamp);
     this.units?.update(this.world, this.state.units, this.state.time + alpha * GAME_PER_TICK, this.view.fp.cam.position);
+    this.cameraBeeps(dt);
     this.view.render(this.state.tick / 60, this.state.wstate.open);
     this.frames++;
   }
