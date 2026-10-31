@@ -32,6 +32,10 @@ export interface Site {
   bed: string | null; table: string | null; containers: string[]; exits: number; windows: number; streetSides: number;
 }
 
+/** A light, for perception (M3-16): lit up to v within r of its box (a lamppost's is its pole's height under the
+ *  lamp, a strip light's its strip). */
+export interface Light { kind: 'post' | 'neon' | 'lamp' | 'flood'; box: Box; r: number; v: number }
+
 /** Areas with special rules: 'under' = underground (no sky light). */
 export interface Zone { kind: string; box: Box; /** an underground space with its own lights (M3-58) */ lit?: boolean }
 
@@ -67,6 +71,8 @@ export interface World {
   teleports: Teleport[];
   props: Prop[];
   zones: Zone[];
+  /** the lights (M3-16), gathered from the props and the lamp decor on first use (sim/light.ts) */
+  lights?: Light[];
   inter: Inter[];
   sites: Site[];
   /** render-only stand-ins for the far view (U-012): one box per block; empty for small worlds */
