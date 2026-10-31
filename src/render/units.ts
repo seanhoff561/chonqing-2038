@@ -82,8 +82,8 @@ export class UnitView {
   update(w: World, units: Unit[], time: number, cam: THREE.Vector3) {
     let shown = 0;
     units.forEach((u, i) => {
-      // (An idle camera's housing still shows: M4-16.)
-      const p = unitPose(w, u, time), on = (p.active || u.cam !== undefined) && u.kind !== 'lamppost' && Math.hypot(p.x - cam.x, p.z - cam.z) <= NEAR;
+      // (An idle camera's housing still shows, M4-16, and a machine that's out where it stopped, M4-17.)
+      const p = unitPose(w, u, time), on = (p.active || u.cam !== undefined || !!u.stop) && u.kind !== 'lamppost' && Math.hypot(p.x - cam.x, p.z - cam.z) <= NEAR;
       this.batch.setVisibleAt(this.ids[i], on);
       if (!on) return;
       this.m.makeRotationY(p.yaw).setPosition(p.x, p.y, p.z);

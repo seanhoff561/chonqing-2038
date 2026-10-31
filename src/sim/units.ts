@@ -33,8 +33,13 @@ export interface Unit {
   told?: number;
   /** whether it has told the network and is telling it still (M4-13) */
   live?: boolean;
-  /** out (switched off, jammed, destroyed) until this game time (M4-13) */
+  /** out (switched off, jammed) until this game time (M4-13); destroyed for good (M4-17) */
   off?: number;
+  dead?: boolean;
+  /** a wreck another machine has come across (M4-17) */
+  found?: boolean;
+  /** where it stopped when it went out, and when (M4-17): it stays there, a wreck if destroyed */
+  stop?: { x: number; y: number; z: number; yaw: number; t: number };
   /** off its beat (M4-04): going to look at a point, looking about there, coming back (sim/alert.ts) */
   trip?: Trip;
   /** when it last went to check a place the hive saw him (M4-04) */
@@ -45,7 +50,7 @@ export interface Unit {
 }
 
 /** Whether a machine is out just now (M4-13). */
-export const isOff = (s: { time: number }, u: Unit) => u.off !== undefined && s.time < u.off;
+export const isOff = (s: { time: number }, u: Unit) => !!u.dead || (u.off !== undefined && s.time < u.off);
 
 /** A trip off the beat: the way there (or back), how far along it, where it is and faces, the look-about left there,
  *  and where and when it left its beat. */
@@ -159,6 +164,8 @@ const keeps = ([a, b]: [number, number], h: number) => (a <= b ? h >= a && h < b
 /** Where an Unaware unit is at a game time, and facing which way (its +z: yaw from +z toward +x). Columns march at
  *  all hours. */
 export function unitPose(w: World, u: Unit, time: number): Pose {
+  // Out, it stays where it stopped (M4-17).
+  if (u.stop) return { x: u.stop.x, y: u.stop.y, z: u.stop.z, yaw: u.stop.yaw, active: false };
   if (u.trip) return { ...u.trip.pos, yaw: u.trip.yaw, active: true };
   if (u.cam !== undefined) {
     // A sweeper pans to and fro at a steady rate, 10 s a pass.

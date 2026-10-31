@@ -10,7 +10,7 @@ import type { World } from '../world/world';
 import { UNITS, SIGHT, STATIC, BROADCAST, type UnitKind } from '../data/units';
 import { navPath } from './nav';
 import { raycast } from '../world/geom';
-import { unitPose, loopOf, type Unit, type Trip } from './units';
+import { unitPose, loopOf, isOff, type Unit, type Trip } from './units';
 import { callOut, flankPoint, searchSpots, coverNear, SQUAD } from './squad';
 import { SCALE } from './clock';
 import { DT } from './types';
@@ -78,6 +78,7 @@ function walk(s: SimState, w: World, u: Unit) {
 export function stepAlert(s: SimState, w: World) {
   const think = s.tick % 6;
   for (const u of s.units) {
+    if (isOff(s, u)) continue;
     const a = u.aware ?? 0;
     const was = u.state;
     // Engaged, it tells the network after its delay (M4-13, sim/district.ts).
@@ -128,7 +129,7 @@ function sendNearest(s: SimState, w: World, cam: Unit, to: V3) {
   const c = unitPose(w, cam, s.time);
   let best: Unit | null = null, bd = 150;
   for (const u of s.units) {
-    if (u === cam || u.convoy || u.reserve || STATIC.has(u.kind) || u.trip || u.state !== 'unaware') continue;
+    if (u === cam || u.convoy || u.reserve || STATIC.has(u.kind) || u.trip || u.state !== 'unaware' || isOff(s, u)) continue;
     const p = unitPose(w, u, s.time), d = Math.hypot(p.x - c.x, p.z - c.z);
     if (p.active && d < bd) { bd = d; best = u; }
   }

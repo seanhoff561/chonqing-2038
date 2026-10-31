@@ -5,7 +5,7 @@
 import type { SimState } from './types';
 import type { World } from '../world/world';
 import { raycast } from '../world/geom';
-import { unitPose, type Unit } from './units';
+import { unitPose, isOff, type Unit } from './units';
 
 type V3 = { x: number; y: number; z: number };
 export const SQUAD = { call: 60, flank: 7, search: 15, spots: 3, look: 3, cover: [3, 6, 9] };
@@ -15,7 +15,7 @@ export function callOut(s: SimState, w: World, u: Unit) {
   const at = unitPose(w, u, s.time);
   s.events.push({ t: 'call', x: at.x, y: at.y + 1.6, z: at.z });
   for (const o of s.units) {
-    if (o === u || o.kind !== 'humanoid' || o.convoy || o.state !== 'unaware') continue;
+    if (o === u || o.kind !== 'humanoid' || o.convoy || o.state !== 'unaware' || isOff(s, o)) continue;
     const p = unitPose(w, o, s.time);
     if (!p.active || Math.hypot(p.x - at.x, p.z - at.z) > SQUAD.call) continue;
     o.aware = Math.max(o.aware ?? 0, 0.35);

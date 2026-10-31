@@ -19,7 +19,7 @@ type V3 = { x: number; y: number; z: number };
 export type Alert = 'unaware' | 'suspicious' | 'engaged' | 'searching' | 'heightened';
 /** A district's alert: its state and since when, its last contact with him (-1 none yet), and how long it stays
  *  Heightened (game seconds). */
-export interface District { state: Alert; since: number; contact: number; until: number }
+export interface District { state: Alert; since: number; contact: number; until: number; /** a small search's radius (M4-17) */ cap?: number }
 /** Real seconds without contact before Searching, and before the search ends; the hour Heightened lifts. */
 export const DISTRICT = { lost: 4, search: 150, calm: 6 };
 
@@ -50,7 +50,7 @@ export function stepDistricts(s: SimState, w: World) {
   const all = new Set([...Object.keys(s.hive.districts), ...aware]);
   for (const k of [...all].sort()) {
     const D = (s.hive.districts[k] ??= { state: 'unaware', since: s.time, contact: -1, until: 0 });
-    const to = (state: Alert) => { if (D.state !== state) { D.state = state; D.since = s.time; } };
+    const to = (state: Alert) => { if (D.state !== state) { D.state = state; D.since = s.time; if (state === 'engaged') D.cap = undefined; } };
     const c = told.get(k);
     if (c && c.t > D.contact) { D.contact = c.t; tell(s, w, k, c.t, c.at); }
     const lost = (s.time - D.contact) / SCALE;

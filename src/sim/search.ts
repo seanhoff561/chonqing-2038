@@ -18,9 +18,9 @@ type V3 = { x: number; y: number; z: number };
 export const SEARCH = { speed: 7, lead: 2, r0: 6, grow: 3, max: 140, check: 1.5, chance: 0.6, weight: { hide: 3, level: 2, ground: 1 }, cell: 32 };
 
 /** The disc he can be in, t real seconds after contact was lost. */
-export function searchArea(lkp: { x: number; z: number; hx: number; hz: number }, t: number) {
+export function searchArea(lkp: { x: number; z: number; hx: number; hz: number }, t: number, max = SEARCH.max) {
   const lead = SEARCH.speed * SEARCH.lead;
-  return { x: lkp.x + lkp.hx * lead, z: lkp.z + lkp.hz * lead, r: Math.min(SEARCH.max, SEARCH.r0 + SEARCH.grow * Math.max(0, t)) };
+  return { x: lkp.x + lkp.hx * lead, z: lkp.z + lkp.hz * lead, r: Math.min(max, SEARCH.r0 + SEARCH.grow * Math.max(0, t)) };
 }
 
 /** The places worth looking (each with its weight) filed by 32 m cell, once per world; and the hiding places by 4 m cell. */
@@ -76,7 +76,7 @@ export function stepSearch(s: SimState, w: World) {
     if (!t || isOff(s, u) || STATIC.has(u.kind)) continue;
     // Done looking where it went for him: on to another point while the district searches.
     if (searching && t.back && (t.kind === 'hunt' || t.kind === 'search')) {
-      const area = searchArea(k!, (s.time - d!.contact) / SCALE), to = searchPoint(s, w, k!, area);
+      const area = searchArea(k!, (s.time - d!.contact) / SCALE, d!.cap), to = searchPoint(s, w, k!, area);
       Object.assign(t, { kind: 'search', back: false, path: way(w, u.kind, t.pos, to), i: 0, scan: 0, visits: [] });
     }
     // The search over (M4-16): back it goes, from wherever it's got to.

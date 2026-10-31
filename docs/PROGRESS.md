@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-17 Silent units.
-Features done: 174 / 297 | Last done: M4-16
+**Status:** building M4. Next: M4-18 Enemy fire and wounds.
+Features done: 175 / 297 | Last done: M4-17
 <!-- /status -->
 
 ## Log
@@ -31,3 +31,4 @@ Features done: 174 / 297 | Last done: M4-16
 - M4-14 Convergence and escalation: machines near him converge, docks launch hunter drones every 20 s, the garage's squad after 45 s
 - M4-15 Search: the search: a growing disc ahead of him, weighted points, 60% checks of hiding places
 - M4-16 Wind-down and Heightened district: the search ends at 150 s; Heightened until 06:00: extra walkers, idle cameras on, awareness x1.3
+- M4-17 Silent units: silent machines draw a look after 12 s; out, a machine stays put; a wreck found starts a small search
