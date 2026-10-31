@@ -13,6 +13,7 @@ import { unitPose, isOff } from './units';
 import { visibility } from './perception';
 import { districtOf } from './district';
 import { DT } from './types';
+import { launcher } from './tag';
 
 /** A hit: its damage (taken as the tick's body step reads the 'hurt'), a bleed, maybe a limb. */
 export function hitHim(s: SimState, dmg: number, cause: string) {
@@ -31,7 +32,9 @@ export function stepFire(s: SimState, w: World) {
     if (!wpn) continue;
     const at = isOff(s, u) || (u.reserve && !u.trip) ? null : unitPose(w, u, s.time);
     if (!at || !at.active || at.docked || (u.state !== 'engaged' && !(hot.size && hot.has(districtOf(at.x, at.z))))) { u.aim = false; u.fire = undefined; u.left = undefined; continue; }
-    const W = WEAPONS[wpn], d = wpn === 'prod' ? Math.hypot(p.pos.x - at.x, p.pos.z - at.z) : Math.hypot(p.pos.x - at.x, p.pos.y + 1 - at.y, p.pos.z - at.z);
+    // (A prod's reach from its body to his middle: not up through a ledge he's on.)
+    const W = WEAPONS[wpn], d = wpn === 'prod' ? Math.hypot(p.pos.x - at.x, p.pos.y + 0.9 - at.y - 0.6, p.pos.z - at.z) : Math.hypot(p.pos.x - at.x, p.pos.y + 1 - at.y, p.pos.z - at.z);
+    if (u.kind === 'quadruped') launcher(s, w, u, at, d);
     // It looks for him along its gun ten times a second, as it sees.
     if ((u.id + s.tick) % 6 === 0) u.aim = !u.blind && d <= W.reach && visibility(s, w, u.kind, at) >= SIGHT.min;
     if (!u.aim) { u.fire = Math.max(0, (u.fire ?? 0) - DT); continue; }

@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-22 Tracking tags.
-Features done: 180 / 298 | Last done: M4-21b
+**Status:** building M4. Next: M4-23 Tracking home.
+Features done: 181 / 298 | Last done: M4-22
 <!-- /status -->
 
 ## Log
@@ -37,3 +37,5 @@ Features done: 180 / 298 | Last done: M4-21b
 - M4-20 Knife, crowbar and takedowns: knife and crowbar blows on the place aimed at; takedowns from behind in 2 s
 - M4-21 Pistol: the pistol: hitscan with spread and sway, kick, magazines and reloads, a 150 m hostile noise
 - M4-21b Guns made real (U-032): guns made real: the QSZ-92, aiming down the sights with a zoom, recoil, slide and flash; leaning with Q and E
+- U-045 fix (a8754f5): the black screen at start (since M4-11 the machines' mesh batch threw at boot) fixed and pushed to main; every page boots clean.
+- M4-22 Tracking tags: quadrupeds' tag launchers stick tracking tags that stay until found with an SDR dongle

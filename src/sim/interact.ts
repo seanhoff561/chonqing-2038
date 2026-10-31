@@ -87,8 +87,8 @@ export function stepInteract(s: SimState, w: World, input: InputFrame) {
   const p = s.player;
   if (p.mode === 'dead') return;
   const task = s.task;
-  // (A takedown is the knife's, M4-20; a reload the pistol's, M4-21.)
-  if (task?.id.startsWith('takedown:') || task?.id === 'reload') return;
+  // (A takedown is the knife's, M4-20; a reload the pistol's, M4-21; picking off a tag the dongle's, M4-22.)
+  if (task?.id.startsWith('takedown:') || task?.id === 'reload' || task?.id === 'untag') return;
   if (task?.id === ROUGH) {
     // Holding E on open floor lays him down to sleep rough (U-013); moving, hiding or a target cancels it.
     if (!(input.buttons & B.INTERACT) || p.mode !== 'ground' || lookTarget(s, w) || Math.hypot(p.vel.x, p.vel.z) > 0.5) { s.task = null; return; }

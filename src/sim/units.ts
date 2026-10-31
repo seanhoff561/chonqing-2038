@@ -58,6 +58,8 @@ export interface Unit {
   fire?: number;
   left?: number;
   aim?: boolean;
+  /** a quadruped's seconds till its tag launcher's next shot (M4-22) */
+  tagIn?: number;
 }
 
 /** Whether a machine is out just now (M4-13). */

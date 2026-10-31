@@ -55,6 +55,11 @@ export type Weapon = keyof typeof WEAPONS;
 export const MELEE = { knife: { damage: 40, reach: 1.6, every: 0.5, noise: 4 }, crowbar: { damage: 55, reach: 1.9, every: 1.1, noise: 20 } };
 export const TAKEDOWN = { reach: 1.5, rear: 120, time: 2, noise: 6 };
 
+/** A quadruped's tag launcher (DESIGN section 6, M4-22): a shot every 6 s at him out to 20 m (beyond its prod's
+ *  reach), sticking a tracking tag to his clothes three times in five; its pop heard 15 m round. Found with an SDR
+ *  dongle, a tag takes 3 s to pick off. */
+export const TAG = { every: 6, reach: 20, near: 1.5, chance: 0.6, noise: 15, remove: 3 };
+
 /** His pistol (DESIGN section 6, M4-21): damage a round, rounds a magazine, the least time between shots, how far it's
  *  heard and reaches, how long a reload takes; its spread in degrees (from the hip, aimed down the sights, more for each
  *  m/s he's moving, less crouched or lying), the aimed sway of his breathing (degrees), each shot's kick up (radians)
