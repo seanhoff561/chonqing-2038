@@ -11,7 +11,7 @@ import { SCALE } from '../../src/sim/clock';
 function pacing() {
   const { world, state } = setup([floor(0, 200)], { x: 0, y: 0, z: 0, yaw: 0 }, { patrols: [{ kind: 'street', unit: 'humanoid', pts: [{ x: 0, y: 0, z: -20 }, { x: 0, y: 0, z: -30 }], dwell: [5, 5], hours: [0, 24] }] });
   const u = state.units[0], T = loopOf(world, u);
-  state.time = 12 * 3600; state.weather = { fog: 0, rain: 0 };
+  state.time = 12 * 3600; state.flags.clear = true; state.weather = { fog: 0, rain: 0 };
   u.phase = 0.5 - ((state.time / SCALE) % T);
   return { world, state, u };
 }

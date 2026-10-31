@@ -1,16 +1,18 @@
 // Seeing him (M4-03, DESIGN section 5). How visible he is to a unit: the share of five points of his body (head, two
 // shoulders, pelvis, knees) inside its cone and range with nothing in the way, times the light on him (a night-vision
 // unit's floor under it; a drone's searchlight lights what it looks at by night), how his posture shows him, how he's
-// moving, the falloff with distance, and the weather's cut to its range. Each unit thinks ten times a second, in turn,
+// moving, the falloff with distance, and the weather's cut to its range. By night thermal units see his heat instead
+// (M4-06). Each unit thinks ten times a second, in turn,
 // and its awareness of him climbs while he's visible and falls away when he isn't.
 import type { SimState } from './types';
 import type { World } from '../world/world';
-import { SENSES, SIGHT, HEARING, type UnitKind } from '../data/units';
+import { SENSES, SIGHT, HEARING, THERMAL, type UnitKind } from '../data/units';
 import { movement as M } from '../data/movement';
 import { raycast } from '../world/geom';
 import { lightAt, LAMP_LIGHT } from './light';
 import { daylight } from './clock';
 import { unitPose, type Pose } from './units';
+import { onUseId } from './use';
 
 type V3 = { x: number; y: number; z: number };
 
@@ -40,6 +42,23 @@ function motion(s: SimState) {
   return v > M.speed.jog + 0.5 ? Mo.fast : Mo.jog;
 }
 
+/** How much of his heat shows to thermal sight: all of it, a tenth under the mylar blanket, three tenths wet, none
+ *  in water over a metre deep. */
+function heat(s: SimState, w: World) {
+  const p = s.player;
+  if (p.mode === 'swim') {
+    const top = w.water.find(b => p.pos.x >= b.x0 && p.pos.x <= b.x1 && p.pos.z >= b.z0 && p.pos.z <= b.z1 && p.pos.y < b.y1);
+    if (top && top.y1 - p.pos.y > THERMAL.deep) return 0;
+  }
+  return (wrapped(s) ? THERMAL.mylar : 1) * (p.wetUntil > s.tick ? THERMAL.wet : 1);
+}
+
+/** Whether he's wrapped in the mylar blanket (and still has it). */
+const wrapped = (s: SimState) => s.player.mylar && s.inv.pack.items.some(i => i.id === 'mylar');
+
+// The mylar blanket (M4-06): used, he wraps it round himself, or takes it off again.
+onUseId('mylar', s => { s.player.mylar = !wrapped(s); s.events.push({ t: 'msg', text: s.player.mylar ? 'wrapped in the mylar blanket' : 'mylar blanket off' }); });
+
 /** How far a unit sees now: its day range by day, its night range by night (between them at dusk), cut by fog and rain. */
 export function rangeOf(s: SimState, kind: UnitKind) {
   const S = SENSES[kind], d = daylight(s.time), f = s.weather.fog, r = s.weather.rain;
@@ -61,7 +80,12 @@ export function visibility(s: SimState, w: World, kind: UnitKind, at: Pose): num
   }
   if (!seen) return 0;
   let light = Math.max(lightAt(w, p, s.time, LAMP_LIGHT[s.player.lamp]), S.ir);
-  if (S.lamp && daylight(s.time) < 0.5) light = 1;
+  if (daylight(s.time) < 0.5) {
+    // By night: in a searchlight's spot he's lit; within thermal range his heat shows (M4-06).
+    const cx = p.x - eye.x, cy = p.y + 0.9 - eye.y, cz = p.z - eye.z, cl = Math.hypot(cx, cy, cz) || 1;
+    if (S.lamp && (cx * ax + cy * ay + cz * az) / cl > Math.cos((S.lamp * Math.PI) / 180)) light = 1;
+    else if (S.thermal && d <= S.thermal) light = Math.max(light, heat(s, w));
+  }
   return (seen / 5) * light * posture(s) * motion(s) * (1 - (d / range) ** 2);
 }
 

@@ -12,7 +12,7 @@ import { stepAlert } from '../../src/sim/alert';
 /** A quadruped standing at the origin facing away (-z), a wall along x = 3 between it and the street beyond. */
 function guarded() {
   const { world, state } = setup([floor(0, 200), solid(3, 0, -30, 3.4, 4, 30)], { x: 10, y: 0, z: -20, yaw: 0 }, { patrols: [{ kind: 'street', unit: 'quadruped', pts: [{ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: -0.01 }], dwell: [600, 600], hours: [0, 24] }] });
-  state.time = 12 * 3600; state.weather = { fog: 0, rain: 0 };
+  state.time = 12 * 3600; state.flags.clear = true; state.weather = { fog: 0, rain: 0 };
   return { world, state, u: state.units[0] };
 }
 

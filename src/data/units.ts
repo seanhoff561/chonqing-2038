@@ -31,19 +31,22 @@ export const DWELL = { end: 6, alley: 8, inside: 12, tunnel: 90 };
 export const PHASE = 0.08;
 
 /** What each kind sees (DESIGN sections 5 and 7): its cone (degrees, and pitched down for a drone's), how far by
- *  day and by night, its eyes' height over its feet, an infrared floor on the light it needs (0 for none), a lamp
- *  that lights what it looks at by night (the drones' searchlights), how far its thermal sight reaches at night, how
- *  well it hears. */
-export const SENSES: Record<UnitKind, { fov: number; pitch: number; day: number; night: number; eye: number; ir: number; lamp: boolean; thermal: number; hear: number }> = {
-  quadruped: { fov: 120, pitch: 0, day: 30, night: 20, eye: 0.85, ir: 0, lamp: false, thermal: 20, hear: 1.5 },
-  humanoid: { fov: 100, pitch: 0, day: 40, night: 22, eye: 1.8, ir: 0.3, lamp: false, thermal: 0, hear: 1 },
-  drone: { fov: 100, pitch: 45, day: 35, night: 30, eye: -0.1, ir: 0, lamp: true, thermal: 30, hear: 0.8 },
-  delivery: { fov: 120, pitch: 0, day: 18, night: 10, eye: 0.5, ir: 0, lamp: false, thermal: 0, hear: 1 },
-  carrier: { fov: 120, pitch: 0, day: 25, night: 15, eye: 1.2, ir: 0.3, lamp: false, thermal: 0, hear: 1 },
+ *  day and by night, its eyes' height over its feet, an infrared floor on the light it needs (0 for none), the
+ *  half-angle of a searchlight's spot along its cone that lights him by night (the drones'), how far its thermal
+ *  sight reaches at night, how well it hears. */
+export const SENSES: Record<UnitKind, { fov: number; pitch: number; day: number; night: number; eye: number; ir: number; lamp: number; thermal: number; hear: number }> = {
+  quadruped: { fov: 120, pitch: 0, day: 30, night: 20, eye: 0.85, ir: 0, lamp: 0, thermal: 20, hear: 1.5 },
+  humanoid: { fov: 100, pitch: 0, day: 40, night: 22, eye: 1.8, ir: 0.3, lamp: 0, thermal: 0, hear: 1 },
+  drone: { fov: 100, pitch: 45, day: 35, night: 30, eye: -0.1, ir: 0, lamp: 15, thermal: 30, hear: 0.8 },
+  delivery: { fov: 120, pitch: 0, day: 18, night: 10, eye: 0.5, ir: 0, lamp: 0, thermal: 0, hear: 1 },
+  carrier: { fov: 120, pitch: 0, day: 25, night: 15, eye: 1.2, ir: 0.3, lamp: 0, thermal: 0, hear: 1 },
 };
 
 /** Hearing him (DESIGN section 5): a noise is heard within its radius times the unit's hearing (its rotors dull a
  *  drone's), x0.6 through walls; gunfire and explosions are hostile, and the hive searches round them. */
+/** Thermal sight at night (DESIGN section 5): his heat shows as full light within a unit's thermal range, a tenth
+ *  of it under a mylar blanket, three tenths wet, none deeper than a metre in water. */
+export const THERMAL = { mylar: 0.1, wet: 0.3, deep: 1 };
 export const HEARING = { occluded: 0.6, hostile: new Set(['pistol', 'shotgun', 'grenade', 'firecrackers', 'explosion']) };
 
 /** Seeing him (DESIGN section 5): awareness climbs at RATE x visibility a second while he's visible at all (MIN),

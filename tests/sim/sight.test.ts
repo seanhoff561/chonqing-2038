@@ -11,7 +11,7 @@ import type { Solid } from '../../src/world/geom';
 /** A unit of a kind standing d metres from him, looking at him; and the world it's in. */
 function watched(kind: UnitKind, d: number, hour: number, more: Solid[] = []) {
   const { world, state } = setup([floor(), ...more], { x: 0, y: 0, z: 0, yaw: 0 }, { patrols: [{ kind: 'street', unit: kind, pts: [{ x: 0, y: 0, z: -d }], dwell: [1], hours: [0, 24] }] });
-  state.time = hour * 3600;
+  state.time = hour * 3600; state.flags.clear = true;
   state.weather = { fog: 0, rain: 0 };
   return { world, state, unit: state.units[0] };
 }
