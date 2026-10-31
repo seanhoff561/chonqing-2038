@@ -96,9 +96,10 @@ function shade(x: number, z: number): number {
 
 export class Buf {
   pos: number[] = []; nor: number[] = []; uv: number[] = []; col: number[] = [];
-  push(p: number[], n: number[], u: number[], c: number) {
+  push(p: number[], n: number[], u: number[], c: number | readonly number[]) {
     const l = Math.hypot(n[0], n[1], n[2]) || 1;
-    this.pos.push(p[0], p[1], p[2]); this.nor.push(n[0] / l, n[1] / l, n[2] / l); this.uv.push(u[0], u[1]); this.col.push(c, c, c);
+    this.pos.push(p[0], p[1], p[2]); this.nor.push(n[0] / l, n[1] / l, n[2] / l); this.uv.push(u[0], u[1]);
+    if (typeof c === 'number') this.col.push(c, c, c); else this.col.push(c[0], c[1], c[2]);
   }
   mesh(mat: THREE.Material): THREE.Mesh | null {
     if (!this.pos.length) return null;

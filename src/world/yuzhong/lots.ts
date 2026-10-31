@@ -23,6 +23,8 @@ export interface Plan {
   noEnter?: boolean;
   /** a cache reached only with a tool (M3-37, U-037): no holds on it, nothing joining it */
   sheer?: boolean;
+  /** a cache's neighbour in a running jump of it (M3-37): no holds on its walls either, none beside the cache */
+  holdless?: boolean;
   /** a climbing line up one of its sides from a neighbour's roof (vertical.ts, U-032) */
   /** a tower's skyline: the highest roof within 25 m of it (U-036) */
   sky?: number;

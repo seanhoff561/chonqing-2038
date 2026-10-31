@@ -23,6 +23,8 @@ export interface Lot {
   noEnter?: boolean;
   /** a cache reached only with a tool (M3-37, U-037): no holds, fronts or details on its walls */
   sheer?: boolean;
+  /** a cache's neighbour (M3-37): no holds on its walls, none beside the cache */
+  holdless?: boolean;
   /** its colour (M3-46): set by the caller or chosen from the palette by its material */
   tint?: number;
   /** a tower's podium top, if it has one */
@@ -54,7 +56,7 @@ export const PARAPET = 0.6;
 export function buildLot(l: Lot, r: Rng, out: Fabric) {
   const s0 = out.solids.length, f0 = out.far.length, c0 = out.climbables.length;
   l.tint ??= tintFor(l.mat, makeRng(hashString(`tint:${l.x0}:${l.z0}`)));
-  if (l.kind === 'tower') tower(l, r, out); else { mass(l, r, out); if (!l.sheer) facades(l, r, out); }
+  if (l.kind === 'tower') tower(l, r, out); else { mass(l, r, out); if (!l.sheer && !l.holdless) facades(l, r, out); }
   // A vine from the foot of a wall (M3-62) stops a mantle short of the first hold over it on that wall, or of the
   // roof where the ground's high beside it: up to a sill, not on up the building (U-036).
   for (let i = out.climbables.length - 1; i >= c0; i--) {
@@ -136,38 +138,63 @@ function mass(l: Lot, r: Rng, out: Fabric) {
   roofClutter(l, open, wall, [px0, pz0, px1, pz1], r, out);
 }
 
-/** Roof clutter (U-044: urban, never green), two to five things: water tanks on stilts and plastic drums (both room to
- *  hide in), AC condensers in a row, a corrugated shed open at one end (a corner to crouch in), a pile of crates, a
- *  solar water heater, a stairwell hut on a big roof. None on a roof a route keeps bare, nor round an enterable
+/** Roof clutter (U-044: urban, never green; U-049: sparse, and laid out as it would be): on four roofs in ten
+ *  nothing; on the rest one arrangement, now and then two, each set square to the roof's edges: a water tank on stilts
+ *  in a corner with blue drums by it (both room to hide in, M3-47); a row of AC condensers along an edge; solar water
+ *  heaters side by side along an edge; a corrugated shed in a corner, open at one end (a corner to crouch in), crates
+ *  stacked at its mouth; on a big roof a stairwell hut. None on a roof a route keeps bare, nor round an enterable
  *  block's roof hut and stair (its corner). */
 function roofClutter(l: Lot, open: boolean, wall: number, [px0, pz0, px1, pz1]: [number, number, number, number], r: Rng, out: Fabric) {
-  const n = l.bare ? 0 : 2 + randInt(r, 4), placed: [number, number, number][] = [];
-  for (let i = 0, t = 0; i < n && t < 20; t++) {
-    const cx = px0 + 1.8 + rand(r) * Math.max(0.1, px1 - px0 - 3.6), cz = pz0 + 1.8 + rand(r) * Math.max(0.1, pz1 - pz0 - 3.6), k = randInt(r, 7);
-    if ((open && Math.hypot(cx - l.x0, cz - l.z0) < 9) || placed.some(([x, z, rr]) => Math.hypot(cx - x, cz - z) < rr + 1.8)) continue;
+  const roll = rand(r), n = l.bare ? 0 : roll < 0.4 ? 0 : roll < 0.85 ? 1 : 2, W = px1 - px0, D = pz1 - pz0;
+  if (W < 4 || D < 4) return;
+  const used: [number, number, number, number][] = [];
+  const free = (x0: number, z0: number, x1: number, z1: number) => x0 >= px0 + 0.3 && z0 >= pz0 + 0.3 && x1 <= px1 - 0.3 && z1 <= pz1 - 0.3 &&
+    !(open && x0 < l.x0 + 9 && z0 < l.z0 + 9) && !used.some(([a, b, c, d]) => x0 < c + 1 && a < x1 + 1 && z0 < d + 1 && b < z1 + 1);
+  const box = (x0: number, z0: number, x1: number, z1: number, y0: number, y1: number, mat: number) => solid(x0, wall + y0, z0, x1, wall + y1, z1, mat);
+  // Each arrangement: its footprint along and across from a corner, and how it's built there (sx, sz: which way it
+  // runs from the corner).
+  const m = 3 + randInt(r, 2);
+  const make: [number, number, (cx: number, cz: number, sx: number, sz: number) => void][] = [
+    [5.4, 2.6, (cx, cz, sx, sz) => {
+      // Water: the tank on stilts in the corner, two drums along the edge from it.
+      const t = (x: number, z: number) => [cx + sx * x, cz + sz * z] as const, [tx, tz] = t(1.3, 1.3);
+      out.solids.push(box(tx - 1, tz - 1, tx + 1, tz + 1, 0.6, 2.2, MAT.metal)); out.props.push({ kind: 'stilts', x: tx, y: wall, z: tz, yaw: 0, w: 2, h: 0.6 });
+      out.hides.push({ id: out.hides.length, kind: 'tank', inner: { x0: tx - 0.9, y0: wall + 0.7, z0: tz - 0.9, x1: tx + 0.9, y1: wall + 2.1, z1: tz + 0.9 } });
+      for (let k = 0; k < 2; k++) { const [dx, dz] = t(3 + k * 1.2, 0.8); out.solids.push(box(dx - 0.5, dz - 0.5, dx + 0.5, dz + 0.5, 0, 1.25, MAT.hidden)); out.props.push({ kind: 'drum', x: dx, y: wall, z: dz, yaw: k * 0.7 }); }
+    }],
+    [1.3 * m + 0.6, 1.4, (cx, cz, sx, sz) => {
+      // Cooling: three or four condensers in a row along the edge, a hand apart.
+      for (let k = 0; k < m; k++) { const x = cx + sx * (0.9 + k * 1.3), z = cz + sz * 0.7; out.solids.push(box(x - 0.5, z - 0.35, x + 0.5, z + 0.35, 0, 0.75, MAT.metal)); }
+    }],
+    [4.8, 1.8, (cx, cz, sx, sz) => {
+      // Solar water heaters, two side by side along the edge, tubes tilted the same way.
+      for (let k = 0; k < 2; k++) {
+        const x = cx + sx * (1.2 + k * 2.3), z = cz + sz * 0.9;
+        out.solids.push(box(x - 1, z - 0.6, x + 1, z + 0.6, 0, 0.3, MAT.metal));
+        out.decor.push(box(x - 1, z - 0.6, x + 1, z - 0.5, 0.3, 0.9, MAT.glass), box(x - 1.05, z + 0.2, x + 1.05, z + 0.55, 1.0, 1.35, MAT.metal));
+      }
+    }],
+    [4.2, 2.2, (cx, cz, sx, sz) => {
+      // Storage: a corrugated shed in the corner, its open end facing along the edge, crates stacked at its mouth.
+      const x = cx + sx * 1.3, z = cz + sz * 1.0;
+      out.solids.push(box(x - 1.2, z - 0.9, x + 1.2, z - 0.85, 0, 2.1, MAT.metal), box(x - 1.2, z + 0.85, x + 1.2, z + 0.9, 0, 2.1, MAT.metal),
+        box(x - sx * 1.25 - 0.025, z - 0.9, x - sx * 1.25 + 0.025, z + 0.9, 0, 2.1, MAT.metal), box(x - 1.3, z - 0.95, x + 1.3, z + 0.95, 2.1, 2.2, MAT.metal));
+      out.hides.push({ id: out.hides.length, kind: 'nook', inner: { x0: Math.min(x - sx * 1.15, x - sx * 0.25), y0: wall, z0: z - 0.8, x1: Math.max(x - sx * 1.15, x - sx * 0.25), y1: wall + 1.9, z1: z + 0.8 } });
+      for (let k = 0; k < 3; k++) { const s = 0.7, cxk = x + sx * (2.0 + (k % 2) * 0.75), y = k === 2 ? 0.7 : 0; out.solids.push(box(cxk - s / 2, z - s / 2 + sz * 0.1, cxk + s / 2, z + s / 2 + sz * 0.1, y, y + s, MAT.crate)); }
+    }],
+    // A stairwell hut on a big roof (not an enterable block's: it has its own), an aerial on it.
+    [W >= 9 && D >= 9 && !open ? 3.2 : 99, 3.2, (cx, cz, sx, sz) => {
+      const x = cx + sx * 1.6, z = cz + sz * 1.6;
+      out.solids.push(box(x - 1.3, z - 1.3, x + 1.3, z + 1.3, 0, 2.6, MAT.concrete));
+      out.props.push({ kind: 'antenna', x, y: wall + 2.6, z, yaw: 0 });
+    }],
+  ];
+  for (let i = 0, tries = 0; i < n && tries < 8; tries++) {
+    const [along, across, build] = make[randInt(r, make.length)], sx = rand(r) < 0.5 ? 1 : -1, sz = rand(r) < 0.5 ? 1 : -1, cx = sx > 0 ? px0 + 0.3 : px1 - 0.3, cz = sz > 0 ? pz0 + 0.3 : pz1 - 0.3;
+    const x0 = Math.min(cx, cx + sx * along), x1 = Math.max(cx, cx + sx * along), z0 = Math.min(cz, cz + sz * across), z1 = Math.max(cz, cz + sz * across);
+    if (!free(x0, z0, x1, z1)) continue;
+    build(cx, cz, sx, sz);
+    used.push([x0, z0, x1, z1]);
     i++;
-    if (k === 0) {
-      // A water tank on stilts, empty now: room to hide in (M3-47).
-      out.solids.push(solid(cx - 1, wall + 0.6, cz - 1, cx + 1, wall + 2.2, cz + 1, MAT.metal)); out.props.push({ kind: 'stilts', x: cx, y: wall, z: cz, yaw: 0, w: 2, h: 0.6 });
-      out.hides.push({ id: out.hides.length, kind: 'tank', inner: { x0: cx - 0.9, y0: wall + 0.7, z0: cz - 0.9, x1: cx + 0.9, y1: wall + 2.1, z1: cz + 0.9 } });
-    } else if (k === 1) {
-      for (let j = 0, m = 1 + randInt(r, 3); j < m; j++) out.solids.push(solid(cx - 0.5 + j * 1.2, wall, cz - 0.35, cx + 0.5 + j * 1.2, wall + 0.7, cz + 0.35, MAT.metal));
-    } else if (k === 2) {
-      // A blue plastic water drum, its lid off: a hiding place like the streets' (the world makes it one).
-      out.solids.push(solid(cx - 0.5, wall, cz - 0.5, cx + 0.5, wall + 1.25, cz + 0.5, MAT.hidden));
-      out.props.push({ kind: 'drum', x: cx, y: wall, z: cz, yaw: rand(r) * 3 });
-    } else if (k === 3) {
-      // A corrugated shed, open at its east end; crouched in its back corner, out of sight from above.
-      out.solids.push(solid(cx - 1.2, wall, cz - 0.9, cx + 1.2, wall + 2.1, cz - 0.85, MAT.metal), solid(cx - 1.2, wall, cz + 0.85, cx + 1.2, wall + 2.1, cz + 0.9, MAT.metal),
-        solid(cx - 1.25, wall, cz - 0.9, cx - 1.2, wall + 2.1, cz + 0.9, MAT.metal), solid(cx - 1.25, wall + 2.1, cz - 0.95, cx + 1.3, wall + 2.2, cz + 0.95, MAT.metal));
-      out.hides.push({ id: out.hides.length, kind: 'nook', inner: { x0: cx - 1.15, y0: wall, z0: cz - 0.8, x1: cx - 0.25, y1: wall + 1.9, z1: cz + 0.8 } });
-    } else if (k === 4) {
-      for (let j = 0, m = 2 + randInt(r, 3); j < m; j++) { const s = 0.6 + rand(r) * 0.4, x = cx + (rand(r) - 0.5) * 1.6, z = cz + (rand(r) - 0.5) * 1.6, y = wall + (j > 1 ? 0.6 : 0); out.solids.push(solid(x - s / 2, y, z - s / 2, x + s / 2, y + s, z + s / 2, MAT.wood)); }
-    } else if (k === 5) {
-      // A solar water heater: a tank on a frame over tilted tubes.
-      out.solids.push(solid(cx - 1, wall, cz - 0.6, cx + 1, wall + 0.3, cz + 0.6, MAT.metal));
-      out.decor.push(solid(cx - 1, wall + 0.3, cz - 0.6, cx + 1, wall + 0.9, cz - 0.5, MAT.glass), solid(cx - 1.05, wall + 1.0, cz + 0.2, cx + 1.05, wall + 1.35, cz + 0.55, MAT.metal));
-    } else if (px1 - px0 > 6 && pz1 - pz0 > 6 && !open) out.solids.push(solid(cx - 1.3, wall, cz - 1.3, cx + 1.3, wall + 2.6, cz + 1.3, MAT.concrete));
-    placed.push([cx, cz, 1.4]);
   }
 }

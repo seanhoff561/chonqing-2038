@@ -659,7 +659,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Four key points of the district (hideout gate, Shibati top, Jiaochangkou, the riverfront) are linked by a street route, a rooftop or beam route and an underground or interior route
   - A sim test checks each link with the nav and movement limits
 
-## M4: 26 of 41 done
+## M4: 27 of 41 done
 
 M4 The machines: cameras, drones and their docks, ground robots, turrets; perception (light, distance, motion, posture, cover, sound, thermal); patrol schedules; alert states, the hivemind broadcast, convergence, drone launches, the search and the heightened district; combat and damage; tracking home and the hideout raid; death and restart. After M4 the core loop is playable start to finish.
 
@@ -756,7 +756,7 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
   - The alley is at the heart of the route network: the network's key points and most route stretches are near it, and a climb (pipe, ladder, crates) goes from the alley up onto the roof routes
   - The chamber connects to the rest of the underground at most through one crawl vent (U-047: "except for maybe through one vent"); no stairway mouth or tunnel entrance within 60 m of the grate
   - Sim tests for each, and the run still starts in the chamber and climbs out through the grate
-- [ ] **M4-22d** Visual pass: roofs, QR codes, paving, road paint, grates (U-049)
+- [x] **M4-22d** Visual pass: roofs, QR codes, paving, road paint, grates (U-049)
   - Roof props far sparser and placed as designed arrangements (a few templates of what stands on a roof together), not scattered repeats
   - QR stickers rare: a small fraction of what there was
   - The pavement doesn't read as a repeating pattern; road markings worn, faded and off-white

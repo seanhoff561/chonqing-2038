@@ -18,6 +18,16 @@ import { ROAD, KERB_W, PAVE } from '../world/yuzhong/ground';
 
 /** Kerb height and width, pavement width, line paint brightness (vertex colour over the dark asphalt). */
 const KERB = 0.12, PAINT = 7;
+
+/** A hash of a lattice point, 0..1; smooth value noise over the map from it (U-049: no tiled sameness). */
+const hash = (i: number, j: number) => { let h = Math.imul(i, 374761393) ^ Math.imul(j, 668265263); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+function noise(x: number, z: number) {
+  const i = Math.floor(x), j = Math.floor(z), fx = x - i, fz = z - j, sx = fx * fx * (3 - 2 * fx), sz = fz * fz * (3 - 2 * fz);
+  const a = hash(i, j) + (hash(i + 1, j) - hash(i, j)) * sx, b = hash(i, j + 1) + (hash(i + 1, j + 1) - hash(i, j + 1)) * sx;
+  return a + (b - a) * sz;
+}
+/** The surface's wear at a point: patches of darker and paler grime a few metres across over finer blotches. */
+const wash = (x: number, z: number) => 0.74 + 0.22 * noise(x / 7, z / 7) + 0.1 * noise(x / 1.7 + 31, z / 1.7 + 17);
 const STEP = 2, UP: [number, number, number] = [0, 1, 0];
 
 interface Seg { ax: number; az: number; bx: number; bz: number; half: number; s: StreetLine }
@@ -123,10 +133,18 @@ export function streetBuffers(g: Heightfield, streets: StreetLine[], lawns?: [nu
         const poke = Math.max(rise(g, v[0]!, v[1]!, v[2]!), rise(g, v[0]!, v[2]!, v[3]!)) + lift - 0.01;
         if (poke > 0.3) continue;
         if (poke > 0) for (const c of v) c![1] += poke;
+        // (Not over a hole in the ground: a grate's or a stairway's opening shows through, U-049.)
+        if (v.some(c => holed(g, c![0], c![2]))) continue;
+        // Paint worn (U-049): gaps where it's gone, the rest faded and dirty, never fresh white.
+        const worn = colour > 1 ? hash(Math.round(mx * 4), Math.round(mz * 4)) : 1;
+        if (worn < 0.18) continue;
         const buf = bufAt(mx, mz)[b], sc = b === 0 ? asph : pave;
         // Wound to face up whichever side the offsets run.
         const [a, bb, c, d] = (o1 > o0 ? [v[0], v[1], v[2], v[3]] : [v[0], v[3], v[2], v[1]]) as number[][];
-        for (const t of [a, bb, c, a, c, d]) buf.push(t, UP, [t[0] * sc, t[2] * sc], colour);
+        for (const t of [a, bb, c, a, c, d]) {
+          const k = colour > 1 ? colour * (0.22 + 0.2 * worn) * wash(t[0], t[2]) : colour * wash(t[0], t[2]);
+          buf.push(t, UP, [t[0] * sc, t[2] * sc], colour > 1 ? [k, k * 0.95, k * 0.84] : [k, k, k]);
+        }
       }
     };
     /** A kerb's face toward the road, from the asphalt up to the kerb top. */
@@ -154,10 +172,13 @@ export function streetBuffers(g: Heightfield, streets: StreetLine[], lawns?: [nu
         if (s.w >= 5) strip(side * (h - 0.45), side * (h - 0.3), 0.045, 0, PAINT, undefined, false);
       }
       if (s.w >= 5.5) strip(-0.08, 0.08, 0.045, 0, PAINT, d => d % 9 < 4.5, false);
-      // Gutters darker along the kerbs, a drain grate in them every 25 m, a manhole cover every 40 m.
+      // Gutters darker along the kerbs, a drain grate in them every 25 m (bars over the black under them, U-049: not a
+      // painted patch), a manhole cover every 40 m.
+      const grate = (d: number) => d % 25 > 12 && d % 25 < 12.9;
       for (const side of [-1, 1]) {
         strip(side * (h - 0.25), side * h, 0.04, 0, 0.7, undefined, false);
-        strip(side * (h - 0.25), side * (h - 0.75), 0.042, 0, 0.3, d => d % 25 > 12 && d % 25 < 12.9, false);
+        strip(side * (h - 0.25), side * (h - 0.75), 0.042, 0, 0.03, grate, false);
+        for (let o = h - 0.74; o < h - 0.27; o += 0.07) strip(side * o, side * (o + 0.025), 0.047, 0, 0.6, grate, false);
       }
       strip(-0.4 - h / 3, 0.4 - h / 3, 0.042, 0, 0.35, d => d % 40 > 20 && d % 40 < 20.8, false);
       // Zebra crossings where it meets another road.
@@ -258,4 +279,10 @@ function rise(g: Heightfield, a: number[], b: number[], c: number[]): number {
     for (let k = 1; k < n; k++) most = Math.max(most, over(p[0] + ((q[0] - p[0]) * k) / n, p[2] + ((q[2] - p[2]) * k) / n));
   }
   return most;
+}
+
+/** Whether the ground is holed where (x, z) is. */
+function holed(g: Heightfield, x: number, z: number) {
+  const i = Math.floor(x / g.cell), j = Math.floor(z / g.cell);
+  return i >= 0 && j >= 0 && i < g.w - 1 && j < g.h - 1 && g.hole[j * (g.w - 1) + i] === 1;
 }

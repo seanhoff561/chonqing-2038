@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-22d Visual pass: roofs, QR codes, paving, road paint, grates (U-049).
-Features done: 182 / 301 | Last done: M4-22b
+**Status:** building M4. Next: M4-22c Faster loading and a new run without reloading (U-048).
+Features done: 183 / 301 | Last done: M4-22d
 <!-- /status -->
 
 ## Log
@@ -40,3 +40,4 @@ Features done: 182 / 301 | Last done: M4-22b
 - U-045 fix (a8754f5): the black screen at start (since M4-11 the machines' mesh batch threw at boot) fixed and pushed to main; every page boots clean.
 - M4-22 Tracking tags: quadrupeds' tag launchers stick tracking tags that stay until found with an SDR dongle
 - M4-22b The hideout in a real alley at the heart of the routes (U-047, U-048): the hideout under a real alley at the heart of the routes, sealed from the underground, a drainpipe up to the roofs
+- M4-22d Visual pass: roofs, QR codes, paving, road paint, grates (U-049): the visual pass: sparse composed roofs, rare QR codes, worn off-white paint, grime over the paving, grates you see through

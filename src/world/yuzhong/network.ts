@@ -50,8 +50,9 @@ export function pickGates(plans: Plan[], r: Rng, count = 5): [Plan, Plan][] {
     const from = near.find(q => q.kind !== 'tower' && obbOverlap(p.obb, q.obb, 8) && !obbOverlap(p.obb, q.obb, E.runningJump.max / 2 + 0.3) && Math.abs(q.wall - p.wall) <= 4 && grappleSpan([p, q]) <= REACH.grapple.across + 2);
     if (!from) continue;
     p.sheer = true; p.noEnter = true;
-    // (Its neighbours keep their heights: no connection sets one to meet a roof and so brings it into reach.)
-    for (const q of near) if (obbOverlap(p.obb, q.obb, E.runningJump.max / 2 + 0.3)) q.flex = undefined;
+    // (Its neighbours keep their heights: no connection sets one to meet a roof and so brings it into reach; and
+    // their walls hold nothing, no beam end or sill sticking out beside the cache.)
+    for (const q of near) if (obbOverlap(p.obb, q.obb, E.runningJump.max / 2 + 0.3)) { q.flex = undefined; q.holdless = true; }
     out.push([p, from]);
   }
   return out;

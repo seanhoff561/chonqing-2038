@@ -64,8 +64,8 @@ export function signage(l: Lot, p: Plan, r: Rng, f: Fabric) {
       const w = 3 + rand(r) * 1.5, u = fc.c + (rand(r) - 0.5) * (fc.len - w - 1), y = l.base + 4.4 + rand(r) * 1.5;
       if (room(u, w + 0.2, y, 0.9, 0.12, 0.02)) { put('redbanner', u, y, { w, text: String(randInt(r, 64)) }); break; }
     }
-    // QR stickers by the doors, at hand height: pay here, scan to register, a code the machines put up.
-    for (let i = 0, n = randInt(r, 3); i < n; i++) {
+    // A QR sticker by a door now and then (U-049: not everywhere), at hand height: pay here, scan to register.
+    for (let i = 0, n = rand(r) < 0.12 ? 1 : 0; i < n; i++) {
       const u = fc.c + (rand(r) - 0.5) * (fc.len - 1), y = l.base + 1.2 + rand(r) * 0.5;
       if (room(u, 0.32, y, 0.4, 0.05, 0.02)) put('qr', u, y, { text: String(randInt(r, 32)) });
     }

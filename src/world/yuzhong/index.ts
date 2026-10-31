@@ -307,7 +307,7 @@ function landMask(g: Heightfield): Uint8Array {
 
 /** Build one lot in its own frame and turn everything it made into place. */
 function buildPlan(p: Plan, n: number, out: Fabric, g: Heightfield): Plot {
-  const o = p.obb, l: Lot = { id: n, x0: o.cx - o.hw, z0: o.cz - o.hd, x1: o.cx + o.hw, z1: o.cz + o.hd, base: p.base, wall: p.wall, top: p.wall, kind: p.kind, mat: p.mat, street: p.street, across: p.across, noEnter: p.noEnter, edge: p.edge, sky: p.sky, bare: p.bare, pitched: p.pitched, sheer: p.sheer,
+  const o = p.obb, l: Lot = { id: n, x0: o.cx - o.hw, z0: o.cz - o.hd, x1: o.cx + o.hw, z1: o.cz + o.hd, base: p.base, wall: p.wall, top: p.wall, kind: p.kind, mat: p.mat, street: p.street, across: p.across, noEnter: p.noEnter, edge: p.edge, sky: p.sky, bare: p.bare, pitched: p.pitched, sheer: p.sheer, holdless: p.holdless,
     ground: (x, z) => { const c = Math.cos(o.yaw), s = Math.sin(o.yaw); return heightAt(g, o.cx + c * (x - o.cx) - s * (z - o.cz), o.cz + s * (x - o.cx) + c * (z - o.cz)) ?? p.base; } };
   const f = empty(), r = makeRng(hashString(p.seed));
   if (p.far) {

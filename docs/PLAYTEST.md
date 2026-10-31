@@ -157,3 +157,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M4-22b: the hideout in a real alley (U-047, U-048)
 - Start a run: climb the shaft ladder, open the grate and come out: does the alley in Shibati's old quarter feel like a real back lane at the heart of things? Is the drainpipe up to the roofs easy to find and climb, and do the roof ways from there feel like a good start? Anything about the grate or shaft still in the way?
+
+## M4-22d: the visual pass (U-049)
+- Look over a district's flat roofs from a tall roof: sparse enough, and do the arrangements (tank and drums, condensers, solar heaters, shed and crates) look placed rather than scattered? Walk a main road: is the paint worn enough, the paving's repetition broken up, and do the gutter drains read as grates with dark under them? Too few QR stickers now, or right?

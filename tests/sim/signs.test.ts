@@ -12,7 +12,9 @@ const cyber = (d: { cyber: boolean }) => d.cyber, shibati = (d: { district: stri
 
 describe('signs (M3-14)', () => {
   it('hangs every kind in the crowded centres', () => {
-    for (const [k, n] of [['neonblade', 200], ['ledscreen', 20], ['ledboard', 40], ['redbanner', 15], ['qr', 100]] as const) expect(of(k, cyber).length, k).toBeGreaterThan(n);
+    // (QR stickers only now and then since U-049: a tenth as many as there were.)
+    for (const [k, n] of [['neonblade', 200], ['ledscreen', 20], ['ledboard', 40], ['redbanner', 15], ['qr', 10]] as const) expect(of(k, cyber).length, k).toBeGreaterThan(n);
+    expect(of('qr').length).toBeLessThan(80);
   });
   it("hangs Shibati's old houses with signs and banners, and no screens", () => {
     expect(of('neonblade', shibati).length).toBeGreaterThan(10);
