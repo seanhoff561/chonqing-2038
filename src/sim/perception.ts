@@ -113,7 +113,7 @@ export function stepSight(s: SimState, w: World, every = 6) {
   for (const u of s.units) {
     // A tripwire's beam is watched every tick, so no running step goes through it unseen (M4-11).
     if (u.kind === 'tripwire') {
-      if (wireTrips(s, w.cameras[u.cam!])) { u.aware = 1.2; u.seen = { ...s.player.pos }; }
+      if (wireTrips(s, w.cameras[u.cam!])) { u.aware = 1.2; u.seen = { ...s.player.pos }; u.saw = s.time; }
       else u.aware = Math.max(0, (u.aware ?? 0) - SIGHT.decay / 60);
       continue;
     }
@@ -121,13 +121,13 @@ export function stepSight(s: SimState, w: World, every = 6) {
     const at = unitPose(w, u, s.time);
     // A motion sensor's alarm: all at once (M4-11).
     if (u.kind === 'pir') {
-      if (pirTrips(s, w, at)) { u.aware = 1.2; u.seen = { ...s.player.pos }; }
+      if (pirTrips(s, w, at)) { u.aware = 1.2; u.seen = { ...s.player.pos }; u.saw = s.time; }
       else u.aware = Math.max(0, (u.aware ?? 0) - SIGHT.decay * dt);
       continue;
     }
     const v = at.active && !at.docked ? visibility(s, w, u.kind, at) : 0;
     u.aware = v >= SIGHT.min ? Math.min(1.5, (u.aware ?? 0) + SIGHT.rate * v * dt) : Math.max(0, (u.aware ?? 0) - SIGHT.decay * dt);
-    if (v >= SIGHT.min) u.seen = { ...s.player.pos };
+    if (v >= SIGHT.min) { u.seen = { ...s.player.pos }; u.saw = s.time; }
   }
 }
 

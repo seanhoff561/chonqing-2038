@@ -659,7 +659,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Four key points of the district (hideout gate, Shibati top, Jiaochangkou, the riverfront) are linked by a street route, a rooftop or beam route and an underground or interior route
   - A sim test checks each link with the nav and movement limits
 
-## M4: 13 of 37 done
+## M4: 14 of 37 done
 
 M4 The machines: cameras, drones and their docks, ground robots, turrets; perception (light, distance, motion, posture, cover, sound, thermal); patrol schedules; alert states, the hivemind broadcast, convergence, drone launches, the search and the heightened district; combat and damage; tracking home and the hideout raid; death and restart. After M4 the core loop is playable start to finish.
 
@@ -713,7 +713,7 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
 - [x] **M4-11** Turrets, motion sensors, tripwires and acoustic sensors
   - Static sensors behave per DESIGN section 7; turrets fire when Engaged
   - Sim tests: crossing a tripwire engages; a motion sensor ignores a slow crawl
-- [ ] **M4-12** District alert state machine
+- [x] **M4-12** District alert state machine
   - Unaware, Suspicious, Engaged, Searching and Heightened transitions per DESIGN section 5
   - Unit tests cover each transition and its timing
 - [ ] **M4-13** Hivemind broadcast

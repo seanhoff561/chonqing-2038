@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-12 District alert state machine.
-Features done: 169 / 297 | Last done: M4-11
+**Status:** building M4. Next: M4-13 Hivemind broadcast.
+Features done: 170 / 297 | Last done: M4-12
 <!-- /status -->
 
 ## Log
@@ -26,3 +26,4 @@ Features done: 169 / 297 | Last done: M4-11
 - M4-01c Memory: stream the city's near layers (found in the M3 verify): Memory: the city's near layers streamed by 256 m cell, the machines in one batch; heap 4.4 GB to 2.8 GB
 - M4-10 Humanoids: Humanoids: walk 2.5, run 4.5, stairs only, armoured and armed; they call each other, flank, take cover and search hiding places one by one
 - M4-11 Turrets, motion sensors, tripwires and acoustic sensors: tripwires, motion sensors, acoustic sensors and turrets that fire when Engaged; hearing hears every noise of a tick; humanoids scan 8 s again
+- M4-12 District alert state machine: each district's alert: Unaware, Suspicious, Engaged, Searching and Heightened

@@ -80,8 +80,8 @@ export interface SimState {
   dropped: Dropped[];
   /** the machines on their beats (M4-01) */
   units: import('./units').Unit[];
-  /** what the hive knows (M4-04): where and when it has seen him */
-  hive: { seen: { x: number; y: number; z: number; t: number }[] };
+  /** what the hive knows (M4-04): where and when it has seen him; each district's alert that isn't Unaware (M4-12) */
+  hive: { seen: { x: number; y: number; z: number; t: number }[]; districts: Record<string, import('./district').District> };
   /** container currently open beside the backpack, or null */
   openContainer: string | null;
   /** interactable id he's looking at, and a running hold-E task */

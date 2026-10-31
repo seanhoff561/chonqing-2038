@@ -16,8 +16,9 @@ export interface Unit {
   cam?: number;
   /** how aware of him it is (M4-03): 0.3 suspicious, 1 engaged */
   aware?: number;
-  /** where it last saw him (M4-04) */
+  /** where it last saw him (M4-04), and when (M4-12) */
   seen?: { x: number; y: number; z: number };
+  saw?: number;
   /** off its beat (M4-04): going to look at a point, looking about there, coming back (sim/alert.ts) */
   trip?: Trip;
   /** when it last went to check a place the hive saw him (M4-04) */
