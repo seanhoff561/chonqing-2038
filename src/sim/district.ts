@@ -28,6 +28,8 @@ export const districtOf = (x: number, z: number) => districtAt(x, z).district;
 const where = (w: World, s: SimState, u: Unit): V3 => (STATIC.has(u.kind) ? w.cameras[u.cam!] : unitPose(w, u, s.time));
 
 export const alertOf = (s: SimState, d: string): Alert => s.hive.districts[d]?.state ?? 'unaware';
+/** The districts Heightened just now (M4-16): suspicion over it or not, until their 06:00. */
+export const heightened = (s: SimState) => new Set(Object.keys(s.hive.districts).filter(k => s.hive.districts[k].until > s.time));
 
 /** Ten times a second: what the machines that have him tell the network, and each district's state from its units
  *  that aren't Unaware (where each is now). */
@@ -58,6 +60,12 @@ export function stepDistricts(s: SimState, w: World) {
     else if (aware.has(k)) to('suspicious');
     else to(s.time < D.until ? 'heightened' : 'unaware');
     if (D.state === 'unaware') delete s.hive.districts[k];
+  }
+  // Heightened (M4-16): its extra walkers out (in once back from wherever they went), its idle cameras on.
+  const H = heightened(s);
+  for (const u of s.units) {
+    if (u.extra) u.on = !!u.trip || H.has(districtOf(...xz(w.patrols[u.patrol].pts[0])));
+    else if (u.cam !== undefined && w.cameras[u.cam].dark) u.on = H.has(districtOf(...xz(w.cameras[u.cam])));
   }
 }
 

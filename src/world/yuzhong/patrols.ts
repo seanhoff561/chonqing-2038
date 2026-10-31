@@ -157,7 +157,8 @@ export function columnSpurs(w: World, pts: V3[]): { s: number; at: V3 }[] {
 }
 
 /** The cameras (M4-07, U-038: commonplace, so he's always on edge): every smart lamppost's, looking along its street;
- *  every camera pole's at the junctions; one over every third street door in the districts, looking out from it; and
+ *  every camera pole's at the junctions; one over every third street door in the districts, looking out from it (one
+ *  in four of those idle until the district's Heightened); and
  *  at each district's centre a sweeper, on the lamppost nearest it. */
 export function placeCameras(w: World): Camera[] {
   const out: Camera[] = [];
@@ -169,7 +170,8 @@ export function placeCameras(w: World): Camera[] {
   w.plots.filter(p => !p.far && p.route && p.route.length > 1 && near(p.route[0].x, p.route[0].z)).forEach((p, i) => {
     if (i % 3) return;
     const [door, inside] = p.route!, dx = door.x - inside.x, dz = door.z - inside.z, d = Math.hypot(dx, dz) || 1;
-    out.push({ kind: 'camera', x: door.x - (dx / d) * 0.6, y: door.y + 2.8, z: door.z - (dz / d) * 0.6, yaw: Math.atan2(dx, dz) });
+    // (One in four idle, its light off, until the district's Heightened: M4-16.)
+    out.push({ kind: 'camera', x: door.x - (dx / d) * 0.6, y: door.y + 2.8, z: door.z - (dz / d) * 0.6, yaw: Math.atan2(dx, dz), ...(i % 12 === 6 ? { dark: true } : {}) });
   });
   for (const k of DISTRICTS) {
     const L = GEO.landmarks[k];

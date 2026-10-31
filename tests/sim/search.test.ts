@@ -48,7 +48,7 @@ describe('search (M4-15)', () => {
   });
   it('checks a hiding place it passes within 1.5 m three times in five, and not one 2 m off', () => {
     const trial = (seed: number, off: number) => {
-      const { world, state } = setup([floor(0, 100)], { x: 0, y: 0, z: 0, yaw: 0 }, { hides: [hide(0, 0, 0)], patrols: [{ kind: 'street', unit: 'quadruped', pts: [{ x: -20, y: 0, z: off }, { x: 20, y: 0, z: off }], dwell: [1, 1], hours: [0, 24] }] });
+      const { world } = setup([floor(0, 100)], { x: 0, y: 0, z: 0, yaw: 0 }, { hides: [hide(0, 0, 0)], patrols: [{ kind: 'street', unit: 'quadruped', pts: [{ x: -20, y: 0, z: off }, { x: 20, y: 0, z: off }], dwell: [1, 1], hours: [0, 24] }] });
       const s = createState(seed, world), u = s.units[0];
       s.player.mode = 'hidden'; s.player.hideId = 0;
       u.trip = { kind: 'search', path: [{ x: 20, y: 0, z: off }], i: 0, pos: { x: -20, y: 0, z: off }, yaw: 0, scan: 0, back: false, left: { x: -20, y: 0, z: off }, leftAt: 0 };

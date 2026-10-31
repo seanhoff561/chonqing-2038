@@ -20,6 +20,9 @@ export interface Unit {
   sent?: number;
   /** the hiding place it last passed near, and checked or not (M4-15) */
   near?: number;
+  /** a walker out only while its district is Heightened (M4-16), and whether it's out (or an idle camera on) */
+  extra?: boolean;
+  on?: boolean;
   /** how aware of him it is (M4-03): 0.3 suspicious, 1 engaged */
   aware?: number;
   /** where it last saw him (M4-04), and when (M4-12) */
@@ -85,6 +88,8 @@ export function createUnits(seed: number, w: World): Unit[] {
   (w.convoys ?? []).forEach((c, path) => {
     for (let slot = 0; slot < column(c).slots; slot++) COLUMN.squad.forEach((m, member) => out.push({ id: out.length, kind: m.kind, patrol: -1, phase: 0, state: 'unaware', convoy: { path, slot, member } }));
   });
+  // The Heightened district's extra walkers (M4-16): a second on every other beat, half a loop behind the first.
+  w.patrols.forEach((p, i) => { if (i % 2) out.push({ id: out.length, kind: p.unit, patrol: i, phase: out[i].phase + timeline(p, UNITS[p.unit].patrol).T / 2, state: 'unaware', extra: true }); });
   // The reserves (M4-14): three hunter drones on each dock, a squad of two humanoids in each garage.
   w.docks.forEach((_, dock) => { for (let k = 0; k < CONVERGE.perDock; k++) out.push({ id: out.length, kind: 'hunter', patrol: -1, phase: 0, state: 'unaware', reserve: { dock } }); });
   w.garages.forEach((_, garage) => { for (let k = 0; k < CONVERGE.squad; k++) out.push({ id: out.length, kind: 'humanoid', patrol: -1, phase: 0, state: 'unaware', reserve: { garage } }); });
@@ -158,12 +163,13 @@ export function unitPose(w: World, u: Unit, time: number): Pose {
   if (u.cam !== undefined) {
     // A sweeper pans to and fro at a steady rate, 10 s a pass.
     const c = w.cameras[u.cam], k = ((((time / SCALE + u.phase) / SWEEP.pass) % 2) + 2) % 2, pan = c.kind === 'sweeper' ? ((Math.abs(k - 1) * 2 - 1) * SWEEP.arc * Math.PI) / 180 : 0;
-    return { x: c.x, y: c.y, z: c.z, yaw: c.yaw + pan, active: true };
+    return { x: c.x, y: c.y, z: c.z, yaw: c.yaw + pan, active: !c.dark || !!u.on };
   }
   if (u.convoy) return columnPose(w, u, time / SCALE);
   // A reserve at home: a hunter on its dock (seen there, seeing nothing), a humanoid inside its garage.
   if (u.reserve) { const d = u.reserve.dock, h = d !== undefined ? w.docks[d] : w.garages[u.reserve.garage!]; return { x: h.x + ((u.id % 3) - 1) * 0.9, y: h.y, z: h.z, yaw: 0, active: d !== undefined, docked: true }; }
   const p = w.patrols[u.patrol], start = p.pts[0], dock = p.dock !== undefined ? w.docks[p.dock] : null;
+  if (u.extra && !u.on) return { x: start.x, y: start.y, z: start.z, yaw: 0, active: false };
   const home: Pose | null = dock && { x: dock.x, y: dock.y, z: dock.z, yaw: 0, active: true, docked: true };
   if (!keeps(p.hours, hourOf(time))) return home ?? { x: start.x, y: start.y, z: start.z, yaw: 0, active: false };
   if (home) {

@@ -15,10 +15,12 @@ const w = getWorld('yuzhong'), P = w.patrols;
 describe('units and their beats (M4-01)', () => {
   it('keeps units as plain data, each started within 8% of its loop', () => {
     const s = createState(5, w);
-    // (The beats' walkers: the columns' and the cameras' aren't on beats.)
-    expect(s.units.filter(u => u.patrol >= 0).length).toBe(P.length);
+    // (The beats' walkers: the columns' and the cameras' aren't on beats; every other beat's second walker is out
+    // only while its district is Heightened, M4-16.)
+    expect(s.units.filter(u => u.patrol >= 0 && !u.extra).length).toBe(P.length);
+    expect(s.units.filter(u => u.extra).length).toBe(Math.floor(P.length / 2));
     expect(JSON.parse(JSON.stringify(s.units))).toEqual(s.units);
-    for (const u of s.units.filter(q => q.patrol >= 0)) {
+    for (const u of s.units.filter(q => q.patrol >= 0 && !q.extra)) {
       expect(u.state).toBe('unaware');
       expect(u.phase).toBeGreaterThanOrEqual(0);
       expect(u.phase).toBeLessThanOrEqual(PHASE * loopOf(w, u) + 1e-6);

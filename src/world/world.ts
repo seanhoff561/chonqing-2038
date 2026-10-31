@@ -66,7 +66,7 @@ export interface Nav { pts: { x: number; y: number; z: number }[]; adj: [number,
 export const NAV = { street: 0, stairs: 1, tunnel: 2, jump: 3 } as const;
 /** A camera or another fixed sensor where it's mounted (M4-07, M4-11): which kind, its lens (a turret's gun, a
  *  sensor's head; a tripwire's one end, `to` its other), which way it faces. */
-export interface Camera { kind: 'camera' | 'sweeper' | 'lamppost' | 'turret' | 'pir' | 'tripwire' | 'acoustic'; x: number; y: number; z: number; yaw: number; to?: { x: number; y: number; z: number } }
+export interface Camera { kind: 'camera' | 'sweeper' | 'lamppost' | 'turret' | 'pir' | 'tripwire' | 'acoustic'; x: number; y: number; z: number; yaw: number; to?: { x: number; y: number; z: number }; /** idle until its district is Heightened (M4-16) */ dark?: boolean }
 /** A column's way out of the city (M3-57b), and its detours: how far along it, and the alley point gone to. */
 export interface Convoy { pts: { x: number; y: number; z: number }[]; spurs: { s: number; at: { x: number; y: number; z: number } }[] }
 /** A machine's beat (M3-37, M4-01): along streets (into alleys and buildings off them), over the roofs, or under the

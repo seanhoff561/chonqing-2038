@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-16 Wind-down and Heightened district.
-Features done: 173 / 297 | Last done: M4-15
+**Status:** building M4. Next: M4-17 Silent units.
+Features done: 174 / 297 | Last done: M4-16
 <!-- /status -->
 
 ## Log
@@ -30,3 +30,4 @@ Features done: 173 / 297 | Last done: M4-15
 - M4-13 Hivemind broadcast: Engaged machines tell the network after their kind's delay; the last known position follows him; the word spreads through the district and 300 m beyond
 - M4-14 Convergence and escalation: machines near him converge, docks launch hunter drones every 20 s, the garage's squad after 45 s
 - M4-15 Search: the search: a growing disc ahead of him, weighted points, 60% checks of hiding places
+- M4-16 Wind-down and Heightened district: the search ends at 150 s; Heightened until 06:00: extra walkers, idle cameras on, awareness x1.3

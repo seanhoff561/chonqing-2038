@@ -14,6 +14,7 @@ import { daylight } from './clock';
 import { unitPose, isOff, type Pose } from './units';
 import { onUseId } from './use';
 import { remember } from './hive';
+import { heightened, districtOf } from './district';
 
 type V3 = { x: number; y: number; z: number };
 
@@ -109,7 +110,7 @@ export function visibility(s: SimState, w: World, kind: UnitKind, at: Pose): num
 /** Every tick: the units whose turn it is look (each ten times a second), their awareness of him climbing at 2.5 x
  *  visibility a second while it's 0.04 or more, else falling away. */
 export function stepSight(s: SimState, w: World, every = 6) {
-  const dt = every / 60;
+  const dt = every / 60, H = heightened(s);
   for (const u of s.units) {
     if (isOff(s, u)) continue;
     // A tripwire's beam is watched every tick, so no running step goes through it unseen (M4-11).
@@ -127,7 +128,9 @@ export function stepSight(s: SimState, w: World, every = 6) {
       continue;
     }
     const v = at.active && !at.docked ? visibility(s, w, u.kind, at) : 0;
-    u.aware = v >= SIGHT.min ? Math.min(1.5, (u.aware ?? 0) + SIGHT.rate * v * dt) : Math.max(0, (u.aware ?? 0) - SIGHT.decay * dt);
+    // (Heightened, its awareness climbs 1.3 times as fast: M4-16.)
+    const rate = SIGHT.rate * (H.size && H.has(districtOf(at.x, at.z)) ? SIGHT.heightened : 1);
+    u.aware = v >= SIGHT.min ? Math.min(1.5, (u.aware ?? 0) + rate * v * dt) : Math.max(0, (u.aware ?? 0) - SIGHT.decay * dt);
     if (v >= SIGHT.min) { u.seen = { ...s.player.pos }; u.saw = s.time; }
   }
 }

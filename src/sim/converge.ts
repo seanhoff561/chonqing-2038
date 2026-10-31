@@ -30,6 +30,7 @@ export function stepConverge(s: SimState, w: World) {
     const t = u.trip, end = t && !t.back && t.kind !== 'check' ? t.path[t.path.length - 1] : undefined;
     if (end && Math.hypot(end.x - to.x, end.z - to.z) < 3) continue;
     const p = unitPose(w, u, s.time);
+    if (!p.active) continue;
     if (!u.reserve && Math.hypot(p.x - to.x, p.z - to.z) > (UNITS[u.kind].fly ? CONVERGE.fly : CONVERGE.ground)) continue;
     // (On its way already, it takes the new way at most once a second.)
     if (end && (u.id + s.tick / 6) % 10) continue;

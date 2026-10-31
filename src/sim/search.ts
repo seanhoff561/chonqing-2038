@@ -79,6 +79,8 @@ export function stepSearch(s: SimState, w: World) {
       const area = searchArea(k!, (s.time - d!.contact) / SCALE), to = searchPoint(s, w, k!, area);
       Object.assign(t, { kind: 'search', back: false, path: way(w, u.kind, t.pos, to), i: 0, scan: 0, visits: [] });
     }
+    // The search over (M4-16): back it goes, from wherever it's got to.
+    else if (!searching && t.kind === 'search' && !t.back) Object.assign(t, { back: true, path: way(w, u.kind, t.pos, t.left), i: 0 });
     checkHides(s, w, u);
   }
 }
