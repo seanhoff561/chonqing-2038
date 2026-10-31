@@ -36,8 +36,17 @@ export interface Unit {
   /** out (switched off, jammed) until this game time (M4-13); destroyed for good (M4-17) */
   off?: number;
   dead?: boolean;
-  /** a wreck another machine has come across (M4-17) */
+  /** hurt (M4-19): its HP left (full if unset), the damage each place on it has taken, blinded, a knee broken (slowed),
+   *  both (immobilised), its battery gone (shut down for good) */
+  hp?: number;
+  hits?: Record<string, number>;
+  blind?: boolean;
+  limp?: boolean;
+  lame?: boolean;
+  shut?: boolean;
+  /** a wreck another machine has come across (M4-17); out, and its silence seen to */
   found?: boolean;
+  out?: boolean;
   /** where it stopped when it went out, and when (M4-17): it stays there, a wreck if destroyed */
   stop?: { x: number; y: number; z: number; yaw: number; t: number };
   /** off its beat (M4-04): going to look at a point, looking about there, coming back (sim/alert.ts) */
@@ -52,7 +61,7 @@ export interface Unit {
 }
 
 /** Whether a machine is out just now (M4-13). */
-export const isOff = (s: { time: number }, u: Unit) => !!u.dead || (u.off !== undefined && s.time < u.off);
+export const isOff = (s: { time: number }, u: Unit) => !!u.dead || !!u.shut || (u.off !== undefined && s.time < u.off);
 
 /** A trip off the beat: the way there (or back), how far along it, where it is and faces, the look-about left there,
  *  and where and when it left its beat. */
@@ -166,8 +175,8 @@ const keeps = ([a, b]: [number, number], h: number) => (a <= b ? h >= a && h < b
 /** Where an Unaware unit is at a game time, and facing which way (its +z: yaw from +z toward +x). Columns march at
  *  all hours. */
 export function unitPose(w: World, u: Unit, time: number): Pose {
-  // Out, it stays where it stopped (M4-17).
-  if (u.stop) return { x: u.stop.x, y: u.stop.y, z: u.stop.z, yaw: u.stop.yaw, active: false };
+  // Out, it stays where it stopped (M4-17); immobilised, where it stands (M4-19).
+  if (u.stop) return { x: u.stop.x, y: u.stop.y, z: u.stop.z, yaw: u.stop.yaw, active: !isOff({ time }, u) };
   if (u.trip) return { ...u.trip.pos, yaw: u.trip.yaw, active: true };
   if (u.cam !== undefined) {
     // A sweeper pans to and fro at a steady rate, 10 s a pass.

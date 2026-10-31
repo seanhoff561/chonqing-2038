@@ -33,7 +33,7 @@ export function stepFire(s: SimState, w: World) {
     if (!at || !at.active || at.docked || (u.state !== 'engaged' && !(hot.size && hot.has(districtOf(at.x, at.z))))) { u.aim = false; u.fire = undefined; u.left = undefined; continue; }
     const W = WEAPONS[wpn], d = wpn === 'prod' ? Math.hypot(p.pos.x - at.x, p.pos.z - at.z) : Math.hypot(p.pos.x - at.x, p.pos.y + 1 - at.y, p.pos.z - at.z);
     // It looks for him along its gun ten times a second, as it sees.
-    if ((u.id + s.tick) % 6 === 0) u.aim = d <= W.reach && visibility(s, w, u.kind, at) >= SIGHT.min;
+    if ((u.id + s.tick) % 6 === 0) u.aim = !u.blind && d <= W.reach && visibility(s, w, u.kind, at) >= SIGHT.min;
     if (!u.aim) { u.fire = Math.max(0, (u.fire ?? 0) - DT); continue; }
     u.fire = (u.fire ?? 0) - DT;
     while (u.fire <= 0) {

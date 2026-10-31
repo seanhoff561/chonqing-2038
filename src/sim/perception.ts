@@ -120,6 +120,8 @@ export function stepSight(s: SimState, w: World, every = 6) {
       continue;
     }
     if ((u.id + s.tick) % every) continue;
+    // Blinded (M4-19), it sees nothing.
+    if (u.blind) { u.aware = Math.max(0, (u.aware ?? 0) - SIGHT.decay * dt); continue; }
     const at = unitPose(w, u, s.time);
     // A motion sensor's alarm: all at once (M4-11).
     if (u.kind === 'pir') {

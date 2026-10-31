@@ -44,7 +44,9 @@ export function leave(s: SimState, w: World, u: Unit, kind: Trip['kind'], to: V3
 /** A tick along the trip: walking (running when Engaged, or hunting him for the network), looking about at the far
  *  end, back, and onto the beat. */
 function walk(s: SimState, w: World, u: Unit) {
-  const t = u.trip!, speed = u.state === 'engaged' || (t.kind === 'hunt' && !t.back) ? UNITS[u.kind].chase : UNITS[u.kind].patrol;
+  const t = u.trip!, speed = (u.state === 'engaged' || (t.kind === 'hunt' && !t.back) ? UNITS[u.kind].chase : UNITS[u.kind].patrol) * (u.limp ? 0.5 : 1);
+  // Immobilised (M4-19): it stands where it is.
+  if (u.lame) return;
   // A humanoid with him in its sights stands and shoots (M4-18), unless it's making for cover.
   if (u.kind === 'humanoid' && u.aim && !t.cover && !t.back) return;
   if (t.i >= t.path.length) {

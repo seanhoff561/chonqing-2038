@@ -6,7 +6,7 @@ import { setup, floor, run, secs } from './helpers';
 import { solid } from '../../src/world/geom';
 import { teleport } from '../../src/sim/player';
 import { unitPose } from '../../src/sim/units';
-import { UNITS } from '../../src/data/units';
+import { UNITS, ZONES } from '../../src/data/units';
 import { NAV } from '../../src/world/world';
 import { navPath } from '../../src/sim/nav';
 import { getWorld } from '../../src/world/build';
@@ -24,7 +24,8 @@ const at = (g: ReturnType<typeof world>, i: number) => unitPose(g.world, g.state
 
 describe('humanoids (M4-10)', () => {
   it('walks at 2.5 m/s to look and runs at 4.5 fighting him; stairs but no jumps; armoured and armed', () => {
-    expect([UNITS.humanoid.patrol, UNITS.humanoid.chase, UNITS.humanoid.hp, UNITS.humanoid.armour, UNITS.humanoid.weapon]).toEqual([2.5, 4.5, 300, 0.1, 'rifle']);
+    // (Its armour is its body's hit zone, M4-19.)
+    expect([UNITS.humanoid.patrol, UNITS.humanoid.chase, UNITS.humanoid.hp, ZONES.humanoid.body, UNITS.humanoid.weapon]).toEqual([2.5, 4.5, 300, 0.1, 'rifle']);
     for (const [aware, speed] of [[0.4, 2.5], [1.2, 4.5]] as const) {
       const g = world([post(0, -60)]), u = g.state.units[0];
       teleport(g.state.player, 0, 0, 200);

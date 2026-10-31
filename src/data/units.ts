@@ -4,24 +4,36 @@ export type UnitKind = 'quadruped' | 'humanoid' | 'drone' | 'hunter' | 'delivery
 /** The machines that stay where they're put (M4-07, M4-11). */
 export const STATIC = new Set<UnitKind>(['camera', 'sweeper', 'lamppost', 'turret', 'pir', 'tripwire', 'acoustic']);
 
-export const UNITS: Record<UnitKind, { patrol: number; chase: number; stairs: boolean; fly: number; zh: string; en: string; hp?: number; armour?: number; weapon?: Weapon }> = {
+export const UNITS: Record<UnitKind, { patrol: number; chase: number; stairs: boolean; fly: number; zh: string; en: string; hp: number; weapon?: Weapon }> = {
   // Its shock prod (M4-18; its tag launcher is M4-22's).
-  quadruped: { patrol: 3, chase: 8, stairs: true, fly: 0, zh: '四足机器人', en: 'Quadruped', weapon: 'prod' },
-  // Armoured (its plates take a tenth of a hit: M4-19) and armed with a rifle (M4-18).
-  humanoid: { patrol: 2.5, chase: 4.5, stairs: true, fly: 0, zh: '人形机器人', en: 'Humanoid', hp: 300, armour: 0.1, weapon: 'rifle' },
-  drone: { patrol: 9, chase: 9, stairs: true, fly: 30, zh: '巡逻无人机', en: 'Patrol drone' },
+  quadruped: { patrol: 3, chase: 8, stairs: true, fly: 0, zh: '四足机器人', en: 'Quadruped', hp: 150, weapon: 'prod' },
+  // Armoured (its plates take a tenth of a hit: ZONES) and armed with a rifle (M4-18).
+  humanoid: { patrol: 2.5, chase: 4.5, stairs: true, fly: 0, zh: '人形机器人', en: 'Humanoid', hp: 300, weapon: 'rifle' },
+  drone: { patrol: 9, chase: 9, stairs: true, fly: 30, zh: '巡逻无人机', en: 'Patrol drone', hp: 40 },
   // Kept on the docks and launched on contact (M4-14), armed with a submachine gun.
   hunter: { patrol: 12, chase: 12, stairs: true, fly: 30, zh: '猎杀无人机', en: 'Hunter drone', hp: 70, weapon: 'smg' },
-  delivery: { patrol: 2, chase: 2, stairs: false, fly: 0, zh: '配送机器人', en: 'Delivery robot' },
-  carrier: { patrol: 1.6, chase: 1.6, stairs: false, fly: 0, zh: '运输机器人', en: 'Carrier' },
-  camera: { patrol: 0, chase: 0, stairs: false, fly: 0, zh: '监控摄像头', en: 'Camera' },
-  sweeper: { patrol: 0, chase: 0, stairs: false, fly: 0, zh: '旋转摄像头', en: 'Sweeping camera' },
-  lamppost: { patrol: 0, chase: 0, stairs: false, fly: 0, zh: '智慧灯杆', en: 'Smart lamppost' },
-  turret: { patrol: 0, chase: 0, stairs: false, fly: 0, zh: '自动炮塔', en: 'Turret', hp: 500, armour: 0.05, weapon: 'turret' },
-  pir: { patrol: 0, chase: 0, stairs: false, fly: 0, zh: '红外感应器', en: 'Motion sensor' },
-  tripwire: { patrol: 0, chase: 0, stairs: false, fly: 0, zh: '激光绊线', en: 'Laser tripwire' },
-  acoustic: { patrol: 0, chase: 0, stairs: false, fly: 0, zh: '声学传感器', en: 'Acoustic sensor' },
+  delivery: { patrol: 2, chase: 2, stairs: false, fly: 0, zh: '配送机器人', en: 'Delivery robot', hp: 80 },
+  carrier: { patrol: 1.6, chase: 1.6, stairs: false, fly: 0, zh: '运输机器人', en: 'Carrier', hp: 200 },
+  camera: { patrol: 0, chase: 0, stairs: false, fly: 0, zh: '监控摄像头', en: 'Camera', hp: 20 },
+  sweeper: { patrol: 0, chase: 0, stairs: false, fly: 0, zh: '旋转摄像头', en: 'Sweeping camera', hp: 20 },
+  lamppost: { patrol: 0, chase: 0, stairs: false, fly: 0, zh: '智慧灯杆', en: 'Smart lamppost', hp: 20 },
+  turret: { patrol: 0, chase: 0, stairs: false, fly: 0, zh: '自动炮塔', en: 'Turret', hp: 500, weapon: 'turret' },
+  pir: { patrol: 0, chase: 0, stairs: false, fly: 0, zh: '红外感应器', en: 'Motion sensor', hp: 20 },
+  tripwire: { patrol: 0, chase: 0, stairs: false, fly: 0, zh: '激光绊线', en: 'Laser tripwire', hp: 20 },
+  acoustic: { patrol: 0, chase: 0, stairs: false, fly: 0, zh: '声学传感器', en: 'Acoustic sensor', hp: 20 },
 };
+
+/** Where a machine can be hit and what each place takes of a hit (DESIGN section 6, M4-19); the damage to a place that
+ *  blinds it (its sensor head), immobilises it (each knee) or shuts it down (its battery). */
+export const ZONES: Record<UnitKind, Record<string, number>> = {
+  drone: { body: 1, rotors: 1.5 }, hunter: { body: 0.8, rotors: 1.5 },
+  quadruped: { body: 0.2, head: 1, legs: 0.6, battery: 1.5 },
+  humanoid: { body: 0.1, head: 1, kneeL: 0.8, kneeR: 0.8, battery: 2 },
+  turret: { body: 0.05, head: 1 },
+  delivery: { body: 1 }, carrier: { body: 0.3 },
+  camera: { body: 1 }, sweeper: { body: 1 }, lamppost: { body: 1 }, pir: { body: 1 }, tripwire: { body: 1 }, acoustic: { body: 1 },
+};
+export const BREAKS: Partial<Record<UnitKind, { head?: number; knee?: number; battery?: number }>> = { quadruped: { head: 60 }, humanoid: { head: 75, knee: 100, battery: 120 }, turret: { head: 100 } };
 
 /** The fixed sensors (M4-11, DESIGN section 7): a motion sensor's cone and reach and the movement it notices (his
  *  speed times how his posture shows him, so a crawl slides under it). */

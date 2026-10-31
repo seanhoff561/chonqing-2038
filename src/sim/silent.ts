@@ -20,16 +20,19 @@ export function stepSilent(s: SimState, w: World) {
   if (s.tick % 6) return;
   for (const u of s.units) {
     const off = isOff(s, u);
-    if (off && !u.stop) {
+    if (off && !u.out) {
+      u.out = true;
       const p = unitPose(w, u, s.time);
-      u.stop = { x: p.x, y: p.y, z: p.z, yaw: p.yaw, t: s.time };
+      // (A destroyed drone falls.)
+      const fall = u.dead && UNITS_FLY.has(u.kind) ? raycast(w.index, p.x, p.y - 0.5, p.z, 0, -1, 0, 200) : null;
+      u.stop = { x: p.x, y: fall ? p.y - 0.5 - fall.t : p.y, z: p.z, yaw: p.yaw, t: u.stop?.t ?? s.time };
       // (A mounted one's silence is looked into from the ground under it.)
       const down = STATIC.has(u.kind) ? raycast(w.index, p.x, p.y - 0.3, p.z, 0, -1, 0, 30) : null, y = down ? p.y - 0.3 - down.t : p.y;
       if (u.state !== 'unaware' || (u.cast !== undefined && s.time < u.cast)) s.hive.silent.push({ x: p.x, y, z: p.z, t: s.time });
-    } else if (!off && u.stop) {
+    } else if (!off && u.out) {
       // Back on, knowing nothing: on with its trip, or its beat from where it stopped (its loop shifted by the time out).
-      if (!u.trip) u.phase -= (s.time - u.stop.t) / SCALE;
-      u.stop = undefined; u.aware = 0; u.state = 'unaware';
+      u.out = undefined; u.aware = 0; u.state = 'unaware';
+      if (!u.lame) { if (!u.trip) u.phase -= (s.time - u.stop!.t) / SCALE; u.stop = undefined; }
     }
   }
   // Silences 12 s old: someone goes to look.
@@ -43,7 +46,7 @@ export function stepSilent(s: SimState, w: World) {
   });
   // Wrecks found.
   for (const d of s.units) {
-    if (!d.dead || !d.stop || d.found) continue;
+    if (!(d.dead || d.shut) || !d.stop || d.found) continue;
     for (const u of s.units) {
       if (u === d || u.convoy || STATIC.has(u.kind) || isOff(s, u) || UNITS_FLY.has(u.kind)) continue;
       const p = unitPose(w, u, s.time), dx = d.stop.x - p.x, dy = d.stop.y - p.y, dz = d.stop.z - p.z, r = Math.hypot(dx, dy, dz);
