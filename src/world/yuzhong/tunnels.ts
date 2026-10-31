@@ -141,7 +141,10 @@ export function buildTunnels(g: Heightfield, sts: Street[]): Tunnels {
   const sx = X(gu), sz = Z(gv), sh = floor + shaftTop - 0.4, t = hs + 0.3;
   rock.push(solid(sx - t, floor + 3, sz - t, sx + t, sh, sz - hs, MAT.stone), solid(sx - t, floor + 3, sz + hs, sx + t, sh, sz + t, MAT.stone),
     solid(sx - t, floor + 3, sz - hs, sx - hs, sh, sz + hs, MAT.stone), solid(sx + hs, floor + 3, sz - hs, sx + t, sh, sz + hs, MAT.stone));
-  rock.push(solid(sx - hs - 1.3, gy - 0.4, sz - hs - 1.3, sx + hs + 1.3, gy + 0.02, sz + hs + 1.3, MAT.concrete));
+  // (A ring round the shaft, not a slab over it: its top was left lying across the opened grate, U-046.)
+  const r = hs + 1.3;
+  rock.push(solid(sx - r, gy - 0.4, sz - r, sx + r, gy + 0.02, sz - hs, MAT.concrete), solid(sx - r, gy - 0.4, sz + hs, sx + r, gy + 0.02, sz + r, MAT.concrete),
+    solid(sx - r, gy - 0.4, sz - hs, sx - hs, gy + 0.02, sz + hs, MAT.concrete), solid(sx + hs, gy - 0.4, sz - hs, sx + r, gy + 0.02, sz + hs, MAT.concrete));
   hole(g, P, sx - hs, sz - hs, sx + hs, sz + hs);
   const [gx, gz] = W(gu, gv), lane = alley(gx, gz, gy, yaw + ang, (x, z) => hAt(g, x, z));
   out.alley = alleyObb(gx, gz, yaw + ang);

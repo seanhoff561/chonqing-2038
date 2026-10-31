@@ -145,6 +145,12 @@ describe('the start hideout grate (M3-72)', () => {
     expect(yz.climbables.some(c => c.kind === 'ladder' && Math.hypot(c.x - gr.x, c.z - gr.z) < 2 && c.y1 > gr.y + 0.5 && c.y0 < gr.y - 8)).toBe(true);
     expect(yz.props.filter(p => p.kind === 'neon' && Math.hypot(p.x - gr.x, p.z - gr.z) < 10).length).toBeGreaterThanOrEqual(2);
     expect(yz.props.some(p => p.kind === 'cover' && Math.hypot(p.x - gr.x, p.z - gr.z) < 0.5)).toBe(true);
+    // Opened, the way up through it is clear (U-046: a paving slab lay across it).
+    const { free } = await import('../../src/sim/physics');
+    yz.index.off[gr.data!.solid as number] = 1;
+    const clear = free(yz.index, gr.x, gr.y - 0.3, gr.z, 1.75, 0.25);
+    yz.index.off[gr.data!.solid as number] = 0;
+    expect(clear).toBe(true);
     // Walls within 3 m of it on two opposite sides, at head height and well over it.
     const { raycast } = await import('../../src/world/geom');
     const walls = [0, 1, 2, 3, 4, 5, 6, 7].map(k => { const a = k * Math.PI / 4; return !!raycast(yz.index, gr.x, gr.y + 1.6, gr.z, Math.cos(a), 0, Math.sin(a), 3) && !!raycast(yz.index, gr.x, gr.y + 8, gr.z, Math.cos(a), 0, Math.sin(a), 3.5); });
