@@ -1,7 +1,8 @@
 // The machines' ways about on foot (M4-02): every street in stretches of 4 m or less, each walkable as the finished
 // world stands (a clear way at body height somewhere across it, not steeper than a stair: a parked car doesn't close
 // it, a wall across it or a building does), the stepped streets' stretches marked stairs; joined where streets meet
-// (the map's simplified lines don't share junction points). And the walks recorded under the ground (the stepped
+// (the map's simplified lines don't share junction points), and a metre's jump between streets side by side. And
+// the walks recorded under the ground (the stepped
 // streets' descents, the metro's way, the underground city's), stitched to the streets and to each other where their
 // points come within a few metres at much the same height.
 import { raycast, type SolidIndex } from '../geom';
@@ -57,6 +58,16 @@ export function buildNav(sts: Street[], g: Heightfield, idx: SolidIndex, walks: 
       if (d < Math.max(width[i], width[j]) / 2 + 0.5 && Math.abs(pts[j].y - p.y) < 0.5 + d * 0.4 && (!b || d < b[1])) best.set(of[j], [j, d]);
     }
     for (const [j] of best.values()) if ((j > i || !best.has(of[i])) && walkable(i, j, Math.min(width[i], width[j]))) link(i, j, NAV.street);
+  }
+  // A jump of a metre or less up or down between streets side by side (a kerb wall, a terrace's edge): for the
+  // quadrupeds (M4-09).
+  for (let i = 0; i < streetPts; i++) {
+    const p = pts[i];
+    for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) for (const j of cell.get(ck(p.x + dx * 8, p.z + dz * 8)) ?? []) {
+      if (j <= i || of[j] === of[i]) continue;
+      const d = Math.hypot(pts[j].x - p.x, pts[j].z - p.z), dy = Math.abs(pts[j].y - p.y);
+      if (d < 3 && dy > 0.4 && dy <= 1 && !adj[i].some(e => e[0] === j) && clearAcross(idx, { ...p, y: Math.max(p.y, pts[j].y) }, { ...pts[j], y: Math.max(p.y, pts[j].y) }, 0.5)) link(i, j, NAV.jump);
+    }
   }
   // The walks under the ground, each a chain; then each bend stitched to the nearest point of the streets or another
   // walk within 6 m and 1.5 m of height, and each end to the streets within 30 m where the way there is clear (a

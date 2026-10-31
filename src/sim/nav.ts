@@ -1,5 +1,6 @@
 // Pathing on the machines' ways (M4-02): A* over the nav graph between the points nearest two places, each kind
-// of unit on the stretches it can take (a delivery robot no stairs and nothing steep; the others everything).
+// of unit on the stretches it can take (a delivery robot no stairs and nothing steep; a quadruped a metre's jump
+// too; the others the rest).
 import { NAV, type Nav } from '../world/world';
 import type { UnitKind } from '../data/units';
 
@@ -8,7 +9,9 @@ export interface NavPath { pts: V3[]; kinds: number[]; length: number }
 
 /** Which stretches a kind of unit can take. */
 export function canTake(kind: UnitKind | 'street', e: [number, number, number], from: V3, to: V3): boolean {
-  if (kind === 'street') return e[2] !== NAV.tunnel;
+  if (kind === 'street') return e[2] === NAV.street || e[2] === NAV.stairs;
+  // A metre's jump: a quadruped's only (M4-09).
+  if (e[2] === NAV.jump) return kind === 'quadruped';
   if (kind === 'delivery' || kind === 'carrier') return e[2] === NAV.street && Math.abs(to.y - from.y) <= 0.15 * e[1] + 0.1;
   return true;
 }

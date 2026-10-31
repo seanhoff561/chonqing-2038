@@ -9,19 +9,26 @@ import type { SimState } from './types';
 import type { World } from '../world/world';
 import { UNITS, SIGHT, STATIC, type UnitKind } from '../data/units';
 import { navPath } from './nav';
+import { raycast } from '../world/geom';
 import { unitPose, loopOf, type Unit } from './units';
 import { SCALE } from './clock';
 import { DT } from './types';
 
 type V3 = { x: number; y: number; z: number };
+/** How far up or down each kind steps without a stair: a quadruped's metre's jump; nothing climbs (M4-09). */
+const STEP: Record<UnitKind, number> = { quadruped: 1, humanoid: 0.5, drone: 99, delivery: 0.2, carrier: 0.3, camera: 0, sweeper: 0, lamppost: 0 };
 export const ALERT = { suspicious: 0.3, engaged: 1, scan: 8, checkFor: 24 * 3600, checkWithin: 200 };
 
-/** The way from a to b for a kind: its nav path on the ground, straight for a drone (8 m over the point) or without
- *  a nav graph. */
+/** The way from a to b for a kind: its nav path on the ground, then on to the point itself if that's within its step
+ *  up or down (a quadruped's metre's jump, half a metre for the rest: none climbs) with nothing in the way; straight
+ *  for a drone (8 m over the point) or without a nav graph. */
 function way(w: World, kind: UnitKind, a: V3, b: V3): V3[] {
   if (kind === 'drone') return [{ x: b.x, y: b.y + 8, z: b.z }];
   const p = w.nav ? navPath(w.nav, a, b, kind) : null;
-  return p ? [...p.pts.slice(1), b] : [b];
+  if (!p) return Math.abs(b.y - a.y) <= STEP[kind] ? [b] : [];
+  const end = p.pts[p.pts.length - 1], d = Math.hypot(b.x - end.x, b.y - end.y, b.z - end.z);
+  const reach = Math.abs(b.y - end.y) <= STEP[kind] && (d < 0.1 || !raycast(w.index, end.x, end.y + 0.5, end.z, (b.x - end.x) / d, (b.y - end.y) / d, (b.z - end.z) / d, d));
+  return [...p.pts.slice(1), ...(reach ? [b] : [])];
 }
 
 function leave(s: SimState, w: World, u: Unit, kind: 'look' | 'check', to: V3) {
@@ -71,7 +78,7 @@ export function stepAlert(s: SimState, w: World) {
       // Still seeing him while it goes: on to where he is now.
       if (!u.trip.back && u.trip.kind === 'look' && u.seen && (u.id + s.tick) % 6 === 0 && a >= SIGHT.min) {
         const end = u.trip.path[u.trip.path.length - 1];
-        if (end && Math.hypot(end.x - u.seen.x, end.z - u.seen.z) > 2) { u.trip.path = way(w, u.kind, u.trip.pos, u.seen); u.trip.i = 0; u.trip.scan = 0; }
+        if (!end || Math.hypot(end.x - u.seen.x, end.z - u.seen.z) > 2) { u.trip.path = way(w, u.kind, u.trip.pos, u.seen); u.trip.i = 0; u.trip.scan = 0; }
       }
       walk(s, w, u);
       continue;

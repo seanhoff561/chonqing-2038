@@ -63,3 +63,11 @@ export function beep(a: Audio, gain: number) {
   a.tone(t, 0.05, gain, 3100, 3100, 'square');
   a.tone(t + 0.09, 0.05, gain * 0.8, 3100, 3100, 'square');
 }
+
+/** A quadruped's servos (M4-09): a whining step, rising, louder nearer. */
+export function servo(a: Audio, gain: number) {
+  if (!a.ready || gain < 0.005) return;
+  const t = a.ctx!.currentTime + 0.005;
+  a.tone(t, 0.16, gain, 520, 880, 'sawtooth');
+  a.noise(t, 0.08, gain * 0.6, 'bandpass', 2200, 2);
+}

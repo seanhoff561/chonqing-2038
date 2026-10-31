@@ -63,7 +63,7 @@ export interface Link { from: string; to: string; layer: 'street' | 'roof' | 'un
 /** The machines' ways about on foot (M4-02): points on the streets, the stairs and the walks under the ground, and
  *  the stretches between them: [the other end, its length, its kind (NAV)]. */
 export interface Nav { pts: { x: number; y: number; z: number }[]; adj: [number, number, number][][] }
-export const NAV = { street: 0, stairs: 1, tunnel: 2 } as const;
+export const NAV = { street: 0, stairs: 1, tunnel: 2, jump: 3 } as const;
 /** A camera where it's mounted (M4-07): which kind, its lens, which way it faces. */
 export interface Camera { kind: 'camera' | 'sweeper' | 'lamppost'; x: number; y: number; z: number; yaw: number }
 /** A column's way out of the city (M3-57b), and its detours: how far along it, and the alley point gone to. */
