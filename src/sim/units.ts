@@ -12,6 +12,8 @@ export interface Unit {
   id: number; kind: UnitKind; /** the beat it walks (world patrols), or -1 in a column */ patrol: number; /** real seconds into its loop it starts */ phase: number; state: 'unaware';
   /** in a column (M4-01b): which way out of the factory, which of its squads in turn, which member of the squad */
   convoy?: { path: number; slot: number; member: number };
+  /** how aware of him it is (M4-03): 0.3 suspicious, 1 engaged */
+  aware?: number;
 }
 export interface Pose { x: number; y: number; z: number; yaw: number; active: boolean }
 

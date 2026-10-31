@@ -22,6 +22,7 @@ import './drops';
 import './grate';
 import { survival } from '../data/survival';
 import { createUnits } from './units';
+import { stepSight } from './perception';
 
 /** Saves of another version are dropped: 8 since the machines walk their beats (M4-01); 7 since he drops things (M3-72). */
 export const STATE_VERSION = 8;
@@ -61,6 +62,7 @@ export function step(state: SimState, world: World, input: InputFrame): void {
   applyCmds(state, world, input.cmds);
   stepInteract(state, world, input);
   stepPlayer(state, world, input);
+  stepSight(state, world);
   stepHeld(state, world, input);
   stepLamp(state, input);
   if (state.openContainer) stepContainers(state, { inter: allInters(state, world) });

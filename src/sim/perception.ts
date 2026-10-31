@@ -1,0 +1,79 @@
+// Seeing him (M4-03, DESIGN section 5). How visible he is to a unit: the share of five points of his body (head, two
+// shoulders, pelvis, knees) inside its cone and range with nothing in the way, times the light on him (a night-vision
+// unit's floor under it; a drone's searchlight lights what it looks at by night), how his posture shows him, how he's
+// moving, the falloff with distance, and the weather's cut to its range. Each unit thinks ten times a second, in turn,
+// and its awareness of him climbs while he's visible and falls away when he isn't.
+import type { SimState } from './types';
+import type { World } from '../world/world';
+import { SENSES, SIGHT, type UnitKind } from '../data/units';
+import { movement as M } from '../data/movement';
+import { raycast } from '../world/geom';
+import { lightAt, LAMP_LIGHT } from './light';
+import { daylight } from './clock';
+import { unitPose, type Pose } from './units';
+
+type V3 = { x: number; y: number; z: number };
+
+/** His five points: head, shoulders, pelvis, knees, at his posture's heights (lying along the ground crawling). */
+export function bodyPoints(s: SimState): V3[] {
+  const p = s.player, { x, y, z } = p.pos, c = Math.cos(p.yaw), sn = Math.sin(p.yaw);
+  if (p.posture === 'crawl') return [0.6, 0.3, 0.3, 0, -0.6].map((f, i) => ({ x: x - sn * f + (i === 1 ? c * 0.2 : i === 2 ? -c * 0.2 : 0), y: y + 0.25, z: z - c * f + (i === 1 ? -sn * 0.2 : i === 2 ? sn * 0.2 : 0) }));
+  const h = M.height[p.posture === 'crouch' ? 'crouch' : p.posture === 'hidden' ? 'hidden' : 'stand'], k = h / M.height.stand;
+  return [{ x, y: y + h - 0.12, z }, { x: x + c * 0.2, y: y + 1.45 * k, z: z - sn * 0.2 }, { x: x - c * 0.2, y: y + 1.45 * k, z: z + sn * 0.2 }, { x, y: y + 0.95 * k, z }, { x, y: y + 0.5 * k, z }];
+}
+
+/** How his posture shows him. */
+function posture(s: SimState) {
+  const p = s.player, P = SIGHT.posture;
+  if (p.mode === 'hidden') return P.hidden;
+  if (p.mode === 'grip' || p.mode === 'cling' || p.mode === 'chimney') return P.hang;
+  return p.posture === 'crawl' ? P.crawl : p.posture === 'crouch' ? P.crouch : P.stand;
+}
+
+/** How his moving shows him. */
+function motion(s: SimState) {
+  const p = s.player, v = Math.hypot(p.vel.x, p.vel.z), Mo = SIGHT.motion;
+  if (p.mode === 'air' || p.mode === 'action' || p.mode === 'wallrun' || p.mode === 'wallclimb' || p.mode === 'zip') return Mo.fast;
+  if (v < 0.2) return Mo.still;
+  if (p.posture === 'crawl') return Mo.crawl;
+  if (p.posture === 'crouch') return Mo.crouch;
+  return v > M.speed.jog + 0.5 ? Mo.fast : Mo.jog;
+}
+
+/** How far a unit sees now: its day range by day, its night range by night (between them at dusk), cut by fog and rain. */
+export function rangeOf(s: SimState, kind: UnitKind) {
+  const S = SENSES[kind], d = daylight(s.time), f = s.weather.fog, r = s.weather.rain;
+  return (S.night + (S.day - S.night) * d) * (f > 0.6 ? 0.45 : f > 0.25 ? 0.75 : 1) * (r > 0.3 ? 0.85 : 1);
+}
+
+/** How visible he is to a unit standing at a pose: 0 (not at all) to 1. */
+export function visibility(s: SimState, w: World, kind: UnitKind, at: Pose): number {
+  const S = SENSES[kind], eye = { x: at.x, y: at.y + S.eye, z: at.z }, range = rangeOf(s, kind), p = s.player.pos;
+  const d = Math.hypot(p.x - eye.x, p.y + 1 - eye.y, p.z - eye.z);
+  if (d > range || s.player.mode === 'dead') return 0;
+  // The cone's axis: the way it faces, pitched down for a drone.
+  const pc = Math.cos((S.pitch * Math.PI) / 180), ax = Math.sin(at.yaw) * pc, ay = -Math.sin((S.pitch * Math.PI) / 180), az = Math.cos(at.yaw) * pc, half = Math.cos((S.fov * Math.PI) / 360);
+  let seen = 0;
+  for (const q of bodyPoints(s)) {
+    const dx = q.x - eye.x, dy = q.y - eye.y, dz = q.z - eye.z, L = Math.hypot(dx, dy, dz);
+    if (L < 0.01 || (dx * ax + dy * ay + dz * az) / L < half) continue;
+    if (!raycast(w.index, eye.x, eye.y, eye.z, dx / L, dy / L, dz / L, L - 0.05)) seen++;
+  }
+  if (!seen) return 0;
+  let light = Math.max(lightAt(w, p, s.time, LAMP_LIGHT[s.player.lamp]), S.ir);
+  if (S.lamp && daylight(s.time) < 0.5) light = 1;
+  return (seen / 5) * light * posture(s) * motion(s) * (1 - (d / range) ** 2);
+}
+
+/** Every tick: the units whose turn it is look (each ten times a second), their awareness of him climbing at 2.5 x
+ *  visibility a second while it's 0.04 or more, else falling away. */
+export function stepSight(s: SimState, w: World, every = 6) {
+  const dt = every / 60;
+  for (const u of s.units) {
+    if ((u.id + s.tick) % every) continue;
+    const at = unitPose(w, u, s.time);
+    const v = at.active ? visibility(s, w, u.kind, at) : 0;
+    u.aware = v >= SIGHT.min ? Math.min(1.5, (u.aware ?? 0) + SIGHT.rate * v * dt) : Math.max(0, (u.aware ?? 0) - SIGHT.decay * dt);
+  }
+}
+

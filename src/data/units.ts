@@ -29,3 +29,22 @@ export const COLUMN = {
 export const DWELL = { end: 6, alley: 8, inside: 12, tunnel: 90 };
 /** A run's units start each somewhere else along their loops: at most this share of a loop out (M4-01). */
 export const PHASE = 0.08;
+
+/** What each kind sees (DESIGN sections 5 and 7): its cone (degrees, and pitched down for a drone's), how far by
+ *  day and by night, its eyes' height over its feet, an infrared floor on the light it needs (0 for none), a lamp
+ *  that lights what it looks at by night (the drones' searchlights), how far its thermal sight reaches at night. */
+export const SENSES: Record<UnitKind, { fov: number; pitch: number; day: number; night: number; eye: number; ir: number; lamp: boolean; thermal: number }> = {
+  quadruped: { fov: 120, pitch: 0, day: 30, night: 20, eye: 0.85, ir: 0, lamp: false, thermal: 20 },
+  humanoid: { fov: 100, pitch: 0, day: 40, night: 22, eye: 1.8, ir: 0.3, lamp: false, thermal: 0 },
+  drone: { fov: 100, pitch: 45, day: 35, night: 30, eye: -0.1, ir: 0, lamp: true, thermal: 30 },
+  delivery: { fov: 120, pitch: 0, day: 18, night: 10, eye: 0.5, ir: 0, lamp: false, thermal: 0 },
+  carrier: { fov: 120, pitch: 0, day: 25, night: 15, eye: 1.2, ir: 0.3, lamp: false, thermal: 0 },
+};
+
+/** Seeing him (DESIGN section 5): awareness climbs at RATE x visibility a second while he's visible at all (MIN),
+ *  falls at DECAY a second otherwise; how much each posture and each way of moving shows. */
+export const SIGHT = {
+  rate: 2.5, min: 0.04, decay: 0.15,
+  posture: { stand: 1, crouch: 0.55, crawl: 0.3, hang: 0.8, hidden: 0 },
+  motion: { still: 0.4, crawl: 0.45, crouch: 0.6, jog: 0.85, fast: 1 },
+};

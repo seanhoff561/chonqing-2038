@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-03 Vision perception.
-Features done: 159 / 296 | Last done: M4-02
+**Status:** building M4. Next: M4-04 Awareness and investigation.
+Features done: 160 / 296 | Last done: M4-03
 <!-- /status -->
 
 ## Log
@@ -16,3 +16,4 @@ Features done: 159 / 296 | Last done: M4-02
 - M4-01 Unit framework and scheduled patrols: units as plain data on beats with pauses and hours, poses a pure function of the game time; beats under the ground and off the streets into alleys and buildings
 - M4-01b Convoys as units: squads out of the factory gates in staggered formation, bounding, a pair peeling off into an alley
 - M4-02 Navigation graph and pathing: Units on their beats, columns out of the factory as units, and the machines' nav graph with A*
+- M4-03 Vision perception: Vision perception: five body points in a unit's cone with clear sight, light with night-vision floors, posture, motion, falloff and weather
