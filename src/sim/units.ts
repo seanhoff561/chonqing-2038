@@ -44,8 +44,10 @@ export interface Unit {
   trip?: Trip;
   /** when it last went to check a place the hive saw him (M4-04) */
   checked?: number;
-  /** a turret's rounds owed, and whether it has him in its sights (M4-11) */
+  /** an armed machine's seconds to its next round, the rounds left in its burst, and whether it has him in its sights
+   *  (M4-11, M4-18) */
   fire?: number;
+  left?: number;
   aim?: boolean;
 }
 

@@ -4,9 +4,10 @@ export type UnitKind = 'quadruped' | 'humanoid' | 'drone' | 'hunter' | 'delivery
 /** The machines that stay where they're put (M4-07, M4-11). */
 export const STATIC = new Set<UnitKind>(['camera', 'sweeper', 'lamppost', 'turret', 'pir', 'tripwire', 'acoustic']);
 
-export const UNITS: Record<UnitKind, { patrol: number; chase: number; stairs: boolean; fly: number; zh: string; en: string; hp?: number; armour?: number; weapon?: string }> = {
-  quadruped: { patrol: 3, chase: 8, stairs: true, fly: 0, zh: '四足机器人', en: 'Quadruped' },
-  // Armoured (its plates take a tenth of a hit) and armed with a rifle (M4-18 fires it, M4-19 hits it).
+export const UNITS: Record<UnitKind, { patrol: number; chase: number; stairs: boolean; fly: number; zh: string; en: string; hp?: number; armour?: number; weapon?: Weapon }> = {
+  // Its shock prod (M4-18; its tag launcher is M4-22's).
+  quadruped: { patrol: 3, chase: 8, stairs: true, fly: 0, zh: '四足机器人', en: 'Quadruped', weapon: 'prod' },
+  // Armoured (its plates take a tenth of a hit: M4-19) and armed with a rifle (M4-18).
   humanoid: { patrol: 2.5, chase: 4.5, stairs: true, fly: 0, zh: '人形机器人', en: 'Humanoid', hp: 300, armour: 0.1, weapon: 'rifle' },
   drone: { patrol: 9, chase: 9, stairs: true, fly: 30, zh: '巡逻无人机', en: 'Patrol drone' },
   // Kept on the docks and launched on contact (M4-14), armed with a submachine gun.
@@ -23,8 +24,19 @@ export const UNITS: Record<UnitKind, { patrol: number; chase: number; stairs: bo
 };
 
 /** The fixed sensors (M4-11, DESIGN section 7): a motion sensor's cone and reach and the movement it notices (his
- *  speed times how his posture shows him, so a crawl slides under it); a turret's fire. */
-export const SENSORS = { pir: { fov: 90, range: 10, motion: 0.5 }, turret: { rate: 6, damage: 12, accuracy: 0.7, sure: 40, reach: 60, noise: 150 } };
+ *  speed times how his posture shows him, so a crawl slides under it). */
+export const SENSORS = { pir: { fov: 90, range: 10, motion: 0.5 } };
+
+/** The machines' weapons (DESIGN section 6, M4-11, M4-18): rounds a burst (0.1 s apart), seconds from one burst to the
+ *  next, damage a hit, how far it reaches (a turret sure within `sure`), its hit chance at best, how far it's heard;
+ *  a prod's stun. */
+export const WEAPONS = {
+  turret: { burst: 1, every: 1 / 6, damage: 12, reach: 60, sure: 40, accuracy: 0.7, noise: 150, stun: 0 },
+  rifle: { burst: 3, every: 1.2, damage: 18, reach: 80, sure: 0, accuracy: 0.55, noise: 150, stun: 0 },
+  smg: { burst: 2, every: 0.8, damage: 8, reach: 35, sure: 35, accuracy: 0.4, noise: 100, stun: 0 },
+  prod: { burst: 1, every: 1.5, damage: 15, reach: 1.5, sure: 1.5, accuracy: 1, noise: 0, stun: 1 },
+};
+export type Weapon = keyof typeof WEAPONS;
 
 /** How long after a machine has him (Engaged) it tells the network (DESIGN section 5), real seconds: the wired
  *  sensors at once nearly, the cameras in a second, the walkers slowest. */

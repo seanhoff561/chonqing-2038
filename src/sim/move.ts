@@ -58,6 +58,8 @@ export function stepPlayer(state: SimState, world: World, input: InputFrame): vo
   p.yaw = input.yaw;
   p.pitch = Math.max(-1.5, Math.min(1.5, input.pitch));
   if (state.flags.noclip) { noclip(p, input); return; }
+  // Stunned (M4-18): he can't move for it.
+  if (p.stun > 0) { p.stun = Math.max(0, p.stun - DT); input = { ...input, mx: 0, my: 0, buttons: 0, pressed: 0 }; }
   if (p.mode === 'noclip') p.mode = 'air';
   p.crouchAge += DT;
   if ((input.pressed & B.CROUCH) && !p.onGround) p.crouchAge = 0;

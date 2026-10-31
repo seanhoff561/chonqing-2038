@@ -32,7 +32,7 @@ import { stepSilent } from './silent';
 
 /** Saves of another version are dropped: 9 since the hive remembers where it saw him (M4-04); 8 since the machines
  *  walk their beats (M4-01). */
-export const STATE_VERSION = 12;
+export const STATE_VERSION = 13;
 
 export function createState(seed: number, world: World): SimState {
   const s = world.spawn;

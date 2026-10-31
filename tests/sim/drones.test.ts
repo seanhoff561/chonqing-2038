@@ -47,6 +47,8 @@ describe('patrol drones and docks (M4-08)', () => {
     expect(a.u.aware ?? 0).toBe(0);
     // Standing still out there while it's flying its beat: seen in under a minute.
     const b = circling();
+    // (Kept alive: once it has him, the dock's hunters come and shoot, M4-18.)
+    b.state.flags.god = true;
     b.state.time += flyAt * SCALE;
     run(b.state, b.world, secs(50));
     expect(b.u.aware ?? 0).toBeGreaterThan(0.3);

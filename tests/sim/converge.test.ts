@@ -22,7 +22,8 @@ describe('convergence and escalation (M4-14)', () => {
       docks: [{ x: 400, y: 20, z: 0 }, { x: -600, y: 20, z: 0 }],
       garages: [{ x: 0, y: 0, z: 300 }, { x: 0, y: 0, z: -700 }],
     });
-    state.time = 12 * 3600; state.flags.clear = true; state.weather = { fog: 0, rain: 0 };
+    // (Kept alive while they come for him: M4-18's hunters and prods would kill him.)
+    state.time = 12 * 3600; state.flags.clear = true; state.flags.god = true; state.weather = { fog: 0, rain: 0 };
     const [nearDog, farDog, nearDrone, farDrone] = state.units;
     const hunting = (u: Unit) => u.trip?.kind === 'hunt' && !u.trip.back;
     const out = (f: (u: Unit) => boolean) => state.units.filter(u => f(u) && u.trip).length;

@@ -45,6 +45,8 @@ export function leave(s: SimState, w: World, u: Unit, kind: Trip['kind'], to: V3
  *  end, back, and onto the beat. */
 function walk(s: SimState, w: World, u: Unit) {
   const t = u.trip!, speed = u.state === 'engaged' || (t.kind === 'hunt' && !t.back) ? UNITS[u.kind].chase : UNITS[u.kind].patrol;
+  // A humanoid with him in its sights stands and shoots (M4-18), unless it's making for cover.
+  if (u.kind === 'humanoid' && u.aim && !t.cover && !t.back) return;
   if (t.i >= t.path.length) {
     if (!t.back) {
       // Holding its cover while it can see him (M4-10).

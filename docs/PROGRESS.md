@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-18 Enemy fire and wounds.
-Features done: 175 / 297 | Last done: M4-17
+**Status:** building M4. Next: M4-19 Unit damage and weak points.
+Features done: 176 / 297 | Last done: M4-18
 <!-- /status -->
 
 ## Log
@@ -32,3 +32,4 @@ Features done: 175 / 297 | Last done: M4-17
 - M4-15 Search: the search: a growing disc ahead of him, weighted points, 60% checks of hiding places
 - M4-16 Wind-down and Heightened district: the search ends at 150 s; Heightened until 06:00: extra walkers, idle cameras on, awareness x1.3
 - M4-17 Silent units: silent machines draw a look after 12 s; out, a machine stays put; a wreck found starts a small search
+- M4-18 Enemy fire and wounds: machines fire: rifle bursts, SMG, prod and stun, turret; each hit bleeds and may hurt a limb
