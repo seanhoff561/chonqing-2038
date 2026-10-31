@@ -24,6 +24,12 @@ export const UNITS: Record<UnitKind, { patrol: number; chase: number; stairs: bo
  *  speed times how his posture shows him, so a crawl slides under it); a turret's fire. */
 export const SENSORS = { pir: { fov: 90, range: 10, motion: 0.5 }, turret: { rate: 6, damage: 12, accuracy: 0.7, sure: 40, reach: 60, noise: 150 } };
 
+/** How long after a machine has him (Engaged) it tells the network (DESIGN section 5), real seconds: the wired
+ *  sensors at once nearly, the cameras in a second, the walkers slowest. */
+export const BROADCAST: Record<UnitKind, number> = { turret: 0.5, pir: 0.5, tripwire: 0.5, acoustic: 0.5, camera: 1, sweeper: 1, lamppost: 1, drone: 1.5, quadruped: 2, delivery: 2, carrier: 2, humanoid: 2.5 };
+/** How far into the districts next to his the network's word of him goes (DESIGN section 5), metres. */
+export const SPREAD = 300;
+
 /** A patrol drone's battery (M4-08, DESIGN section 7): 6 real minutes in the air, the first and last 20 s of them
  *  flying out from its rooftop dock and home again, then 2 minutes on the dock charging: the gap in its cover. */
 export const DRONE = { flight: 360, charge: 120, launch: 20 };

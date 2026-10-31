@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-13 Hivemind broadcast.
-Features done: 170 / 297 | Last done: M4-12
+**Status:** building M4. Next: M4-14 Convergence and escalation.
+Features done: 171 / 297 | Last done: M4-13
 <!-- /status -->
 
 ## Log
@@ -27,3 +27,4 @@ Features done: 170 / 297 | Last done: M4-12
 - M4-10 Humanoids: Humanoids: walk 2.5, run 4.5, stairs only, armoured and armed; they call each other, flank, take cover and search hiding places one by one
 - M4-11 Turrets, motion sensors, tripwires and acoustic sensors: tripwires, motion sensors, acoustic sensors and turrets that fire when Engaged; hearing hears every noise of a tick; humanoids scan 8 s again
 - M4-12 District alert state machine: each district's alert: Unaware, Suspicious, Engaged, Searching and Heightened
+- M4-13 Hivemind broadcast: Engaged machines tell the network after their kind's delay; the last known position follows him; the word spreads through the district and 300 m beyond

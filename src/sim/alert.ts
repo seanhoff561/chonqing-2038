@@ -7,12 +7,11 @@
 // him sends the nearest unit on foot.)
 import type { SimState } from './types';
 import type { World } from '../world/world';
-import { UNITS, SIGHT, STATIC, type UnitKind } from '../data/units';
+import { UNITS, SIGHT, STATIC, BROADCAST, type UnitKind } from '../data/units';
 import { navPath } from './nav';
 import { raycast } from '../world/geom';
 import { unitPose, loopOf, type Unit } from './units';
 import { callOut, flankPoint, searchSpots, coverNear, SQUAD } from './squad';
-import { remember } from './hive';
 import { SCALE } from './clock';
 import { DT } from './types';
 
@@ -78,7 +77,8 @@ export function stepAlert(s: SimState, w: World) {
   for (const u of s.units) {
     const a = u.aware ?? 0;
     const was = u.state;
-    if (a >= ALERT.engaged && u.state !== 'engaged') { u.state = 'engaged'; remember(s, u.seen ?? s.player.pos); }
+    // Engaged, it tells the network after its delay (M4-13, sim/district.ts).
+    if (a >= ALERT.engaged && u.state !== 'engaged') { u.state = 'engaged'; u.cast = s.time + BROADCAST[u.kind] * SCALE; }
     else if (a >= ALERT.suspicious && u.state === 'unaware') u.state = 'suspicious';
     // A humanoid that's just noticed him calls the others near it (M4-10).
     if (was === 'unaware' && u.state !== 'unaware' && u.kind === 'humanoid' && !u.convoy && u.seen) callOut(s, w, u);

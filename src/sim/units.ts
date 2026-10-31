@@ -19,6 +19,13 @@ export interface Unit {
   /** where it last saw him (M4-04), and when (M4-12) */
   seen?: { x: number; y: number; z: number };
   saw?: number;
+  /** when it tells (told) the network it has him (M4-13), game time; when the network last told it where he is */
+  cast?: number;
+  told?: number;
+  /** whether it has told the network and is telling it still (M4-13) */
+  live?: boolean;
+  /** out (switched off, jammed, destroyed) until this game time (M4-13) */
+  off?: number;
   /** off its beat (M4-04): going to look at a point, looking about there, coming back (sim/alert.ts) */
   trip?: Trip;
   /** when it last went to check a place the hive saw him (M4-04) */
@@ -27,6 +34,9 @@ export interface Unit {
   fire?: number;
   aim?: boolean;
 }
+
+/** Whether a machine is out just now (M4-13). */
+export const isOff = (s: { time: number }, u: Unit) => u.off !== undefined && s.time < u.off;
 
 /** A trip off the beat: the way there (or back), how far along it, where it is and faces, the look-about left there,
  *  and where and when it left its beat. */

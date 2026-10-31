@@ -1,5 +1,6 @@
 // M4-12: each district's alert (DESIGN section 5). Unaware by default; Suspicious while one of its machines is;
-// Engaged the moment one has him in sight at full awareness; Searching once none has seen him for 4 s; Engaged again
+// Engaged once one that has him has told the network (a camera after 1 s: M4-13), and kept so while one sees him;
+// Searching once none has seen him for 4 s; Engaged again
 // on a fresh sighting; Heightened 150 s after the last contact, until 06:00, and Suspicious over it while a machine
 // is; then Unaware.
 import { describe, it, expect } from 'vitest';
@@ -7,6 +8,7 @@ import { setup, floor, run, secs } from './helpers';
 import { teleport } from '../../src/sim/player';
 import { alertOf, DISTRICT } from '../../src/sim/district';
 import { nextHour } from '../../src/sim/clock';
+import { BROADCAST } from '../../src/data/units';
 
 /** A camera 4 m up at the origin looking +z over an open floor, at noon; he starts well out of its sight. */
 function watched() {
@@ -36,13 +38,17 @@ describe('district alert (M4-12)', () => {
     expect(back).toBeGreaterThan(left - 12);
     expect(back).toBeLessThan(left + 12);
   });
-  it('turns Engaged the moment one has him, Searching 4 s after the last sighting, Engaged again on a fresh one', () => {
+  it('turns Engaged once the camera has told the network, Searching 4 s after the last sighting, Engaged again on a fresh one', () => {
     const t = watched();
     t.inView();
     let engagedAt = -1;
     for (let i = 0; i < secs(5) && engagedAt < 0; i++) { run(t.state, t.world, 1); if (t.cam.state === 'engaged') engagedAt = i; }
     expect(engagedAt).toBeGreaterThan(0);
-    expect(t.until('engaged', 7)).toBeGreaterThanOrEqual(0);
+    // Suspicious until it tells (1 s on), then Engaged.
+    expect(t.alert()).toBe('suspicious');
+    const told = t.until('engaged', secs(2)) / 60;
+    expect(told).toBeGreaterThan(BROADCAST.camera - 0.15);
+    expect(told).toBeLessThan(BROADCAST.camera + 0.15);
     // Kept Engaged while it sees him.
     run(t.state, t.world, secs(10));
     expect(t.alert()).toBe('engaged');

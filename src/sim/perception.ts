@@ -11,7 +11,7 @@ import { movement as M } from '../data/movement';
 import { raycast } from '../world/geom';
 import { lightAt, LAMP_LIGHT } from './light';
 import { daylight } from './clock';
-import { unitPose, type Pose } from './units';
+import { unitPose, isOff, type Pose } from './units';
 import { onUseId } from './use';
 import { remember } from './hive';
 
@@ -111,6 +111,7 @@ export function visibility(s: SimState, w: World, kind: UnitKind, at: Pose): num
 export function stepSight(s: SimState, w: World, every = 6) {
   const dt = every / 60;
   for (const u of s.units) {
+    if (isOff(s, u)) continue;
     // A tripwire's beam is watched every tick, so no running step goes through it unseen (M4-11).
     if (u.kind === 'tripwire') {
       if (wireTrips(s, w.cameras[u.cam!])) { u.aware = 1.2; u.seen = { ...s.player.pos }; u.saw = s.time; }
@@ -140,6 +141,7 @@ export function stepHearing(s: SimState, w: World) {
     if (e.t !== 'noise') continue;
     const hostile = HEARING.hostile.has(e.kind);
     for (const u of s.units) {
+      if (isOff(s, u)) continue;
       const at = unitPose(w, u, s.time);
       if (!at.active || at.docked) continue;
       const S = SENSES[u.kind], ear = { x: at.x, y: at.y + Math.max(0.3, S.eye), z: at.z }, d = Math.hypot(e.x - ear.x, e.y + 0.5 - ear.y, e.z - ear.z), r = e.r * S.hear;

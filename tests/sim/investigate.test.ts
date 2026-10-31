@@ -44,10 +44,11 @@ describe('awareness and investigation (M4-04)', () => {
     expect(p.z).toBeLessThanOrEqual(-19.9);
     expect(p.z).toBeGreaterThanOrEqual(-30.1);
   });
-  it('turns Engaged when he stays in its view, and the hive remembers where', () => {
+  it('turns Engaged when he stays in its view, and the hive remembers where (once it has told it: M4-13)', () => {
     const { world, state, u } = pacing();
     run(state, world, secs(3));
     expect(u.state).toBe('engaged');
+    run(state, world, secs(2.6));
     expect(state.hive.seen.length).toBe(1);
     expect(Math.hypot(state.hive.seen[0].x, state.hive.seen[0].z)).toBeLessThan(1);
   });

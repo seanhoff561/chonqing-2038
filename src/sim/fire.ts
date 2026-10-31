@@ -5,7 +5,7 @@ import type { World } from '../world/world';
 import { SENSORS, SIGHT } from '../data/units';
 import { damage, sprainLeg } from './body';
 import { rand } from './rng';
-import { unitPose } from './units';
+import { unitPose, isOff } from './units';
 import { visibility } from './perception';
 import { DT } from './types';
 
@@ -24,6 +24,7 @@ export function stepFire(s: SimState, w: World) {
   const T = SENSORS.turret;
   for (const u of s.units) {
     if (u.kind !== 'turret') continue;
+    if (isOff(s, u)) { u.fire = 0; u.aim = false; continue; }
     if (u.state !== 'engaged') { u.fire = 0; u.aim = false; continue; }
     // It looks for him along its gun ten times a second, as it sees.
     const at = unitPose(w, u, s.time), d = Math.hypot(s.player.pos.x - at.x, s.player.pos.y + 1 - at.y, s.player.pos.z - at.z);

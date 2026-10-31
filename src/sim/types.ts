@@ -80,8 +80,9 @@ export interface SimState {
   dropped: Dropped[];
   /** the machines on their beats (M4-01) */
   units: import('./units').Unit[];
-  /** what the hive knows (M4-04): where and when it has seen him; each district's alert that isn't Unaware (M4-12) */
-  hive: { seen: { x: number; y: number; z: number; t: number }[]; districts: Record<string, import('./district').District> };
+  /** what the hive knows (M4-04): where and when it has seen him; each district's alert that isn't Unaware (M4-12); his
+   *  last known position and the way he was going (M4-13) */
+  hive: { seen: { x: number; y: number; z: number; t: number }[]; districts: Record<string, import('./district').District>; lkp?: { x: number; y: number; z: number; t: number; hx: number; hz: number; ax: number; az: number } };
   /** container currently open beside the backpack, or null */
   openContainer: string | null;
   /** interactable id he's looking at, and a running hold-E task */
