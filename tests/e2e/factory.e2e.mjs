@@ -8,7 +8,7 @@ export default async function ({ open, fail, screenshot }) {
     const ROAD = new Set(['motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'unclassified', 'residential', 'service']);
     const roads = w.streets.filter(s => ROAD.has(s.kind)), seg = (px, pz, [ax, az], [bx, bz]) => { const l = (bx - ax) ** 2 + (bz - az) ** 2 || 1, t = Math.max(0, Math.min(1, ((px - ax) * (bx - ax) + (pz - az) * (bz - az)) / l)); return Math.hypot(ax + (bx - ax) * t - px, az + (bz - az) * t - pz); };
     const onRoad = p => roads.some(s => s.pts.some((q, i) => i > 0 && seg(p.x, p.z, s.pts[i - 1], q) < s.w / 2 + 1));
-    const gates = f('gate'), paths = (w.convoys || []).map(c => {
+    const gates = f('gate'), paths = (w.convoys || []).map(({ pts: c }) => {
       let len = 0; for (let i = 1; i < c.length; i++) len += Math.hypot(c[i].x - c[i - 1].x, c[i].z - c[i - 1].z);
       const out = c.filter((p, i) => i > 12), g = c[0], e = c[c.length - 1];
       return { len, road: out.filter(onRoad).length / out.length, away: Math.hypot(e.x - g.x, e.z - g.z) };

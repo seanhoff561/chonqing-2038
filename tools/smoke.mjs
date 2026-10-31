@@ -24,13 +24,14 @@ const fails = [];
 let passes = 0;
 
 // The 1:1 city takes a while to boot in software-rendered Chrome, so its scenarios boot once and every check
-// shares that page: a check's close() is put off to the end, and the next check gets the flags, headlamp and
-// clock the page started with.
+// shares that page: a check's close() is put off to the end (or until a third city would be held), and the next
+// check gets the flags, headlamp and clock the page started with.
 const SHARED = new Set(['?scenario=shibati&seed=1', '?scenario=yuzhong&seed=1', '?scenario=run&seed=1']);
 const shared = new Map();
 async function open(query, where) {
   const held = shared.get(query);
   if (held) {
+    held.used = Date.now();
     held.where.v = where;
     await held.page.evaluate(`(() => { const g = window.__cq.game; Object.assign(g.state.flags, ${held.flags}); for (const k of Object.keys(g.state.flags)) if (!(k in ${held.flags})) delete g.state.flags[k]; g.state.player.lamp = 0; g.state.time = ${held.time}; window.__cq.runFrames(2); })()`);
     return held.page;
@@ -42,10 +43,17 @@ async function open(query, where) {
   await page.goto(base + query, { waitUntil: 'load', timeout: 240000 });
   await page.waitForFunction('window.__cq && window.__cq.ready', { timeout: 240000 });
   if (SHARED.has(query)) {
+    // Two cities held open at most: each takes some 4.7 GB in software-rendered Chrome, and a third runs the
+    // machine out of memory (its page dies and every check after it times out). The least recently used goes.
+    if (shared.size >= 2) {
+      const [q, old] = [...shared.entries()].sort((a, b) => a[1].used - b[1].used)[0];
+      shared.delete(q);
+      await old.close();
+    }
     const [flags, time] = await page.evaluate('[JSON.stringify(window.__cq.game.state.flags), window.__cq.game.state.time]');
     const close = page.close.bind(page);
     page.close = async () => {};
-    shared.set(query, { page, where: label, flags, time, close });
+    shared.set(query, { page, where: label, flags, time, close, used: Date.now() });
   }
   return page;
 }
