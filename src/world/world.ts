@@ -56,7 +56,10 @@ export interface Teleport { name: string; x: number; y: number; z: number; yaw: 
  *  is taken ('jump', 'drop', or the connection's kind). */
 /** An off-street route (M3-37, M3-76): its points, where each stretch between two is (in a building, on a roof,
  *  underground, on the ground, or across a gap), and the ways taken between nodes, in order. */
-export interface Route { id: string; kind: 'main' | 'branch'; pts: { x: number; y: number; z: number }[]; on: ('inside' | 'roof' | 'under' | 'ground' | 'gap')[]; ways: string[] }
+export interface Route { id: string; kind: 'main' | 'branch' | 'link'; pts: { x: number; y: number; z: number }[]; on: ('inside' | 'roof' | 'under' | 'ground' | 'gap')[]; ways: string[] }
+/** One of the three ways between two of a district's key points (M3-21): along the streets, over the roofs, or
+ *  underground and through the buildings. */
+export interface Link { from: string; to: string; layer: 'street' | 'roof' | 'under'; route: Route }
 /** A machine's beat (M3-37, laid for M4): along streets or over the roofs, between the hours it keeps. */
 export interface Patrol { kind: 'street' | 'drone'; pts: { x: number; y: number; z: number }[]; hours: [number, number] }
 /** A place reached only one way, with a tool (U-037): where, what it takes, and where that's used from. */
@@ -66,6 +69,8 @@ export interface World {
   name: string;
   /** off-street routes, machines' beats, tool-gated places (M3-37); empty for small worlds */
   routes: Route[]; patrols: Patrol[]; gates: Gate[];
+  /** the three layers of routes between the district's key points (M3-21) */
+  links: Link[];
   /** render-only boxes (visible stair steps over invisible ramps, trims) */
   decor: Solid[];
   teleports: Teleport[];
@@ -103,7 +108,7 @@ export interface World {
 
 export interface WorldParts {
   name: string;
-  routes?: Route[]; patrols?: Patrol[]; gates?: Gate[];
+  routes?: Route[]; patrols?: Patrol[]; gates?: Gate[]; links?: Link[];
   solids: Solid[];
   decor?: Solid[];
   water?: Box[];
@@ -142,7 +147,7 @@ export function makeWorld(p: WorldParts): World {
   if (parts.size) for (const it of p.inter ?? []) if (typeof it.data?.part === 'string' && parts.has(it.data.part)) it.data.solid = parts.get(it.data.part);
   return {
     name: p.name,
-    routes: p.routes ?? [], patrols: p.patrols ?? [], gates: p.gates ?? [],
+    routes: p.routes ?? [], patrols: p.patrols ?? [], gates: p.gates ?? [], links: p.links ?? [],
     decor: p.decor ?? [],
     solids,
     ground: p.ground,

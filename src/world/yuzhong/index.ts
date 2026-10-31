@@ -33,7 +33,8 @@ import { sewers } from './sewers';
 import { breaches } from './breach';
 import { signage } from './signage';
 import { liFlat } from './liflat';
-import { riverfront } from './riverfront';
+import { riverfront, riverRoad } from './riverfront';
+import { streetGraph } from './streetroute';
 
 const empty = (): Fabric => ({ solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [], sites: [], far: [] });
 
@@ -91,11 +92,18 @@ export function buildYuzhong(): World {
   windowBridges(out.features.filter(f => f.kind.startsWith('win:')), built, cross);
   // The sewer maze under the basements (M3-73a).
   const sew = sewers(out.features.filter(f => f.kind === 'sewer'), plots, g, under.route, tun.zones.map(z => z.box), under.solids, under.zones.map(z => z.box));
+  // Shibati's stair (M3-18): the stepped street nearest the landmark, its top and its foot. The district's key points
+  // (M3-21): the hideout's grate, Jiaochangkou, the top of the stair, the riverfront; three layers of routes join them.
+  const SB = GEO.landmarks.shibati, near = (s: Street) => Math.min(...s.pts.map(([x, z]) => Math.hypot(x - SB.x, z - SB.z)));
+  const stair = sts.filter(s => s.steps && onGround(s)).sort((a, b) => near(a) - near(b))[0], sh = stair.pts.map(([x, z]) => hAt(g, x, z));
+  const [top, foot] = [stair.pts[sh.indexOf(Math.max(...sh))], stair.pts[sh.indexOf(Math.min(...sh))]], JK = GEO.landmarks.jiaochangkou;
+  const keys = [{ name: 'hideout gate', at: tun.at.grate }, { name: 'jiaochangkou', at: { x: JK.x, y: hAt(g, JK.x, JK.z), z: JK.z } },
+    { name: 'shibati top', at: { x: top[0], y: hAt(g, top[0], top[1]), z: top[1] } }, { name: 'riverfront', at: riverRoad(g, sts, { x: foot[0], z: foot[1] }) }], joins: [number, number][] = [[0, 1], [1, 2], [2, 3]];
   // The caches, and the route network over everything that joins the roofs (M3-37).
   const gates = placeGates(gatePairs.filter(q => isolated(q, plans)), out), L0 = GEO.landmarks, lm = (k: string) => ({ x: L0[k].x, y: 0, z: L0[k].z });
   const net = network(plots, out.features.concat(vert.features, cross.features, under.features, sew.features), out.sites, sts, g,
     [['jiaochangkou', 'shibati', 'jiefangbei', 'cablewayNorth', 'xiaoshizi', 'chaotianmen'].map(lm), ['jiefangbei', 'xinhuaIntl', 'hongyadong', 'chaotianmen'].map(lm)],
-    { x: tun.at.grate.x, y: tun.at.grate.y, z: tun.at.grate.z }, cross, gates, buildIndex(out.solids));
+    { x: tun.at.grate.x, y: tun.at.grate.y, z: tun.at.grate.z }, cross, gates, buildIndex(out.solids), keys, joins);
   // The underground city's buildings (M3-73), as they stand (after the routes: the surface's network doesn't run
   // through the cavern under it).
   under.lots.forEach((s, k) => { const { l, f } = underLot(s, k); place(f, { cx: (l.x0 + l.x1) / 2, cz: (l.z0 + l.z1) / 2, hw: (l.x1 - l.x0) / 2, hd: (l.z1 - l.z0) / 2, yaw: 0 }, `under${k}`, out); });
@@ -109,11 +117,9 @@ export function buildYuzhong(): World {
   const hide = { name: "Friends' hideout (vent grate)", x: tun.at.spawn.x, y: tun.at.spawn.y + 0.05, z: tun.at.spawn.z, yaw: -Math.PI / 2 - tun.frame.yaw };
   // (Looking down the stepped street from its mouth.)
   const dw = under.features.find(f => f.kind === 'way:descent'), descentYaw = dw ? Math.atan2(-dw.nx!, -dw.nz!) : 0;
-  // Shibati's stair from its top looking down and from its foot looking up (M3-18): the stepped street nearest the
-  // landmark; the beam of Line 2 a third of the way along its longest run, looking along it.
-  const SB = L.shibati, near = (s: Street) => Math.min(...s.pts.map(([x, z]) => Math.hypot(x - SB.x, z - SB.z)));
-  const stair = sts.filter(s => s.steps && onGround(s)).sort((a, b) => near(a) - near(b))[0], sh = stair.pts.map(([x, z]) => hAt(g, x, z));
-  const [top, foot] = [stair.pts[sh.indexOf(Math.max(...sh))], stair.pts[sh.indexOf(Math.min(...sh))]], look = (a: [number, number], b: [number, number]) => Math.atan2(a[0] - b[0], a[1] - b[1]);
+  // Shibati's stair from its top looking down and from its foot looking up (M3-18); the beam of Line 2 a third of the
+  // way along its longest run, looking along it.
+  const look = (a: [number, number], b: [number, number]) => Math.atan2(a[0] - b[0], a[1] - b[1]);
   const run = line.beams.reduce((a, b) => (b.pts.length > a.pts.length ? b : a)), bi = Math.floor(run.pts.length / 3), bn = run.pts[Math.min(run.pts.length - 1, bi + 1)];
   const teleports = ['jiefangbei', 'shibati', 'jiaochangkou', 'hongyadong', 'xiaoshizi', 'chaotianmen', 'cablewayNorth'].map(k => at(k)).concat([
     { name: 'Shibati top', x: top[0], y: hAt(g, top[0], top[1]) + 1.5, z: top[1], yaw: look(top, foot) },
@@ -213,6 +219,10 @@ export function buildYuzhong(): World {
     world.hides.push({ id: world.hides.length, kind: h.kind, yaw: p.yaw, inner: { x0: x - h.w / 2, y0: p.y + h.y, z0: z - h.d / 2, x1: x + h.w / 2, y1: p.y + h.y + h.h, z1: z + h.d / 2 } });
   }
   liFlat(world);
+  // The street layer between the key points, along the streets as they stand now (M3-21).
+  const along = streetGraph(sts, g, world.index);
+  world.features.push(...keys.map((k, n) => ({ kind: `key:${k.name}`, x: k.at.x, y: k.at.y, z: k.at.z, group: n })));
+  world.links = net.links.concat(joins.flatMap(([i, j]) => { const rt = along(`link:${keys[i].name}-${keys[j].name}:street`, keys[i].at, keys[j].at); return rt ? [{ from: keys[i].name, to: keys[j].name, layer: 'street' as const, route: rt }] : []; }));
   return world;
 }
 

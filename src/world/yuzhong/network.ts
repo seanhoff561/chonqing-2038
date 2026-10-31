@@ -17,7 +17,7 @@ import { makeRng, hashString, rand, type Rng } from '../../sim/rng';
 import { ENVELOPE as E } from '../../data/envelope';
 import { REACH } from '../../data/reach';
 import { heightAt, type Heightfield } from '../heightfield';
-import type { Feature, Plot, Site, Route, Patrol, Gate, Inter, Prop } from '../world';
+import type { Feature, Plot, Site, Route, Patrol, Gate, Inter, Prop, Link } from '../world';
 import { ROAD, type Street } from './ground';
 import { minRect, obbOverlap, type Obb } from './shapes';
 import { BARE } from '../city/climb';
@@ -29,6 +29,9 @@ type V3 = { x: number; y: number; z: number };
 const PARAPET = 0.6;
 /** The connections that join two roofs or two walls, by their features' kind. */
 const JOINS = ['crossPlank', 'crossBeam', 'crossCord', 'cord', 'walkway', 'gapBar', 'skybridge'];
+/** Ways under the ground, and ways over the roofs (the crossings built or to build among them). */
+const UNDER_WAYS = new Set(['tunnel', 'sewer', 'manhole', 'way']);
+const ROOF_WAYS = new Set(['jump', 'drop', 'climb', 'line', 'build', 'crossPlank', 'crossBeam', 'gapBar', 'walkway', 'skybridge', 'winPlank']);
 
 /** Caches reached only by grappling hook (U-037), chosen before anything is built: a block none of its neighbours'
  *  roofs reach (none within a running jump that isn't 4 m and more below it), with a roof 7-16 m off to shoot from.
@@ -89,7 +92,7 @@ interface Edge { a: number; b: number; w: number; kind: string; pa: V3; pb: V3 }
 const WINS = new Set(['win:open', 'win:glass']);
 
 /** The graph, the routes and the beats. `grate` is the start hideout's way out. */
-export function network(plots: Plot[], features: Feature[], sites: Site[], sts: Street[], g: Heightfield, anchors: V3[][], grate: V3, out: Vertical, gates: Gate[], index: SolidIndex): { routes: Route[]; patrols: Patrol[] } {
+export function network(plots: Plot[], features: Feature[], sites: Site[], sts: Street[], g: Heightfield, anchors: V3[][], grate: V3, out: Vertical, gates: Gate[], index: SolidIndex, keys: { name: string; at: V3 }[] = [], joins: [number, number][] = []): { routes: Route[]; patrols: Patrol[]; links: Link[] } {
   const r = makeRng(hashString('network'));
   const lots = plots.filter(p => !p.far), obb = lots.map(p => minRect(p.corners)), n = lots.length;
   const cells = new Map<string, number[]>(), key = (x: number, z: number) => `${Math.floor(x / 48)},${Math.floor(z / 48)}`;
@@ -193,6 +196,10 @@ export function network(plots: Plot[], features: Feature[], sites: Site[], sts: 
     })();
     if (b) link(end(a), end(b), 0, 'sewer', a, b);
   }
+  // (The district's key points are places on the ground too, M3-21.)
+  const keyNodes = keys.map(q => { const k = add({ place: 'ground', x: q.at.x, y: q.at.y, z: q.at.z }); ground.push(k); return k; });
+  // (Each joined to the ways in and down within 150 m of it, walking.)
+  for (const k of keyNodes) for (const b of ground) if (b !== k && !keyNodes.includes(b)) { const d = Math.hypot(nodes[b].x - nodes[k].x, nodes[b].z - nodes[k].z); if (d >= 60 && d < 150) link(k, b, 0, 'street', nodes[k], nodes[b]); }
   for (const a of ground) for (const b of ground) if (a < b && Math.hypot(nodes[a].x - nodes[b].x, nodes[a].z - nodes[b].z) < 60) link(a, b, 0, 'street', nodes[a], nodes[b]);
   // Roof to roof: the connections' two ends; jumps and drops within reach; a line ridden or walked.
   const groups = new Map<number, Feature[]>();
@@ -229,7 +236,7 @@ export function network(plots: Plot[], features: Feature[], sites: Site[], sts: 
   const sheer = new Set(gates.map(q => owner(q.x, q.z)));
   // Shortest ways (Dijkstra on a binary heap), never through a gated cache unless it's where the way goes.
   const N = nodes.length;
-  const path = (from: number, to: number): Edge[] | null => {
+  const path = (from: number, to: number, weigh = (e: Edge) => e.w): Edge[] | null => {
     const dist = new Float64Array(N).fill(Infinity), prev = new Array<Edge | null>(N).fill(null), heap: [number, number][] = [[0, from]];
     const push = (d: number, i: number) => { heap.push([d, i]); for (let k = heap.length - 1; k > 0;) { const p = (k - 1) >> 1; if (heap[p][0] <= heap[k][0]) break; [heap[p], heap[k]] = [heap[k], heap[p]]; k = p; } };
     const pop = () => { const top = heap[0], last = heap.pop()!; if (heap.length) { heap[0] = last; for (let k = 0; ;) { const l = 2 * k + 1, rr = l + 1; let m = k; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (rr < heap.length && heap[rr][0] < heap[m][0]) m = rr; if (m === k) break; [heap[m], heap[k]] = [heap[k], heap[m]]; k = m; } } return top; };
@@ -238,7 +245,7 @@ export function network(plots: Plot[], features: Feature[], sites: Site[], sts: 
       const [d, i] = pop();
       if (d > dist[i]) continue;
       if (i === to) break;
-      for (const e of edges[i]) if ((e.b === to || !sheer.has(e.b)) && d + e.w < dist[e.b]) { dist[e.b] = d + e.w; prev[e.b] = e; push(dist[e.b], e.b); }
+      for (const e of edges[i]) { const c = d + weigh(e); if ((e.b === to || !sheer.has(e.b)) && c < dist[e.b]) { dist[e.b] = c; prev[e.b] = e; push(c, e.b); } }
     }
     if (!Number.isFinite(dist[to])) return null;
     const steps: Edge[] = [];
@@ -288,9 +295,32 @@ export function network(plots: Plot[], features: Feature[], sites: Site[], sts: 
   for (const q of gates) { const a = owner(q.from.x, q.from.z), b = owner(q.x, q.z); if (a >= 0 && b >= 0) link(a, b, 30, 'grapple', q.from, q, false); }
   const routes: Route[] = [];
   /** A route: the way's points, where each stretch between them is, and the ways taken (unmarked, U-043). */
-  const along = (id: string, kind: Route['kind'], a: number, b: number) => {
-    const p = path(a, b);
-    if (!p || !p.length) return;
+  /** A way that passes through some place of a kind before it ends (M3-21): the shortest over (node, been there yet)
+   *  pairs, so it can't take a short cut that never goes there. */
+  const through = (from: number, to: number, weigh: (e: Edge) => number, need: (k: number) => boolean): Edge[] | null => {
+    const dist = new Float64Array(2 * N).fill(Infinity), prev = new Array<[Edge, number] | null>(2 * N).fill(null), open: [number, number][] = [];
+    const s0 = need(from) ? N + from : from;
+    dist[s0] = 0; open.push([0, s0]);
+    while (open.length) {
+      let m = 0;
+      for (let k = 1; k < open.length; k++) if (open[k][0] < open[m][0]) m = k;
+      const [d, st] = open[m]; open[m] = open[open.length - 1]; open.pop();
+      if (d > dist[st]) continue;
+      const i = st % N, been = st >= N;
+      if (i === to && been) break;
+      for (const e of edges[i]) {
+        const nb = been || need(e.b) ? N + e.b : e.b, c = d + weigh(e);
+        if ((e.b === to || !sheer.has(e.b)) && c < dist[nb]) { dist[nb] = c; prev[nb] = [e, st]; open.push([c, nb]); }
+      }
+    }
+    if (!Number.isFinite(dist[N + to])) return null;
+    const steps: Edge[] = [];
+    for (let st = N + to; prev[st]; st = prev[st]![1]) steps.unshift(prev[st]![0]);
+    return steps;
+  };
+  const along = (id: string, kind: Route['kind'], a: number, b: number, weigh?: (e: Edge) => number, need?: (k: number) => boolean): Route | null => {
+    const p = weigh && need ? through(a, b, weigh, need) : path(a, b, weigh);
+    if (!p || !p.length) return null;
     const pts: V3[] = [{ x: nodes[a].x, y: nodes[a].y, z: nodes[a].z }], on: Route['on'] = [], ways: string[] = [];
     for (const e of p) {
       pts.push({ ...e.pa }); on.push(nodes[e.a].place);
@@ -299,10 +329,11 @@ export function network(plots: Plot[], features: Feature[], sites: Site[], sts: 
     }
     const z = nodes[b];
     pts.push({ x: z.x, y: z.y, z: z.z }); on.push(z.place);
-    routes.push({ id, kind, pts, on, ways });
+    return { id, kind, pts, on, ways };
   };
+  const keep = (rt: Route | null) => { if (rt) routes.push(rt); return !!rt; };
   // Main routes: chains of the districts' centres.
-  anchors.forEach((chain, c) => { for (let k = 0; k + 1 < chain.length; k++) { const a = nodeAt(chain[k]), b = nodeAt(chain[k + 1]); if (a >= 0 && b >= 0 && a !== b) along(`main${c}.${k}`, 'main', a, b); } });
+  anchors.forEach((chain, c) => { for (let k = 0; k + 1 < chain.length; k++) { const a = nodeAt(chain[k]), b = nodeAt(chain[k + 1]); if (a >= 0 && b >= 0 && a !== b) keep(along(`main${c}.${k}`, 'main', a, b)); } });
   // Branches: from the main routes to the shelters within 300 m of them (one in three, up to 30), and to the caches.
   const onMain = new Set<number>();
   for (const rt of routes) for (const q of rt.pts) { const i = owner(q.x, q.z); if (i >= 0) onMain.add(inside[i] >= 0 ? inside[i] : i); }
@@ -315,10 +346,22 @@ export function network(plots: Plot[], features: Feature[], sites: Site[], sts: 
     if (t < 0 || onMain.has(t) || reached.has(t)) continue;
     reached.add(t);
     const best = nearest(t);
-    if (best >= 0) { const before = routes.length; along(`branch${branches}`, 'branch', best, t); if (routes.length > before) branches++; }
+    if (best >= 0 && keep(along(`branch${branches}`, 'branch', best, t))) branches++;
   }
-  gates.forEach((q, k) => { const t = owner(q.x, q.z), best = t >= 0 ? nearest(t) : -1; if (best >= 0) along(`cache${k}`, 'branch', best, t); });
-  return { routes, patrols: beats(routes, sts, g, grate) };
+  gates.forEach((q, k) => { const t = owner(q.x, q.z), best = t >= 0 ? nearest(t) : -1; if (best >= 0) keep(along(`cache${k}`, 'branch', best, t)); });
+  // Two of the three layers between the district's key points (M3-21; the streets' is laid once the world stands):
+  // over the roofs, in and up at one end and down and out at the other; and underground or through the buildings,
+  // crossing the open between them. Each from a key point to the next, with no tool.
+  const links: Link[] = [];
+  const layers: ['roof' | 'under', (e: Edge) => number, (k: number) => boolean][] = [
+    ['roof', e => (e.kind === 'grapple' || UNDER_WAYS.has(e.kind) || nodes[e.b].place === 'under' ? Infinity : e.w * (nodes[e.b].place === 'roof' ? 1 : 5)), k => nodes[k].place === 'roof'],
+    ['under', e => (e.kind === 'grapple' ? Infinity : e.w * ({ roof: 8, ground: 3, inside: 1, under: 1 }[nodes[e.b].place]) * (ROOF_WAYS.has(e.kind) ? 4 : 1)), k => nodes[k].place === 'under' || nodes[k].place === 'inside'],
+  ];
+  for (const [i, j] of joins) for (const [layer, weigh, need] of layers) {
+    const rt = along(`link:${keys[i].name}-${keys[j].name}:${layer}`, 'link', keyNodes[i], keyNodes[j], weigh, need);
+    if (rt) links.push({ from: keys[i].name, to: keys[j].name, layer, route: rt });
+  }
+  return { routes, patrols: beats(routes, sts, g, grate), links };
 }
 
 /** How far from a footprint's centre the line along (ux, uz) leaves it. */
