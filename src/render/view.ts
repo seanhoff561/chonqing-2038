@@ -100,7 +100,7 @@ export class View {
       const mid = (s: Solid) => this.cellAt0((s.x0 + s.x1) / 2, (s.z0 + s.z1) / 2);
       for (const s of trims) mid(s).detail.push(s);
       for (const s of insides) mid(s).rooms.push(s);
-    } else meshes.add(...nearLayers(trims, insides, [], 1));
+    } else { const near = nearLayers(trims, insides, [], 1); if (near.length) meshes.add(...near); }
     if (w.ground) meshes.add(...buildGroundMeshes(w.ground, this.hasFar ? 'near' : 'all', w.marks), ...buildStreetMeshes(w.ground, w.streets, this.hasFar ? 'near' : 'all', w.lawns));
     const share = PRESETS[this.preset].props, props = buildProps(w.props.filter(p => !p.kind.startsWith('f:') && !(this.hasFar && isSmall(p))), share);
     if (this.hasFar) for (const p of w.props) if (isSmall(p)) this.cellAt0(p.x, p.z).props.push(p);

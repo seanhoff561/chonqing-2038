@@ -3,6 +3,7 @@
 // builds the real models).
 import * as THREE from 'three';
 import { mergeGeometries } from './view';
+import { mergeGeometries as mergeAll } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { unitPose, type Unit } from '../sim/units';
 import type { World } from '../world/world';
 import type { UnitKind } from '../data/units';
@@ -52,7 +53,8 @@ function shape(k: UnitKind): THREE.BufferGeometry {
   };
   // (A tripwire is all beam: red, lit.)
   if (k === 'tripwire') return paint(GEO[k](), 0xff2020, 1);
-  return mergeGeometries([paint(GEO[k](), 0x5a6068, 0), paint(new THREE.BoxGeometry(0.2, 0.05, 0.02).applyMatrix4(EYE_AT[k]), 0xd8ecff, 1)]);
+  // (Three's merge, which keeps the colour and glow: the view's own keeps only what the world's meshes have.)
+  return mergeAll([paint(GEO[k](), 0x5a6068, 0), paint(new THREE.BoxGeometry(0.2, 0.05, 0.02).applyMatrix4(EYE_AT[k]), 0xd8ecff, 1)]);
 }
 
 /** Every unit in one batch: one draw call for all the machines near him. */
