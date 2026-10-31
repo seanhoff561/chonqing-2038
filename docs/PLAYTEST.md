@@ -148,3 +148,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M4-11: fixed sensors
 - In the Grand Tunnel past the metro's passage, find the red tripwire: is it visible enough in the lamp's light to jump, and does a running jump feel fair? Crawl past a motion sensor in a shelter store room (slowly), then crouch-walk: does the difference read? Stand in front of a factory gate's turret: does the burst sound and hurt as it should, and does it feel deadly within seconds?
+
+## M4-12 to M4-14: the hive answers
+- Get seen by a camera in Jiefangbei and stay seen: within a few seconds do the machines near you converge, does a hunter drone come off a roof dock, and after 45 s a pair of humanoids out of a street door? Break line of sight and hide: does it feel like the net closes and then loosens?

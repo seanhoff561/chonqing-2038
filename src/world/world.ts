@@ -86,8 +86,10 @@ export interface World {
   nav?: Nav;
   /** the cameras and the other fixed sensors (M4-07, M4-11) */
   cameras: Camera[];
-  /** the drones' rooftop docks, where they charge (M4-08) */
+  /** the drones' rooftop docks, where they charge (M4-08) and the hunters wait (M4-14) */
   docks: { x: number; y: number; z: number }[];
+  /** each district's garage, where its squad of humanoids waits (M4-14) */
+  garages: { x: number; y: number; z: number }[];
   /** render-only boxes (visible stair steps over invisible ramps, trims) */
   decor: Solid[];
   teleports: Teleport[];
@@ -126,7 +128,7 @@ export interface World {
 
 export interface WorldParts {
   name: string;
-  routes?: Route[]; patrols?: Patrol[]; gates?: Gate[]; links?: Link[]; cameras?: Camera[]; docks?: World['docks'];
+  routes?: Route[]; patrols?: Patrol[]; gates?: Gate[]; links?: Link[]; cameras?: Camera[]; docks?: World['docks']; garages?: World['garages'];
   solids: Solid[];
   decor?: Solid[];
   water?: Box[];
@@ -165,7 +167,7 @@ export function makeWorld(p: WorldParts): World {
   if (parts.size) for (const it of p.inter ?? []) if (typeof it.data?.part === 'string' && parts.has(it.data.part)) it.data.solid = parts.get(it.data.part);
   return {
     name: p.name,
-    routes: p.routes ?? [], patrols: p.patrols ?? [], gates: p.gates ?? [], links: p.links ?? [], cameras: p.cameras ?? [], docks: p.docks ?? [],
+    routes: p.routes ?? [], patrols: p.patrols ?? [], gates: p.gates ?? [], links: p.links ?? [], cameras: p.cameras ?? [], docks: p.docks ?? [], garages: p.garages ?? [],
     decor: p.decor ?? [],
     solids,
     ground: p.ground,

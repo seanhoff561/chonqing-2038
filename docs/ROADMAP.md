@@ -659,7 +659,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Four key points of the district (hideout gate, Shibati top, Jiaochangkou, the riverfront) are linked by a street route, a rooftop or beam route and an underground or interior route
   - A sim test checks each link with the nav and movement limits
 
-## M4: 15 of 37 done
+## M4: 16 of 37 done
 
 M4 The machines: cameras, drones and their docks, ground robots, turrets; perception (light, distance, motion, posture, cover, sound, thermal); patrol schedules; alert states, the hivemind broadcast, convergence, drone launches, the search and the heightened district; combat and damage; tracking home and the hideout raid; death and restart. After M4 the core loop is playable start to finish.
 
@@ -720,7 +720,7 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
   - An Engaged unit broadcasts after its type's delay; the last known position updates live while broadcasting units see him
   - Contact spreads to the district and to units within 300 m in neighbouring districts
   - A sim test: disabling the unit before its delay keeps the network unaware
-- [ ] **M4-14** Convergence and escalation
+- [x] **M4-14** Convergence and escalation
   - Ground units within 250 m path to the last known position and drones within 400 m fly to it; docks launch hunter drones every 20 s (3 per dock); a humanoid squad deploys after 45 s
   - A sim test checks unit counts over time
 - [ ] **M4-15** Search

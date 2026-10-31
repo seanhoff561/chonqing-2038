@@ -15,6 +15,8 @@ const GEO: Record<UnitKind, () => THREE.BufferGeometry> = {
   humanoid: () => mergeGeometries([at(0.5, 0.7, 0.3, 0, 1.25, 0), at(0.26, 0.26, 0.26, 0, 1.78, 0), ...[-1, 1].flatMap(k => [at(0.15, 0.88, 0.16, k * 0.13, 0.44, 0), at(0.11, 0.72, 0.12, k * 0.33, 1.2, 0)])]),
   quadruped: () => mergeGeometries([at(0.45, 0.32, 1.0, 0, 0.7, 0), at(0.26, 0.22, 0.3, 0, 0.82, 0.6), ...FOUR.map(([a, b]) => at(0.1, 0.6, 0.1, a * 0.17, 0.3, b * 0.38))]),
   drone: () => mergeGeometries([at(0.5, 0.15, 0.5, 0, 0, 0), ...FOUR.flatMap(([a, b]) => [at(0.5, 0.04, 0.06, a * 0.25, 0.02, b * 0.25), at(0.36, 0.01, 0.36, a * 0.45, 0.07, b * 0.45)])]),
+  // A hunter drone (M4-14): bigger, its gun slung under it.
+  hunter: () => mergeGeometries([at(0.7, 0.2, 0.8, 0, 0, 0), at(0.08, 0.08, 0.6, 0, -0.16, 0.3), ...FOUR.flatMap(([a, b]) => [at(0.6, 0.05, 0.07, a * 0.32, 0.03, b * 0.32), at(0.46, 0.01, 0.46, a * 0.58, 0.09, b * 0.58)])]),
   delivery: () => mergeGeometries([at(0.6, 0.55, 0.8, 0, 0.35, 0), ...FOUR.map(([a, b]) => at(0.08, 0.2, 0.2, a * 0.32, 0.1, b * 0.28))]),
   // A carrier: a long cargo body on six legs.
   carrier: () => mergeGeometries([at(1.4, 1.0, 3.0, 0, 1.3, 0), at(1.0, 0.4, 0.6, 0, 1.1, 1.7), ...[-1, 0, 1].flatMap(b => [-1, 1].map(a => at(0.14, 0.9, 0.14, a * 0.6, 0.45, b * 1.1)))]),
@@ -33,7 +35,7 @@ const GEO: Record<UnitKind, () => THREE.BufferGeometry> = {
 /** Where each kind's eyes are, from its feet. */
 const EYE_AT: Record<UnitKind, THREE.Matrix4> = {
   humanoid: new THREE.Matrix4().makeTranslation(0, 1.8, 0.135), quadruped: new THREE.Matrix4().makeTranslation(0, 0.85, 0.755),
-  drone: new THREE.Matrix4().makeTranslation(0, -0.1, 0.2), delivery: new THREE.Matrix4().makeTranslation(0, 0.5, 0.41), carrier: new THREE.Matrix4().makeTranslation(0, 1.2, 2.01),
+  drone: new THREE.Matrix4().makeTranslation(0, -0.1, 0.2), hunter: new THREE.Matrix4().makeTranslation(0, -0.06, 0.41), delivery: new THREE.Matrix4().makeTranslation(0, 0.5, 0.41), carrier: new THREE.Matrix4().makeTranslation(0, 1.2, 2.01),
   camera: new THREE.Matrix4().makeTranslation(0, -0.05, 0.29), sweeper: new THREE.Matrix4().makeTranslation(0, -0.05, 0.28), lamppost: new THREE.Matrix4().makeTranslation(0, 0, 0),
   turret: new THREE.Matrix4().makeTranslation(0, 0.2, 0.46), pir: new THREE.Matrix4().makeTranslation(0, -0.04, 0.09), acoustic: new THREE.Matrix4().makeTranslation(0, 0.12, 0.06), tripwire: new THREE.Matrix4().makeTranslation(0, 0, 0),
 };

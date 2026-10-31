@@ -10,21 +10,21 @@ import type { World } from '../world/world';
 import { UNITS, SIGHT, STATIC, BROADCAST, type UnitKind } from '../data/units';
 import { navPath } from './nav';
 import { raycast } from '../world/geom';
-import { unitPose, loopOf, type Unit } from './units';
+import { unitPose, loopOf, type Unit, type Trip } from './units';
 import { callOut, flankPoint, searchSpots, coverNear, SQUAD } from './squad';
 import { SCALE } from './clock';
 import { DT } from './types';
 
 type V3 = { x: number; y: number; z: number };
 /** How far up or down each kind steps without a stair: a quadruped's metre's jump; nothing climbs (M4-09). */
-const STEP: Record<UnitKind, number> = { quadruped: 1, humanoid: 0.5, drone: 99, delivery: 0.2, carrier: 0.3, camera: 0, sweeper: 0, lamppost: 0, turret: 0, pir: 0, tripwire: 0, acoustic: 0 };
+const STEP: Record<UnitKind, number> = { quadruped: 1, humanoid: 0.5, drone: 99, hunter: 99, delivery: 0.2, carrier: 0.3, camera: 0, sweeper: 0, lamppost: 0, turret: 0, pir: 0, tripwire: 0, acoustic: 0 };
 export const ALERT = { suspicious: 0.3, engaged: 1, scan: 8, checkFor: 24 * 3600, checkWithin: 200 };
 
 /** The way from a to b for a kind: its nav path on the ground, then on to the point itself if that's within its step
  *  up or down (a quadruped's metre's jump, half a metre for the rest: none climbs) with nothing in the way; straight
  *  for a drone (8 m over the point) or without a nav graph. */
-function way(w: World, kind: UnitKind, a: V3, b: V3): V3[] {
-  if (kind === 'drone') return [{ x: b.x, y: b.y + 8, z: b.z }];
+export function way(w: World, kind: UnitKind, a: V3, b: V3): V3[] {
+  if (kind === 'drone' || kind === 'hunter') return [{ x: b.x, y: b.y + 8, z: b.z }];
   const p = w.nav ? navPath(w.nav, a, b, kind) : null;
   if (!p) return Math.abs(b.y - a.y) <= STEP[kind] ? [b] : [];
   const end = p.pts[p.pts.length - 1], d = Math.hypot(b.x - end.x, b.y - end.y, b.z - end.z);
@@ -32,16 +32,17 @@ function way(w: World, kind: UnitKind, a: V3, b: V3): V3[] {
   return [...p.pts.slice(1), ...(reach ? [b] : [])];
 }
 
-function leave(s: SimState, w: World, u: Unit, kind: 'look' | 'check', to: V3) {
+export function leave(s: SimState, w: World, u: Unit, kind: Trip['kind'], to: V3) {
   const at = unitPose(w, u, s.time);
   // A humanoid coming to a place others are already making for comes round it from a side (M4-10).
   const side = u.kind === 'humanoid' ? flankPoint(s, w, u, at, to) : null, path = side ? [...way(w, u.kind, at, side), ...way(w, u.kind, side, to)] : way(w, u.kind, at, to);
   u.trip = { kind, path, i: 0, pos: { x: at.x, y: at.y, z: at.z }, yaw: at.yaw, scan: 0, back: false, left: { x: at.x, y: at.y, z: at.z }, leftAt: s.time };
 }
 
-/** A tick along the trip: walking (running when Engaged), looking about at the far end, back, and onto the beat. */
+/** A tick along the trip: walking (running when Engaged, or hunting him for the network), looking about at the far
+ *  end, back, and onto the beat. */
 function walk(s: SimState, w: World, u: Unit) {
-  const t = u.trip!, speed = u.state === 'engaged' ? UNITS[u.kind].chase : UNITS[u.kind].patrol;
+  const t = u.trip!, speed = u.state === 'engaged' || (t.kind === 'hunt' && !t.back) ? UNITS[u.kind].chase : UNITS[u.kind].patrol;
   if (t.i >= t.path.length) {
     if (!t.back) {
       // Holding its cover while it can see him (M4-10).
@@ -94,7 +95,7 @@ export function stepAlert(s: SimState, w: World) {
       // Still seeing him while it goes: on to where he is now; a humanoid fighting him makes for cover where it can
       // still see him, and holds it while it can (M4-10).
       const t = u.trip;
-      if (!t.back && t.kind === 'look' && u.seen && (u.id + s.tick) % 6 === 0 && a >= SIGHT.min) {
+      if (!t.back && t.kind !== 'check' && u.seen && (u.id + s.tick) % 6 === 0 && a >= SIGHT.min) {
         const seesNow = Math.hypot(u.seen.x - s.player.pos.x, u.seen.z - s.player.pos.z) < 0.5;
         if (u.kind === 'humanoid' && u.state === 'engaged' && seesNow) {
           if (!t.cover || (u.id + s.tick) % 60 === 0) { const c = coverNear(s, w, t.pos); if (c) { t.cover = c; t.path = way(w, u.kind, t.pos, c); t.i = 0; t.scan = 0; } }
@@ -110,7 +111,7 @@ export function stepAlert(s: SimState, w: World) {
       else if (u.seen) { leave(s, w, u, 'look', u.seen); continue; }
     }
     // Checking where the hive saw him, as it passes nearest the place on its beat (each unit in turn).
-    if ((u.id + think) % 6 || u.state !== 'unaware') continue;
+    if ((u.id + think) % 6 || u.state !== 'unaware' || u.reserve) continue;
     const at = unitPose(w, u, s.time);
     if (!at.active || (u.checked !== undefined && s.time - u.checked < loopOf(w, u) * SCALE)) continue;
     for (const h of s.hive.seen) {
@@ -125,7 +126,7 @@ function sendNearest(s: SimState, w: World, cam: Unit, to: V3) {
   const c = unitPose(w, cam, s.time);
   let best: Unit | null = null, bd = 150;
   for (const u of s.units) {
-    if (u === cam || u.convoy || STATIC.has(u.kind) || u.trip || u.state !== 'unaware') continue;
+    if (u === cam || u.convoy || u.reserve || STATIC.has(u.kind) || u.trip || u.state !== 'unaware') continue;
     const p = unitPose(w, u, s.time), d = Math.hypot(p.x - c.x, p.z - c.z);
     if (p.active && d < bd) { bd = d; best = u; }
   }

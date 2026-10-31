@@ -36,7 +36,7 @@ import { liFlat } from './liflat';
 import { riverfront, riverRoad } from './riverfront';
 import { streetRoute } from './streetroute';
 import { buildNav, walksOf } from './nav';
-import { walkedBeats, columnSpurs, placeCameras } from './patrols';
+import { walkedBeats, columnSpurs, placeCameras, placeGarages } from './patrols';
 import { placeSensors } from './sensors';
 
 const empty = (): Fabric => ({ solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [], sites: [], far: [] });
@@ -230,6 +230,7 @@ export function buildYuzhong(): World {
   world.patrols = walkedBeats(world, net.patrols, [tun.at.junction, tun.at.metro]);
   for (const c of world.convoys ?? []) c.spurs = columnSpurs(world, c.pts);
   world.cameras = placeCameras(world).concat(placeSensors(world, gtAt));
+  world.garages = placeGarages(world, tun.at.spawn);
   world.links = net.links.concat(joins.flatMap(([i, j]) => { const rt = streetRoute(world.nav!, `link:${keys[i].name}-${keys[j].name}:street`, keys[i].at, keys[j].at); return rt ? [{ from: keys[i].name, to: keys[j].name, layer: 'street' as const, route: rt }] : []; }));
   return world;
 }

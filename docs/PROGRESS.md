@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-14 Convergence and escalation.
-Features done: 171 / 297 | Last done: M4-13
+**Status:** building M4. Next: M4-15 Search.
+Features done: 172 / 297 | Last done: M4-14
 <!-- /status -->
 
 ## Log
@@ -28,3 +28,4 @@ Features done: 171 / 297 | Last done: M4-13
 - M4-11 Turrets, motion sensors, tripwires and acoustic sensors: tripwires, motion sensors, acoustic sensors and turrets that fire when Engaged; hearing hears every noise of a tick; humanoids scan 8 s again
 - M4-12 District alert state machine: each district's alert: Unaware, Suspicious, Engaged, Searching and Heightened
 - M4-13 Hivemind broadcast: Engaged machines tell the network after their kind's delay; the last known position follows him; the word spreads through the district and 300 m beyond
+- M4-14 Convergence and escalation: machines near him converge, docks launch hunter drones every 20 s, the garage's squad after 45 s

@@ -179,3 +179,20 @@ export function placeCameras(w: World): Camera[] {
   }
   return out;
 }
+
+/** Each district's machine garage (M4-14): the street door nearest its centre (none within 150 m of the friends'
+ *  hideout, `home`: they'd have found it), where its squad of humanoids waits. */
+export function placeGarages(w: World, home: V3): V3[] {
+  const out: V3[] = [];
+  for (const k of DISTRICTS) {
+    const L = GEO.landmarks[k];
+    let best: V3 | null = null, bd = Infinity;
+    for (const p of w.plots) {
+      if (p.far || !p.route || p.route.length < 2 || Math.hypot(p.route[0].x - home.x, p.route[0].z - home.z) < 150) continue;
+      const d = Math.hypot(p.route[0].x - L.x, p.route[0].z - L.z);
+      if (d < bd) { bd = d; best = p.route[0]; }
+    }
+    if (best) out.push({ x: best.x, y: best.y, z: best.z });
+  }
+  return out;
+}

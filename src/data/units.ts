@@ -1,6 +1,6 @@
 // The machines that move (DESIGN section 7): how fast each kind goes on its beat and when chasing, whether it takes
 // stairs, how high it flies, and the hours its beats keep by default. Speeds in real metres a second.
-export type UnitKind = 'quadruped' | 'humanoid' | 'drone' | 'delivery' | 'carrier' | 'camera' | 'sweeper' | 'lamppost' | 'turret' | 'pir' | 'tripwire' | 'acoustic';
+export type UnitKind = 'quadruped' | 'humanoid' | 'drone' | 'hunter' | 'delivery' | 'carrier' | 'camera' | 'sweeper' | 'lamppost' | 'turret' | 'pir' | 'tripwire' | 'acoustic';
 /** The machines that stay where they're put (M4-07, M4-11). */
 export const STATIC = new Set<UnitKind>(['camera', 'sweeper', 'lamppost', 'turret', 'pir', 'tripwire', 'acoustic']);
 
@@ -8,7 +8,9 @@ export const UNITS: Record<UnitKind, { patrol: number; chase: number; stairs: bo
   quadruped: { patrol: 3, chase: 8, stairs: true, fly: 0, zh: '四足机器人', en: 'Quadruped' },
   // Armoured (its plates take a tenth of a hit) and armed with a rifle (M4-18 fires it, M4-19 hits it).
   humanoid: { patrol: 2.5, chase: 4.5, stairs: true, fly: 0, zh: '人形机器人', en: 'Humanoid', hp: 300, armour: 0.1, weapon: 'rifle' },
-  drone: { patrol: 9, chase: 12, stairs: true, fly: 30, zh: '巡逻无人机', en: 'Patrol drone' },
+  drone: { patrol: 9, chase: 9, stairs: true, fly: 30, zh: '巡逻无人机', en: 'Patrol drone' },
+  // Kept on the docks and launched on contact (M4-14), armed with a submachine gun.
+  hunter: { patrol: 12, chase: 12, stairs: true, fly: 30, zh: '猎杀无人机', en: 'Hunter drone', hp: 70, weapon: 'smg' },
   delivery: { patrol: 2, chase: 2, stairs: false, fly: 0, zh: '配送机器人', en: 'Delivery robot' },
   carrier: { patrol: 1.6, chase: 1.6, stairs: false, fly: 0, zh: '运输机器人', en: 'Carrier' },
   camera: { patrol: 0, chase: 0, stairs: false, fly: 0, zh: '监控摄像头', en: 'Camera' },
@@ -26,9 +28,15 @@ export const SENSORS = { pir: { fov: 90, range: 10, motion: 0.5 }, turret: { rat
 
 /** How long after a machine has him (Engaged) it tells the network (DESIGN section 5), real seconds: the wired
  *  sensors at once nearly, the cameras in a second, the walkers slowest. */
-export const BROADCAST: Record<UnitKind, number> = { turret: 0.5, pir: 0.5, tripwire: 0.5, acoustic: 0.5, camera: 1, sweeper: 1, lamppost: 1, drone: 1.5, quadruped: 2, delivery: 2, carrier: 2, humanoid: 2.5 };
+export const BROADCAST: Record<UnitKind, number> = { turret: 0.5, pir: 0.5, tripwire: 0.5, acoustic: 0.5, camera: 1, sweeper: 1, lamppost: 1, hunter: 1, drone: 1.5, quadruped: 2, delivery: 2, carrier: 2, humanoid: 2.5 };
 /** How far into the districts next to his the network's word of him goes (DESIGN section 5), metres. */
 export const SPREAD = 300;
+
+/** Convergence and escalation on contact (DESIGN section 5, M4-14): how near his last known position (metres) the
+ *  machines on the ground go to it, the drones fly to it, and the docks launch hunters (one at once, one more every
+ *  20 s while the district is Engaged, three a dock at most); how long Engaged before the district's garage sends its
+ *  squad of two humanoids. */
+export const CONVERGE = { ground: 250, fly: 400, dock: 500, every: 20, perDock: 3, squadAfter: 45, squad: 2 };
 
 /** A patrol drone's battery (M4-08, DESIGN section 7): 6 real minutes in the air, the first and last 20 s of them
  *  flying out from its rooftop dock and home again, then 2 minutes on the dock charging: the gap in its cover. */
@@ -65,6 +73,7 @@ export const SENSES: Record<UnitKind, { fov: number; pitch: number; day: number;
   quadruped: { fov: 120, pitch: 0, day: 30, night: 20, eye: 0.85, ir: 0, lamp: 0, thermal: 20, hear: 1.5 },
   humanoid: { fov: 100, pitch: 0, day: 40, night: 22, eye: 1.8, ir: 0.3, lamp: 0, thermal: 0, hear: 1 },
   drone: { fov: 100, pitch: 45, day: 35, night: 30, eye: -0.1, ir: 0, lamp: 15, thermal: 30, hear: 0.8 },
+  hunter: { fov: 100, pitch: 45, day: 35, night: 30, eye: -0.1, ir: 0, lamp: 15, thermal: 30, hear: 0.8 },
   delivery: { fov: 120, pitch: 0, day: 18, night: 10, eye: 0.5, ir: 0, lamp: 0, thermal: 0, hear: 1 },
   carrier: { fov: 120, pitch: 0, day: 25, night: 15, eye: 1.2, ir: 0.3, lamp: 0, thermal: 0, hear: 1 },
   // The cameras (M4-07): fixed ones over doors and at junctions, sweepers at plazas and gates, the smart lampposts'.

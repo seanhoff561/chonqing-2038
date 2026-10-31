@@ -4,7 +4,7 @@
 // (parked at the beat's start otherwise). So sleeping skips time for free and he can learn exact timings. Movement
 // runs in real seconds, the hours on the game clock.
 import type { World, Patrol, Convoy } from '../world/world';
-import { UNITS, PHASE, COLUMN, SWEEP, DRONE, type UnitKind } from '../data/units';
+import { UNITS, PHASE, COLUMN, SWEEP, DRONE, CONVERGE, type UnitKind } from '../data/units';
 import { makeRng, rand, hashString } from './rng';
 import { SCALE, hourOf, dayOf } from './clock';
 
@@ -14,6 +14,10 @@ export interface Unit {
   convoy?: { path: number; slot: number; member: number };
   /** a camera (M4-07): which of the world's */
   cam?: number;
+  /** kept back until it's sent (M4-14): a hunter drone on its dock, a humanoid in its district's garage */
+  reserve?: { dock?: number; garage?: number };
+  /** when a reserve was last sent out (M4-14) */
+  sent?: number;
   /** how aware of him it is (M4-03): 0.3 suspicious, 1 engaged */
   aware?: number;
   /** where it last saw him (M4-04), and when (M4-12) */
@@ -41,7 +45,7 @@ export const isOff = (s: { time: number }, u: Unit) => u.off !== undefined && s.
 /** A trip off the beat: the way there (or back), how far along it, where it is and faces, the look-about left there,
  *  and where and when it left its beat. */
 export interface Trip {
-  kind: 'look' | 'check'; path: { x: number; y: number; z: number }[]; i: number; pos: { x: number; y: number; z: number }; yaw: number; scan: number; back: boolean; left: { x: number; y: number; z: number }; leftAt: number;
+  kind: 'look' | 'check' | 'hunt'; path: { x: number; y: number; z: number }[]; i: number; pos: { x: number; y: number; z: number }; yaw: number; scan: number; back: boolean; left: { x: number; y: number; z: number }; leftAt: number;
   /** a humanoid's search (M4-10): the hiding places still to go through */
   visits?: { x: number; y: number; z: number }[];
   /** a humanoid's cover it's holding while it can see him (M4-10) */
@@ -79,6 +83,9 @@ export function createUnits(seed: number, w: World): Unit[] {
   (w.convoys ?? []).forEach((c, path) => {
     for (let slot = 0; slot < column(c).slots; slot++) COLUMN.squad.forEach((m, member) => out.push({ id: out.length, kind: m.kind, patrol: -1, phase: 0, state: 'unaware', convoy: { path, slot, member } }));
   });
+  // The reserves (M4-14): three hunter drones on each dock, a squad of two humanoids in each garage.
+  w.docks.forEach((_, dock) => { for (let k = 0; k < CONVERGE.perDock; k++) out.push({ id: out.length, kind: 'hunter', patrol: -1, phase: 0, state: 'unaware', reserve: { dock } }); });
+  w.garages.forEach((_, garage) => { for (let k = 0; k < CONVERGE.squad; k++) out.push({ id: out.length, kind: 'humanoid', patrol: -1, phase: 0, state: 'unaware', reserve: { garage } }); });
   return out;
 }
 
@@ -152,6 +159,8 @@ export function unitPose(w: World, u: Unit, time: number): Pose {
     return { x: c.x, y: c.y, z: c.z, yaw: c.yaw + pan, active: true };
   }
   if (u.convoy) return columnPose(w, u, time / SCALE);
+  // A reserve at home: a hunter on its dock (seen there, seeing nothing), a humanoid inside its garage.
+  if (u.reserve) { const d = u.reserve.dock, h = d !== undefined ? w.docks[d] : w.garages[u.reserve.garage!]; return { x: h.x + ((u.id % 3) - 1) * 0.9, y: h.y, z: h.z, yaw: 0, active: d !== undefined, docked: true }; }
   const p = w.patrols[u.patrol], start = p.pts[0], dock = p.dock !== undefined ? w.docks[p.dock] : null;
   const home: Pose | null = dock && { x: dock.x, y: dock.y, z: dock.z, yaw: 0, active: true, docked: true };
   if (!keeps(p.hours, hourOf(time))) return home ?? { x: start.x, y: start.y, z: start.z, yaw: 0, active: false };
