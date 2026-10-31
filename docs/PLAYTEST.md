@@ -106,3 +106,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M3-73: the underground city's buildings
 - Teleport to 'Underground city deck' and 'Underground city concourse': does it read as a dense cyberpunk underground street (neon tube, blade signs, screens) without being garish? Go into a few of the buildings: rooms, doors, stairs, furniture where they should be?
+
+## M3-61: ruins that look fallen
+- Walk a few rough patches by buildings: do the facade sections, columns, beams and boulders read as having fallen from the building beside them, or as placed blocks?

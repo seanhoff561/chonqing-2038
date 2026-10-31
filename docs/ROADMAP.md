@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 79 of 93 done
+## M3: 80 of 93 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -600,7 +600,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
 - [x] **M3-67** Climbing reworked (U-032)
   - No building can be climbed to its top by itself: its holds (vents, sills, short ladders, pipes, beams) are scarce and scattered, ground floors bare; reaching a roof takes crossing from other buildings and things beside them (climbable street poles, kiosks, walls, scaffolding) using the whole envelope (wall-runs, kicks, long jumps, items)
   - A unit test finds no building whose own holds chain from the ground to its roof, and a bot reaches three roofs over 20 m by crossing from others
-- [ ] **M3-61** Ruins that look fallen (U-031)
+- [x] **M3-61** Ruins that look fallen (U-031)
   - The rough ground reads as collapse: boulders and broken slabs, fallen beams and columns, sections of facade lying where they fell from the building beside them (its material and colour), sediment and rubble filling the hollows organically
   - A unit test checks each ruin matches its neighbouring building; screenshots of three
 - [ ] **M3-62** Foliage (U-031)
