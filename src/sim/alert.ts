@@ -11,6 +11,7 @@ import { UNITS, SIGHT, STATIC, type UnitKind } from '../data/units';
 import { navPath } from './nav';
 import { raycast } from '../world/geom';
 import { unitPose, loopOf, type Unit } from './units';
+import { callOut, flankPoint, searchSpots, coverNear, SQUAD } from './squad';
 import { SCALE } from './clock';
 import { DT } from './types';
 
@@ -33,7 +34,9 @@ function way(w: World, kind: UnitKind, a: V3, b: V3): V3[] {
 
 function leave(s: SimState, w: World, u: Unit, kind: 'look' | 'check', to: V3) {
   const at = unitPose(w, u, s.time);
-  u.trip = { kind, path: way(w, u.kind, at, to), i: 0, pos: { x: at.x, y: at.y, z: at.z }, yaw: at.yaw, scan: 0, back: false, left: { x: at.x, y: at.y, z: at.z }, leftAt: s.time };
+  // A humanoid coming to a place others are already making for comes round it from a side (M4-10).
+  const side = u.kind === 'humanoid' ? flankPoint(s, w, u, at, to) : null, path = side ? [...way(w, u.kind, at, side), ...way(w, u.kind, side, to)] : way(w, u.kind, at, to);
+  u.trip = { kind, path, i: 0, pos: { x: at.x, y: at.y, z: at.z }, yaw: at.yaw, scan: 0, back: false, left: { x: at.x, y: at.y, z: at.z }, leftAt: s.time };
 }
 
 /** A tick along the trip: walking (running when Engaged), looking about at the far end, back, and onto the beat. */
@@ -41,10 +44,19 @@ function walk(s: SimState, w: World, u: Unit) {
   const t = u.trip!, speed = u.state === 'engaged' ? UNITS[u.kind].chase : UNITS[u.kind].patrol;
   if (t.i >= t.path.length) {
     if (!t.back) {
-      // Looking about, a slow sweep either way.
+      // Holding its cover while it can see him (M4-10).
+      if (t.cover) return;
+      // Looking about, a slow sweep either way; a humanoid looks briefly and then goes through the hiding places near
+      // the place one by one, looking at each (M4-10).
+      const look = u.kind === 'humanoid' ? SQUAD.look : ALERT.scan;
       t.scan += DT;
-      t.yaw += Math.sin((t.scan / ALERT.scan) * Math.PI * 4) * 0.03;
-      if (t.scan >= ALERT.scan) { t.back = true; t.path = way(w, u.kind, t.pos, t.left); t.i = 0; }
+      t.yaw += Math.sin((t.scan / look) * Math.PI * 4) * 0.03;
+      if (t.scan >= look) {
+        if (u.kind === 'humanoid' && !t.visits) t.visits = searchSpots(w, t.pos);
+        const next = t.visits?.shift();
+        if (next) { t.path = way(w, u.kind, t.pos, next); t.i = 0; t.scan = 0; return; }
+        t.back = true; t.path = way(w, u.kind, t.pos, t.left); t.i = 0;
+      }
       return;
     }
     // Back where it left: on with the beat, its loop shifted by the time away.
@@ -64,8 +76,11 @@ export function stepAlert(s: SimState, w: World) {
   const think = s.tick % 6;
   for (const u of s.units) {
     const a = u.aware ?? 0;
+    const was = u.state;
     if (a >= ALERT.engaged && u.state !== 'engaged') { u.state = 'engaged'; s.hive.seen.push({ ...(u.seen ?? s.player.pos), t: s.time }); }
     else if (a >= ALERT.suspicious && u.state === 'unaware') u.state = 'suspicious';
+    // A humanoid that's just noticed him calls the others near it (M4-10).
+    if (was === 'unaware' && u.state !== 'unaware' && u.kind === 'humanoid' && !u.convoy && u.seen) callOut(s, w, u);
     if (u.convoy) { if (a < ALERT.suspicious) u.state = 'unaware'; continue; }
     if (STATIC.has(u.kind)) {
       // A camera that's caught sight of him sends the nearest unit on foot within 150 m to look (M4-07).
@@ -75,11 +90,17 @@ export function stepAlert(s: SimState, w: World) {
       continue;
     }
     if (u.trip) {
-      // Still seeing him while it goes: on to where he is now.
-      if (!u.trip.back && u.trip.kind === 'look' && u.seen && (u.id + s.tick) % 6 === 0 && a >= SIGHT.min) {
-        const end = u.trip.path[u.trip.path.length - 1];
-        if (!end || Math.hypot(end.x - u.seen.x, end.z - u.seen.z) > 2) { u.trip.path = way(w, u.kind, u.trip.pos, u.seen); u.trip.i = 0; u.trip.scan = 0; }
-      }
+      // Still seeing him while it goes: on to where he is now; a humanoid fighting him makes for cover where it can
+      // still see him, and holds it while it can (M4-10).
+      const t = u.trip;
+      if (!t.back && t.kind === 'look' && u.seen && (u.id + s.tick) % 6 === 0 && a >= SIGHT.min) {
+        const seesNow = Math.hypot(u.seen.x - s.player.pos.x, u.seen.z - s.player.pos.z) < 0.5;
+        if (u.kind === 'humanoid' && u.state === 'engaged' && seesNow) {
+          if (!t.cover || (u.id + s.tick) % 60 === 0) { const c = coverNear(s, w, t.pos); if (c) { t.cover = c; t.path = way(w, u.kind, t.pos, c); t.i = 0; t.scan = 0; } }
+        } else t.cover = undefined;
+        const end = t.path[t.path.length - 1];
+        if (!t.cover && (!end || Math.hypot(end.x - u.seen.x, end.z - u.seen.z) > 2)) { t.path = way(w, u.kind, t.pos, u.seen); t.i = 0; t.scan = 0; t.visits = undefined; }
+      } else if (t.cover && a < SIGHT.min) t.cover = undefined;
       walk(s, w, u);
       continue;
     }

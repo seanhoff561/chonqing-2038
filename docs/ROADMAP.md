@@ -659,7 +659,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Four key points of the district (hideout gate, Shibati top, Jiaochangkou, the riverfront) are linked by a street route, a rooftop or beam route and an underground or interior route
   - A sim test checks each link with the nav and movement limits
 
-## M4: 11 of 37 done
+## M4: 12 of 37 done
 
 M4 The machines: cameras, drones and their docks, ground robots, turrets; perception (light, distance, motion, posture, cover, sound, thermal); patrol schedules; alert states, the hivemind broadcast, convergence, drone launches, the search and the heightened district; combat and damage; tracking home and the hideout raid; death and restart. After M4 the core loop is playable start to finish.
 
@@ -706,7 +706,7 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
 - [x] **M4-09** Quadrupeds
   - Patrol at 3 m/s, chase at 8 m/s on the nav graph, take stairs and 1 m jumps, never climb; loud servos
   - A sim test: a chase over stairs, and no way to follow up a 2.4 m mantle
-- [ ] **M4-10** Humanoids
+- [x] **M4-10** Humanoids
   - 2.5 m/s walk, 4.5 m/s run, stairs only, armoured, armed
   - A sim test covers patrol and pursuit speed
   - Humanoids act like human soldiers hunting him (U-031): cover, flanking, calling to each other, searching methodically

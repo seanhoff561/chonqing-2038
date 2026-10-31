@@ -142,3 +142,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M4-07: cameras
 - Walk a district's main street by day: do the cameras' beeps keep you on edge without grating? Try slipping past the sweeper at a district's centre by timing its pan; walk openly past a door camera and see a unit come to look.
+
+## M4-09, M4-10: quadrupeds and humanoids
+- Get a quadruped after you (stand in its view): does its servo whine warn you early enough, is its 8 m/s chase up the stairs frightening but escapable by a mantle? Let a humanoid notice you: do you hear the radio call, do the others come round the sides, and do they search the hiding spots like soldiers rather than wander?

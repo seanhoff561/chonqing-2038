@@ -26,7 +26,13 @@ export interface Unit {
 
 /** A trip off the beat: the way there (or back), how far along it, where it is and faces, the look-about left there,
  *  and where and when it left its beat. */
-export interface Trip { kind: 'look' | 'check'; path: { x: number; y: number; z: number }[]; i: number; pos: { x: number; y: number; z: number }; yaw: number; scan: number; back: boolean; left: { x: number; y: number; z: number }; leftAt: number }
+export interface Trip {
+  kind: 'look' | 'check'; path: { x: number; y: number; z: number }[]; i: number; pos: { x: number; y: number; z: number }; yaw: number; scan: number; back: boolean; left: { x: number; y: number; z: number }; leftAt: number;
+  /** a humanoid's search (M4-10): the hiding places still to go through */
+  visits?: { x: number; y: number; z: number }[];
+  /** a humanoid's cover it's holding while it can see him (M4-10) */
+  cover?: { x: number; y: number; z: number };
+}
 export interface Pose { x: number; y: number; z: number; yaw: number; active: boolean; /** a drone on its dock, charging: sees nothing */ docked?: boolean }
 
 /** A beat as a timeline, out and back: pauses and walks, each from t0 for dur real seconds. */

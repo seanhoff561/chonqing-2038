@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-10 Humanoids.
-Features done: 167 / 297 | Last done: M4-01c
+**Status:** building M4. Next: M4-11 Turrets, motion sensors, tripwires and acoustic sensors.
+Features done: 168 / 297 | Last done: M4-10
 <!-- /status -->
 
 ## Log
@@ -24,3 +24,4 @@ Features done: 167 / 297 | Last done: M4-01c
 - M4-08 Patrol drones and docks: Patrol drones and docks: 6-minute flights from rooftop docks, 2 minutes charging, a learnable gap in their cover
 - M4-09 Quadrupeds: Quadrupeds: 3 m/s patrols and 8 m/s chases on the nav graph over stairs and metre jumps, no climbing, whining servos
 - M4-01c Memory: stream the city's near layers (found in the M3 verify): Memory: the city's near layers streamed by 256 m cell, the machines in one batch; heap 4.4 GB to 2.8 GB
+- M4-10 Humanoids: Humanoids: walk 2.5, run 4.5, stairs only, armoured and armed; they call each other, flank, take cover and search hiding places one by one

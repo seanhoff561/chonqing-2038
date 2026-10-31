@@ -4,9 +4,10 @@ export type UnitKind = 'quadruped' | 'humanoid' | 'drone' | 'delivery' | 'carrie
 /** The machines that stay where they're put (M4-07). */
 export const STATIC = new Set<UnitKind>(['camera', 'sweeper', 'lamppost']);
 
-export const UNITS: Record<UnitKind, { patrol: number; chase: number; stairs: boolean; fly: number; zh: string; en: string }> = {
+export const UNITS: Record<UnitKind, { patrol: number; chase: number; stairs: boolean; fly: number; zh: string; en: string; hp?: number; armour?: number; weapon?: string }> = {
   quadruped: { patrol: 3, chase: 8, stairs: true, fly: 0, zh: '四足机器人', en: 'Quadruped' },
-  humanoid: { patrol: 2.5, chase: 4.5, stairs: true, fly: 0, zh: '人形机器人', en: 'Humanoid' },
+  // Armoured (its plates take a tenth of a hit) and armed with a rifle (M4-18 fires it, M4-19 hits it).
+  humanoid: { patrol: 2.5, chase: 4.5, stairs: true, fly: 0, zh: '人形机器人', en: 'Humanoid', hp: 300, armour: 0.1, weapon: 'rifle' },
   drone: { patrol: 9, chase: 12, stairs: true, fly: 30, zh: '巡逻无人机', en: 'Patrol drone' },
   delivery: { patrol: 2, chase: 2, stairs: false, fly: 0, zh: '配送机器人', en: 'Delivery robot' },
   carrier: { patrol: 1.6, chase: 1.6, stairs: false, fly: 0, zh: '运输机器人', en: 'Carrier' },

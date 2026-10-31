@@ -71,3 +71,12 @@ export function servo(a: Audio, gain: number) {
   a.tone(t, 0.16, gain, 520, 880, 'sawtooth');
   a.noise(t, 0.08, gain * 0.6, 'bandpass', 2200, 2);
 }
+
+/** A humanoid calling the others (M4-10): a burst of radio static round a clipped two-tone, louder nearer. */
+export function radio(a: Audio, gain: number) {
+  if (!a.ready || gain < 0.005) return;
+  const t = a.ctx!.currentTime + 0.005;
+  a.noise(t, 0.35, gain * 0.5, 'bandpass', 1800, 3);
+  a.tone(t + 0.05, 0.12, gain, 880, 880, 'square');
+  a.tone(t + 0.19, 0.12, gain, 660, 660, 'square');
+}
