@@ -130,7 +130,7 @@ export function fill(index: SolidIndex, g: Heightfield, mk: Marks, plots: Plot[]
   function onGrass(x: number, z: number, w: Wall | null, q: number, r: Rng): boolean {
     const yaw = w ? along(w) : 0;
     if (q < 0.25) return put('garden', x, z, yaw);
-    if (q < 0.45) return put(rand(r) < 0.3 ? 'figtree' : 'tree', x, z, rand(r) * 6.3);
+    if (q < 0.45) return put(['figtree', 'camphor', 'tree', 'ginkgo', 'palm', 'bamboo'][Math.floor(rand(r) * 6)], x, z, rand(r) * 6.3);
     if (q < 0.55) return put('bench', x, z, w ? out(w) : 0);
     if (q < 0.65) return put('shrub', x, z, rand(r) * 6.3);
     return false;

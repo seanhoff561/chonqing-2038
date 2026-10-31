@@ -6,6 +6,7 @@ import { solid } from '../geom';
 import { MAT } from '../mats';
 import { rand, randInt, makeRng, hashString, type Rng } from '../../sim/rng';
 import { sides, footOf, BARE } from './climb';
+import { ENVELOPE as E } from '../../data/envelope';
 import type { Lot, Fabric } from './buildings';
 
 const FLOOR = 3;
@@ -57,7 +58,7 @@ export function details(l: Lot, r: Rng, out: Fabric, roof: number) {
   }
 }
 
-/** Render-only dressing, drawn from its own stream so the holds above never move: cable bundles and vines on
+/** Dressing, drawn from its own stream so the holds above never move: cable bundles and vines (climbable) on
  *  the walls; aerials, dishes and pots near the roof edge. */
 function dress(l: Lot, all: Side[], roof: number, out: Fabric) {
   const r = makeRng(hashString(`dress:${l.x0}:${l.z0}`));
@@ -65,7 +66,14 @@ function dress(l: Lot, all: Side[], roof: number, out: Fabric) {
   for (const s of all) {
     if (s.b - s.a < 4) continue;
     if (rand(r) < 0.3) out.props.push({ kind: 'cablebundle', ...onWall(s, s.a + 1 + rand(r) * (s.b - s.a - 2)), y: l.base, h: Math.min(roof - l.base, 6 + rand(r) * 9) });
-    if (rand(r) < 0.18) out.props.push({ kind: 'vine', ...onWall(s, s.a + 2 + rand(r) * (s.b - s.a - 4)), y: l.base, w: 2 + rand(r) * 3, h: Math.min(roof - l.base, 3 + rand(r) * 8) });
+    // Vines thick enough to climb up their middle (U-035, M3-62), as high as a wall kick reaches: an easy way to a
+    // first-floor sill, never on toward the holds over the bare stretch (no way up a building from the street on
+    // its own walls, U-036, U-044).
+    if (rand(r) < 0.18) {
+      const v = onWall(s, s.a + 2 + rand(r) * (s.b - s.a - 4)), h = Math.min(roof - l.base, 3 + rand(r) * 8), foot = Math.min(footOf(l, s), l.ground?.(v.x + s.nx * 0.6, v.z + s.nz * 0.6) ?? Infinity), top = Math.min(l.base + h - 0.3, foot + E.wallKick.comfortable);
+      out.props.push({ kind: 'vine', ...v, y: l.base, w: 2 + rand(r) * 3, h });
+      if (top > foot + 2.2) out.climbables.push({ kind: 'pipe', x: v.x + s.nx * 0.12, z: v.z + s.nz * 0.12, y0: foot + 0.4, y1: top, nx: s.nx, nz: s.nz });
+    }
   }
   const edge = () => {
     const s = all[randInt(r, 4)], c = s.a + 1 + rand(r) * Math.max(0.1, s.b - s.a - 2), d = -(0.6 + rand(r) * 0.6);

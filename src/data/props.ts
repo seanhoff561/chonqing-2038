@@ -10,6 +10,9 @@ export const PROP_BOX: Record<string, { w: number; d: number; h: number }> = {
   edict: { w: 3.2, d: 0.3, h: 4.4 }, slab: { w: 2.4, d: 2.6, h: 0.5 }, halfwall: { w: 0.3, d: 3, h: 2 },
   bags: { w: 1.4, d: 1.4, h: 0.65 }, garden: { w: 2, d: 3, h: 0.3 }, tarp: { w: 2.4, d: 3, h: 1.3 }, boxes: { w: 1.2, d: 1.2, h: 0.5 },
   dumpster: { w: 1.9, d: 1.15, h: 1.3 }, drum: { w: 1.0, d: 1.0, h: 1.25 },
+  // The trees by species and the potted plants (M3-62): their trunks, a clump of bamboo, a hedge p.w long.
+  camphor: { w: 0.7, d: 0.7, h: 2.4 }, palm: { w: 0.35, d: 0.35, h: 5 }, bamboo: { w: 0.9, d: 0.9, h: 4 }, ginkgo: { w: 0.4, d: 0.4, h: 5 },
+  hedge: { w: 0.7, d: 3, h: 0.9 }, potplant: { w: 0.7, d: 0.7, h: 0.6 },
 };
 
 /** Props hung on walls, strung overhead, set on roofs or built round a place: everything else stands on the

@@ -270,7 +270,7 @@ M2 Hideout and survival: the hideout set piece, the day and night clock, sleep, 
   - On death the save is deleted, a death screen shows the run summary, and New Run starts with a fresh seed
   - The smoke test kills the player through the dev hook, sees the death screen and finds the save gone
 
-## M3: 80 of 93 done
+## M3: 81 of 93 done
 
 M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alleys, rooftops, interiors, tunnels), fog, rain, neon, and chunk streaming.
 
@@ -603,9 +603,9 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
 - [x] **M3-61** Ruins that look fallen (U-031)
   - The rough ground reads as collapse: boulders and broken slabs, fallen beams and columns, sections of facade lying where they fell from the building beside them (its material and colour), sediment and rubble filling the hollows organically
   - A unit test checks each ruin matches its neighbouring building; screenshots of three
-- [ ] **M3-62** Foliage (U-031)
-  - Several tree species of varied size and shape (camphor, banyan, palm, bamboo, ginkgo), shrubs, hedges, ferns and potted plants; rooftop gardens of planters and climbing plants instead of bushes on bare roofs
-  - Screenshots of a park, a street and a rooftop
+- [x] **M3-62** Foliage (U-031)
+  - Several tree species of varied size and shape (camphor, banyan, palm, bamboo, ginkgo), shrubs, hedges, ferns and potted plants (rooftop gardens dropped by U-044: no green on the roofs, which carry urban props instead, M3-80)
+  - Screenshots of a park and a street (the rooftop shot went with the rooftop gardens, U-044)
   - U-035: trees, vines on walls and other foliage he can climb
 - [ ] **M3-63** A realistic sky, rain and night; the visual overhaul (U-031, U-032)
   - The sky from photographic reference: fine pinpoint stars, natural cloud (no orange cast), the sky running down to a visible horizon; rain from reference: streaks, splashes, wet sheen, mist

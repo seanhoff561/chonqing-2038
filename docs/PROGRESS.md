@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-62 Foliage (U-031).
-Features done: 143 / 295 | Last done: M3-61
+**Status:** building M3. Next: M3-63 A realistic sky, rain and night; the visual overhaul (U-031, U-032).
+Features done: 144 / 295 | Last done: M3-62
 <!-- /status -->
 
 ## Log
@@ -91,3 +91,4 @@ Features done: 143 / 295 | Last done: M3-61
 - M3-81 Connections meet the walls (U-044): Connections meet the walls: ends fitted to the built walls, extended or left out; joined buildings built flush; window planks in the route network
 - M3-73 The underground city's buildings (U-038): The underground city's buildings: real lots with rooms and fronts, heavy neon (tube, blade signs, screens)
 - M3-61 Ruins that look fallen (U-031): Ruins that look fallen: facade sections in the neighbouring building's material and colour, columns, beams, boulders, rubble in the hollows
+- M3-62 Foliage (U-031): Foliage: camphor, banyan, palm, bamboo, ginkgo, hedges, ferns, potted plants; climbable trunks and vines

@@ -109,3 +109,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M3-61: ruins that look fallen
 - Walk a few rough patches by buildings: do the facade sections, columns, beams and boulders read as having fallen from the building beside them, or as placed blocks?
+
+## M3-62: foliage
+- In a park, a wood and along a street: do the species read as different trees (camphor, banyan, palm, bamboo, ginkgo)? Climb a big tree's trunk and a vine to a first-floor window: does it feel right?

@@ -10,6 +10,7 @@ import { details } from './details';
 import { fronts } from './fronts';
 import { tower } from './towers';
 import { tintFor, PAINTED } from './palette';
+import { ENVELOPE as E } from '../../data/envelope';
 
 export type LotKind = 'res' | 'tower';
 export interface Lot {
@@ -49,9 +50,21 @@ export const PARAPET = 0.6;
 /** Build one lot (its mass, roof and facade climbing) into out. Its
  *  walls, slabs and glass take its colour (M3-46), from a stream of its own so the layout never shifts. */
 export function buildLot(l: Lot, r: Rng, out: Fabric) {
-  const s0 = out.solids.length, f0 = out.far.length;
+  const s0 = out.solids.length, f0 = out.far.length, c0 = out.climbables.length;
   l.tint ??= tintFor(l.mat, makeRng(hashString(`tint:${l.x0}:${l.z0}`)));
   if (l.kind === 'tower') tower(l, r, out); else { mass(l, r, out); if (!l.sheer) facades(l, r, out); }
+  // A vine from the foot of a wall (M3-62) stops a mantle short of the first hold over it on that wall, or of the
+  // roof where the ground's high beside it: up to a sill, not on up the building (U-036).
+  for (let i = out.climbables.length - 1; i >= c0; i--) {
+    const c = out.climbables[i];
+    if (c.kind !== 'pipe' || c.y0 > (l.ground?.(c.x + c.nx * 0.6, c.z + c.nz * 0.6) ?? l.base) + 1.5) continue;
+    // (Anything on its walls: what's not the block itself, well inside them.)
+    const near = (x: number, z: number) => Math.hypot(x - c.x, z - c.z) < 2.6, body = (x: number, z: number) => x > l.x0 + 0.35 && x < l.x1 - 0.35 && z > l.z0 + 0.35 && z < l.z1 - 0.35;
+    const over = out.solids.slice(s0).filter(s => s.y1 > c.y0 + 1 && s.y1 < l.wall + 0.3 && near((s.x0 + s.x1) / 2, (s.z0 + s.z1) / 2) && !body((s.x0 + s.x1) / 2, (s.z0 + s.z1) / 2)).map(s => s.y1)
+      .concat(out.climbables.slice(c0).filter(o => o !== c && near(o.x, o.z)).map(o => o.y0), [l.wall]);
+    c.y1 = Math.min(c.y1, Math.min(...over) - E.mantleJump.max - 0.1);
+    if (c.y1 < c.y0 + 2) out.climbables.splice(i, 1);
+  }
   for (const list of [out.solids.slice(s0), out.far.slice(f0)]) for (const s of list) if (s.tint === undefined && PAINTED.has(s.mat)) s.tint = l.tint;
 }
 

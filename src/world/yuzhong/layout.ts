@@ -5,7 +5,7 @@
 import { solid, rampSolid, turn, overlaps, type Solid, type SolidIndex } from '../geom';
 import { heightAt, type Heightfield } from '../heightfield';
 import { MAT } from '../mats';
-import { makeRng, hashString, rand } from '../../sim/rng';
+import { makeRng, hashString, rand, type Rng } from '../../sim/rng';
 import { GEO } from '../geo';
 import type { Feature, Plot, Prop, StreetLine } from '../world';
 import { propBoxes } from './dressing';
@@ -19,15 +19,18 @@ export interface Layout { lawns: P2[][]; paths: StreetLine[]; solids: Solid[]; d
 const KH = 0.15, KW = 0.2, PATH = 2.4;
 
 /** land: 1 on the peninsula (the far banks' parks aren't laid out). */
+/** One of a list, by the stream. */
+const pick = <T>(r: Rng, xs: T[]) => xs[Math.floor(rand(r) * xs.length)];
+
 export function layout(index: SolidIndex, g: Heightfield, mk: Marks, land: Uint8Array): Layout {
   const out: Layout = { lawns: [], paths: [], solids: [], decor: [], props: [], features: [] };
   const yAt = (x: number, z: number) => heightAt(g, x, z) ?? 0;
   /** Whether a street (its carriageway, pavement or path) runs at (x, z): parks keep off them. */
   const street = (x: number, z: number) => streetCells[Math.round(z / g.cell) * g.w + Math.round(x / g.cell)] !== 0;
-  const put = (kind: string, x: number, z: number, yaw: number) => {
+  const put = (kind: string, x: number, z: number, yaw: number, extra: Partial<Prop> = {}) => {
     const y = heightAt(g, x, z);
     if (y === null || street(x, z)) return false;
-    const p: Prop = { kind, x, y, z, yaw }, boxes = propBoxes(p);
+    const p: Prop = { kind, x, y, z, yaw, ...extra }, boxes = propBoxes(p);
     if (boxes.some(b => overlaps(index, { ...b, y0: b.y0 + 0.3 }))) return false;
     out.props.push(p); out.solids.push(...boxes);
     return true;
@@ -53,6 +56,8 @@ export function layout(index: SolidIndex, g: Heightfield, mk: Marks, land: Uint8
     const r = makeRng(hashString(`park${Math.round(o.cx)},${Math.round(o.cz)}`)), at = (x: number, z: number) => inside(poly, x, z);
     out.lawns.push(poly);
     out.features.push({ kind: 'park', x: o.cx, y: yAt(o.cx, o.cz), z: o.cz, group: Math.round(area), nx: 0, nz: 0 });
+    // (Its edges planted with one kind, its avenues with another, its groves mixed: M3-62.)
+    const edgeTree = pick(r, ['camphor', 'figtree', 'ginkgo', 'tree']), avenue = pick(r, ['ginkgo', 'palm', 'camphor', 'figtree']);
     for (let i = 0; i < poly.length; i++) {
       const a = poly[i], b = poly[(i + 1) % poly.length];
       kerb(a, b);
@@ -60,12 +65,12 @@ export function layout(index: SolidIndex, g: Heightfield, mk: Marks, land: Uint8
       const len = Math.hypot(b[0] - a[0], b[1] - a[1]), nx = -(b[1] - a[1]) / (len || 1), nz = (b[0] - a[0]) / (len || 1);
       for (let t = 4; t < len - 2; t += 8 + rand(r) * 3) for (const s of [1, -1]) {
         const x = a[0] + ((b[0] - a[0]) * t) / len + nx * s * 2.5, z = a[1] + ((b[1] - a[1]) * t) / len + nz * s * 2.5;
-        if (at(x, z)) { put(rand(r) < 0.3 ? 'figtree' : 'tree', x, z, rand(r) * 6.28); break; }
+        if (at(x, z)) { put(edgeTree, x, z, rand(r) * 6.28); break; }
       }
-      // A hedge along the edge between them, 1.2 m in.
+      // A hedge along the edge between them, 1.2 m in, gapped where it's died back.
       for (let t = 2; t < len - 1; t += 4) for (const s of [1, -1]) {
         const x = a[0] + ((b[0] - a[0]) * t) / len + nx * s * 1.2, z = a[1] + ((b[1] - a[1]) * t) / len + nz * s * 1.2;
-        if (at(x, z)) { if (rand(r) < 0.6) put('shrub', x, z, rand(r) * 6.28); break; }
+        if (at(x, z)) { if (rand(r) < 0.6) put('hedge', x, z, Math.atan2(nx, nz), { w: 3.2 }); break; }
       }
     }
     // Paths along its two axes through the middle, from edge to edge: the longest stretch inside it.
@@ -84,7 +89,7 @@ export function layout(index: SolidIndex, g: Heightfield, mk: Marks, land: Uint8
       // Trees either side every 10 m, a bench now and then facing the path, a lamp every 20 m.
       for (let t = best[0] + 5, n = 0; t < best[1] - 3; t += 10, n++) {
         const x = o.cx + ux * t, z = o.cz + uz * t, side = n % 2 ? 1 : -1, px = -uz * side, pz = ux * side;
-        put(rand(r) < 0.3 ? 'figtree' : 'tree', x + px * 3, z + pz * 3, rand(r) * 6.28);
+        put(avenue, x + px * 3, z + pz * 3, rand(r) * 6.28);
         if (n % 2 === 0 && rand(r) < 0.6) put('bench', x - px * (PATH / 2 + 0.6), z - pz * (PATH / 2 + 0.6), Math.atan2(px, pz));
         if (n % 2 === 1) put('lamppost', x - px * (PATH / 2 + 0.4), z - pz * (PATH / 2 + 0.4), 0);
       }
@@ -93,7 +98,7 @@ export function layout(index: SolidIndex, g: Heightfield, mk: Marks, land: Uint8
     for (let a = -o.hw + 6; a < o.hw - 4; a += 9) for (let b = -o.hd + 6; b < o.hd - 4; b += 9) {
       if (Math.abs(a) < 4 || Math.abs(b) < 4 || rand(r) > 0.7) continue;
       const x = o.cx + c * a - s * b + (rand(r) - 0.5) * 3, z = o.cz + s * a + c * b + (rand(r) - 0.5) * 3;
-      if (at(x, z)) put(rand(r) < 0.3 ? 'figtree' : 'tree', x, z, rand(r) * 6.28);
+      if (at(x, z)) put(pick(r, ['camphor', 'figtree', 'bamboo', 'ginkgo', 'palm', 'tree']), x, z, rand(r) * 6.28);
     }
     // Its ground is laid: the green and the fill leave it alone.
     for (let j = 0; j < mk.h; j++) for (let i = 0; i < mk.w; i++) if (mk.m[j * mk.w + i] === MARK.park && at((i + 0.5) * mk.cell, (j + 0.5) * mk.cell)) mk.m[j * mk.w + i] = MARK.laid;

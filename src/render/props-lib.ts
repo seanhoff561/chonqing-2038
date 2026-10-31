@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import type { Prop } from '../world/world';
 import { Kit, leafCards } from './propkit';
+import { PLANTS } from './plants';
 import { propAtlas, atlasMaterial } from './prop-atlas';
 
 // One material for every library prop: the atlas carries every surface, leaves included (alpha-tested).
@@ -266,6 +267,8 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
   shrub: p => { const k = new Kit(seedOf(p)).use('bark'), r = k.r; k.blob(0.6, 0x4a5a32, 0, 0.45, 0, 0.8); const cards = Array.from({ length: 10 }, () => ({ x: (r() - 0.5) * 1.2, y: 0.3 + r() * 0.6, z: (r() - 0.5) * 1.2, s: 0.5 + r() * 0.3, ry: r() * 3 })); return group([{ geo: k.geometry(), mat: PROP_MAT }, { geo: leafCards(cards, 0x8a9a5a), mat: leaves() }]); },
   tree: p => tree(p, false),
   figtree: p => tree(p, true),
+  // The species (M3-62): camphor, palm, bamboo, ginkgo, hedges, ferns, potted plants.
+  ...Object.fromEntries(Object.entries(PLANTS).map(([k, f]) => [k, (p: Prop) => group(f(p).map(geo => ({ geo, mat: PROP_MAT })))])),
   figroots: p => wallGreen(p, true),
   vine: p => wallGreen(p, false),
   dronedock: p => {

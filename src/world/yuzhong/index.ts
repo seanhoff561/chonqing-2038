@@ -9,7 +9,7 @@ import { makeRng, hashString, rand, randInt, type Rng } from '../../sim/rng';
 import { buildLot, PARAPET, type Fabric, type Lot } from '../city/buildings';
 import { stepsFor } from '../steps';
 import { findMarks } from './marks';
-import { greenery } from './green';
+import { greenery, trunk } from './green';
 import { layout, doorPaths } from './layout';
 import { ruins } from './ruins';
 import { fill } from './fill';
@@ -162,6 +162,8 @@ export function buildYuzhong(): World {
     const gy = heightAt(g, p.x, p.z) ?? p.y, from = (p.y < gy - 2.5 ? p.y : Math.max(p.y, gy)) + 0.5, hit = raycast(world.index, p.x, from, p.z, 0, -1, 0, 30);
     if (hit && hit.t > 0.01) p.y = from - hit.t;
   }
+  // The big trees climbable up their trunks, wherever they were planted (U-035, M3-62).
+  for (const p of world.props) { const c = trunk(p); if (c) world.climbables.push(c); }
   // Signs and screens only where they face a street with nothing in front of them; laundry only where both ends of
   // its cord meet a wall (U-031).
   const SIGNS = new Set(['neonblade', 'ledscreen']);

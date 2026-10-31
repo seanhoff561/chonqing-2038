@@ -23,7 +23,7 @@ export function propBoxes(p: Prop): Solid[] {
   const b = PROP_BOX[p.kind];
   if (!b) return [];
   // A rubble pile is p.w across; a broken wall p.w long and, along its jagged top, about three quarters of p.h.
-  const w = p.kind === 'rubblepile' ? (p.w ?? 2) * 0.8 : b.w, d = p.kind === 'rubblepile' ? (p.w ?? 2) * 0.8 : p.kind === 'halfwall' ? p.w ?? b.d : b.d;
+  const w = p.kind === 'rubblepile' ? (p.w ?? 2) * 0.8 : b.w, d = p.kind === 'rubblepile' ? (p.w ?? 2) * 0.8 : p.kind === 'halfwall' || p.kind === 'hedge' ? p.w ?? b.d : b.d;
   const h = p.kind === 'halfwall' ? (p.h ?? b.h) * 0.75 : b.h;
   const c = Math.cos(p.yaw), s = Math.sin(p.yaw), n = Math.max(1, Math.round(d / 1.4)), out: Solid[] = [];
   for (let i = 0; i < n; i++) {
@@ -34,6 +34,9 @@ export function propBoxes(p: Prop): Solid[] {
   }
   return out;
 }
+
+/** The trees a street is lined with, one species a street (M3-62): Chongqing's banyans and camphors most. */
+const STREET_TREES = ['figtree', 'figtree', 'camphor', 'camphor', 'ginkgo', 'palm', 'tree'];
 
 type Put = (kind: string, x: number, z: number, yaw: number, extra?: Partial<Prop>) => boolean;
 /** A utility pole h m high at (x, z), its bolts facing n. */
@@ -120,7 +123,7 @@ export function dressStreets(index: SolidIndex, g: Heightfield, sts: Street[], l
  *  lampposts and trees at the kerb, scooters, bins and drone docks against the buildings; now and then a camera
  *  pole and a notice. */
 function road(s: Street, len: number, at: (t: number, off: number) => [number, number], th: number, r: Rng, put: Put, g: Heightfield, poleAt: PoleAt) {
-  const kerb = s.w / 2 + KERB_W, wall = kerb + PAVE, along = Math.PI / 2 - th;
+  const kerb = s.w / 2 + KERB_W, wall = kerb + PAVE, along = Math.PI / 2 - th, tree = STREET_TREES[hashString(`trees:${s.pts[0]}`) % STREET_TREES.length];
   // Utility poles at the building line every 40-80 m, alternating sides (U-032): a way up onto a low roof, or to
   // the first hold of a wall, from the street.
   const ux = Math.cos(th), uz = Math.sin(th);
@@ -146,13 +149,15 @@ function road(s: Street, len: number, at: (t: number, off: number) => [number, n
     const side = rand(r) < 0.5 ? -1 : 1, q = rand(r);
     // Scooters fallen in a heap against the buildings, not parked in a row.
     if (q < 0.35) for (let i = 0, n = 2 + randInt(r, 3); i < n; i++) { const yaw = rand(r) * 6.28; either(t + i * (0.8 + rand(r) * 1.2), wall - 0.4 - rand(r) * 0.9, side, (x, z) => put('scooter', x, z, yaw)); }
-    else if (q < 0.6) { const yaw = rand(r) * 6; either(t, kerb + 0.6, side, (x, z) => put('tree', x, z, yaw)); }
+    else if (q < 0.6) { const yaw = rand(r) * 6; either(t, kerb + 0.6, side, (x, z) => put(tree, x, z, yaw)); }
     else if (q < 0.66) either(t, wall - 0.5, side, (x, z, sd) => put('bin', x, z, along + (sd > 0 ? Math.PI : 0)));
     else if (q < 0.7) either(t, wall - 0.65, side, (x, z) => put('dumpster', x, z, -th));
     else if (q < 0.73) either(t, wall - 0.6, side, (x, z, sd) => put('dronedock', x, z, along + (sd > 0 ? Math.PI : 0)));
     else if (q < 0.76) either(t, wall + 0.2, side, (x, z, sd) => put('kiosk', x, z, along + (sd > 0 ? Math.PI : 0)));
-    // Rubbish bags piled against a wall where the collections stopped; bollards in twos at the kerb.
-    else if (q < 0.86) either(t, wall - 0.5, side, (x, z) => put('bags', x, z, rand(r) * 6.28));
+    // Rubbish bags piled against a wall where the collections stopped, a potted plant left by a door; bollards in
+    // twos at the kerb.
+    else if (q < 0.83) either(t, wall - 0.5, side, (x, z) => put('bags', x, z, rand(r) * 6.28));
+    else if (q < 0.86) either(t, wall - 0.5, side, (x, z) => put('potplant', x, z, rand(r) * 6.28));
     else if (q < 0.93) for (const d of [-0.8, 0.8]) either(t + d, kerb + 0.3, side, (x, z) => put('bollard', x, z, along));
   }
   if (len > 30 && rand(r) < 0.05) {
@@ -185,8 +190,9 @@ function walkway(s: Street, len: number, at: (t: number, off: number) => [number
       else if (q < 0.3) place('scooter', face + rand(r) * 6);
       else if (q < 0.38) place('bench', face);
       else if (q < 0.45) place('bin', face);
-      else if (q < 0.55) place('pot', rand(r) * 6);
-      else if (q < 0.62) place('tree', rand(r) * 6);
+      else if (q < 0.5) place('pot', rand(r) * 6);
+      else if (q < 0.55) place('potplant', rand(r) * 6);
+      else if (q < 0.62) place(STREET_TREES[randInt(r, STREET_TREES.length)], rand(r) * 6);
       else if (q < (cyber ? 0.78 : 0.68)) place('stall', face);
       else if (q < (cyber ? 0.84 : 0.72)) place('mahjong', face);
       else if (q < (cyber ? 0.88 : 0.75)) place('kiosk', face);
