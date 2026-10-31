@@ -5,6 +5,8 @@ import * as THREE from 'three';
 import type { Prop } from '../world/world';
 import { Kit, leafCards } from './propkit';
 import { PLANTS } from './plants';
+import { quad, slot, signs, SIGN_PROPS } from './signs';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { propAtlas, atlasMaterial } from './prop-atlas';
 
 // One material for every library prop: the atlas carries every surface, leaves included (alpha-tested).
@@ -269,6 +271,7 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
   figtree: p => tree(p, true),
   // The species (M3-62): camphor, palm, bamboo, ginkgo, hedges, ferns, potted plants.
   ...Object.fromEntries(Object.entries(PLANTS).map(([k, f]) => [k, (p: Prop) => group(f(p).map(geo => ({ geo, mat: PROP_MAT })))])),
+  ...Object.fromEntries(Object.entries(SIGN_PROPS).map(([k, f]) => [k, (p: Prop) => group(f(p, PROP_MAT))])),
   figroots: p => wallGreen(p, true),
   vine: p => wallGreen(p, false),
   dronedock: p => {
@@ -400,20 +403,18 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
   neonblade: p => {
     const k = new Kit(seedOf(p)).use('metal'), r = k.r, h = p.h ?? 3, glow = new Kit(seedOf(p) + 4);
     const [style, si] = (p.text ?? 'box:' + Math.floor(r() * SCHEMES.length)).split(':'), [face, ink, tube] = SCHEMES[+si % SCHEMES.length];
-    /** Characters down a vertical face (or along a horizontal one) of cells s across, as boxes through x from x0 to x1. */
-    const chars = (pen: Kit, n: number, cell: number, y0: number, z0: number, color: number, t: number, across = false, x0 = 0, x1 = 0.28) => {
-      for (let c = 0; c < n; c++) for (const [a0, b0, a1, b1] of glyph(r)) {
-        const ya = across ? y0 + b0 * cell : y0 + (n - 1 - c) * (cell + 0.1) + b0 * cell, yb = across ? y0 + b1 * cell : y0 + (n - 1 - c) * (cell + 0.1) + b1 * cell;
-        const za = across ? z0 + c * (cell + 0.1) + a0 * cell : z0 + a0 * cell, zb = across ? z0 + c * (cell + 0.1) + a1 * cell : z0 + a1 * cell;
-        if (across) pen.box(Math.max(t, zb - za), Math.max(t, yb - ya), x1 - x0, color, (za + zb) / 2, ya - (yb === ya ? t / 2 : 0), (x0 + x1) / 2);
-        else pen.box(x1 - x0, Math.max(t, yb - ya), Math.max(t, zb - za), color, (x0 + x1) / 2, ya - (yb === ya ? t / 2 : 0), (za + zb) / 2);
-      }
+    // The shop's name in real characters (M3-14): down both faces of a blade, or along a fascia; glowing (neon,
+    // a lit plaque) or printed (a light box's face, cloth).
+    const text: THREE.BufferGeometry[] = [], pick = Math.abs(seedOf(p) >> 3);
+    const blade = (th: number, z: number, y0: number, hh: number, dd: number, color: number, glows: boolean) => {
+      for (const f of ['x', '-x'] as const) text.push(quad(slot.name(pick), dd, hh, f === 'x' ? th / 2 + 0.006 : -th / 2 - 0.006, y0, z, f, color, glows ? 1 : 0));
     };
+    const chars = (): Part[] => text.length ? [{ geo: mergeGeometries(text), mat: signs() }] : [];
     if (style === 'fascia') {
       // Flat on the wall over the shop front: a board, its characters along it, a lamp strip under it.
       const w = p.w ?? 3, cell = 0.55, n = Math.max(2, Math.floor((w - 0.4) / (cell + 0.1)));
       (r() < 0.5 ? glow : k.use('paint')).box(w, 0.8, 0.12, face, 0, 0, 0.08);
-      chars(k, n, cell, 0.12, -(n * (cell + 0.1)) / 2 + 0.05, ink, 0.07, true, 0.14, 0.18);
+      text.push(quad(slot.line(pick), Math.min(w - 0.3, n * (cell + 0.1)), 0.62, 0, 0.09, 0.146, 'z', ink, 1));
       glow.box(w - 0.2, 0.04, 0.05, tube, 0, -0.06, 0.12);
     } else if (style === 'banner') {
       // Cloth on a pole out from the wall, hanging a little crooked.
@@ -421,14 +422,14 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
       k.cyl(0.03, 0.03, 1.0, 0x3a3a3a, 0, h, 0.5, 5, 'z');
       const cloth = new Kit(seedOf(p) + 7).use('fabric');
       cloth.box(0.03, h - 0.1, 0.62, face, 0, 0.05, 0.6, 0, 0, lean);
-      chars(cloth, n, 0.42, 0.25, 0.39, ink, 0.06, false, -0.03, 0.03);
-      return group([{ geo: k.geometry(), mat: PROP_MAT }, { geo: cloth.geometry(), mat: PROP_MAT }]);
+      if (n > 1) blade(0.03, 0.6, 0.25, h - 0.6, 0.5, ink, false);
+      return group([{ geo: k.geometry(), mat: PROP_MAT }, { geo: cloth.geometry(), mat: PROP_MAT }, ...chars()]);
     } else if (style === 'lantern') {
       // Red lanterns on a bracket over a lit plaque.
       k.box(0.06, 0.06, 1.1, 0x3a3a3a, 0, h, 0.55);
       for (const z of [0.45, 0.95]) { k.cyl(0.01, 0.01, 0.3, 0x2a2a2a, 0, h - 0.3, z, 4); glow.blob(0.26, 0xff2a1a, 0, h - 0.55, z, 1.25); glow.box(0.3, 0.06, 0.3, 0xffc040, 0, h - 0.92, z); }
       glow.box(0.08, 1.2, 0.5, face, 0, 0, 0.35);
-      chars(k, 2, 0.4, 0.15, 0.15, ink, 0.05, false, -0.06, 0.06);
+      blade(0.08, 0.35, 0.1, 1.0, 0.32, ink, false);
     } else if (style === 'square') {
       // A small square light box out on an arm, a pictogram on both faces.
       const y = h - 1.0;
@@ -436,21 +437,21 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
       glow.box(0.22, 0.9, 0.9, face, 0, y, 0.6);
       const ring = r() < 0.5;
       if (ring) k.add(new THREE.TorusGeometry(0.28, 0.06, 6, 16).rotateY(Math.PI / 2).translate(0, y + 0.45, 0.6), ink, 0);
-      else chars(k, 1, 0.6, y + 0.15, 0.3, ink, 0.08, false, -0.13, 0.13);
+      else blade(0.22, 0.6, y + 0.08, 0.75, 0.3, ink, false);
     } else if (style === 'tube') {
       // A dark board, the characters in neon tube on both faces.
       const n = Math.max(2, Math.floor((h - 0.3) / 0.62));
       k.box(0.08, 0.08, 1.0, 0x3a3a3a, 0, h - 0.2, 0.5).box(0.08, 0.08, 1.0, 0x3a3a3a, 0, 0.2, 0.5).box(0.12, h, 0.8, 0x15161a, 0, 0, 0.6);
-      chars(glow, n, 0.52, 0.2, 0.34, tube, 0.04, false, -0.09, 0.09);
+      if (n > 1) blade(0.12, 0.6, 0.2, h - 0.4, Math.min(0.7, (h - 0.4) / 3), tube, true);
     } else {
       // The light box blade (the default).
       const n = Math.max(2, Math.floor((h - 0.3) / 0.62));
       k.box(0.08, 0.08, 1.0, 0x3a3a3a, 0, h - 0.2, 0.5).box(0.08, 0.08, 1.0, 0x3a3a3a, 0, 0.2, 0.5);
       glow.box(0.24, h, 0.8, face, 0, 0, 0.6);
-      chars(k, n, 0.52, 0.2, 0.34, ink, 0.07);
+      if (n > 1) blade(0.24, 0.6, 0.2, h - 0.4, Math.min(0.7, (h - 0.4) / 3), ink, false);
       if (r() < 0.4) for (const x of [-0.13, 0.13]) glow.box(0.02, 0.03, 0.8, tube, x, h - 0.05, 0.6).box(0.02, 0.03, 0.8, tube, x, 0.02, 0.6).box(0.02, h - 0.04, 0.03, tube, x, 0.02, 0.215).box(0.02, h - 0.04, 0.03, tube, x, 0.02, 0.985);
     }
-    return group([{ geo: k.geometry(), mat: PROP_MAT }, { geo: glow.geometry(), mat: GLOW_MAT }]);
+    return group([{ geo: k.geometry(), mat: PROP_MAT }, { geo: glow.geometry(), mat: GLOW_MAT }, ...chars()]);
   },
   dronewreck: p => {
     const k = new Kit(seedOf(p)).use('metal'), r = k.r;
@@ -459,17 +460,6 @@ const LIB: Record<string, (p: Prop) => THREE.Object3D> = {
     return group([{ geo: k.geometry(), mat: PROP_MAT }]);
   },
 };
-
-/** A made-up character in a unit cell, as a sign reads from the street: three to five strokes across and down
- *  ([z0, y0, z1, y1], one pair equal). */
-function glyph(r: () => number): [number, number, number, number][] {
-  const out: [number, number, number, number][] = [], n = 3 + Math.floor(r() * 3);
-  for (let i = 0; i < n; i++) {
-    if (i === 0 || (i > 1 && r() < 0.5)) { const y = [0.1, 0.5, 0.9][Math.floor(r() * 3)], a = 0.05 + r() * 0.3; out.push([a, y, a + 0.5 + r() * 0.15, y]); }
-    else { const z = [0.2, 0.5, 0.8][Math.floor(r() * 3)], a = 0.05 + r() * 0.3; out.push([z, a, z, a + 0.5 + r() * 0.15]); }
-  }
-  return out;
-}
 
 export const libKinds = () => Object.keys(LIB);
 export const libProp = (p: Prop): THREE.Object3D | null => LIB[p.kind]?.(p) ?? null;

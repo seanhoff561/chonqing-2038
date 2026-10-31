@@ -124,3 +124,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M3-35: Shibati and Jiaochangkou from the references
 - Walk down Shibati's stair among the old pitched-roof houses and along Jiaochangkou's ridge junction (logs/places-shibati.png, places-jiaochangkou.png): do they read like the reference photos made 2038? Worth adding: Jiaochangkou's old timber house squeezed between slab blocks, its metro entrance sign box.
+
+## M3-14: neon and signage
+- At night (`?dev=1`, set the clock past 21:00) walk Jiefangbei's shopping streets and down Shibati (logs/shibati-night.png, signs-close.png, signs-ticker.png): do the shop names, neon, red banners, QR stickers and the scrolling LED tickers read as Chinese street signage at a glance, and is the night glow right on a real GPU (not blown out, not dim)? Are the characters crisp at a few metres?

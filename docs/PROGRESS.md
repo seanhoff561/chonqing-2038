@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M3. Next: M3-14 Neon and signage.
-Features done: 149 / 295 | Last done: M3-35
+**Status:** building M3. Next: M3-16 Sim light map.
+Features done: 150 / 295 | Last done: M3-14
 <!-- /status -->
 
 ## Log
@@ -97,3 +97,4 @@ Features done: 149 / 295 | Last done: M3-35
 - M3-41 The city at 1:1 (U-017): The city at 1:1: the game beside Jiefangbei, Shibati and Chaotianmen's reference photos, budgets holding
 - M3-43 The subway way in (U-018): The subway way in: Jiaochangkou's metro station (platform, screen doors, dead escalators, concourse) and its running tunnel into the Grand Tunnel
 - M3-35 Shibati and Jiaochangkou from the references (U-014): Shibati and Jiaochangkou from the references: old pitched-roof houses down the stair, stone retaining walls on slopes
+- M3-14 Neon and signage: Neon and signage: real Chinese shop names, slogans on red banners, QR stickers and scrolling LED tickers, glowing at night

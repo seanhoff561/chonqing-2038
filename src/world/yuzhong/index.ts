@@ -5,7 +5,7 @@ import { solid, rampSolid, turn, buildIndex, raycast, carve, type Solid } from '
 import { HUNG, PROP_BOX, PROP_HIDE } from '../../data/props';
 import { makeWorld, type World, type Teleport, type Prop, type Inter, type Climbable, type HideSpot, type Site, type Plot } from '../world';
 import { MAT } from '../mats';
-import { makeRng, hashString, rand, randInt, type Rng } from '../../sim/rng';
+import { makeRng, hashString } from '../../sim/rng';
 import { buildLot, PARAPET, type Fabric, type Lot } from '../city/buildings';
 import { stepsFor } from '../steps';
 import { findMarks } from './marks';
@@ -31,6 +31,7 @@ import { buildLine2, stationEntrances, BEAM } from './line2';
 import { dressStreets } from './dressing';
 import { sewers } from './sewers';
 import { breaches } from './breach';
+import { signage } from './signage';
 
 const empty = (): Fabric => ({ solids: [], decor: [], props: [], lots: [], inter: [], climbables: [], hides: [], features: [], sites: [], far: [] });
 
@@ -171,7 +172,7 @@ export function buildYuzhong(): World {
   for (const p of world.props) { const c = trunk(p); if (c) world.climbables.push(c); }
   // Signs and screens only where they face a street with nothing in front of them; laundry only where both ends of
   // its cord meet a wall (U-031).
-  const SIGNS = new Set(['neonblade', 'ledscreen']);
+  const SIGNS = new Set(['neonblade', 'ledscreen', 'ledboard', 'redbanner']);
   world.props = world.props.filter(p => {
     if (p.kind === 'laundry' && p.w) {
       const ux = Math.cos(p.yaw), uz = -Math.sin(p.yaw), half = p.w / 2;
@@ -272,7 +273,7 @@ function buildPlan(p: Plan, n: number, out: Fabric, g: Heightfield): Plot {
     f.far.push(solid(l.x0, l.base, l.z0, l.x1, l.wall + PARAPET, l.z1, look));
   } else {
     buildLot(l, r, f);
-    if (p.cyber) cyber(l, p, r, f);
+    signage(l, p, r, f);
   }
   // A foundation down to the lowest ground round it: where a neighbour's lower base dips the ground at a shared
   // wall, or the slope falls away, no gap shows under the walls.
@@ -341,41 +342,6 @@ function rowAlleys(plans: Plan[], out: Fabric, g: Heightfield) {
     turn.set(a.row, k + 1);
     alleys([lot(o.cx, o.cz, o.hw, o.hd, y, a.wall), lot(bx, bz, b.obb.hw, b.obb.hd, y, b.wall)], makeRng(hashString(`alley${Math.round(o.cx)},${Math.round(o.cz)}`)), f, [0.1, 0.5, 0.9, 0.3, 0.8][k % 5], Math.abs(Math.sin(a.obb.yaw - b.obb.yaw)) < 0.01);
     place(f, o, `${a.seed}a`, out);
-  }
-}
-
-/** Shop sign styles (render/props-lib.ts neonblade), the light box and the fascia board twice as often. */
-const SIGN_STYLES = ['box', 'box', 'tube', 'banner', 'lantern', 'square', 'fascia', 'fascia'];
-
-/** The crowded centres gone cyberpunk (U-011, U-020): LED screens on the street faces of towers, malls and
- *  offices; blade signs on the shop fronts below everything else. Props in the lot's own frame. */
-function cyber(l: Lot, p: Plan, r: Rng, f: Fabric) {
-  const faces = [
-    { on: p.street[0], c: (l.x0 + l.x1) / 2, f: l.z0, len: l.x1 - l.x0, yaw: Math.PI, at: (u: number, d: number) => [u, l.z0 - d] },
-    { on: p.street[1], c: (l.x0 + l.x1) / 2, f: l.z1, len: l.x1 - l.x0, yaw: 0, at: (u: number, d: number) => [u, l.z1 + d] },
-    { on: p.street[2], c: (l.z0 + l.z1) / 2, f: l.x0, len: l.z1 - l.z0, yaw: -Math.PI / 2, at: (u: number, d: number) => [l.x0 - d, u] },
-    { on: p.street[3], c: (l.z0 + l.z1) / 2, f: l.x1, len: l.z1 - l.z0, yaw: Math.PI / 2, at: (u: number, d: number) => [l.x1 + d, u] },
-  ].filter(x => x.on && x.len > 6);
-  const big = l.kind === 'tower' || l.mat === MAT.facadeBand;
-  // Its shops share a look (U-031): one style of sign and one colour scheme, each building its own.
-  const style = SIGN_STYLES[randInt(r, SIGN_STYLES.length)], text = `${style}:${randInt(r, 10)}`;
-  for (const fc of faces) {
-    if (big && rand(r) < 0.8) {
-      const w = Math.min(fc.len * 0.6, 8 + rand(r) * 12), h = 4 + rand(r) * 8, y = l.base + Math.min((l.podium ?? l.wall) - l.base - h - 1, 6 + rand(r) * 10);
-      const [x, z] = fc.at(fc.c + (rand(r) - 0.5) * (fc.len - w) * 0.5, 0.2);
-      if (y > l.base + 3) f.props.push({ kind: 'ledscreen', x, y, z, yaw: fc.yaw, w, h });
-    }
-    // One or two signs, where each clears everything on the facade (balconies, cages, AC units, awnings).
-    for (let i = 0, n = big ? 1 : 1 + randInt(r, 2); i < n; i++) for (let tries = 0; tries < 6; tries++) {
-      const u = fc.c + (rand(r) - 0.5) * (fc.len - 2), flat = style === 'fascia', w = flat ? Math.min(fc.len - 1, 3 + rand(r) * 3) : 0.5;
-      const y = flat ? l.base + 3.15 : l.base + 3.2 + rand(r) * 2.5, h = flat ? 0.9 : 2 + rand(r) * 2.5;
-      const [ax, az] = fc.at(u - (flat ? w / 2 : 0.2), 0.15), [bx, bz] = fc.at(u + (flat ? w / 2 : 0.2), flat ? 0.3 : 1.1);
-      const box = { x0: Math.min(ax, bx), y0: y, z0: Math.min(az, bz), x1: Math.max(ax, bx), y1: y + h, z1: Math.max(az, bz) };
-      if (f.solids.concat(f.decor).some(q => q.x0 < box.x1 && q.x1 > box.x0 && q.y0 < box.y1 && q.y1 > box.y0 && q.z0 < box.z1 && q.z1 > box.z0)) continue;
-      const [x, z] = fc.at(u, 0.05);
-      f.props.push({ kind: 'neonblade', x, y, z, yaw: fc.yaw, h, w, text });
-      break;
-    }
   }
 }
 

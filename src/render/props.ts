@@ -7,6 +7,7 @@ import { textTexture } from './textures';
 import { mergeGeometries } from './view';
 import { ChunkMerger } from './world-mesh';
 import { libProp, libKinds } from './props-lib';
+import { tickSigns } from './signs';
 
 const lam = (color: number, emissive = 0) => new THREE.MeshLambertMaterial({ color, emissive });
 const box = (w: number, h: number, d: number, x: number, y: number, z: number) => new THREE.BoxGeometry(w, h, d).translate(x, y + h / 2, z);
@@ -245,6 +246,7 @@ const ticking: Tick[] = [];
 export function tickProps(t: number, open: Record<string, boolean> = {}) {
   // Floodlit beams show after dark only (U-031).
   FLOOD.opacity = 0.08 * night.k;
+  tickSigns(t);
   for (const f of ticking) f(t, open);
 }
 
