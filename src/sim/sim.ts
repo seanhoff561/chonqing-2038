@@ -27,6 +27,7 @@ import { stepAlert } from './alert';
 import { stepFire } from './fire';
 import { stepDistricts } from './district';
 import { stepConverge } from './converge';
+import { stepSearch } from './search';
 
 /** Saves of another version are dropped: 9 since the hive remembers where it saw him (M4-04); 8 since the machines
  *  walk their beats (M4-01). */
@@ -72,6 +73,7 @@ export function step(state: SimState, world: World, input: InputFrame): void {
   stepAlert(state, world);
   stepDistricts(state, world);
   stepConverge(state, world);
+  stepSearch(state, world);
   stepFire(state, world);
   stepHeld(state, world, input);
   stepLamp(state, input);

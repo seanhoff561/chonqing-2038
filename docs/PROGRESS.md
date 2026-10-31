@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-15 Search.
-Features done: 172 / 297 | Last done: M4-14
+**Status:** building M4. Next: M4-16 Wind-down and Heightened district.
+Features done: 173 / 297 | Last done: M4-15
 <!-- /status -->
 
 ## Log
@@ -29,3 +29,4 @@ Features done: 172 / 297 | Last done: M4-14
 - M4-12 District alert state machine: each district's alert: Unaware, Suspicious, Engaged, Searching and Heightened
 - M4-13 Hivemind broadcast: Engaged machines tell the network after their kind's delay; the last known position follows him; the word spreads through the district and 300 m beyond
 - M4-14 Convergence and escalation: machines near him converge, docks launch hunter drones every 20 s, the garage's squad after 45 s
+- M4-15 Search: the search: a growing disc ahead of him, weighted points, 60% checks of hiding places

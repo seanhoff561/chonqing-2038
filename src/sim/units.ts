@@ -18,6 +18,8 @@ export interface Unit {
   reserve?: { dock?: number; garage?: number };
   /** when a reserve was last sent out (M4-14) */
   sent?: number;
+  /** the hiding place it last passed near, and checked or not (M4-15) */
+  near?: number;
   /** how aware of him it is (M4-03): 0.3 suspicious, 1 engaged */
   aware?: number;
   /** where it last saw him (M4-04), and when (M4-12) */
@@ -45,7 +47,7 @@ export const isOff = (s: { time: number }, u: Unit) => u.off !== undefined && s.
 /** A trip off the beat: the way there (or back), how far along it, where it is and faces, the look-about left there,
  *  and where and when it left its beat. */
 export interface Trip {
-  kind: 'look' | 'check' | 'hunt'; path: { x: number; y: number; z: number }[]; i: number; pos: { x: number; y: number; z: number }; yaw: number; scan: number; back: boolean; left: { x: number; y: number; z: number }; leftAt: number;
+  kind: 'look' | 'check' | 'hunt' | 'search'; path: { x: number; y: number; z: number }[]; i: number; pos: { x: number; y: number; z: number }; yaw: number; scan: number; back: boolean; left: { x: number; y: number; z: number }; leftAt: number;
   /** a humanoid's search (M4-10): the hiding places still to go through */
   visits?: { x: number; y: number; z: number }[];
   /** a humanoid's cover it's holding while it can see him (M4-10) */

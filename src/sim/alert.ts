@@ -20,16 +20,18 @@ type V3 = { x: number; y: number; z: number };
 const STEP: Record<UnitKind, number> = { quadruped: 1, humanoid: 0.5, drone: 99, hunter: 99, delivery: 0.2, carrier: 0.3, camera: 0, sweeper: 0, lamppost: 0, turret: 0, pir: 0, tripwire: 0, acoustic: 0 };
 export const ALERT = { suspicious: 0.3, engaged: 1, scan: 8, checkFor: 24 * 3600, checkWithin: 200 };
 
-/** The way from a to b for a kind: its nav path on the ground, then on to the point itself if that's within its step
- *  up or down (a quadruped's metre's jump, half a metre for the rest: none climbs) with nothing in the way; straight
- *  for a drone (8 m over the point) or without a nav graph. */
+/** The way from a to b for a kind: its nav path on the ground, then on toward the point itself if that's within its
+ *  step up or down (a quadruped's metre's jump, half a metre for the rest: none climbs), as far as nothing's in the
+ *  way; straight for a drone (8 m over the point) or without a nav graph. */
 export function way(w: World, kind: UnitKind, a: V3, b: V3): V3[] {
   if (kind === 'drone' || kind === 'hunter') return [{ x: b.x, y: b.y + 8, z: b.z }];
   const p = w.nav ? navPath(w.nav, a, b, kind) : null;
   if (!p) return Math.abs(b.y - a.y) <= STEP[kind] ? [b] : [];
   const end = p.pts[p.pts.length - 1], d = Math.hypot(b.x - end.x, b.y - end.y, b.z - end.z);
-  const reach = Math.abs(b.y - end.y) <= STEP[kind] && (d < 0.1 || !raycast(w.index, end.x, end.y + 0.5, end.z, (b.x - end.x) / d, (b.y - end.y) / d, (b.z - end.z) / d, d));
-  return [...p.pts.slice(1), ...(reach ? [b] : [])];
+  if (Math.abs(b.y - end.y) > STEP[kind] || d < 0.1) return [...p.pts.slice(1), ...(d < 0.1 ? [b] : [])];
+  // On to the point, or as near it as it gets (up to a crate a hiding place is in: M4-15).
+  const hit = raycast(w.index, end.x, end.y + 0.5, end.z, (b.x - end.x) / d, (b.y - end.y) / d, (b.z - end.z) / d, d), f = hit ? (hit.t - 0.3) / d : 1;
+  return [...p.pts.slice(1), ...(f > 0 ? [{ x: end.x + (b.x - end.x) * f, y: end.y + (b.y - end.y) * f, z: end.z + (b.z - end.z) * f }] : [])];
 }
 
 export function leave(s: SimState, w: World, u: Unit, kind: Trip['kind'], to: V3) {
