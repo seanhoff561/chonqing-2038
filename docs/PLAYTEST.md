@@ -115,3 +115,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M3-63: sky, rain, night, the muted city
 - Play through a dusk into night on a real GPU: is the night dark enough to need the headlamp but still readable (lit windows, stars, neon)? In rain: do the streaks, splashes and mist read as rain? By day: does the muted city let the robots, crates and loot stand out?
+
+## M3-41: the city at 1:1 beside the real places
+- Look over logs/places-jiefangbei.png, places-shibati.png, places-chaotianmen.png (reference photo left, the game right, from tests/e2e/places.e2e.mjs). Known gaps to judge: Shibati's old low houses and lanes read as blocks of flats; Raffles City's towers have no Crystal skybridge. Which matter most?
