@@ -285,6 +285,27 @@ export function buildProps(props: Prop[], share = 1): THREE.Group {
   return g;
 }
 
+/** Whether a prop is one of the small ones, drawn near only. */
+export const isSmall = (p: Prop) => SMALL.has(p.kind);
+
+/** Small props by themselves (M4-01c: the big city builds them a cell at a time as he nears it), merged per chunk
+ *  and drawn near only; `share` of the loose litter. */
+export function smallProps(props: Prop[], share = 1): THREE.Mesh[] {
+  const small = new ChunkMerger();
+  for (const p of props) {
+    if (!keep(p, share)) continue;
+    const b = builders[p.kind], o = b ? b(p) : libProp(p);
+    if (!o) continue;
+    o.position.set(p.x, p.y, p.z);
+    o.rotation.y = p.yaw;
+    if ((o as THREE.Mesh).isMesh && o.children.length === 0) small.add(o as THREE.Mesh);
+    else { o.updateMatrixWorld(true); for (const c of [...o.children]) small.add(c as THREE.Mesh); }
+  }
+  const out = small.build(mergeGeometries) as THREE.Mesh[];
+  for (const m of out) m.userData.detail = true;
+  return out;
+}
+
 /** Doors and window panes (M3-36), thousands of them: one instanced mesh of each per 64 m chunk, culled with the
  *  city's chunks and drawn only near; a door swings open (its slab turned about its hinge) and a pane goes when its
  *  interactable's world state opens. */

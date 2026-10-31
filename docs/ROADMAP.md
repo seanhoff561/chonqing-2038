@@ -659,7 +659,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Four key points of the district (hideout gate, Shibati top, Jiaochangkou, the riverfront) are linked by a street route, a rooftop or beam route and an underground or interior route
   - A sim test checks each link with the nav and movement limits
 
-## M4: 10 of 36 done
+## M4: 11 of 37 done
 
 M4 The machines: cameras, drones and their docks, ground robots, turrets; perception (light, distance, motion, posture, cover, sound, thermal); patrol schedules; alert states, the hivemind broadcast, convergence, drone launches, the search and the heightened district; combat and damage; tracking home and the hideout raid; death and restart. After M4 the core loop is playable start to finish.
 
@@ -672,6 +672,10 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
 - [x] **M4-01b** Convoys as units (split from M4-01)
   - Convoys (U-030): the main roads carry the machines' columns (humanoids, quadrupeds, carriers, drones overhead) out of the city at all hours from the factory, so streets and open ground are where he gets seen; they start on the factory's convoy paths (world.convoys, M3-57b) and replace its decor columns (render/convoys.ts)
   - Columns move like a military unit (U-031): squads in loose staggered formation crossing streets by bounds, not single-file lines; patrols peel off the columns into alleys and buildings and rejoin them
+- [x] **M4-01c** Memory: stream the city's near layers (found in the M3 verify)
+  - The 1:1 city's page heap stays well under a browser tab's ~4 GB limit (it was 4.4 GB after a collection, 5.8 GB before, from M3: GC stalls of seconds a frame under memory pressure, and three cities open ran the smoke out of memory)
+  - The near-only layers (small trims, rooms inside buildings, small props) are built a 256 m cell at a time as he nears and let go well away, with no change within the detail radius
+  - Draw calls stay in budget with the machines drawn
 - [x] **M4-02** Navigation graph and pathing
   - A nav graph built from streets, stairs and tunnels with levels; A* between any two reachable nodes
   - Unit types filter edges (delivery robots avoid stairs)

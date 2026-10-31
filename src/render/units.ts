@@ -8,8 +8,7 @@ import type { World } from '../world/world';
 import type { UnitKind } from '../data/units';
 
 /** How near a unit must be to be drawn. */
-const NEAR = 300;
-const BODY = new THREE.MeshLambertMaterial({ color: 0x5a6068 }), EYE = new THREE.MeshBasicMaterial({ color: 0xd8ecff });
+const NEAR = 220;
 const at = (w: number, h: number, d: number, x: number, y: number, z: number) => new THREE.BoxGeometry(w, h, d).translate(x, y, z);
 const FOUR = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
 const GEO: Record<UnitKind, () => THREE.BufferGeometry> = {
@@ -33,32 +32,52 @@ const EYE_AT: Record<UnitKind, THREE.Matrix4> = {
 };
 const KINDS = Object.keys(GEO) as UnitKind[];
 
+/** A kind's shape and its lit eyes as one geometry: the body grey, the eyes glowing (M4-26 makes the models). */
+function shape(k: UnitKind): THREE.BufferGeometry {
+  const paint = (g: THREE.BufferGeometry, c: number, glow: number) => {
+    const g2 = g.index ? g.toNonIndexed() : g, n = g2.attributes.position.count, col = new THREE.Color(c);
+    g2.setAttribute('color', new THREE.Float32BufferAttribute(Array.from({ length: n }, () => [col.r, col.g, col.b]).flat(), 3));
+    g2.setAttribute('glow', new THREE.Float32BufferAttribute(new Array(n).fill(glow), 1));
+    if (g2.attributes.uv) g2.deleteAttribute('uv');
+    return g2;
+  };
+  return mergeGeometries([paint(GEO[k](), 0x5a6068, 0), paint(new THREE.BoxGeometry(0.2, 0.05, 0.02).applyMatrix4(EYE_AT[k]), 0xd8ecff, 1)]);
+}
+
+/** Every unit in one batch: one draw call for all the machines near him. */
 export class UnitView {
   readonly group = new THREE.Group();
-  private bodies = {} as Record<UnitKind, THREE.InstancedMesh<THREE.BufferGeometry, THREE.Material>>;
-  private eyes: THREE.InstancedMesh;
+  private batch: THREE.BatchedMesh;
+  private ids: number[] = [];
   private m = new THREE.Matrix4();
-  private e = new THREE.Matrix4();
 
-  constructor(n: number) {
-    for (const k of KINDS) this.bodies[k] = new THREE.InstancedMesh<THREE.BufferGeometry, THREE.Material>(GEO[k](), BODY, Math.max(1, n));
-    this.eyes = new THREE.InstancedMesh(new THREE.BoxGeometry(0.2, 0.05, 0.02), EYE, Math.max(1, n));
-    for (const m of [...Object.values(this.bodies), this.eyes]) { m.frustumCulled = false; m.count = 0; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); this.group.add(m); }
+  constructor(units: Unit[]) {
+    const shapes = Object.fromEntries(KINDS.map(k => [k, shape(k)])) as Record<UnitKind, THREE.BufferGeometry>;
+    const verts = KINDS.reduce((a, k) => a + shapes[k].attributes.position.count, 0);
+    const mat = new THREE.MeshLambertMaterial({ vertexColors: true });
+    mat.onBeforeCompile = sh => {
+      sh.vertexShader = 'attribute float glow;\nvarying float vGlow;\n' + sh.vertexShader.replace('#include <color_vertex>', '#include <color_vertex>\nvGlow = glow;');
+      sh.fragmentShader = 'varying float vGlow;\n' + sh.fragmentShader.replace('vec3 totalEmissiveRadiance = emissive;', 'vec3 totalEmissiveRadiance = emissive + vColor.rgb * vGlow;');
+    };
+    mat.customProgramCacheKey = () => 'units';
+    this.batch = new THREE.BatchedMesh(Math.max(1, units.length), verts, 0, mat);
+    const geo = Object.fromEntries(KINDS.map(k => [k, this.batch.addGeometry(shapes[k])])) as Record<UnitKind, number>;
+    for (const u of units) { const id = this.batch.addInstance(geo[u.kind]); this.batch.setVisibleAt(id, false); this.ids.push(id); }
+    this.batch.frustumCulled = false;
+    this.group.add(this.batch);
   }
 
   update(w: World, units: Unit[], time: number, cam: THREE.Vector3) {
-    const count = Object.fromEntries(KINDS.map(k => [k, 0])) as Record<UnitKind, number>;
-    let eyes = 0;
-    for (const u of units) {
-      const p = unitPose(w, u, time);
-      if (!p.active || u.kind === 'lamppost' || Math.hypot(p.x - cam.x, p.z - cam.z) > NEAR) continue;
-      this.m.makeRotationY(p.yaw).setPosition(p.x, p.y, p.z);
-      this.bodies[u.kind].setMatrixAt(count[u.kind]++, this.m);
-      this.eyes.setMatrixAt(eyes++, this.e.copy(this.m).multiply(EYE_AT[u.kind]));
-    }
-    for (const k of KINDS) { this.bodies[k].count = count[k]; this.bodies[k].instanceMatrix.needsUpdate = true; }
-    this.eyes.count = eyes; this.eyes.instanceMatrix.needsUpdate = true;
+    let shown = 0;
+    units.forEach((u, i) => {
+      const p = unitPose(w, u, time), on = p.active && u.kind !== 'lamppost' && Math.hypot(p.x - cam.x, p.z - cam.z) <= NEAR;
+      this.batch.setVisibleAt(this.ids[i], on);
+      if (!on) return;
+      this.batch.setMatrixAt(this.ids[i], this.m.makeRotationY(p.yaw).setPosition(p.x, p.y, p.z));
+      shown++;
+    });
+    this.batch.visible = shown > 0;
   }
 
-  dispose() { for (const m of [...Object.values(this.bodies), this.eyes]) m.geometry.dispose(); this.group.removeFromParent(); }
+  dispose() { this.batch.dispose(); this.group.removeFromParent(); }
 }

@@ -14,7 +14,7 @@ export default async function ({ open, fail, screenshot }) {
     Object.assign(s.player.pos, { x, y: p.y + 9, z }); s.player.fallFrom = s.player.pos.y; g.input.yaw = Math.atan2(-dx, -dz); g.input.pitch = -0.55;
     window.__cq.runFrames(5);
     const v = new (g.view.fp.cam.position.constructor)(p.x, p.y + 1, p.z).project(g.view.fp.cam);
-    const drawn = g.view.scene.children.filter(o => o.isGroup).flatMap(o => o.children).filter(m => m.isInstancedMesh).reduce((a, m) => a + m.count, 0);
+    const drawn = g.units.ids.filter(id => g.units.batch.getVisibleAt(id)).length;
     return { drawn, units: s.units.length, screen: [v.x.toFixed(2), v.y.toFixed(2), v.z.toFixed(2)], cam: [g.view.fp.cam.position.x - p.x, g.view.fp.cam.position.y - p.y, g.view.fp.cam.position.z - p.z].map(n => n.toFixed(1)) };
   })()`);
   if (!r) { fail('units', 'no column out on its road'); await page.close(); return; }

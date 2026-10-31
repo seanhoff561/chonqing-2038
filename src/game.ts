@@ -121,7 +121,7 @@ export class Game {
     this.applyDraw();
     this.view.setWorld(this.world);
     this.units?.dispose();
-    this.units = new UnitView(this.state.units.length);
+    this.units = new UnitView(this.state.units);
     this.view.scene.add(this.units.group);
   }
 

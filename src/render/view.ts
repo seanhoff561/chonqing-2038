@@ -1,6 +1,6 @@
 // The three.js scene: renderer, lights, fog, the static world meshes and the first-person rig.
 import * as THREE from 'three';
-import type { World } from '../world/world';
+import type { World, Prop } from '../world/world';
 import type { Solid } from '../world/geom';
 import { buildSolidMeshes, ChunkMerger, CASTER_LAYER } from './world-mesh';
 import { buildGroundMeshes, buildFarGround, coarseField } from './ground-mesh';
@@ -10,7 +10,7 @@ import { buildLabels } from './labels';
 import { material, lodRadius, swayTime } from './materials';
 import { MAT } from '../world/mats';
 import { FPCamera } from './fpcamera';
-import { buildProps, tickProps } from './props';
+import { buildProps, tickProps, smallProps, isSmall } from './props';
 import { RoomProps } from './roomprops';
 
 /** Half-size of the sun's shadow area around the camera, metres. */
@@ -90,14 +90,20 @@ export class View {
     // Rooms inside buildings (M3-38) only within INNER, and casting nothing (the shell does).
     const inner = (s: Solid) => this.hasFar && !!s.inner;
     const meshes = buildSolidMeshes(w.solids.filter(s => !inner(s)).concat(w.decor.filter(s => !small(s) && !inner(s))), this.hasFar ? 'near' : 'all', undefined, w.index);
-    const detail = buildSolidMeshes(w.decor.filter(s => small(s) && !inner(s)), 'near').children.filter(m => !m.castShadow);
-    for (const m of detail) m.userData.detail = true;
-    const rooms = buildSolidMeshes(w.solids.filter(inner).concat(w.decor.filter(inner)), 'near').children.filter(m => !m.castShadow);
-    for (const m of rooms) m.userData.detail = m.userData.inner = true;
-    if (detail.length) meshes.add(...detail);
-    if (rooms.length) meshes.add(...rooms);
+    // In the big city the trims, the rooms and the small props (half its geometry, all drawn only near) are built a
+    // 256 m cell at a time as he nears it and let go once he's well away (M4-01c); small worlds build them all now.
+    this.stream.clear();
+    this.share = PRESETS[this.preset].props;
+    const trims = w.decor.filter(s => small(s) && !inner(s)), insides = w.solids.filter(inner).concat(w.decor.filter(inner));
+    if (this.hasFar) {
+      // (By its middle in the world, as its chunk is chosen: a turned solid's box is its bounds.)
+      const mid = (s: Solid) => this.cellAt0((s.x0 + s.x1) / 2, (s.z0 + s.z1) / 2);
+      for (const s of trims) mid(s).detail.push(s);
+      for (const s of insides) mid(s).rooms.push(s);
+    } else meshes.add(...nearLayers(trims, insides, [], 1));
     if (w.ground) meshes.add(...buildGroundMeshes(w.ground, this.hasFar ? 'near' : 'all', w.marks), ...buildStreetMeshes(w.ground, w.streets, this.hasFar ? 'near' : 'all', w.lawns));
-    const props = buildProps(w.props.filter(p => !p.kind.startsWith('f:')), PRESETS[this.preset].props);
+    const share = PRESETS[this.preset].props, props = buildProps(w.props.filter(p => !p.kind.startsWith('f:') && !(this.hasFar && isSmall(p))), share);
+    if (this.hasFar) for (const p of w.props) if (isSmall(p)) this.cellAt0(p.x, p.z).props.push(p);
     this.rooms?.dispose();
     this.rooms = new RoomProps(w.props.filter(p => p.kind.startsWith('f:')));
     this.world.add(meshes, buildLabels(w.labels), props);
@@ -151,6 +157,7 @@ export class View {
       cr[0] = Math.min(cr[0], r[0]); cr[1] = Math.min(cr[1], r[1]); cr[2] = Math.max(cr[2], r[2]); cr[3] = Math.max(cr[3], r[3]);
     }
     this.cells = [...cells.values()];
+    this.cellAt = cells;
     // The city stands still but for the props that tick: its transforms are computed once, not every frame
     // (M3-53: some 15 000 objects).
     this.world.updateMatrixWorld(true);
@@ -187,10 +194,48 @@ export class View {
     this.lamp.distance = mode === 2 ? 12 : 40;
   }
 
+  /** The near layers of the big city by 256 m cell (M4-01c): their trims and rooms, and their meshes while built. */
+  private stream = new Map<number, StreamCell>();
+  private cellAt = new Map<number, THREE.Group>();
+  private share = 1;
+  /** The streamed cell a point is in, made if it's new. */
+  private cellAt0(x: number, z: number): StreamCell {
+    const i = Math.floor(x / 256), j = Math.floor(z / 256), k = i * 65536 + j;
+    let c = this.stream.get(k);
+    if (!c) this.stream.set(k, (c = { k, x: i * 256, z: j * 256, detail: [], rooms: [], props: [], meshes: null }));
+    return c;
+  }
+  /** Every frame: the nearest cell within reach of the detail radius (and 120 m more) whose near layers aren't
+   *  built gets them, one a frame; a cell 400 m past it lets its go. */
+  private streamCells(c: THREE.Vector3) {
+    const reach = PRESETS[this.preset].detail, d = (q: { x: number; z: number }) => Math.hypot(Math.max(q.x - c.x, 0, c.x - q.x - 256), Math.max(q.z - c.z, 0, c.z - q.z - 256));
+    let next: StreamCell | null = null;
+    for (const q of this.stream.values()) {
+      const dq = d(q);
+      if (!q.meshes && dq < reach + 120 && (!next || dq < d(next))) next = q;
+      else if (q.meshes && dq > reach + 400) { for (const m of q.meshes) { m.removeFromParent(); m.geometry.dispose(); } q.meshes = null; }
+    }
+    if (!next) return;
+    next.meshes = nearLayers(next.detail, next.rooms, next.props, this.share);
+    let cell = this.cellAt.get(next.k);
+    if (!cell) { this.cellAt.set(next.k, (cell = new THREE.Group())); cell.userData.rect = [next.x, next.z, next.x + 256, next.z + 256]; cell.matrixAutoUpdate = false; cell.userData.frozen = true; this.world.add(cell); this.cells.push(cell); }
+    for (const m of next.meshes) {
+      m.geometry.computeBoundingBox();
+      const b = m.geometry.boundingBox!;
+      m.userData.rect = [b.min.x, b.min.z, b.max.x, b.max.z];
+      m.matrixAutoUpdate = false; m.userData.frozen = true;
+      const r = cell.userData.rect;
+      r[0] = Math.min(r[0], b.min.x); r[1] = Math.min(r[1], b.min.z); r[2] = Math.max(r[2], b.max.x); r[3] = Math.max(r[3], b.max.z);
+      cell.add(m);
+    }
+    this.visFar = -1;
+  }
+
   render(t = 0, open: Record<string, boolean> = {}) {
     // Detailed chunks wholly past the detail radius (or the fog) are not drawn; looked at again once he has
     // moved 4 m or the radius has changed.
     const c = this.fp.cam.position, far = this.hasFar ? lodRadius.value : (this.scene.fog as THREE.Fog).far;
+    if (this.stream.size) this.streamCells(c);
     if (far !== this.visFar || Math.hypot(c.x - this.visAt.x, c.z - this.visAt.z) > 4) {
       this.visFar = far; this.visAt.copy(c);
       const within = (o: THREE.Object3D) => { const [x0, z0, x1, z1] = o.userData.rect; return Math.hypot(Math.max(x0 - c.x, 0, c.x - x1), Math.max(z0 - c.z, 0, c.z - z1)) < (o.userData.inner ? Math.min(far, PRESETS[this.preset].inner) : o.userData.detail ? Math.min(far, PRESETS[this.preset].detail) : far); };
@@ -211,6 +256,19 @@ export class View {
     }
     r.render(this.scene, this.fp.cam);
   }
+}
+
+/** A 256 m cell of the near layers: its corner, its trims and rooms, their meshes while built. */
+type StreamCell = { k: number; x: number; z: number; detail: Solid[]; rooms: Solid[]; props: Prop[]; meshes: THREE.Mesh[] | null };
+
+/** The near layers' meshes: the small trims and small props (drawn within the detail radius) and the rooms inside
+ *  the buildings (within the rooms' radius), none casting shadows. */
+function nearLayers(trims: Solid[], insides: Solid[], props: Prop[], share: number): THREE.Mesh[] {
+  const detail = buildSolidMeshes(trims, 'near').children.filter(m => !m.castShadow) as THREE.Mesh[];
+  for (const m of detail) m.userData.detail = true;
+  const rooms = buildSolidMeshes(insides, 'near').children.filter(m => !m.castShadow) as THREE.Mesh[];
+  for (const m of rooms) m.userData.detail = m.userData.inner = true;
+  return [...detail, ...rooms, ...(props.length ? smallProps(props, share) : [])];
 }
 
 /** Mark what under o never moves: a subtree with nothing that animates (a prop with a tick) is frozen whole.
