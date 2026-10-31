@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-21b Guns made real (U-032).
-Features done: 179 / 298 | Last done: M4-21
+**Status:** building M4. Next: M4-22 Tracking tags.
+Features done: 180 / 298 | Last done: M4-21b
 <!-- /status -->
 
 ## Log
@@ -36,3 +36,4 @@ Features done: 179 / 298 | Last done: M4-21
 - M4-19 Unit damage and weak points: machines' HP and hit zones: blinded, immobilised, shut down, destroyed
 - M4-20 Knife, crowbar and takedowns: knife and crowbar blows on the place aimed at; takedowns from behind in 2 s
 - M4-21 Pistol: the pistol: hitscan with spread and sway, kick, magazines and reloads, a 150 m hostile noise
+- M4-21b Guns made real (U-032): guns made real: the QSZ-92, aiming down the sights with a zoom, recoil, slide and flash; leaning with Q and E

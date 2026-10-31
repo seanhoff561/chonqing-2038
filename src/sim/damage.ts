@@ -6,7 +6,7 @@
 import type { SimState } from './types';
 import type { World } from '../world/world';
 import { UNITS, ZONES, BREAKS } from '../data/units';
-import { movement as M } from '../data/movement';
+import { eyeOf } from './player';
 import { unitPose, isOff, type Unit } from './units';
 import type { UnitKind } from '../data/units';
 import { raycast } from '../world/geom';
@@ -38,7 +38,7 @@ const BODY: Record<UnitKind, [number, number, number]> = {
  *  where on it, and which place that is; none if a wall's in the way. */
 export type Aim = { u: Unit; t: number; zone: string; at: { x: number; y: number; z: number } };
 export function aimAt(s: SimState, w: World, reach: number, spread = { yaw: 0, pitch: 0 }): Aim | null {
-  const p = s.player, yaw = p.yaw + spread.yaw, pitch = p.pitch + spread.pitch, e = { x: p.pos.x, y: p.pos.y + M.eye[p.posture], z: p.pos.z };
+  const p = s.player, yaw = p.yaw + spread.yaw, pitch = p.pitch + spread.pitch, e = eyeOf(p);
   const d = { x: -Math.sin(yaw) * Math.cos(pitch), y: Math.sin(pitch), z: -Math.cos(yaw) * Math.cos(pitch) }, h2 = d.x * d.x + d.z * d.z;
   let best = null as Aim | null;
   if (h2 < 1e-6) return null;

@@ -1,5 +1,6 @@
 // The player's state. Movement modes are advanced in move.ts.
 import type { Vec3 } from './types';
+import { movement as M } from '../data/movement';
 
 export type Posture = 'stand' | 'crouch' | 'crawl' | 'hidden';
 export type Mode = 'ground' | 'air' | 'action' | 'grip' | 'cling' | 'wallrun' | 'wallclimb' | 'chimney' | 'swim' | 'hidden' | 'zip' | 'dead' | 'noclip';
@@ -64,8 +65,9 @@ export interface Player {
   /** seconds he's stunned for, a prod's (M4-18); till his next blow or shot (M4-20) */
   stun: number;
   swing: number;
-  /** the pistol's kick, radians up, settling (M4-21) */
+  /** the pistol's kick, radians up, settling (M4-21); how far he leans, -1 left to 1 right (M4-21b) */
   kick: number;
+  lean: number;
   /** where he climbs back out of a hiding spot */
   hideExit: Vec3 | null;
 }
@@ -75,7 +77,7 @@ export function createPlayer(x: number, y: number, z: number, yaw: number): Play
     pos: { x, y, z }, vel: { x: 0, y: 0, z: 0 }, yaw, pitch: 0,
     mode: 'air', posture: 'stand', onGround: false, fallFrom: y, crouchAge: 99,
     endurance: 100, exhausted: false, hands: [{ grip: null }, { grip: null }], pull: 1.5, regrab: 0, kicks: 0, strain: 0, muscle: 0, side: 0, jumpHeld: false, clung: false, act: null,
-    wall: { nx: 0, nz: 0, t: 0, y: 0, id: -1 }, breath: 40, wetUntil: 0, stepAcc: 0, crawlToggle: false, hideId: -1, coyote: 0, slide: -1, hideExit: null, lamp: 0, mylar: false, stun: 0, swing: 0, kick: 0,
+    wall: { nx: 0, nz: 0, t: 0, y: 0, id: -1 }, breath: 40, wetUntil: 0, stepAcc: 0, crawlToggle: false, hideId: -1, coyote: 0, slide: -1, hideExit: null, lamp: 0, mylar: false, stun: 0, swing: 0, kick: 0, lean: 0,
   };
 }
 
@@ -89,3 +91,11 @@ export function teleport(p: Player, x: number, y: number, z: number) {
   if (p.mode !== 'dead') p.mode = 'air';
   p.onGround = false;
 }
+
+/** Where his eyes are: over his feet at his posture's height, out to the side as far as he leans (M4-21b). */
+export function eyeOf(p: Player) {
+  const k = p.lean * LEAN.out;
+  return { x: p.pos.x + Math.cos(p.yaw) * k, y: p.pos.y + M.eye[p.posture] - Math.abs(p.lean) * LEAN.dip, z: p.pos.z - Math.sin(p.yaw) * k };
+}
+/** Leaning round a corner (U-032): how far out his head goes, how much it drops, how fast he leans (a second). */
+export const LEAN = { out: 0.4, dip: 0.06, rate: 6 };

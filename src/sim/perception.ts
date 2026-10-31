@@ -13,6 +13,7 @@ import { lightAt, LAMP_LIGHT } from './light';
 import { daylight } from './clock';
 import { unitPose, isOff, type Pose } from './units';
 import { onUseId } from './use';
+import { LEAN } from './player';
 import { remember } from './hive';
 import { heightened, districtOf } from './district';
 
@@ -23,7 +24,9 @@ export function bodyPoints(s: SimState): V3[] {
   const p = s.player, { x, y, z } = p.pos, c = Math.cos(p.yaw), sn = Math.sin(p.yaw);
   if (p.posture === 'crawl') return [0.6, 0.3, 0.3, 0, -0.6].map((f, i) => ({ x: x - sn * f + (i === 1 ? c * 0.2 : i === 2 ? -c * 0.2 : 0), y: y + 0.25, z: z - c * f + (i === 1 ? -sn * 0.2 : i === 2 ? sn * 0.2 : 0) }));
   const h = M.height[p.posture === 'crouch' ? 'crouch' : p.posture === 'hidden' ? 'hidden' : 'stand'], k = h / M.height.stand;
-  return [{ x, y: y + h - 0.12, z }, { x: x + c * 0.2, y: y + 1.45 * k, z: z - sn * 0.2 }, { x: x - c * 0.2, y: y + 1.45 * k, z: z + sn * 0.2 }, { x, y: y + 0.95 * k, z }, { x, y: y + 0.5 * k, z }];
+  // Leaning (M4-21b), his head goes out to the side, his shoulders half as far.
+  const l = p.lean * LEAN.out, hx = c * l, hz = -sn * l;
+  return [{ x: x + hx, y: y + h - 0.12, z: z + hz }, { x: x + c * 0.2 + hx / 2, y: y + 1.45 * k, z: z - sn * 0.2 + hz / 2 }, { x: x - c * 0.2 + hx / 2, y: y + 1.45 * k, z: z + sn * 0.2 + hz / 2 }, { x, y: y + 0.95 * k, z }, { x, y: y + 0.5 * k, z }];
 }
 
 /** How his posture shows him. */

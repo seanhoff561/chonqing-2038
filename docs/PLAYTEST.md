@@ -151,3 +151,6 @@ Report: does the city feel full and layered now, or still too open anywhere? Do 
 
 ## M4-12 to M4-14: the hive answers
 - Get seen by a camera in Jiefangbei and stay seen: within a few seconds do the machines near you converge, does a hunter drone come off a roof dock, and after 45 s a pair of humanoids out of a street door? Break line of sight and hide: does it feel like the net closes and then loosens?
+
+## M4-18 to M4-21b: fighting back
+- Take the pistol (give it with the dev panel) and a couple of magazines into the gym: does aiming down the sights (right mouse) feel right, the sights where your eye expects, the zoom comfortable? Does each shot's kick and slide read? Lean round a wall with Q and E: natural, or too far? Knife a drone; sneak up behind a humanoid and hold the knife on it for the takedown: is 2 s tense? Stand in a turret's view and sprint away from a humanoid: does the danger feel fair? (The sleeves fill the bottom of the view aimed: say if that bothers you.)

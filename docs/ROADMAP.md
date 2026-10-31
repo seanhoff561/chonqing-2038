@@ -659,7 +659,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Four key points of the district (hideout gate, Shibati top, Jiaochangkou, the riverfront) are linked by a street route, a rooftop or beam route and an underground or interior route
   - A sim test checks each link with the nav and movement limits
 
-## M4: 23 of 38 done
+## M4: 24 of 38 done
 
 M4 The machines: cameras, drones and their docks, ground robots, turrets; perception (light, distance, motion, posture, cover, sound, thermal); patrol schedules; alert states, the hivemind broadcast, convergence, drone launches, the search and the heightened district; combat and damage; tracking home and the hideout raid; death and restart. After M4 the core loop is playable start to finish.
 
@@ -745,7 +745,7 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
 - [x] **M4-21** Pistol
   - Hitscan with spread and sway, magazines and reloads; each shot is a hostile 150 m noise
   - A sim test: head shots blind a quadruped
-- [ ] **M4-21b** Guns made real (U-032)
+- [x] **M4-21b** Guns made real (U-032)
   - Guns made real (U-032): realistic models, firing and recoil, scoping, leaning with Q and E
   - The pistol's model, slide and muzzle flash; recoil kicks the view and settles; right mouse aims down the sights with a zoom; Q and E lean round a corner, the sim's eye and aim moving with it; a screenshot of each
 - [ ] **M4-22** Tracking tags

@@ -15,6 +15,7 @@ const CONTROLS: [string, string][] = [
   ['W / S or drag the mouse', 'pull up / let out while hanging'],
   ['Space while hanging', 'push off a wall under your feet, or pump a swing on a bar'],
   ['Q', 'let go'],
+  ['Q / E (hold) on your feet', 'lean left / right round a corner'],
   ['Ctrl (hold) or C', 'crouch; while running: slide; landing: roll'],
   ['Z', 'crawl'],
   ['F (hold)', 'interact; with nothing in view: sleep rough'],

@@ -1,6 +1,6 @@
 // First-person camera: eye height by posture, head bob, landing dip, wall-run and cling lean.
 import * as THREE from 'three';
-import type { Player } from '../sim/player';
+import { LEAN, type Player } from '../sim/player';
 import type { Vec3 } from '../sim/types';
 import { movement as M } from '../data/movement';
 
@@ -17,6 +17,9 @@ export class FPCamera {
   private fov = 75;
   /** 0..1 eased sprint amount */
   sprint = 0;
+  /** 0..1 aimed down the sights (M4-21b): the view narrows */
+  zoom = 0;
+  private lean = 0;
 
   constructor(aspect: number) {
     this.cam = new THREE.PerspectiveCamera(75, aspect, 0.05, 400);
@@ -37,17 +40,22 @@ export class FPCamera {
     // Lean away from the wall on a wall-run, slightly while clinging to it.
     let rollTarget = 0;
     if (p.mode === 'wallrun' || p.mode === 'cling') rollTarget = (p.mode === 'wallrun' ? 0.14 : 0.08) * Math.sign(p.wall.nx * Math.cos(yaw) - p.wall.nz * Math.sin(yaw));
+    // Leaning round a corner (U-032): the head out to the side and tipped that way.
+    rollTarget -= p.lean * 0.14;
     this.roll += (rollTarget - this.roll) * k;
+    this.lean += (p.lean - this.lean) * k;
     // Sprinting has to read clearly (U-003): FOV kick, harder bob, a slight lean.
     const sprinting = walking && sp > 5.5;
     this.sprint += ((sprinting ? 1 : 0) - this.sprint) * (1 - Math.exp(-6 * dt));
-    this.fov += (this.baseFov + this.sprint * 9 - this.fov) * k;
+    this.fov += (this.baseFov * (1 - 0.38 * this.zoom) + this.sprint * 9 - this.fov) * k;
     if (Math.abs(this.cam.fov - this.fov) > 0.01) { this.cam.fov = this.fov; this.cam.updateProjectionMatrix(); }
     const limpDip = this.limp * (walking ? Math.max(0, Math.sin(this.bob)) * 0.09 : 0);
     const bobAmp = amp * (1 + this.sprint * 0.8);
     const by = Math.abs(Math.sin(this.bob)) * 0.045 * bobAmp - limpDip, bx = Math.sin(this.bob) * 0.025 * bobAmp;
-    this.cam.position.set(pos.x + Math.cos(yaw) * bx, pos.y + this.eye + by - this.dip, pos.z - Math.sin(yaw) * bx);
-    this.cam.rotation.set(pitch - this.sprint * 0.04, yaw, this.roll + limpDip * 0.4 + Math.sin(this.bob) * 0.006 * this.sprint);
+    const out = bx + this.lean * LEAN.out;
+    this.cam.position.set(pos.x + Math.cos(yaw) * out, pos.y + this.eye + by - this.dip - Math.abs(this.lean) * LEAN.dip, pos.z - Math.sin(yaw) * out);
+    // (The pistol's kick lifts the view as it lifts his aim: M4-21.)
+    this.cam.rotation.set(pitch + p.kick - this.sprint * 0.04, yaw, this.roll + limpDip * 0.4 + Math.sin(this.bob) * 0.006 * this.sprint);
   }
 
   eyeHeight() { return this.eye; }

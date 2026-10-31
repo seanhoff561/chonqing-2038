@@ -2,10 +2,10 @@
 import { B, DT, type InputFrame, type SimState, type FallOutcome, type Vec3 } from './types';
 import { rand } from './rng';
 import type { World } from '../world/world';
-import type { Player, Posture } from './player';
+import { LEAN, type Player, type Posture } from './player';
 import { movement as M } from '../data/movement';
 import { free, moveHorizontal, moveVertical, groundGap, surface, boxAt } from './physics';
-import { groundAt, query, xzHit, type SolidIndex } from '../world/geom';
+import { groundAt, query, xzHit, raycast, type SolidIndex } from '../world/geom';
 import { MAT } from '../world/mats';
 import { groundParkour, airParkour, airWall, stepAction, stepWallRun, stepWallClimb, stepCling } from './parkour';
 import { stepHands, stepGrip } from './grip';
@@ -58,6 +58,13 @@ export function stepPlayer(state: SimState, world: World, input: InputFrame): vo
   p.yaw = input.yaw;
   p.pitch = Math.max(-1.5, Math.min(1.5, input.pitch));
   if (state.flags.noclip) { noclip(p, input); return; }
+  // Leaning (U-032): Q left, E right, on his feet and not running; never through a wall.
+  const want = p.mode === 'ground' && p.posture !== 'crawl' && Math.hypot(p.vel.x, p.vel.z) < 4 ? ((input.buttons & B.LEAN_R) ? 1 : 0) - ((input.buttons & B.LEAN_L) ? 1 : 0) : 0;
+  p.lean += (want - p.lean) * (1 - Math.exp(-LEAN.rate * DT));
+  if (Math.abs(p.lean) > 0.01) {
+    const side = Math.sign(p.lean), hit = raycast(world.index, p.pos.x, p.pos.y + M.eye[p.posture], p.pos.z, Math.cos(p.yaw) * side, 0, -Math.sin(p.yaw) * side, LEAN.out + 0.2);
+    if (hit) p.lean = side * Math.min(Math.abs(p.lean), Math.max(0, hit.t - 0.2) / LEAN.out);
+  } else p.lean = 0;
   // Stunned (M4-18): he can't move for it.
   if (p.stun > 0) { p.stun = Math.max(0, p.stun - DT); input = { ...input, mx: 0, my: 0, buttons: 0, pressed: 0 }; }
   if (p.mode === 'noclip') p.mode = 'air';

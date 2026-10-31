@@ -16,10 +16,26 @@ const cyl = (r: number, l: number, m: THREE.Material, axis: 'x' | 'y' | 'z' = 'x
 };
 const group = (...o: THREE.Object3D[]) => { const g = new THREE.Group(); g.add(...o); return g; };
 
+/** The QSZ-92 (M4-21b, U-032): a raked polymer grip with its magazine's base, the frame and trigger guard, the steel
+ *  slide (named, to run back as it fires) with its sights and ejection port, the barrel's crown, and a muzzle flash
+ *  (named, hidden until a shot). */
+function pistol() {
+  const poly = M(0x2c2f32, 0.7, 0.05), slideMat = M(0x464b52, 0.4, 0.5);
+  const grip = group(box(0.105, 0.03, 0.036, poly), box(0.012, 0.032, 0.038, dark, 0.058, 0, 0.002), ...[0, 1, 2, 3].map(k => box(0.006, 0.031, 0.037, rubber, -0.03 + k * 0.022, 0, 0)));
+  grip.rotation.y = -0.32; grip.position.set(0.012, 0, 0.012);
+  const slide = group(box(0.032, 0.028, 0.19, slideMat), box(0.008, 0.006, 0.006, dark, -0.019, 0, -0.088), box(0.008, 0.012, 0.006, dark, -0.019, 0, 0.088), box(0.004, 0.004, 0.004, white, -0.024, 0, 0.088),
+    box(0.012, 0.0285, 0.035, dark, -0.004, 0, -0.005), ...[0, 1, 2, 3, 4].map(k => box(0.02, 0.0285, 0.003, dark, 0, 0, 0.06 + k * 0.007)));
+  slide.name = 'slide'; slide.position.set(-0.066, 0, -0.062);
+  const flash = new THREE.Mesh(new THREE.ConeGeometry(0.075, 0.16, 7, 1, true).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffc860, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  flash.name = 'flash'; flash.position.set(-0.066, 0, -0.24); flash.visible = false;
+  return group(grip, box(0.026, 0.026, 0.16, poly, -0.042, 0, -0.07), box(0.004, 0.022, 0.05, poly, -0.012, 0, -0.04), box(0.032, 0.022, 0.004, poly, -0.03, 0, -0.065), box(0.016, 0.006, 0.006, steel, -0.022, 0, -0.03),
+    slide, cyl(0.0065, 0.012, steel, 'z', -0.07, 0, -0.16), cyl(0.0035, 0.013, rubber, 'z', -0.07, 0, -0.161), flash);
+}
+
 const models: Record<string, () => THREE.Object3D> = {
   crowbar: () => group(cyl(0.012, 0.6, steel, 'x', -0.2), box(0.012, 0.03, 0.07, steel, -0.5, 0, -0.03), box(0.05, 0.012, 0.03, steel, 0.1, 0, -0.02)),
   knife: () => group(box(0.1, 0.03, 0.022, rubber), box(0.13, 0.004, 0.028, steel, -0.11, 0, 0)),
-  pistol: () => group(box(0.11, 0.03, 0.035, dark, 0.01, 0, 0.005), box(0.035, 0.034, 0.19, dark, -0.06, 0, -0.065), box(0.02, 0.01, 0.03, dark, 0.0, 0, -0.03)),
+  pistol: () => pistol(),
   shotgun: () => group(box(0.04, 0.12, 0.05, wood, 0, -0.02, 0.08), cyl(0.013, 0.7, dark, 'z', 0, 0.05, -0.3), box(0.05, 0.05, 0.3, wood, 0, 0.03, 0.25)),
   nailgun: () => group(box(0.12, 0.04, 0.04, yellow, 0.01), box(0.08, 0.06, 0.26, yellow, -0.07, 0, -0.08), box(0.03, 0.03, 0.05, dark, -0.07, 0, -0.23)),
   boltcutters: () => group(cyl(0.012, 0.45, rubber, 'x', -0.1), cyl(0.012, 0.45, rubber, 'x', -0.1, 0, -0.04), box(0.12, 0.02, 0.05, steel, -0.38, 0, -0.02)),

@@ -6,7 +6,7 @@ import { lineMeshes } from './render/lines';
 import { hideNear } from './sim/hide';
 import { lineInReach } from './sim/zip';
 import { createState, step } from './sim/sim';
-import { DT, type SimState, type Vec3 } from './sim/types';
+import { B, DT, type SimState, type Vec3 } from './sim/types';
 import { GAME_PER_TICK } from './sim/clock';
 import type { World } from './world/world';
 import { getWorld } from './world/build';
@@ -32,6 +32,7 @@ import { syncWorld } from './sim/doors';
 import { playMove } from './audio/moves';
 import { Hands3D, poseFor, gripPose, HELD_AT } from './render/hands3d';
 import { itemModel, supportPoint } from './render/items3d';
+import { GunFeel } from './render/gunfeel';
 import { SleepUI } from './ui/sleep-ui';
 import { DeathScreen } from './ui/death';
 import { Furniture } from './render/furniture';
@@ -79,6 +80,8 @@ export class Game {
   private units: UnitView | null = null;
   scenario!: Scenario;
   private heldId = '';
+  private heldModel: THREE.Object3D | null = null;
+  private gun = new GunFeel();
   private prev: Vec3 = { x: 0, y: 0, z: 0 };
   private acc = 0;
   private last = 0;
@@ -207,7 +210,7 @@ export class Game {
     for (const e of this.state.events) {
       if (e.t === 'land') this.view.fp.landed(e.h);
       else if (e.t === 'sfx') playMove(this.audio, e.id);
-      else if (e.t === 'fire') gunshot(this.audio, 0.9);
+      else if (e.t === 'fire') { gunshot(this.audio, 0.9); this.gun.fired(); }
       else if (e.t === 'open') this.inv.toggle(true);
       else if (e.t === 'sleep-menu') this.sleep.toggle(true, e.id === 'rough');
       else if (e.t === 'slept' && this.scenario.run && !this.state.dead) writeSave(localStorage, this.scenario.name, this.state);
@@ -222,9 +225,14 @@ export class Game {
   render(alpha: number, dt: number) {
     const p = this.state.player;
     const pos = { x: this.prev.x + (p.pos.x - this.prev.x) * alpha, y: this.prev.y + (p.pos.y - this.prev.y) * alpha, z: this.prev.z + (p.pos.z - this.prev.z) * alpha };
+    // Guns (M4-21b): aimed down the sights the view narrows; the gun's raised and kicked once the hands are posed.
+    const gun = this.heldId === 'pistol' ? this.heldModel : null;
+    this.gun.aim(dt, !!gun && (this.input.mouse & B.AIM) !== 0 && !this.input.uiOpen);
+    this.view.fp.zoom = this.gun.ads;
     this.view.fp.update(p, pos, this.input.yaw, this.input.pitch, dt);
     this.bodyFx.update(this.state, this.view.fp, dt);
     this.updateHands(dt);
+    this.gun.update(dt, this.hands.group, gun);
     this.inv.update();
     this.updatePrompt();
     this.updateHeld();
@@ -308,7 +316,8 @@ export class Game {
     if (id === this.heldId || !this.hands.ready) return;
     this.heldId = id;
     const slot = this.hands.heldSlot(1);
-    if (slot) { slot.clear(); if (id) { const m = itemModel(id); m.position.copy(HELD_AT); slot.add(m); } }
+    this.heldModel = null;
+    if (slot) { slot.clear(); if (id) { const m = itemModel(id); m.position.copy(HELD_AT); slot.add(m); this.heldModel = m; } }
   }
 
   start() {
