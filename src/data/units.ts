@@ -59,6 +59,9 @@ export const TAKEDOWN = { reach: 1.5, rear: 120, time: 2, noise: 6 };
  *  reach), sticking a tracking tag to his clothes three times in five; its pop heard 15 m round. Found with an SDR
  *  dongle, a tag takes 3 s to pick off. */
 export const TAG = { every: 6, reach: 20, near: 1.5, chance: 0.6, noise: 15, remove: 3 };
+/** Followed home (M4-23, U-013): coming within 25 m of a hideout's bed under 10 s (real) after a machine last had
+ *  him in sight, or with a tag on him, or seen while there, gives the hideout away. */
+export const TRACK = { near: 25, after: 10 };
 
 /** His pistol (DESIGN section 6, M4-21): damage a round, rounds a magazine, the least time between shots, how far it's
  *  heard and reaches, how long a reload takes; its spread in degrees (from the hip, aimed down the sights, more for each

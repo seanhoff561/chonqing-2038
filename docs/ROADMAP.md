@@ -659,7 +659,7 @@ M3 First district: Shibati and Jiaochangkou with full verticality (stairs, alley
   - Four key points of the district (hideout gate, Shibati top, Jiaochangkou, the riverfront) are linked by a street route, a rooftop or beam route and an underground or interior route
   - A sim test checks each link with the nav and movement limits
 
-## M4: 28 of 41 done
+## M4: 29 of 41 done
 
 M4 The machines: cameras, drones and their docks, ground robots, turrets; perception (light, distance, motion, posture, cover, sound, thermal); patrol schedules; alert states, the hivemind broadcast, convergence, drone launches, the search and the heightened district; combat and damage; tracking home and the hideout raid; death and restart. After M4 the core loop is playable start to finish.
 
@@ -766,7 +766,7 @@ M4 The machines: cameras, drones and their docks, ground robots, turrets; percep
   - The boot to a playable city is measured and made faster (cache what can be cached; build less up front)
   - Starting a new run (after death or from the menu) makes a fresh run state in place without reloading the page or rebuilding the world
   - An e2e test times the boot against its budget and starts a second run in place
-- [ ] **M4-23** Tracking home
+- [x] **M4-23** Tracking home
   - Entering the shelter's area (within 25 m of his bed) within 10 s of any unit's line of sight, or with a tag, marks the shelter compromised (U-013)
   - Sim tests: a clean return stays safe; a tagged return compromises it
 - [ ] **M4-24** Hideout raid

@@ -4,7 +4,8 @@
 // off, 3 s.
 import { DT, type SimState } from './types';
 import type { World } from '../world/world';
-import { TAG, SIGHT } from '../data/units';
+import { TAG, SIGHT, TRACK } from '../data/units';
+import { SCALE } from './clock';
 import { visibility } from './perception';
 import { onUseId } from './use';
 import { rand } from './rng';
@@ -37,4 +38,19 @@ export function stepTag(s: SimState) {
   s.task = null;
   s.player.tag = false;
   s.events.push({ t: 'msg', text: 'tracking tag off and crushed' });
+}
+
+/** Every tick (M4-23, U-013): followed home. Coming into a hideout's area (within 25 m of its bed) with a machine's
+ *  eyes on him in the last 10 s, or a tag on him, or seen while he's there, and they know where it is. Nothing tells
+ *  him so. */
+export function stepTrack(s: SimState) {
+  if (!s.shelters.length) return;
+  const p = s.player.pos;
+  let saw = -Infinity;
+  for (const u of s.units) if (u.saw !== undefined && u.saw > saw) saw = u.saw;
+  for (const h of s.shelters) {
+    const near = Math.hypot(p.x - h.x, p.y - h.y, p.z - h.z) <= TRACK.near;
+    if (near && (saw === s.time || (!h.near && (s.player.tag || s.time - saw <= TRACK.after * SCALE)))) h.compromised = true;
+    h.near = near;
+  }
 }

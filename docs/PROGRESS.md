@@ -1,8 +1,8 @@
 # Progress
 
 <!-- status -->
-**Status:** building M4. Next: M4-23 Tracking home.
-Features done: 184 / 301 | Last done: M4-22c
+**Status:** building M4. Next: M4-24 Hideout raid.
+Features done: 185 / 301 | Last done: M4-23
 <!-- /status -->
 
 ## Log
@@ -42,3 +42,4 @@ Features done: 184 / 301 | Last done: M4-22c
 - M4-22b The hideout in a real alley at the heart of the routes (U-047, U-048): the hideout under a real alley at the heart of the routes, sealed from the underground, a drainpipe up to the roofs
 - M4-22d Visual pass: roofs, QR codes, paving, road paint, grates (U-049): the visual pass: sparse composed roofs, rare QR codes, worn off-white paint, grime over the paving, grates you see through
 - M4-22c Faster loading and a new run without reloading (U-048): loading screen, a third faster city build, and new runs in place (U-048)
+- M4-23 Tracking home: followed home: a hideout given away by a sighting or a tag (U-013)

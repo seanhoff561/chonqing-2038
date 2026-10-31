@@ -60,7 +60,11 @@ export interface Placed { id: string; item: string; x: number; y: number; z: num
 
 export interface FallOutcome { damage: number; sprain: boolean; fracture: boolean; arm: boolean; lethal: boolean }
 
-export interface Shelter { id: string; x: number; y: number; z: number; battery: number; compromised: boolean }
+export interface Shelter {
+  id: string; x: number; y: number; z: number; battery: number; compromised: boolean;
+  /** he was within TRACK.near of its bed last tick (M4-23) */
+  near?: boolean;
+}
 
 export interface SimState {
   version: number;
